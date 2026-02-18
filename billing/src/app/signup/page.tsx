@@ -18,9 +18,13 @@ export function SignupPage() {
     if (!email.trim()) { setError("Please enter your email"); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
     if (password !== confirmPassword) { setError("Passwords do not match"); return; }
-    const success = await signUp(email.trim(), password, name.trim());
-    if (success) navigate("/");
-    else setError("Failed to create account. Please try again.");
+    try {
+      const success = await signUp(email.trim(), password, name.trim());
+      if (success) navigate("/");
+      else setError("Failed to create account. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create account. Please try again.");
+    }
   };
 
   return (

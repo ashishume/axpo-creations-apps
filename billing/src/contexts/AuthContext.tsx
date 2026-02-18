@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     } catch (error) {
       console.error("Sign up failed:", error);
-      return false;
+      throw error; // Let the page show the message (e.g. "email already exists")
     } finally {
       setLoading(false);
     }

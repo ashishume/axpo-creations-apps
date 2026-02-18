@@ -70,17 +70,21 @@ export const paymentRepositoryApi: PaymentRepository = {
 
   async getAllocations(paymentId?: string): Promise<PaymentAllocation[]> {
     if (paymentId) {
-      const p = await this.getById(paymentId);
-      if (!p) return [];
-      const r = await billingFetchJson<Record<string, unknown>>(`/payments/${paymentId}`);
-      const allocs = (r.allocations as Record<string, unknown>[]) ?? [];
-      return allocs.map(mapAllocationFromApi);
+      try {
+        const r = await billingFetchJson<Record<string, unknown>>(`/payments/${paymentId}`);
+        const allocs = (r.allocations as Record<string, unknown>[]) ?? [];
+        return allocs.map(mapAllocationFromApi);
+      } catch {
+        return [];
+      }
     }
-    const payments = await this.getAll();
+    /** All allocations: one list call (backend returns allocations per payment). */
+    const list = await billingFetchJson<Record<string, unknown>[]>("/payments");
+    if (!Array.isArray(list)) return [];
     const all: PaymentAllocation[] = [];
-    for (const pay of payments) {
-      const allocs = await this.getAllocations(pay.id);
-      all.push(...allocs);
+    for (const pay of list) {
+      const allocs = (pay.allocations as Record<string, unknown>[]) ?? [];
+      all.push(...allocs.map(mapAllocationFromApi));
     }
     return all;
   },

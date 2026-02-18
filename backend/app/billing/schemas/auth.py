@@ -10,6 +10,13 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    name: str | None = None
+    role: str = "user"
+
+
 class UserResponse(BaseModel):
     id: UUID
     email: str

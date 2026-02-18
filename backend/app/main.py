@@ -1,11 +1,16 @@
 """FastAPI application entry point."""
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.core.middleware import setup_middleware
 from app.core.exceptions import AppException, app_exception_handler
 from app.billing.router import router as billing_router
 from app.teaching.router import router as teaching_router
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Start Tech API",
@@ -16,6 +21,16 @@ app = FastAPI(
 )
 
 app.add_exception_handler(AppException, app_exception_handler)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Return 500 with error detail so we can debug (e.g. missing table)."""
+    logger.exception("Unhandled exception")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+    )
 setup_middleware(app)
 
 app.include_router(billing_router, prefix="/billing/api/v1", tags=["billing"])

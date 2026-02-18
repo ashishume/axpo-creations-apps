@@ -98,19 +98,23 @@ export const invoiceRepositoryApi: InvoiceRepository = {
   },
 
   async getItems(invoiceId: string): Promise<InvoiceItem[]> {
-    const inv = await this.getById(invoiceId);
-    if (!inv) return [];
-    const r = await billingFetchJson<Record<string, unknown>>(`/invoices/${invoiceId}`);
-    const items = (r.items as Record<string, unknown>[]) ?? [];
-    return items.map(mapItemFromApi);
+    try {
+      const r = await billingFetchJson<Record<string, unknown>>(`/invoices/${invoiceId}`);
+      const items = (r.items as Record<string, unknown>[]) ?? [];
+      return items.map(mapItemFromApi);
+    } catch {
+      return [];
+    }
   },
 
+  /** Fetches all invoice items in one go using list endpoint (backend returns items per invoice). */
   async getAllItems(): Promise<InvoiceItem[]> {
-    const invoices = await this.getAll();
+    const list = await billingFetchJson<Record<string, unknown>[]>("/invoices");
+    if (!Array.isArray(list)) return [];
     const all: InvoiceItem[] = [];
-    for (const inv of invoices) {
-      const items = await this.getItems(inv.id);
-      all.push(...items);
+    for (const inv of list) {
+      const items = (inv.items as Record<string, unknown>[]) ?? [];
+      all.push(...items.map(mapItemFromApi));
     }
     return all;
   },

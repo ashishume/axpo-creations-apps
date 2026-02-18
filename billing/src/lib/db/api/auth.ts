@@ -24,8 +24,20 @@ export const authRepositoryApi: AuthRepository = {
   },
 
   async signUp(email: string, password: string, name: string): Promise<User | null> {
-    // Backend may not expose register; could add later. For now fail.
-    return null;
+    const res = await billingFetch("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password, name, role: "user" }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      const msg = (err as { detail?: string }).detail ?? res.statusText;
+      if (msg.toLowerCase().includes("already registered") || res.status === 409) {
+        throw new Error("An account with this email already exists.");
+      }
+      throw new Error(msg);
+    }
+    const data = (await res.json()) as { user: Record<string, unknown> };
+    return mapUser(data.user);
   },
 
   async signOut(): Promise<void> {
