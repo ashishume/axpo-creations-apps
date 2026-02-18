@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = True
     COOKIE_DOMAIN: str | None = None
 
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,https://school.axpocreation.com,https://billing.axpocreation.com"
 
 
 def get_settings() -> Settings:
