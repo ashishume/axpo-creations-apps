@@ -1,9 +1,12 @@
 /**
  * Billing backend API client.
  * Set VITE_BILLING_API_URL (e.g. http://localhost:8000) to use the backend instead of Supabase.
+ * Production builds default to https://server.axpocreation.com when unset.
  */
-
-const BASE = import.meta.env.VITE_BILLING_API_URL ?? "";
+const PRODUCTION_BACKEND = "https://server.axpocreation.com";
+const BASE =
+  import.meta.env.VITE_BILLING_API_URL ??
+  (import.meta.env.PROD ? PRODUCTION_BACKEND : "");
 const BILLING_PREFIX = "/billing/api/v1";
 
 export function getBillingApiUrl(): string {

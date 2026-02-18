@@ -1,9 +1,12 @@
 /**
  * Teaching backend API client.
  * Set VITE_TEACHING_API_URL (e.g. http://localhost:8000) to use the backend instead of Supabase.
+ * Production builds default to https://server.axpocreation.com when unset.
  */
-
-const BASE = import.meta.env.VITE_TEACHING_API_URL ?? '';
+const PRODUCTION_BACKEND = "https://server.axpocreation.com";
+const BASE =
+  import.meta.env.VITE_TEACHING_API_URL ??
+  (import.meta.env.PROD ? PRODUCTION_BACKEND : "");
 const TEACHING_PREFIX = '/teaching/api/v1';
 
 export function getTeachingApiUrl(): string {
