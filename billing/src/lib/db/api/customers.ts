@@ -1,6 +1,6 @@
-import { billingFetchJson } from "@/lib/api/client";
-import type { CustomerRepository } from "../../repository";
-import type { Customer } from "../../types";
+import { billingFetch, billingFetchJson } from "@/lib/api/client";
+import type { CustomerRepository } from "../repository";
+import type { Customer } from "../types";
 
 function mapFromApi(r: Record<string, unknown>): Customer {
   return {

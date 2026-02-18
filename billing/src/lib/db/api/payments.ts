@@ -1,6 +1,6 @@
-import { billingFetch, billingFetchJson } from "@/lib/api/client";
-import type { PaymentRepository } from "../../repository";
-import type { Payment, PaymentAllocation } from "../../types";
+import { billingFetchJson } from "@/lib/api/client";
+import type { PaymentRepository } from "../repository";
+import type { Payment, PaymentAllocation } from "../types";
 
 function mapPaymentFromApi(r: Record<string, unknown>): Payment {
   return {
@@ -94,7 +94,7 @@ export const paymentRepositoryApi: PaymentRepository = {
     const fyEnd = fyStart + 1;
     const start = `${fyStart}-04-01`;
     const end = `${fyEnd}-03-31`;
-    const count = payments.filter((p) => p.date >= start && p.date <= end).length;
+    const count = payments.filter((p: Payment) => p.date >= start && p.date <= end).length;
     return count + 1;
   },
 };

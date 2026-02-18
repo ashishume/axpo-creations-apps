@@ -1,5 +1,6 @@
 import type { Staff, StaffRole } from '../../../types';
 import type { ExtendedSalaryPayment } from '../repositories/staff';
+import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
 function mapStaff(r: Record<string, unknown>): Staff {
@@ -98,5 +99,35 @@ export const staffRepositoryApi = {
 
   async updateSalaryPayment(_staffId: string, _paymentId: string, _updates: Partial<ExtendedSalaryPayment>): Promise<ExtendedSalaryPayment> {
     throw new Error('Salary payments not available via API yet');
+  },
+
+  async getPaginated(
+    page: number = 1,
+    pageSize: number = 10,
+    filters?: { sessionId?: string; role?: string; search?: string }
+  ): Promise<PaginatedResult<Staff>> {
+    let all = await this.getAll();
+    if (filters?.sessionId) all = all.filter((s) => s.sessionId === filters.sessionId);
+    if (filters?.role) all = all.filter((s) => s.role === filters.role);
+    if (filters?.search) {
+      const q = (filters.search ?? '').toLowerCase();
+      all = all.filter((s) => s.name.toLowerCase().includes(q) || s.employeeId.toLowerCase().includes(q));
+    }
+    const total = all.length;
+    const start = (page - 1) * pageSize;
+    const data = all.slice(start, start + pageSize);
+    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  },
+
+  async deleteSalaryPayment(_staffId: string, _paymentId: string): Promise<void> {
+    throw new Error('Salary payments not available via API yet');
+  },
+
+  async getLastPaidDate(_staffId: string): Promise<string | null> {
+    return null;
+  },
+
+  async getSalaryStatus(_staffId: string, _month: string): Promise<ExtendedSalaryPayment | null> {
+    return null;
   },
 };

@@ -1,4 +1,5 @@
 import type { Expense, ExpenseCategory } from '../../../types';
+import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
 function mapExpense(r: Record<string, unknown>): Expense {
@@ -84,5 +85,25 @@ export const expensesRepositoryApi = {
       body: JSON.stringify(body),
     });
     return Array.isArray(list) ? list.map(mapExpense) : [];
+  },
+
+  async getPaginated(
+    page: number = 1,
+    pageSize: number = 10,
+    filters?: { sessionId?: string; category?: string; search?: string; startDate?: string; endDate?: string }
+  ): Promise<PaginatedResult<Expense>> {
+    let all = await this.getAll();
+    if (filters?.sessionId) all = all.filter((e) => e.sessionId === filters.sessionId);
+    if (filters?.category) all = all.filter((e) => e.category === filters.category);
+    if (filters?.startDate) all = all.filter((e) => e.date >= (filters.startDate ?? ''));
+    if (filters?.endDate) all = all.filter((e) => e.date <= (filters.endDate ?? ''));
+    if (filters?.search) {
+      const q = (filters.search ?? '').toLowerCase();
+      all = all.filter((e) => e.description.toLowerCase().includes(q) || e.vendorPayee.toLowerCase().includes(q));
+    }
+    const total = all.length;
+    const start = (page - 1) * pageSize;
+    const data = all.slice(start, start + pageSize);
+    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   },
 };

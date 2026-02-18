@@ -1,4 +1,5 @@
 import type { Student, StudentPersonalDetails } from '../../../types';
+import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
 function mapStudent(r: Record<string, unknown>): Student {
@@ -156,6 +157,28 @@ export const studentsRepositoryApi = {
   },
 
   async addPayment(_studentId: string, _payment: { date: string; amount: number; method: string; receiptNumber: string; feeCategory: string; month?: string }): Promise<{ id: string; date: string; amount: number; method: string; receiptNumber: string; feeCategory: string; month?: string }> {
+    throw new Error('Fee payments not available via API yet');
+  },
+
+  async getPaginated(
+    page: number = 1,
+    pageSize: number = 10,
+    filters?: { sessionId?: string; classId?: string; search?: string }
+  ): Promise<PaginatedResult<Student>> {
+    let all = await this.getAll();
+    if (filters?.sessionId) all = all.filter((s) => s.sessionId === filters.sessionId);
+    if (filters?.classId) all = all.filter((s) => s.classId === filters.classId);
+    if (filters?.search) {
+      const q = (filters.search ?? '').toLowerCase();
+      all = all.filter((s) => s.name.toLowerCase().includes(q) || s.studentId.toLowerCase().includes(q));
+    }
+    const total = all.length;
+    const start = (page - 1) * pageSize;
+    const data = all.slice(start, start + pageSize);
+    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  },
+
+  async deletePayment(_studentId: string, _paymentId: string): Promise<void> {
     throw new Error('Fee payments not available via API yet');
   },
 };

@@ -1,5 +1,5 @@
 import { billingFetch, billingFetchJson } from "@/lib/api/client";
-import type { AuthRepository, User } from "../../repository";
+import type { AuthRepository, User } from "../repository";
 
 function mapUser(r: Record<string, unknown>): User {
   return {

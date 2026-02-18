@@ -1,6 +1,6 @@
 import { billingFetch, billingFetchJson } from "@/lib/api/client";
-import type { ExpenseRepository } from "../../repository";
-import type { Expense } from "../../types";
+import type { ExpenseRepository } from "../repository";
+import type { Expense } from "../types";
 
 function mapFromApi(r: Record<string, unknown>): Expense {
   return {

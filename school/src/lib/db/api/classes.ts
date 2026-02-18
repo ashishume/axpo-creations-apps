@@ -1,4 +1,5 @@
 import type { StudentClass } from '../../../types';
+import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
 function mapClass(r: Record<string, unknown>): StudentClass {
@@ -88,5 +89,13 @@ export const classesRepositoryApi = {
       body: JSON.stringify(body),
     });
     return Array.isArray(list) ? list.map(mapClass) : [];
+  },
+
+  async getPaginated(page: number = 1, pageSize: number = 10, sessionId?: string): Promise<PaginatedResult<StudentClass>> {
+    const all = sessionId ? await this.getBySession(sessionId) : await this.getAll();
+    const total = all.length;
+    const start = (page - 1) * pageSize;
+    const data = all.slice(start, start + pageSize);
+    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   },
 };

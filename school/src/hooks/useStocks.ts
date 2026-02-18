@@ -83,8 +83,9 @@ export function useAddStockTransaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ stockId, transaction }: { stockId: string; transaction: Omit<StockTransaction, 'id'> }) =>
-      stocksRepository.addTransaction(stockId, transaction),
+    mutationFn: async ({ stockId, transaction }: { stockId: string; transaction: Omit<StockTransaction, 'id'> }) => {
+      await stocksRepository.addTransaction(stockId, transaction);
+    },
     onSuccess: (_, { stockId }) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, stockId] });

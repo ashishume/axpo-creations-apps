@@ -35,7 +35,7 @@ export function UsersPage() {
   const displayUsers = useMemo(() => {
     if (!data?.users) return [];
     if (isSuperAdmin) return data.users;
-    return data.users.filter((u) => {
+    return data.users.filter((u: User) => {
       const roleName = roles?.find((r) => r.id === u.roleId)?.name ?? u.role?.name;
       return roleName !== SUPER_ADMIN_ROLE_NAME;
     });
@@ -204,7 +204,7 @@ export function UsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white">
-                {displayUsers.map((user) => (
+                {displayUsers.map((user: User) => (
                   <tr key={user.id} className="hover:bg-slate-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">

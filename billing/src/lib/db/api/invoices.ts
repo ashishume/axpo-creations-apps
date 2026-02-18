@@ -1,6 +1,6 @@
 import { billingFetch, billingFetchJson } from "@/lib/api/client";
-import type { InvoiceRepository } from "../../repository";
-import type { Invoice, InvoiceItem } from "../../types";
+import type { InvoiceRepository } from "../repository";
+import type { Invoice, InvoiceItem } from "../types";
 
 function mapInvoiceFromApi(r: Record<string, unknown>): Invoice {
   return {
@@ -124,7 +124,7 @@ export const invoiceRepositoryApi: InvoiceRepository = {
     const fyEnd = fyStart + 1;
     const start = `${fyStart}-04-01`;
     const end = `${fyEnd}-03-31`;
-    const count = invoices.filter((i) => i.date >= start && i.date <= end).length;
+    const count = invoices.filter((i: Invoice) => i.date >= start && i.date <= end).length;
     return count + 1;
   },
 };

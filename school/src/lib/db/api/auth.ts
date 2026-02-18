@@ -1,7 +1,7 @@
-import type { User, Role, Permission, LoginCredentials, ChangePasswordRequest } from '../../../types/auth';
+import type { User, Permission, LoginCredentials, ChangePasswordRequest, CreateUserRequest, UpdateUserRequest } from '../../../types/auth';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
-function mapUser(r: Record<string, unknown>, permissions: string[]): User {
+function mapUser(r: Record<string, unknown>, _permissions: string[]): User {
   return {
     id: String(r.id),
     username: String(r.username ?? ''),
@@ -45,5 +45,25 @@ export const authRepositoryApi = {
 
   async changePassword(_userId: string, _request: ChangePasswordRequest): Promise<void> {
     throw new Error('Change password is not available when using the API. Use profile or contact admin.');
+  },
+
+  async getUsers(_page: number = 1, _pageSize: number = 10): Promise<{ users: User[]; total: number }> {
+    throw new Error('User management is not available when using the backend API.');
+  },
+
+  async createUser(_request: CreateUserRequest): Promise<User> {
+    throw new Error('User management is not available when using the backend API.');
+  },
+
+  async updateUser(_userId: string, _request: UpdateUserRequest): Promise<User> {
+    throw new Error('User management is not available when using the backend API.');
+  },
+
+  async deleteUser(_userId: string): Promise<void> {
+    throw new Error('User management is not available when using the backend API.');
+  },
+
+  async resetPassword(_userId: string, _newPassword: string): Promise<void> {
+    throw new Error('User management is not available when using the backend API.');
   },
 };

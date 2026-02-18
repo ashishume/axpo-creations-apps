@@ -2,7 +2,7 @@ import type {
   SubscriptionRepository,
   SubscriptionPlan,
   UserSubscription,
-} from "../../repository";
+} from "../repository";
 
 const DEFAULT_PLANS: SubscriptionPlan[] = [
   {

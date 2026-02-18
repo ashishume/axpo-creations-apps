@@ -1,4 +1,5 @@
 import type { Stock, StockTransaction } from '../../../types';
+import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
 function mapStock(r: Record<string, unknown>): Stock {
@@ -71,7 +72,29 @@ export const stocksRepositoryApi = {
     await teachingFetch(`/stocks/${id}`, { method: 'DELETE' });
   },
 
-  async addTransaction(_stockId: string, _transaction: Omit<StockTransaction, 'id'>): Promise<void> {
+  async addTransaction(_stockId: string, _transaction: Omit<StockTransaction, 'id'>): Promise<StockTransaction> {
+    throw new Error('Stock transactions not available via API yet');
+  },
+
+  async getPaginated(
+    page: number = 1,
+    pageSize: number = 10,
+    filters?: { sessionId?: string; status?: string; search?: string }
+  ): Promise<PaginatedResult<Stock>> {
+    let all = await this.getAll();
+    if (filters?.sessionId) all = all.filter((s) => s.sessionId === filters.sessionId);
+    if (filters?.status) all = all.filter((s) => s.status === filters.status);
+    if (filters?.search) {
+      const q = (filters.search ?? '').toLowerCase();
+      all = all.filter((s) => s.publisherName.toLowerCase().includes(q) || (s.description ?? '').toLowerCase().includes(q));
+    }
+    const total = all.length;
+    const start = (page - 1) * pageSize;
+    const data = all.slice(start, start + pageSize);
+    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  },
+
+  async deleteTransaction(_stockId: string, _transactionId: string): Promise<void> {
     throw new Error('Stock transactions not available via API yet');
   },
 
