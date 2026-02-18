@@ -1,0 +1,184 @@
+@import "tailwindcss";
+
+/* Theme variables (slate + indigo) – used by forms, tables, modals */
+:root {
+  --bg-page: #f1f5f9;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border: #cbd5e1;
+  --border-strong: #94a3b8;
+  --link: #4f46e5;
+  --link-hover: #4338ca;
+  --btn-primary-bg: #4f46e5;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #4338ca;
+  --btn-danger: #dc2626;
+  --btn-danger-hover: #b91c1c;
+  --table-header-bg: #e2e8f0;
+  --table-row-alt: #f1f5f9;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --success: #16a34a;
+  --warning-bg: #fef3c7;
+  --warning-text: #92400e;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-primary);
+  background: var(--bg-page);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Buttons – touch-friendly min height */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 cursor-pointer px-4 py-2 min-h-[44px] touch-manipulation;
+}
+
+.btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  @apply border border-transparent hover:shadow-md;
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-hover);
+}
+
+.btn-secondary {
+  @apply border;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--table-row-alt);
+}
+
+.btn-danger {
+  background: var(--btn-danger);
+  @apply text-white border border-transparent;
+}
+
+.btn-danger:hover {
+  background: var(--btn-danger-hover);
+}
+
+/* Inputs */
+.input {
+  @apply w-full px-3 py-2 rounded-lg border transition-all duration-200;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--input-border);
+}
+
+.input:focus {
+  @apply outline-none ring-2 ring-indigo-500;
+  border-color: var(--link);
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Card */
+.card {
+  @apply rounded-lg shadow-sm p-6;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+/* Table – horizontal scroll on mobile/tablet, -webkit-overflow-scrolling for smooth scroll on iOS */
+.table-container {
+  @apply w-full overflow-x-auto rounded-lg;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+.table {
+  @apply w-full border-collapse;
+}
+
+.table th {
+  @apply px-4 py-3 text-left text-sm font-semibold;
+  background: var(--table-header-bg);
+  color: var(--text-primary);
+}
+
+.table td {
+  @apply px-4 py-3 text-sm;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody tr:hover {
+  background: var(--table-row-alt);
+}
+
+/* Modal */
+.modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  @apply rounded-lg shadow-xl w-full mx-4 max-h-[90vh] overflow-auto;
+  background: var(--bg-card);
+}
+
+/* Skeleton */
+.skeleton {
+  @apply animate-pulse rounded;
+  background: var(--table-row-alt);
+}
+
+/* Spinner */
+.spinner {
+  @apply w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin;
+}
+
+/* Toast */
+.toast {
+  @apply fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3;
+}
+
+.toast-success {
+  @apply bg-green-600 text-white;
+}
+
+.toast-error {
+  @apply bg-red-600 text-white;
+}
+
+.toast-info {
+  background: var(--btn-primary-bg);
+  @apply text-white;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
