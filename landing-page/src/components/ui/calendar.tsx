@@ -36,7 +36,7 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) =>
+        formatMonthDropdown: (date: Date) =>
           date.toLocaleString("default", { month: "short" }),
         ...formatters,
       }}
@@ -125,20 +125,22 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Root: ({ className, rootRef, ...props }) => {
+        Root: (props) => {
+          const { className, rootRef, ...rest } = props as React.HTMLAttributes<HTMLDivElement> & { rootRef?: React.Ref<HTMLDivElement> }
           return (
             <div
               data-slot="calendar"
               ref={rootRef as React.Ref<HTMLDivElement>}
               className={cn(className)}
-              {...props}
+              {...rest}
             />
           )
         },
-        Chevron: ({ className, orientation, ...props }) => {
+        Chevron: (props) => {
+          const { className, orientation, ...rest } = props as React.SVGAttributes<SVGElement> & { orientation?: string }
           if (orientation === "left") {
             return (
-              <ChevronLeftIcon className={cn("size-4", className)} {...props} />
+              <ChevronLeftIcon className={cn("size-4", className)} {...rest} />
             )
           }
 
@@ -146,19 +148,20 @@ function Calendar({
             return (
               <ChevronRightIcon
                 className={cn("size-4", className)}
-                {...props}
+                {...rest}
               />
             )
           }
 
           return (
-            <ChevronDownIcon className={cn("size-4", className)} {...props} />
+            <ChevronDownIcon className={cn("size-4", className)} {...rest} />
           )
         },
         DayButton: CalendarDayButton,
-        WeekNumber: ({ children, ...props }) => {
+        WeekNumber: (props) => {
+          const { children, ...rest } = props as React.TdHTMLAttributes<HTMLTableCellElement> & { week?: unknown }
           return (
-            <td {...props}>
+            <td {...rest}>
               <div className="flex size-[--cell-size] items-center justify-center text-center">
                 {children}
               </div>
