@@ -1,0 +1,135 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { staffRepository, type ExtendedSalaryPayment } from '../lib/db/repositories';
+import type { Staff } from '../types';
+
+const QUERY_KEY = 'staff';
+
+export function useStaff() {
+  return useQuery({
+    queryKey: [QUERY_KEY],
+    queryFn: () => staffRepository.getAll(),
+  });
+}
+
+export function useStaffBySession(sessionId: string) {
+  return useQuery({
+    queryKey: [QUERY_KEY, 'bySession', sessionId],
+    queryFn: () => staffRepository.getBySession(sessionId),
+    enabled: !!sessionId,
+  });
+}
+
+interface StaffFilters {
+  sessionId?: string;
+  role?: string;
+  search?: string;
+}
+
+export function useStaffPaginated(
+  page: number = 1, 
+  pageSize: number = 10, 
+  filters?: StaffFilters
+) {
+  return useQuery({
+    queryKey: [QUERY_KEY, 'paginated', page, pageSize, filters],
+    queryFn: () => staffRepository.getPaginated(page, pageSize, filters),
+  });
+}
+
+export function useStaffMember(id: string) {
+  return useQuery({
+    queryKey: [QUERY_KEY, id],
+    queryFn: () => staffRepository.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateStaff() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (staffMember: Omit<Staff, 'id' | 'salaryPayments'>) => staffRepository.create(staffMember),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function useUpdateStaff() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Omit<Staff, 'id' | 'salaryPayments'>> }) =>
+      staffRepository.update(id, updates),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, id] });
+    },
+  });
+}
+
+export function useDeleteStaff() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => staffRepository.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function useAddSalaryPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ staffId, payment }: { staffId: string; payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'> }) =>
+      staffRepository.addSalaryPayment(staffId, payment),
+    onSuccess: (_, { staffId }) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, staffId] });
+    },
+  });
+}
+
+export function useUpdateSalaryPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ staffId, paymentId, updates }: { staffId: string; paymentId: string; updates: Partial<ExtendedSalaryPayment> }) =>
+      staffRepository.updateSalaryPayment(staffId, paymentId, updates),
+    onSuccess: (_, { staffId }) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, staffId] });
+    },
+  });
+}
+
+export function useDeleteSalaryPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ staffId, paymentId }: { staffId: string; paymentId: string }) =>
+      staffRepository.deleteSalaryPayment(staffId, paymentId),
+    onSuccess: (_, { staffId }) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, staffId] });
+    },
+  });
+}
+
+export function useStaffLastPaidDate(staffId: string) {
+  return useQuery({
+    queryKey: [QUERY_KEY, staffId, 'lastPaid'],
+    queryFn: () => staffRepository.getLastPaidDate(staffId),
+    enabled: !!staffId,
+  });
+}
+
+export function useStaffSalaryStatus(staffId: string, month: string) {
+  return useQuery({
+    queryKey: [QUERY_KEY, staffId, 'salary', month],
+    queryFn: () => staffRepository.getSalaryStatus(staffId, month),
+    enabled: !!staffId && !!month,
+  });
+}

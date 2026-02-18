@@ -1,0 +1,241 @@
+import { useMemo } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useStudent } from '../../hooks/useStudents';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { formatCurrency } from '../../lib/utils';
+import { 
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
+
+export function StudentFeesPage() {
+  const { user } = useAuth();
+  const { data: student, isLoading, error } = useStudent(user?.studentId || '');
+
+  // Generate last 12 months
+  const months = useMemo(() => {
+    const result: string[] = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      result.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+    }
+    return result;
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (error || !student) {
+    return (
+      <div className="rounded-lg bg-red-50 p-6 text-center text-red-600">
+        <AlertCircle className="mx-auto mb-2 h-8 w-8" />
+        <p>Unable to load your fee information.</p>
+      </div>
+    );
+  }
+
+  // Group payments by month
+  const paymentsByMonth = new Map<string, typeof student.payments>();
+  student.payments.forEach(p => {
+    const month = p.month || p.date.slice(0, 7);
+    if (!paymentsByMonth.has(month)) {
+      paymentsByMonth.set(month, []);
+    }
+    paymentsByMonth.get(month)!.push(p);
+  });
+
+  // One-time fees status
+  const oneTimeFees = [
+    { 
+      name: 'Registration Fees', 
+      amount: student.registrationFees || 0, 
+      paid: student.registrationPaid,
+      category: 'registration'
+    },
+    { 
+      name: 'Admission Fees', 
+      amount: student.admissionFees || 0, 
+      paid: student.admissionPaid,
+      category: 'admission'
+    },
+    { 
+      name: 'Annual Fund', 
+      amount: student.annualFund || 0, 
+      paid: student.annualFundPaid,
+      category: 'annualFund'
+    },
+  ];
+
+  const monthlyFee = student.monthlyFees || 0;
+  const transportFee = student.transportFees || 0;
+  const totalMonthly = monthlyFee + transportFee;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Fee Details</h1>
+        <p className="text-slate-600">View your complete fee structure and payment status</p>
+      </div>
+
+      {/* One-time Fees */}
+      <Card>
+        <CardHeader>
+          <CardTitle>One-time Fees</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-slate-600">
+                  <th className="pb-2 pr-4 font-medium">Fee Type</th>
+                  <th className="pb-2 pr-4 font-medium text-right">Amount</th>
+                  <th className="pb-2 font-medium text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {oneTimeFees.map((fee) => (
+                  <tr key={fee.category} className="border-b border-slate-100">
+                    <td className="py-3 pr-4 font-medium text-slate-900">{fee.name}</td>
+                    <td className="py-3 pr-4 text-right">{formatCurrency(fee.amount)}</td>
+                    <td className="py-3 text-center">
+                      {fee.paid ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                          <CheckCircle className="h-3 w-3" />
+                          Paid
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                          <Clock className="h-3 w-3" />
+                          Pending
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-slate-50">
+                  <td className="py-3 pr-4 font-semibold text-slate-900">Total</td>
+                  <td className="py-3 pr-4 text-right font-semibold">
+                    {formatCurrency(oneTimeFees.reduce((sum, f) => sum + f.amount, 0))}
+                  </td>
+                  <td className="py-3 text-center">
+                    <span className="text-xs text-slate-500">
+                      {oneTimeFees.filter(f => f.paid).length}/{oneTimeFees.length} paid
+                    </span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Monthly Fees */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Fees</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4 rounded-lg bg-slate-50 p-4">
+            <div className="flex flex-wrap gap-4">
+              <div>
+                <p className="text-sm text-slate-500">Tuition Fee</p>
+                <p className="text-lg font-semibold text-slate-900">{formatCurrency(monthlyFee)}</p>
+              </div>
+              {transportFee > 0 && (
+                <div>
+                  <p className="text-sm text-slate-500">Transport Fee</p>
+                  <p className="text-lg font-semibold text-slate-900">{formatCurrency(transportFee)}</p>
+                </div>
+              )}
+              <div className="border-l border-slate-200 pl-4">
+                <p className="text-sm text-slate-500">Total Monthly</p>
+                <p className="text-lg font-semibold text-indigo-600">{formatCurrency(totalMonthly)}</p>
+              </div>
+              <div className="border-l border-slate-200 pl-4">
+                <p className="text-sm text-slate-500">Due Date</p>
+                <p className="text-lg font-semibold text-slate-900">{student.dueDayOfMonth || 10}th of each month</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-slate-600">
+                  <th className="pb-2 pr-4 font-medium">Month</th>
+                  <th className="pb-2 pr-4 font-medium text-right">Due</th>
+                  <th className="pb-2 pr-4 font-medium text-right">Paid</th>
+                  <th className="pb-2 font-medium text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {months.map((month) => {
+                  const monthPayments = student.payments.filter(
+                    p => (p.month === month || p.date.startsWith(month)) && 
+                         (p.feeCategory === 'monthly' || p.feeCategory === 'transport')
+                  );
+                  const paidAmount = monthPayments.reduce((sum, p) => sum + p.amount, 0);
+                  const isPaid = paidAmount >= totalMonthly;
+                  const isPartial = paidAmount > 0 && paidAmount < totalMonthly;
+
+                  return (
+                    <tr key={month} className="border-b border-slate-100">
+                      <td className="py-3 pr-4 font-medium text-slate-900">{month}</td>
+                      <td className="py-3 pr-4 text-right">{formatCurrency(totalMonthly)}</td>
+                      <td className="py-3 pr-4 text-right">{formatCurrency(paidAmount)}</td>
+                      <td className="py-3 text-center">
+                        {isPaid ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                            <CheckCircle className="h-3 w-3" />
+                            Paid
+                          </span>
+                        ) : isPartial ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                            <AlertCircle className="h-3 w-3" />
+                            Partial
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                            <Clock className="h-3 w-3" />
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Late Fee Info */}
+      {student.lateFeeAmount && student.lateFeeAmount > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Late Fee Policy</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg bg-amber-50 p-4">
+              <p className="text-sm text-amber-800">
+                <strong>Late Fee:</strong> {formatCurrency(student.lateFeeAmount)} applied{' '}
+                {student.lateFeeFrequency === 'daily' ? 'per day' : 'per week'} after the due date.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

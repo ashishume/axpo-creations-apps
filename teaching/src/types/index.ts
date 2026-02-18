@@ -1,0 +1,234 @@
+// Subscription plan IDs: Starter (base), AI Assistant (premium with Axpo Assistant)
+export type PlanId = "starter" | "ai_assistant";
+
+export interface SubscriptionPlanInfo {
+  id: PlanId;
+  name: string;
+  price: number;
+  features: string[];
+}
+
+// Organization (tenant boundary; one org has many schools, pay per school)
+export interface Organization {
+  id: string;
+  name: string;
+  slug?: string;
+  billingEmail?: string;
+}
+
+// School & Session
+export interface School {
+  id: string;
+  /** Organization this school belongs to (tenant isolation). */
+  organizationId?: string;
+  name: string;
+  address: string;
+  contact: string;
+  /** When true, app is locked for all users of this school except Super Admin */
+  isLocked?: boolean;
+  /** Subscription plan for this school. Default 'starter'. */
+  planId?: PlanId;
+}
+
+export interface Session {
+  id: string;
+  schoolId: string;
+  year: string; // e.g. "2023-2024"
+  startDate: string; // ISO
+  endDate: string;
+  /** Day of month (1-28) when salary is due for this session. Used for late payment calculation. */
+  salaryDueDay?: number;
+}
+
+// Student class: fixed fees and late fees per class
+export interface StudentClass {
+  id: string;
+  sessionId: string;
+  name: string; // e.g. "Class 1", "Nursery"
+  // One-time fees per session
+  registrationFees: number;
+  admissionFees: number;
+  annualFund: number;
+  // Monthly tuition fee
+  monthlyFees: number;
+  // Late fee configuration
+  lateFeeAmount: number; // Amount to add as fine
+  lateFeeFrequency: "daily" | "weekly"; // How often late fee is applied after due date
+  dueDayOfMonth: number; // 1-28, day of month when monthly fee is due
+}
+
+// Fee types
+export type FeeType =
+  | "Regular"
+  | "Boarding"
+  | "Day Scholar + Meals"
+  | "Boarding + Meals";
+
+export type PaymentMethod = "Cash" | "Cheque" | "Online" | "Bank Transfer";
+
+export interface Payment {
+  id: string;
+  date: string;
+  amount: number;
+  method: PaymentMethod;
+  receiptNumber: string;
+}
+
+// Student personal details
+export interface StudentPersonalDetails {
+  fatherName?: string;
+  motherName?: string;
+  guardianPhone?: string;
+  currentAddress?: string;
+  permanentAddress?: string;
+  bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "";
+  healthIssues?: string; // Optional health-related notes
+}
+
+// Fee payment tracking for different fee types
+export interface FeePayment {
+  id: string;
+  date: string;
+  amount: number;
+  method: PaymentMethod;
+  receiptNumber: string;
+  feeCategory: "registration" | "admission" | "annualFund" | "monthly" | "transport" | "other";
+  month?: string; // For monthly fees, e.g. "2024-04"
+  receiptPhotoUrl?: string; // Photo of receipt (max 2MB)
+}
+
+// Student - with all fee types and personal details
+export interface Student {
+  id: string;
+  sessionId: string;
+  classId?: string; // Link to StudentClass
+  
+  // Basic info
+  name: string;
+  studentId: string; // display ID
+  feeType: FeeType;
+  
+  // Personal details
+  personalDetails?: StudentPersonalDetails;
+  
+  // Fee structure (per student, can override class defaults)
+  registrationFees?: number; // One-time per session
+  admissionFees?: number; // One-time per session
+  annualFund?: number; // One-time per session
+  monthlyFees?: number; // Monthly tuition (overrides class if set)
+  transportFees?: number; // Optional, per month (varies by distance)
+  
+  // Fee payment status flags
+  registrationPaid?: boolean;
+  admissionPaid?: boolean;
+  annualFundPaid?: boolean;
+  
+  // Due date config (can override class)
+  dueDayOfMonth?: number; // 1-28
+  lateFeeAmount?: number;
+  lateFeeFrequency?: "daily" | "weekly";
+  
+  // All payments
+  payments: FeePayment[];
+  
+  // Profile photo
+  photoUrl?: string;
+  
+  // Sibling concession - link to sibling student for 30% monthly fee discount
+  siblingId?: string;
+  
+  // Legacy fields for backward compatibility
+  targetAmount?: number;
+  finePerDay?: number;
+  dueFrequency?: "monthly" | "quarterly";
+}
+
+// Staff
+export type StaffRole =
+  | "Teacher"
+  | "Administrative"
+  | "Bus Driver"
+  | "Support Staff";
+
+export interface SalaryPayment {
+  id: string;
+  month: string; // YYYY-MM
+  amount: number;
+  status: "Paid" | "Pending" | "Partially Paid";
+  paymentDate?: string;
+  method?: PaymentMethod;
+  /** Due date (YYYY-MM-DD) for this month; used for late payment calculation. Set from session salaryDueDay. */
+  dueDate?: string;
+}
+
+export interface Staff {
+  id: string;
+  sessionId: string;
+  name: string;
+  employeeId: string;
+  role: StaffRole;
+  monthlySalary: number;
+  subjectOrGrade?: string; // for teachers
+  salaryPayments: SalaryPayment[];
+}
+
+// Expenses
+export type ExpenseCategory =
+  | "Transportation"
+  | "Events"
+  | "Utilities"
+  | "Supplies"
+  | "Infrastructure"
+  | "Miscellaneous"
+  | "Stock Purchase"
+  | "Salary"
+  | "Fixed Cost";
+
+export interface Expense {
+  id: string;
+  sessionId: string;
+  date: string;
+  amount: number;
+  category: ExpenseCategory;
+  description: string;
+  vendorPayee: string;
+  paymentMethod: PaymentMethod;
+  tags?: string[];
+}
+
+// Stock Management - for books/supplies bought on credit from publishers
+export type StockTransactionType = "purchase" | "sale" | "return";
+
+export interface StockTransaction {
+  id: string;
+  date: string;
+  type: StockTransactionType;
+  amount: number; // Value in Rs
+  quantity?: number; // Optional, for item count
+  description: string;
+  receiptNumber?: string;
+}
+
+export interface Stock {
+  id: string;
+  sessionId: string;
+  publisherName: string;
+  description: string; // e.g. "Books for 2024-25 session"
+  purchaseDate: string;
+  totalCreditAmount: number; // Total amount bought on credit
+  transactions: StockTransaction[]; // Sales, returns
+  status: "open" | "cleared"; // Open = ongoing, Cleared = fully settled
+  settledDate?: string; // When the stock was fully cleared
+  settledAmount?: number; // Final amount paid (after returns)
+  notes?: string;
+}
+
+// Fixed Monthly Costs (e.g., rent)
+export interface FixedMonthlyCost {
+  id: string;
+  sessionId: string;
+  name: string; // e.g. "Rent", "Internet"
+  amount: number;
+  category: ExpenseCategory;
+  isActive: boolean;
+}
