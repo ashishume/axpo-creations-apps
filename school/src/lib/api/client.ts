@@ -14,16 +14,28 @@ export function isTeachingApiConfigured(): boolean {
   return Boolean(BASE && BASE.trim());
 }
 
+/** Fetch with credentials so HTTP-only cookies are sent. On 401, tries refresh once and retries. */
 export async function teachingFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const url = `${getTeachingApiUrl()}${path.startsWith('/') ? path : `/${path}`}`;
-  return fetch(url, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
+  const doFetch = () =>
+    fetch(url, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+  let res = await doFetch();
+  if (res.status === 401 && !path.includes('/auth/refresh')) {
+    const refreshRes = await fetch(`${getTeachingApiUrl()}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (refreshRes.ok) res = await doFetch();
+  }
+  return res;
 }
 
 export async function teachingFetchJson<T>(path: string, options: RequestInit = {}): Promise<T> {

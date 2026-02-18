@@ -1,8 +1,7 @@
 """Auth routes - login, logout, refresh, me."""
 from fastapi import APIRouter, Depends, Response
 
-from app.config import get_settings
-from app.core.security import set_auth_cookies, clear_auth_cookies, create_access_token
+from app.core.security import set_auth_cookies, set_access_cookie, clear_auth_cookies, create_access_token
 from app.billing.dependencies import (
     get_billing_db_session,
     get_current_billing_user,
@@ -52,16 +51,7 @@ async def refresh(
     if not payload:
         return RefreshResponse(message="Invalid or expired refresh token")
     new_access = create_access_token({"sub": payload["sub"]}, domain="billing")
-    settings = get_settings()
-    response.set_cookie(
-        key="access_token",
-        value=new_access,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        httponly=True,
-        secure=settings.COOKIE_SECURE,
-        samesite="lax",
-        path="/",
-    )
+    set_access_cookie(response, new_access)
     return RefreshResponse(message="Token refreshed")
 
 

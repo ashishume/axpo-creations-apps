@@ -95,7 +95,27 @@ def set_auth_cookies(
     )
 
 
+def set_access_cookie(response: Response, access_token: str) -> None:
+    """Set only the access token cookie (e.g. after refresh). Same options as set_auth_cookies."""
+    settings = get_settings()
+    max_age = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    response.set_cookie(
+        key=ACCESS_TOKEN_COOKIE,
+        value=access_token,
+        max_age=max_age,
+        httponly=True,
+        secure=settings.COOKIE_SECURE,
+        samesite="lax",
+        path="/",
+        domain=settings.COOKIE_DOMAIN or None,
+    )
+
+
 def clear_auth_cookies(response: Response) -> None:
-    """Clear auth cookies (logout)."""
-    response.delete_cookie(ACCESS_TOKEN_COOKIE, path="/")
-    response.delete_cookie(REFRESH_TOKEN_COOKIE, path="/")
+    """Clear auth cookies (logout). Uses same path/domain as set_cookie for reliable deletion."""
+    settings = get_settings()
+    kwargs = {"path": "/"}
+    if settings.COOKIE_DOMAIN:
+        kwargs["domain"] = settings.COOKIE_DOMAIN
+    response.delete_cookie(ACCESS_TOKEN_COOKIE, **kwargs)
+    response.delete_cookie(REFRESH_TOKEN_COOKIE, **kwargs)

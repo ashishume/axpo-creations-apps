@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    # Session duration: refresh token (and HTTP-only cookie) expire after this many days.
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     COOKIE_SECURE: bool = True
