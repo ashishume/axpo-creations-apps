@@ -2,35 +2,39 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, School, Receipt } from "lucide-react";
+import { Check, ArrowRight, School, Receipt, Sparkles } from "lucide-react";
 
 const products = [
   {
     id: "billing",
-    title: "AxpoBill Pro",
-    description: "Advanced billing and inventory management software designed for modern retail and wholesale businesses.",
+    title: "Axpo Biller",
+    description: "GST-compliant billing and inventory software for manufacturers and wholesalers. AI-powered insights, smart stock alerts, and automated reports so you focus on growth.",
     icon: Receipt,
     features: [
-      "GST Compliant Invoicing",
-      "Real-time Inventory Tracking",
-      "Multi-store Management",
-      "Detailed Financial Reports"
+      "GST-compliant invoicing (CGST/SGST/IGST)",
+      "Products, customers & payments in one place",
+      "Stock tracking with AI-driven low-stock alerts",
+      "Smart reports: sales, outstanding, ledger & profit"
     ],
-    comparison: "Similar to Tally, but simpler."
+    comparison: "AI-first • Simpler than Tally",
+    aiBadge: true,
+    learnMoreUrl: "https://billing.axpocreation.com/",
   },
   {
     id: "school",
-    title: "EduManage 360",
-    description: "Complete school management ecosystem trusted by Rishaan International Boarding School and others.",
+    title: "Axpo EduFinance",
+    description: "Complete school finance hub: fees, staff salaries, expenses, and dashboards. AI-enhanced analytics and year-end reports so institutions run with clarity and control.",
     icon: School,
     features: [
-      "Student Information System",
-      "Fee & Finance Management",
-      "Attendance & Timetabling",
-      "Parent Communication App"
+      "Schools, sessions & student fee tracking",
+      "Staff & salary management by month",
+      "Expense categories & payment history",
+      "AI-powered dashboards & year-end reports"
     ],
-    comparison: "Used by 3+ Top Schools"
-  }
+    comparison: "AI-powered • Trusted by schools",
+    aiBadge: true,
+    learnMoreUrl: "https://school.axpocreation.com/",
+  },
 ];
 
 export function Features() {
@@ -38,9 +42,12 @@ export function Features() {
     <section className="py-24 bg-slate-50 dark:bg-slate-900/50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
+          <Badge variant="outline" className="mb-4 gap-1.5 border-primary/30 text-primary">
+            <Sparkles className="w-3.5 h-3.5" /> AI-powered solutions
+          </Badge>
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Our Core Products</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            We build specialized software tailored to specific industry needs, focusing on reliability and ease of use.
+            Industry-specific software with AI at the core—smarter reports, intelligent alerts, and automation that scales with you.
           </p>
         </div>
 
@@ -58,7 +65,14 @@ export function Features() {
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 text-primary">
                     <product.icon className="w-6 h-6" />
                   </div>
-                  <Badge variant="secondary" className="w-fit mb-2">{product.comparison}</Badge>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {product.aiBadge && (
+                      <Badge variant="default" className="w-fit gap-1 bg-primary/90">
+                        <Sparkles className="w-3 h-3" /> AI
+                      </Badge>
+                    )}
+                    <Badge variant="secondary" className="w-fit">{product.comparison}</Badge>
+                  </div>
                   <CardTitle className="text-2xl font-bold">{product.title}</CardTitle>
                   <CardDescription className="text-base">{product.description}</CardDescription>
                 </CardHeader>
@@ -73,8 +87,10 @@ export function Features() {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full group">
-                    Learn More <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <Button asChild className="w-full group">
+                    <a href={product.learnMoreUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center">
+                      Learn More <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </a>
                   </Button>
                 </CardFooter>
               </Card>

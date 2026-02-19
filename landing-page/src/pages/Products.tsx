@@ -10,7 +10,7 @@ export default function Products() {
         <div className="container mx-auto px-4 mb-12">
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-center mb-6">Our Solutions</h1>
           <p className="text-lg text-muted-foreground text-center max-w-2xl mx-auto">
-            Discover our suite of specialized software designed to streamline your operations and boost productivity.
+            AI-powered billing and school finance tools—axpo Biller and axpo EduFinance—built to streamline operations and drive smarter decisions.
           </p>
         </div>
         <Features />

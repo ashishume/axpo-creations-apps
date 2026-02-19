@@ -12,7 +12,7 @@ export function Footer() {
               Axpo<span className="text-slate-100">Creation</span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Empowering businesses and educational institutions with cutting-edge software solutions.
+              AI-powered software for billing, inventory, and school finance—built for reliability and growth.
             </p>
             <div className="flex gap-4 pt-2">
               <a href="#" className="hover:text-primary transition-colors"><Linkedin className="w-5 h-5" /></a>
@@ -24,8 +24,8 @@ export function Footer() {
           <div>
             <h3 className="font-bold text-white mb-4">Products</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">AxpoBill Pro</Link></li>
-              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">EduManage 360</Link></li>
+              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">axpo Biller</Link></li>
+              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">axpo EduFinance</Link></li>
               <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">Custom Solutions</Link></li>
             </ul>
           </div>

@@ -28,13 +28,13 @@ export function Hero() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6 border border-primary/20">
-              Innovating Future Tech
+              AI-Powered • Built for Growth
             </span>
             <h1 className="text-4xl md:text-6xl font-heading font-bold tracking-tight text-foreground mb-6 leading-tight">
-              Software Solutions for <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">Modern Growth</span>
+              Smarter Software for <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">Billing & Education</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              From robust billing systems to comprehensive school management, AxpoCreation builds the tools you need to succeed in a digital world.
+              From AI-enhanced billing and inventory (axpo Biller) to intelligent school finance (axpo EduFinance), we build the tools that scale with you.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -56,11 +56,11 @@ export function Hero() {
           >
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span>Enterprise Ready</span>
+              <span>AI-Powered Insights</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span>24/7 Support</span>
+              <span>Enterprise Ready</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-primary" />
