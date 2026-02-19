@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png"; // Assuming we generated this
+import { APPS } from "@/lib/constants";
 
 export function Hero() {
   return (
@@ -34,7 +35,7 @@ export function Hero() {
               Smarter Software for <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">Billing & Education</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              From AI-enhanced billing and inventory (axpo Biller) to intelligent school finance (axpo EduFinance), we build the tools that scale with you.
+              From AI-enhanced billing and inventory ({APPS.biller.name}) to intelligent school finance ({APPS.eduFinance.name}), we build the tools that scale with you.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

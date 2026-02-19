@@ -7,7 +7,7 @@ const founders = [
     role: "Founder",
     bio: "Visionary leader with a passion for transforming traditional workflows through technology.",
     initials: "AD",
-    image: "/assets/founder_1.jpg"
+    image: "/assets/founder_1.png"
   },
   {
     name: "Soumojit Kar",

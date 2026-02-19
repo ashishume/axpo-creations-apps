@@ -76,8 +76,7 @@ export default function Contact() {
                     <div>
                       <h3 className="font-semibold mb-1">Visit Us</h3>
                       <p className="text-sm text-muted-foreground">
-                        123 Tech Park, Innovation Street,<br />
-                        Digital City, 560100
+                        Bengaluru, Karnataka
                       </p>
                     </div>
                   </div>

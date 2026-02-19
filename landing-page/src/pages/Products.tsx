@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Features } from "@/components/sections/Features";
+import { APPS } from "@/lib/constants";
 
 export default function Products() {
   return (
@@ -10,7 +11,7 @@ export default function Products() {
         <div className="container mx-auto px-4 mb-12">
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-center mb-6">Our Solutions</h1>
           <p className="text-lg text-muted-foreground text-center max-w-2xl mx-auto">
-            AI-powered billing and school finance tools—axpo Biller and axpo EduFinance—built to streamline operations and drive smarter decisions.
+            AI-powered billing and school finance tools—{APPS.biller.name} and {APPS.eduFinance.name}—built to streamline operations and drive smarter decisions.
           </p>
         </div>
         <Features />

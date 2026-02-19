@@ -1,5 +1,6 @@
 import { Rocket, Mail, MapPin, Phone, Linkedin, Twitter, Facebook } from "lucide-react";
 import { Link } from "wouter";
+import { APPS } from "@/lib/constants";
 
 export function Footer() {
   return (
@@ -24,8 +25,8 @@ export function Footer() {
           <div>
             <h3 className="font-bold text-white mb-4">Products</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">axpo Biller</Link></li>
-              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">axpo EduFinance</Link></li>
+              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">{APPS.biller.name}</Link></li>
+              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">{APPS.eduFinance.name}</Link></li>
               <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">Custom Solutions</Link></li>
             </ul>
           </div>
@@ -45,7 +46,7 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary shrink-0" />
-                <span>123 Tech Park, Innovation Street, Digital City, 560100</span>
+                <span>Bengaluru, Karnataka</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary shrink-0" />

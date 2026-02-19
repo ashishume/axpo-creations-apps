@@ -3,11 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, School, Receipt, Sparkles } from "lucide-react";
+import { APPS } from "@/lib/constants";
 
 const products = [
   {
     id: "billing",
-    title: "Axpo Biller",
+    title: APPS.biller.name,
     description: "GST-compliant billing and inventory software for manufacturers and wholesalers. AI-powered insights, smart stock alerts, and automated reports so you focus on growth.",
     icon: Receipt,
     features: [
@@ -18,11 +19,11 @@ const products = [
     ],
     comparison: "AI-first • Simpler than Tally",
     aiBadge: true,
-    learnMoreUrl: "https://billing.axpocreation.com/",
+    learnMoreUrl: APPS.biller.url,
   },
   {
     id: "school",
-    title: "Axpo EduFinance",
+    title: APPS.eduFinance.name,
     description: "Complete school finance hub: fees, staff salaries, expenses, and dashboards. AI-enhanced analytics and year-end reports so institutions run with clarity and control.",
     icon: School,
     features: [
@@ -33,7 +34,7 @@ const products = [
     ],
     comparison: "AI-powered • Trusted by schools",
     aiBadge: true,
-    learnMoreUrl: "https://school.axpocreation.com/",
+    learnMoreUrl: APPS.eduFinance.url,
   },
 ];
 
