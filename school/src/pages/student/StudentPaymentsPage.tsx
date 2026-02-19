@@ -5,14 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button';
 import { Pagination, usePagination } from '../../components/ui/Pagination';
 import { formatCurrency } from '../../lib/utils';
-import { 
-  Download,
-  Receipt,
-  CreditCard,
-  AlertCircle,
-  Loader2,
-  Filter
-} from 'lucide-react';
+import { Skeleton, SkeletonStats, SkeletonTable } from '../../components/ui/Skeleton';
+import { Download, Receipt, CreditCard, AlertCircle, Filter } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, string> = {
   registration: 'Registration',
@@ -68,8 +62,13 @@ export function StudentPaymentsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <SkeletonStats count={4} />
+        <SkeletonTable rows={8} columns={7} />
       </div>
     );
   }

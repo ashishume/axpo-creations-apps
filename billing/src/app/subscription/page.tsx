@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { subscriptionRepository } from "@/lib/db";
+import { Skeleton } from "@/components/ui";
 
 export function SubscriptionPage() {
   const { user } = useAuth();
@@ -51,12 +51,18 @@ export function SubscriptionPage() {
   if (loading) {
     return (
       <div className="animate-fadeIn">
-        <h1 className="text-2xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-          Subscription Plans
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <Skeleton className="h-8 w-48 mb-4" />
+        <Skeleton className="h-4 w-72 mb-8" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="skeleton h-96 rounded-lg"></div>
+            <div key={i} className="card p-6 space-y-4">
+              <Skeleton className="h-6 w-24 mx-auto" />
+              <Skeleton className="h-10 w-20 mx-auto" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" count={4} />
+              </div>
+              <Skeleton className="h-10 w-full rounded" />
+            </div>
           ))}
         </div>
       </div>

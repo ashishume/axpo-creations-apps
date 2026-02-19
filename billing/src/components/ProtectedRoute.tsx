@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { PageShellSkeleton } from "@/components/ui";
 
 const publicPaths = ["/login", "/signup"];
 
@@ -18,14 +19,7 @@ export function ProtectedRoute() {
   }, [loading, isAuthenticated, isPublic, navigate]);
 
   if (loading && !isPublic) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100">
-        <div className="text-center">
-          <div className="spinner mx-auto mb-4 w-10 h-10 border-2 border-indigo-600 border-t-transparent" />
-          <p className="text-slate-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <PageShellSkeleton />;
   }
 
   if (!isAuthenticated && !isPublic) {

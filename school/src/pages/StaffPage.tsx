@@ -4,6 +4,7 @@ import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
 import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { BulkImportModal } from "../components/import/BulkImportModal";
 import type { Staff as StaffType, StaffRole, SalaryPayment } from "../types";
@@ -88,6 +89,7 @@ export function StaffPage() {
     staff,
     sessions,
     selectedSessionId,
+    isAppLoading,
     addStaff,
     updateStaff,
     deleteStaff,
@@ -237,6 +239,18 @@ export function StaffPage() {
             Select a school and session to view staff.
           </CardContent>
         </Card>
+      ) : isAppLoading ? (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-40" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-10 w-64" />
+              <SkeletonTable rows={8} columns={6} />
+            </CardContent>
+          </Card>
+        </div>
       ) : (
         <Card>
           <CardHeader>

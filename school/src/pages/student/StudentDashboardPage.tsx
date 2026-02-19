@@ -2,25 +2,15 @@ import { useAuth } from '../../context/AuthContext';
 import { useStudent } from '../../hooks/useStudents';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { formatCurrency } from '../../lib/utils';
-import { 
-  GraduationCap, 
-  CreditCard, 
-  Clock, 
-  CheckCircle,
-  AlertCircle,
-  Loader2
-} from 'lucide-react';
+import { SkeletonDashboard } from '../../components/ui/Skeleton';
+import { GraduationCap, CreditCard, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export function StudentDashboardPage() {
   const { user } = useAuth();
   const { data: student, isLoading, error } = useStudent(user?.studentId || '');
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-      </div>
-    );
+    return <SkeletonDashboard />;
   }
 
   if (error || !student) {

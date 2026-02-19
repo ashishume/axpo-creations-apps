@@ -67,6 +67,8 @@ interface AppState {
 }
 
 interface AppContextValue extends AppState {
+  /** True while dashboard/app data is being fetched (e.g. after login). */
+  isAppLoading: boolean;
   // Schools
   addSchool: (school: Omit<School, "id">) => void;
   updateSchool: (id: string, data: Partial<School>) => void;
@@ -177,8 +179,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     () => storage.loadSelection().sessionId
   );
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [isAppLoading, setIsAppLoading] = useState(true);
 
   const refetchAll = useCallback(async () => {
+    setIsAppLoading(true);
     try {
       // Prefer aggregated dashboard API (1 call); fall back to 8 separate calls if RPC not available
       const aggregated = await getAggregatedDashboard();
@@ -233,12 +237,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     } catch {
       // Supabase not configured or network error — leave state as-is
+    } finally {
+      setIsAppLoading(false);
     }
   }, [isSuperAdmin]);
 
   // Run refetch only once user is known (so isSuperAdmin is correct). Avoids double fetch on load.
   useEffect(() => {
-    if (user != null) refetchAll();
+    if (user == null) setIsAppLoading(false);
+    else refetchAll();
   }, [refetchAll, user]);
 
   // User-scoped visibility: Super Admin = all; Org Admin = org's schools; Manager/school user = staff's school only
@@ -1062,6 +1069,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectedSchoolId,
       selectedSessionId,
       toasts,
+      isAppLoading,
       setSelectedSchool: setSelectedSchoolId,
       setSelectedSession: setSelectedSessionId,
       addSchool,
@@ -1121,6 +1129,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectedSchoolId,
       selectedSessionId,
       toasts,
+      isAppLoading,
       addSchool,
       updateSchool,
       deleteSchool,

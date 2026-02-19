@@ -4,6 +4,7 @@ import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
 import { Plus, Pencil, Trash2, CheckCircle, ArrowDownCircle, ArrowUpCircle, RotateCcw } from "lucide-react";
 import type { Stock, StockTransactionType } from "../types";
 import { formatCurrency, formatDate } from "../lib/utils";
@@ -19,6 +20,7 @@ export function StocksPage() {
   const {
     stocks,
     selectedSessionId,
+    isAppLoading,
     addStock,
     updateStock,
     deleteStock,
@@ -121,6 +123,17 @@ export function StocksPage() {
         <Card>
           <CardContent className="py-12 text-center text-slate-500">
             Select a school and session to view stocks.
+          </CardContent>
+        </Card>
+      ) : isAppLoading ? (
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <SkeletonTable rows={6} columns={9} />
           </CardContent>
         </Card>
       ) : (
