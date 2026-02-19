@@ -25,12 +25,24 @@ app.add_exception_handler(AppException, app_exception_handler)
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
-    """Return 500 with error detail so we can debug (e.g. missing table)."""
+    """Return 500 with error detail; 503 when DB is unreachable (deployment/network)."""
     logger.exception("Unhandled exception")
+    msg = str(exc)
+    # DB unreachable from container (e.g. TEACHING_DATABASE_URL uses host container can't reach)
+    if "Network is unreachable" in msg or "Connection refused" in msg or "Name or service not known" in msg:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": "Database is unreachable. Ensure BILLING_DATABASE_URL and TEACHING_DATABASE_URL are reachable from this container (use DB host IP/name, not localhost).",
+                "error": msg,
+            },
+        )
     return JSONResponse(
         status_code=500,
-        content={"detail": str(exc)},
+        content={"detail": msg},
     )
+
+
 setup_middleware(app)
 
 app.include_router(billing_router, prefix="/billing/api/v1", tags=["billing"])

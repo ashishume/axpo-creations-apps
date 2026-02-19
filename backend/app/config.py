@@ -1,5 +1,15 @@
 """Application configuration from environment."""
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _ensure_async_driver(url: str) -> str:
+    """Ensure Postgres URL uses async driver (asyncpg). Required for create_async_engine."""
+    if url.startswith("postgresql://") and "+" not in url.split("://", 1)[0]:
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    return url
 
 
 class Settings(BaseSettings):
@@ -14,6 +24,11 @@ class Settings(BaseSettings):
 
     BILLING_DATABASE_URL: str
     TEACHING_DATABASE_URL: str
+
+    @field_validator("BILLING_DATABASE_URL", "TEACHING_DATABASE_URL", mode="after")
+    @classmethod
+    def normalize_db_url(cls, v: str) -> str:
+        return _ensure_async_driver(v)
 
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"

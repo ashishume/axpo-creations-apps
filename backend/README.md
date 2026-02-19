@@ -30,6 +30,8 @@ Copy `.env.example` to `.env` and set:
 
 Until these are real URLs, **login will return 500** with `nodename nor servname provided, or not known` (invalid host).
 
+**Containers (Docker, Cloud Run, ECS, etc.):** The app must be able to reach the DB host from inside the container. Do **not** use `localhost` or `127.0.0.1` for the DB host—use the real hostname or IP of your Postgres (e.g. Supabase pooler host, Cloud SQL connection name, or an IP reachable on the container network). Otherwise you will see **503** with `Network is unreachable` or **500** with connection errors on login.
+
 Use async Postgres URLs, e.g.:
 
 ```bash
