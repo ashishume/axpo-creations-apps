@@ -34,14 +34,19 @@ class TeachingBase(DeclarativeBase):
 
 
 def create_engine_for_url(url: str):
-    """Create async engine for a given database URL. Uses SSL for Supabase/cloud Postgres."""
+    """Create async engine for a given database URL. Uses SSL for Supabase/cloud Postgres.
+    statement_cache_size=0 is required when using PgBouncer (e.g. Supabase pooler) in
+    transaction or statement mode, which does not support prepared statements."""
     return create_async_engine(
         url,
         echo=False,
         pool_pre_ping=True,
         pool_size=5,
         max_overflow=10,
-        connect_args={"ssl": _ssl_context},
+        connect_args={
+            "ssl": _ssl_context,
+            "statement_cache_size": 0,
+        },
     )
 
 
