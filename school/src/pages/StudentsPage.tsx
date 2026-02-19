@@ -4,6 +4,7 @@ import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
 import { Plus, Pencil, Trash2, DollarSign, Upload, BookOpen, Eye, Camera, X, User } from "lucide-react";
 import { BulkImportModal } from "../components/import/BulkImportModal";
 import { PaymentReceiptModal } from "../components/receipt/PaymentReceiptModal";
@@ -38,6 +39,7 @@ export function StudentsPage() {
     classes,
     selectedSchoolId,
     selectedSessionId,
+    isAppLoading,
     addStudent,
     updateStudent,
     deleteStudent,
@@ -327,6 +329,22 @@ export function StudentsPage() {
             Select a school and session to view students.
           </CardContent>
         </Card>
+      ) : isAppLoading ? (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <Skeleton className="h-10 w-64" />
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+              <SkeletonTable rows={8} columns={6} />
+            </CardContent>
+          </Card>
+        </div>
       ) : (
         <>
           <Card>

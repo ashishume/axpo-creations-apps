@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useApp } from "../context/AppContext";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
+import { SkeletonFinancialDashboard } from "../components/ui/Skeleton";
 import { formatCurrency } from "../lib/utils";
 import { getTotalPaid, getRemaining, getPaymentStatus, getTotalAnnualFees } from "../lib/studentUtils";
 import {
@@ -30,6 +31,7 @@ export function DashboardPage() {
     classes,
     fixedCosts,
     selectedSessionId,
+    isAppLoading,
   } = useApp();
 
   const sessionStudents = useMemo(
@@ -240,6 +242,10 @@ export function DashboardPage() {
         </Card>
       </div>
     );
+  }
+
+  if (isAppLoading) {
+    return <SkeletonFinancialDashboard />;
   }
 
   return (

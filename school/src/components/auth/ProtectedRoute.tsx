@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { LoginPage } from '../../pages/LoginPage';
+import { SkeletonPageShell } from '../../components/ui/Skeleton';
 import type { Permission } from '../../types/auth';
-import { ShieldX, Loader2 } from 'lucide-react';
+import { ShieldX } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -30,16 +31,7 @@ export function ProtectedRoute({
 
   // Show loading state
   if (isLoading) {
-    return (
-      loadingFallback || (
-        <div className="flex min-h-screen items-center justify-center bg-slate-50">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-            <p className="text-sm text-slate-600">Loading...</p>
-          </div>
-        </div>
-      )
-    );
+    return loadingFallback ?? <SkeletonPageShell />;
   }
 
   // Not authenticated - show login

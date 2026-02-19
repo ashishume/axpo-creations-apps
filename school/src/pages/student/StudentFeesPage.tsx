@@ -3,12 +3,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useStudent } from '../../hooks/useStudents';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { formatCurrency } from '../../lib/utils';
-import { 
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  Loader2
-} from 'lucide-react';
+import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton';
+import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 export function StudentFeesPage() {
   const { user } = useAuth();
@@ -27,8 +23,19 @@ export function StudentFeesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-6">
+          <Skeleton className="h-5 w-32 mb-4" />
+          <SkeletonTable rows={4} columns={3} />
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-6">
+          <Skeleton className="h-5 w-32 mb-4" />
+          <SkeletonTable rows={12} columns={4} />
+        </div>
       </div>
     );
   }

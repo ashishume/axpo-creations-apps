@@ -77,14 +77,129 @@ export function SkeletonTable({ rows = 5, columns = 4 }: { rows?: number; column
 }
 
 export function SkeletonStats({ count = 4 }: { count?: number }) {
+  const n = Math.min(count, 4);
+  const gridClass =
+    n === 1 ? 'grid-cols-1' :
+    n === 2 ? 'grid-cols-1 md:grid-cols-2' :
+    n === 3 ? 'grid-cols-1 md:grid-cols-3' :
+    'grid-cols-1 md:grid-cols-2 lg:grid-cols-4';
   return (
-    <div className={cn('grid gap-4', `grid-cols-${Math.min(count, 4)} md:grid-cols-${count}`)}>
-      {Array.from({ length: count }).map((_, i) => (
+    <div className={cn('grid gap-4', gridClass)}>
+      {Array.from({ length: n }).map((_, i) => (
         <div key={i} className="rounded-lg border border-slate-200 bg-white p-6">
           <Skeleton className="mb-2 h-3 w-1/2" />
           <Skeleton className="h-8 w-2/3" />
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Dashboard layout: header + stat cards + two content cards (e.g. fee structure + recent) */
+export function SkeletonDashboard() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-16 w-16 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-lg border border-slate-200 bg-white p-6">
+            <Skeleton className="mb-2 h-3 w-1/2" />
+            <Skeleton className="h-8 w-2/3" />
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-white p-6">
+          <Skeleton className="mb-4 h-5 w-32" />
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex justify-between border-b border-slate-100 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-6">
+          <Skeleton className="mb-4 h-5 w-40" />
+          <div className="space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between rounded-lg border border-slate-100 p-2">
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-3 w-28" />
+                </div>
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Financial dashboard layout: title, 4 metrics, expected income card, 3 obligations, 2 chart cards */
+export function SkeletonFinancialDashboard() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Skeleton className="h-8 w-56" />
+      </div>
+
+      {/* Key metrics - 4 cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-lg border border-slate-200 bg-white p-4 pt-4">
+            <Skeleton className="mb-2 h-3 w-3/4" />
+            <Skeleton className="h-8 w-28" />
+            <Skeleton className="mt-1 h-3 w-1/2" />
+          </div>
+        ))}
+      </div>
+
+      {/* Expected income card (amber-style block) */}
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
+        <Skeleton className="mb-4 h-5 w-72" />
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i}>
+              <Skeleton className="mb-2 h-3 w-36" />
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="mt-1 h-3 w-44" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Obligations - 3 cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-lg border border-slate-200 bg-white p-4 pt-4">
+            <Skeleton className="mb-2 h-3 w-40" />
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="mt-1 h-3 w-32" />
+          </div>
+        ))}
+      </div>
+
+      {/* Charts row - 2 cards */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-white p-6">
+          <Skeleton className="mb-4 h-5 w-40" />
+          <Skeleton className="h-64 w-full rounded-md" />
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-6">
+          <Skeleton className="mb-4 h-5 w-48" />
+          <Skeleton className="h-64 w-full rounded-md" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -118,6 +233,32 @@ export function SkeletonForm({ fields = 4 }: { fields?: number }) {
       <div className="flex justify-end gap-2 pt-2">
         <Skeleton className="h-9 w-20" />
         <Skeleton className="h-9 w-24" />
+      </div>
+    </div>
+  );
+}
+
+/** Full-page app shell skeleton for initial load (e.g. ProtectedRoute) */
+export function SkeletonPageShell() {
+  return (
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <div className="border-b border-slate-200 bg-white px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-8 rounded" />
+          <Skeleton className="h-6 w-48" />
+        </div>
+      </div>
+      <div className="flex-1 p-6">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-96 mb-8" />
+          <div className="grid gap-4 md:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-24 rounded-lg" />
+            ))}
+          </div>
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </div>
       </div>
     </div>
   );

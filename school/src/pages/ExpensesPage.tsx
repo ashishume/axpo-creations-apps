@@ -6,6 +6,7 @@ import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { FilterChips } from "../components/ui/FilterChips";
 import { SearchInput } from "../components/ui/SearchInput";
+import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import type { Expense as ExpenseType, ExpenseCategory, PaymentMethod, FixedMonthlyCost } from "../types";
 import { formatCurrency, formatDate } from "../lib/utils";
@@ -30,6 +31,7 @@ export function ExpensesPage() {
     expenses,
     fixedCosts,
     selectedSessionId,
+    isAppLoading,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -193,6 +195,27 @@ export function ExpensesPage() {
             Select a school and session to view expenses.
           </CardContent>
         </Card>
+      ) : isAppLoading ? (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <Skeleton className="h-6 w-28" />
+              <Skeleton className="h-6 w-20" />
+            </CardHeader>
+            <CardContent>
+              <SkeletonTable rows={6} columns={6} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-64 mt-1" />
+            </CardHeader>
+            <CardContent>
+              <SkeletonTable rows={3} columns={4} />
+            </CardContent>
+          </Card>
+        </div>
       ) : (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">

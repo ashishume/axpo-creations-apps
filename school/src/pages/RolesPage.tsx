@@ -3,13 +3,13 @@ import { useRoles, useCreateRole, useUpdateRole, useDeleteRole } from '../hooks/
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { PermissionGate } from '../components/auth/PermissionGate';
+import { SkeletonCard } from '../components/ui/Skeleton';
 import { 
   Plus, 
   Pencil, 
   Trash2, 
   Shield,
   Lock,
-  Loader2,
   CheckSquare,
   Square
 } from 'lucide-react';
@@ -252,8 +252,10 @@ export function RolesPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card"
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { PermissionGate } from "../components/auth/PermissionGate";
+import { SkeletonList } from "../components/ui/Skeleton";
 import { Plus, Pencil, Trash2, Building2 } from "lucide-react";
 import type { Organization } from "../types";
 import { organizationsRepository } from "../lib/db/repositories";
@@ -82,7 +83,7 @@ export function OrganizationsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-slate-500">Loading…</p>
+            <SkeletonList items={5} />
           ) : organizations.length === 0 ? (
             <p className="text-sm text-slate-500">No organizations yet. Add one to create schools under it.</p>
           ) : (
