@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png"; // Assuming we generated this
-import { APPS } from "@/lib/constants";
+import { APPS, CONTACT_WHATSAPP_URL } from "@/lib/constants";
 
 export function Hero() {
   return (
@@ -43,8 +43,10 @@ export function Hero() {
                 Explore Our Products
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
-              <Button size="lg" variant="outline" className="h-12 px-8 text-base bg-white/50 backdrop-blur-sm">
-                Contact Sales
+              <Button size="lg" variant="outline" className="h-12 px-8 text-base bg-white/50 backdrop-blur-sm" asChild>
+                <a href={CONTACT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                  Contact Sales
+                </a>
               </Button>
             </div>
           </motion.div>
