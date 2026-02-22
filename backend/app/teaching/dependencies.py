@@ -52,3 +52,21 @@ async def get_current_teaching_user(
     if not user:
         raise UnauthorizedError("User not found")
     return user
+
+
+def require_teaching_permission(permission: str):
+    """Return a dependency that requires the current user to have the given permission."""
+
+    async def _require(
+        db: AsyncSession = Depends(get_teaching_db_session),
+        user: User = Depends(get_current_teaching_user),
+    ) -> User:
+        from app.teaching.services.auth import auth_service
+
+        permissions = await auth_service.get_permissions_for_user(db, user)
+        if permission not in permissions:
+            from app.core.exceptions import ForbiddenError
+            raise ForbiddenError("Insufficient permissions")
+        return user
+
+    return _require

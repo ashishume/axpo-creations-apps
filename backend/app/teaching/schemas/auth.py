@@ -43,3 +43,34 @@ class MeResponse(BaseModel):
 
 class RefreshResponse(BaseModel):
     message: str = "Token refreshed"
+
+
+# User management (list/create/update/delete/reset-password)
+class UserListResponse(BaseModel):
+    users: list[UserResponse]
+    total: int
+
+
+class CreateUserRequest(BaseModel):
+    username: str
+    email: str | None = None
+    name: str
+    role_id: UUID
+    password: str
+    organization_id: UUID | None = None
+    staff_id: UUID | None = None
+    student_id: UUID | None = None
+
+
+class UpdateUserRequest(BaseModel):
+    email: str | None = None
+    name: str | None = None
+    role_id: UUID | None = None
+    is_active: bool | None = None
+    organization_id: UUID | None = None
+    staff_id: UUID | None = None
+    student_id: UUID | None = None
+
+
+class ResetPasswordRequest(BaseModel):
+    new_password: str

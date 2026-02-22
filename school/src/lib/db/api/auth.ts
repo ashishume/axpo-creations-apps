@@ -47,23 +47,64 @@ export const authRepositoryApi = {
     throw new Error('Change password is not available when using the API. Use profile or contact admin.');
   },
 
-  async getUsers(_page: number = 1, _pageSize: number = 10): Promise<{ users: User[]; total: number }> {
-    throw new Error('User management is not available when using the backend API.');
+  async getUsers(page: number = 1, pageSize: number = 10): Promise<{ users: User[]; total: number }> {
+    const data = await teachingFetchJson<{ users: Record<string, unknown>[]; total: number }>(
+      `/users?page=${page}&page_size=${pageSize}`
+    );
+    const users = (data.users ?? []).map((r) => mapUser(r, []));
+    return { users, total: data.total ?? 0 };
   },
 
-  async createUser(_request: CreateUserRequest): Promise<User> {
-    throw new Error('User management is not available when using the backend API.');
+  async createUser(request: CreateUserRequest): Promise<User> {
+    const body: Record<string, unknown> = {
+      username: request.username,
+      email: request.email ?? null,
+      name: request.name,
+      role_id: request.roleId,
+      password: request.password,
+      staff_id: request.staffId ?? null,
+      student_id: request.studentId ?? null,
+    };
+    if (request.organizationId !== undefined) body.organization_id = request.organizationId;
+    const r = await teachingFetchJson<Record<string, unknown>>('/users', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return mapUser(r, []);
   },
 
-  async updateUser(_userId: string, _request: UpdateUserRequest): Promise<User> {
-    throw new Error('User management is not available when using the backend API.');
+  async updateUser(userId: string, request: UpdateUserRequest): Promise<User> {
+    const body: Record<string, unknown> = {};
+    if (request.email !== undefined) body.email = request.email;
+    if (request.name !== undefined) body.name = request.name;
+    if (request.roleId !== undefined) body.role_id = request.roleId;
+    if (request.isActive !== undefined) body.is_active = request.isActive;
+    if (request.organizationId !== undefined) body.organization_id = request.organizationId;
+    if (request.staffId !== undefined) body.staff_id = request.staffId;
+    if (request.studentId !== undefined) body.student_id = request.studentId;
+    const r = await teachingFetchJson<Record<string, unknown>>(`/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+    return mapUser(r, []);
   },
 
-  async deleteUser(_userId: string): Promise<void> {
-    throw new Error('User management is not available when using the backend API.');
+  async deleteUser(userId: string): Promise<void> {
+    const res = await teachingFetch(`/users/${userId}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error((err as { detail?: string }).detail ?? res.statusText);
+    }
   },
 
-  async resetPassword(_userId: string, _newPassword: string): Promise<void> {
-    throw new Error('User management is not available when using the backend API.');
+  async resetPassword(userId: string, newPassword: string): Promise<void> {
+    const res = await teachingFetch(`/users/${userId}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ new_password: newPassword }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error((err as { detail?: string }).detail ?? res.statusText);
+    }
   },
 };
