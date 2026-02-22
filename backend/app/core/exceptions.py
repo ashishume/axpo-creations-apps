@@ -34,10 +34,17 @@ class ForbiddenError(AppException):
 
 
 class ConflictError(AppException):
-    """Conflict (e.g. duplicate)."""
+    """Conflict (e.g. duplicate, constraint violation)."""
 
     def __init__(self, message: str = "Conflict"):
         super().__init__(message, status_code=status.HTTP_409_CONFLICT)
+
+
+class ValidationError(AppException):
+    """Invalid input / validation failed."""
+
+    def __init__(self, message: str = "Validation error"):
+        super().__init__(message, status_code=status.HTTP_400_BAD_REQUEST)
 
 
 async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:

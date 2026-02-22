@@ -3,6 +3,7 @@ import logging
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 
 from app.config import get_settings
 from app.core.middleware import setup_middleware
@@ -21,6 +22,20 @@ app = FastAPI(
 )
 
 app.add_exception_handler(AppException, app_exception_handler)
+
+
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(request: Request, exc: IntegrityError):
+    """Map DB constraint violations to 409 Conflict."""
+    logger.warning("IntegrityError: %s", exc)
+    msg = "A database constraint was violated (e.g. duplicate or invalid reference)."
+    orig = str(exc.orig) if getattr(exc, "orig", None) else str(exc)
+    if "unique" in orig.lower() or "duplicate" in orig.lower():
+        msg = "A record with this value already exists."
+    return JSONResponse(
+        status_code=409,
+        content={"detail": msg},
+    )
 
 
 @app.exception_handler(Exception)
