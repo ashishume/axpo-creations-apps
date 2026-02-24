@@ -215,6 +215,13 @@ export function LoginPage() {
             </Button>
           </form>
 
+          <p className="mt-6 text-center text-xs text-slate-500">
+            By signing in, you agree to our{" "}
+            <a href="https://www.axpocreation.com/terms-of-service" target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:text-indigo-700">Terms of Service</a>
+            {" "}and{" "}
+            <a href="https://www.axpocreation.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:text-indigo-700">Privacy Policy</a>.
+          </p>
+
           {/* <div className="mt-6 rounded-lg bg-slate-50 p-4">
             <p className="text-xs text-slate-500">
               <strong>Default credentials:</strong>
