@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 const SCHEME = "axpo-expense";
 const WEB_BASE = "https://www.axpocreation.com";
+const OG_IMAGE = "https://www.axpocreation.com/logo.jpg";
 
 type OpenType = "splitter" | "lend";
 
@@ -23,6 +24,27 @@ const CONTENT: Record<
   },
 };
 
+function setMetaTag(
+  property: string,
+  content: string,
+  isOg = true
+): () => void {
+  const attr = isOg ? "property" : "name";
+  const selector = `meta[${attr}="${property}"]`;
+  let el = document.querySelector<HTMLMetaElement>(selector);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, property);
+    document.head.appendChild(el);
+  }
+  const prev = el.getAttribute("content");
+  el.setAttribute("content", content);
+  return () => {
+    if (prev !== null) el?.setAttribute("content", prev);
+    else el?.remove();
+  };
+}
+
 export default function Open() {
   const [showFallback, setShowFallback] = useState(false);
   const appOpenedRef = useRef(false);
@@ -36,6 +58,27 @@ export default function Open() {
   const validType = type === "splitter" || type === "lend";
   const deepLink =
     validType && id ? `${SCHEME}://${type}/${id}` : `${SCHEME}://`;
+
+  // OG/social meta for deep link previews (WhatsApp, etc.) – same as axpo-expense/public/open.html
+  useEffect(() => {
+    if (!validType || !type) return;
+    const title = "Open in Axpo Tracker";
+    const description = "Tap to open in the Axpo Tracker app";
+    const prevTitle = document.title;
+    document.title = title;
+    const restores: Array<() => void> = [
+      () => { document.title = prevTitle; },
+      setMetaTag("og:title", "Axpo Tracker"),
+      setMetaTag("og:description", description),
+      setMetaTag("og:image", OG_IMAGE),
+      setMetaTag("og:type", "website"),
+      setMetaTag("twitter:card", "summary", false),
+      setMetaTag("twitter:title", "Axpo Tracker", false),
+      setMetaTag("twitter:description", description, false),
+      setMetaTag("twitter:image", OG_IMAGE, false),
+    ];
+    return () => restores.forEach((r) => r());
+  }, [validType, type]);
 
   useEffect(() => {
     if (!validType || !id) {
@@ -71,7 +114,7 @@ export default function Open() {
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [validType, id, type, deepLink]);
+  }, [validType, id, deepLink]);
 
   if (!validType || !id) {
     return null;
