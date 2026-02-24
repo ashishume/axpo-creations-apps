@@ -73,11 +73,12 @@ export function LoginPage() {
                 Sign up
               </Link>
             </p>
-          </div>
-          <div className="mt-4 p-3 rounded-md text-xs bg-slate-100 text-slate-600">
-            <p className="font-medium mb-1">Demo credentials:</p>
-            <p>Username: <code className="px-1 rounded bg-slate-200">admin</code></p>
-            <p>Password: <code className="px-1 rounded bg-slate-200">admin</code></p>
+            <p className="mt-3 text-xs">
+              By signing in, you agree to our{" "}
+              <a href="https://www.axpocreation.com/terms-of-service" target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:text-indigo-700">Terms of Service</a>
+              {" "}and{" "}
+              <a href="https://www.axpocreation.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:text-indigo-700">Privacy Policy</a>.
+            </p>
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ import Products from "@/pages/Products";
 import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
+import Open from "@/pages/Open";
 
 function Router() {
   return (
@@ -20,6 +21,8 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/open/:type/:id" component={Open} />
+      <Route path="/open" component={Open} />
       <Route component={NotFound} />
     </Switch>
   );

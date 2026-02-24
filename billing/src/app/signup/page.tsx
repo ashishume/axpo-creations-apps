@@ -64,6 +64,12 @@ export function SignupPage() {
               Already have an account?{" "}
               <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-700">Sign in</Link>
             </p>
+            <p className="mt-3 text-xs">
+              By creating an account, you agree to our{" "}
+              <a href="https://www.axpocreation.com/terms-of-service" target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:text-indigo-700">Terms of Service</a>
+              {" "}and{" "}
+              <a href="https://www.axpocreation.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:text-indigo-700">Privacy Policy</a>.
+            </p>
           </div>
         </div>
       </div>
