@@ -49,8 +49,11 @@ export default function Open() {
   const [showFallback, setShowFallback] = useState(false);
   const appOpenedRef = useRef(false);
 
+  // Parse path: support any base path (e.g. / or /app) so /open/splitter/id or /base/open/splitter/id works
   const path = typeof window !== "undefined" ? window.location.pathname : "";
-  const pathAfterOpen = path.replace(/^\/open\/?/, "");
+  const pathAfterOpen = path.includes("/open/")
+    ? path.slice(path.indexOf("/open/") + "/open/".length)
+    : path.replace(/^\/open\/?/, "");
   const segments = pathAfterOpen.split("/").filter(Boolean);
   const type = segments[0] as OpenType | undefined;
   const id = segments[1];
