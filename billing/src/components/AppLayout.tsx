@@ -72,7 +72,7 @@ export function AppLayout() {
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
               <Box className="h-5 w-5" strokeWidth={2} />
             </div>
-            <span className="text-lg font-bold text-indigo-700">BricksBilling</span>
+            <span className="text-lg font-bold text-indigo-700">Axpo Billing</span>
           </NavLink>
           <p className="text-xs text-slate-500 mt-0.5">GST-compliant billing</p>
         </div>
@@ -122,7 +122,7 @@ export function AppLayout() {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <span className="font-bold text-slate-900 truncate">BricksBilling</span>
+          <span className="font-bold text-slate-900 truncate">Axpo Billing</span>
         </header>
         <div className="flex-1 overflow-auto p-4 md:p-6">
           <Outlet />

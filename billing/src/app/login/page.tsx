@@ -26,7 +26,7 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         <div className="card">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-900">Bricks Factory Billing</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Axpo Billing</h1>
             <p className="mt-2 text-slate-600">Sign in to your account</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -202,7 +202,7 @@ export function DashboardPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="mt-2 text-slate-600">Bricks Factory Billing – GST-compliant billing for brick manufacturers</p>
+        <p className="mt-2 text-slate-600">Axpo Billing – GST-compliant billing for brick manufacturers</p>
       </div>
 
       {!company && (

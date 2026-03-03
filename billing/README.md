@@ -1,4 +1,4 @@
-# Bricks Factory Billing (MVP)
+# Axpo Billing (MVP)
 
 GST-compliant billing software for brick manufacturing factories in India. Vite + React + Supabase.
 

@@ -1,4 +1,4 @@
--- Supabase Schema for Bricks Factory Billing
+-- Supabase Schema for Axpo Billing
 -- Run this in Supabase SQL Editor to create all tables
 
 -- Enable UUID extension

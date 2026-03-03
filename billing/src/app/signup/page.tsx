@@ -33,7 +33,7 @@ export function SignupPage() {
         <div className="card">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-slate-900">Create Account</h1>
-            <p className="mt-2 text-slate-600">Sign up for Bricks Factory Billing</p>
+            <p className="mt-2 text-slate-600">Sign up for Axpo Billing</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (

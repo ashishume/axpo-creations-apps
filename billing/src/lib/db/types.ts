@@ -1,4 +1,4 @@
-// Data types for Bricks Factory Billing MVP (local state)
+// Data types for Axpo Billing MVP (local state)
 
 export type ProductType = "Red Clay Bricks" | "Fly Ash Bricks" | "Wire Cut Bricks" | "Concrete Blocks";
 
