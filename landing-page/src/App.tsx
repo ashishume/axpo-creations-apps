@@ -11,6 +11,7 @@ import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import Copyright from "@/pages/Copyright";
+import DeleteAccount from "@/pages/DeleteAccount";
 import Open from "@/pages/Open";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/copyright" component={Copyright} />
+      <Route path="/delete-account" component={DeleteAccount} />
       <Route path="/open/:type/:id" component={Open} />
       <Route path="/open" component={Open} />
       <Route component={NotFound} />

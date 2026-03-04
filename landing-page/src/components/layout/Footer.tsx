@@ -40,6 +40,7 @@ export function Footer() {
               <li><Link href="/privacy-policy" className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</Link></li>
               <li><Link href="/terms-of-service" className="hover:text-primary transition-colors cursor-pointer">Terms of Service</Link></li>
               <li><Link href="/copyright" className="hover:text-primary transition-colors cursor-pointer">Copyright</Link></li>
+              <li><Link href="/delete-account" className="hover:text-primary transition-colors cursor-pointer">Delete Account</Link></li>
             </ul>
           </div>
 
