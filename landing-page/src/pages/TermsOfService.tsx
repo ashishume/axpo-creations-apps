@@ -25,7 +25,7 @@ export default function TermsOfService() {
         <p className="leading-relaxed text-slate-600 dark:text-slate-400 mb-4">
           Welcome to Axpo Tracker. By using the app, you agree to these Terms of
           Service (&quot;Terms&quot;). If you do not agree, please do not use the
-          app.
+          app. These Terms also serve as the End User License Agreement (EULA) for the Axpo Tracker app.
         </p>
 
         <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
@@ -100,7 +100,40 @@ export default function TermsOfService() {
         </p>
 
         <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
-          6. Intellectual Property
+          6. Subscriptions and In-App Purchases
+        </h2>
+        <p className="text-slate-600 dark:text-slate-400 mb-2">
+          Axpo Tracker may offer premium features through a paid subscription or
+          other in-app purchase. If you choose to subscribe:
+        </p>
+        <ul className="list-disc pl-5 space-y-2 text-slate-600 dark:text-slate-400 mb-4">
+          <li>
+            <strong>Subscription type and price:</strong> The subscription is
+            auto-renewable. The subscription name, length (e.g. monthly), and
+            price are shown in the app at the time of purchase and in the App
+            Store (or equivalent store) product page.
+          </li>
+          <li>
+            <strong>Payment:</strong> Payment is processed by Apple (on iOS) or
+            the applicable platform. We do not store your payment card details.
+          </li>
+          <li>
+            <strong>Renewal and cancellation:</strong> Your subscription will
+            renew automatically unless you turn off auto-renewal at least 24
+            hours before the end of the current period. You can manage or cancel
+            your subscription in your device&apos;s account settings (e.g. iOS:
+            Settings → [Your Name] → Subscriptions).
+          </li>
+          <li>
+            <strong>Refunds:</strong> Refund requests for purchases made through
+            the App Store or other platforms are subject to that platform&apos;s
+            refund policy (e.g. Apple&apos;s). We cannot issue refunds directly
+            for those purchases.
+          </li>
+        </ul>
+
+        <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
+          7. Intellectual Property
         </h2>
         <p className="text-slate-600 dark:text-slate-400 mb-4">
           The app, its design, branding, and content (other than user-generated
@@ -112,7 +145,7 @@ export default function TermsOfService() {
         </p>
 
         <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
-          7. Disclaimers
+          8. Disclaimers
         </h2>
         <p className="text-slate-600 dark:text-slate-400 mb-4">
           THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot;
@@ -122,7 +155,7 @@ export default function TermsOfService() {
         </p>
 
         <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
-          8. Limitation of Liability
+          9. Limitation of Liability
         </h2>
         <p className="text-slate-600 dark:text-slate-400 mb-4">
           TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE (AND OUR SUPPLIERS,
@@ -135,7 +168,7 @@ export default function TermsOfService() {
         </p>
 
         <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
-          9. Termination
+          10. Termination
         </h2>
         <p className="text-slate-600 dark:text-slate-400 mb-4">
           You may stop using the app at any time. We may suspend or terminate
@@ -145,7 +178,7 @@ export default function TermsOfService() {
         </p>
 
         <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
-          10. Changes to the Terms
+          11. Changes to the Terms
         </h2>
         <p className="text-slate-600 dark:text-slate-400 mb-4">
           We may update these Terms from time to time. We will post the new
@@ -155,7 +188,7 @@ export default function TermsOfService() {
         </p>
 
         <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
-          11. General
+          12. General
         </h2>
         <p className="text-slate-600 dark:text-slate-400 mb-4">
           These Terms are governed by the laws of India (or your country of
@@ -165,7 +198,7 @@ export default function TermsOfService() {
         </p>
 
         <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
-          12. Contact
+          13. Contact
         </h2>
         <p className="text-slate-600 dark:text-slate-400 mb-2">
           For questions about these Terms:
