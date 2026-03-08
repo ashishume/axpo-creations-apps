@@ -137,3 +137,36 @@ export function getPaymentsByCategory(student: Student) {
   
   return categories;
 }
+
+/** Set of months (YYYY-MM) already paid for a given category (e.g. "monthly" or "transport") */
+export function getPaidMonthsByCategory(
+  student: Student,
+  category: "monthly" | "transport"
+): Set<string> {
+  const set = new Set<string>();
+  for (const p of student.payments) {
+    if (p.feeCategory === category && p.month) set.add(p.month);
+  }
+  return set;
+}
+
+/** Next unpaid month (YYYY-MM) for a category; if current month not paid, return it, else next month not in paid set */
+export function getNextUnpaidMonth(
+  student: Student,
+  category: "monthly" | "transport" = "monthly"
+): string {
+  const paid = getPaidMonthsByCategory(student, category);
+  const now = new Date();
+  let y = now.getFullYear();
+  let m = now.getMonth() + 1; // 1–12
+  for (let i = 0; i < 24; i++) {
+    const yyyyMm = `${y}-${String(m).padStart(2, "0")}`;
+    if (!paid.has(yyyyMm)) return yyyyMm;
+    m += 1;
+    if (m > 12) {
+      m = 1;
+      y += 1;
+    }
+  }
+  return `${y}-${String(m).padStart(2, "0")}`;
+}

@@ -1,9 +1,32 @@
 """Student schemas."""
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel
+
+
+class FeePaymentCreate(BaseModel):
+    date: date
+    amount: Decimal
+    method: str
+    receipt_number: str | None = None
+    fee_category: str
+    month: str | None = None
+    receipt_photo_url: str | None = None
+
+
+class FeePaymentResponse(BaseModel):
+    id: UUID
+    date: date
+    amount: Decimal
+    method: str
+    receipt_number: str | None = None
+    fee_category: str
+    month: str | None = None
+    receipt_photo_url: str | None = None
+
+    model_config = {"from_attributes": True}
 
 
 class StudentBase(BaseModel):
@@ -66,5 +89,6 @@ class StudentResponse(StudentBase):
     user_id: UUID | None
     created_at: datetime
     updated_at: datetime
+    payments: list[FeePaymentResponse] = []
 
     model_config = {"from_attributes": True}

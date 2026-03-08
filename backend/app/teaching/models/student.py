@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import TeachingBase
 
@@ -56,6 +56,10 @@ class Student(TeachingBase):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+    payments: Mapped[list["FeePayment"]] = relationship(
+        "FeePayment", back_populates="student", lazy="selectin"
+    )
+
 
 class FeePayment(TeachingBase):
     __tablename__ = "school_xx_fee_payments"
@@ -72,6 +76,9 @@ class FeePayment(TeachingBase):
     receipt_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
     fee_category: Mapped[str] = mapped_column(String(50), nullable=False)
     month: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    receipt_photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    student: Mapped["Student"] = relationship("Student", back_populates="payments")

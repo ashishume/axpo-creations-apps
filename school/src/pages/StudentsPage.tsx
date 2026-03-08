@@ -1214,11 +1214,18 @@ export function StudentsPage() {
               }
             }
 
-            await addFeePayment(detailsStudent.student.id, payment);
+            const createdPayment = await addFeePayment(detailsStudent.student.id, payment);
             toast("Payment recorded");
-            // Sync modal with fresh student from context (refetchAll has completed)
-            const updatedStudent = students.find((s) => s.id === detailsStudent.student.id);
-            if (updatedStudent) setDetailsStudent({ student: updatedStudent, initialTab: "payments" });
+            // Keep new row visible: optimistically merge created payment (refetch state may not be updated yet)
+            if (createdPayment) {
+              setDetailsStudent({
+                student: {
+                  ...detailsStudent.student,
+                  payments: [...detailsStudent.student.payments, createdPayment],
+                },
+                initialTab: "payments",
+              });
+            }
           }}
           onUpdateStudent={(data) => {
             updateStudent(detailsStudent.student.id, data);

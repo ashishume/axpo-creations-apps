@@ -1,10 +1,16 @@
 """Student routes."""
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.teaching.dependencies import get_teaching_db_session, get_current_teaching_user
-from app.teaching.schemas.student import StudentCreate, StudentUpdate, StudentResponse
+from app.teaching.schemas.student import (
+    StudentCreate,
+    StudentUpdate,
+    StudentResponse,
+    FeePaymentCreate,
+    FeePaymentResponse,
+)
 from app.teaching.services.student import student_service
 from app.teaching.models.user import User
 
@@ -74,3 +80,26 @@ async def delete_student(
     user: User = Depends(get_current_teaching_user),
 ):
     await student_service.delete(db, id)
+
+
+@router.post("/{id}/payments", response_model=FeePaymentResponse)
+async def add_student_payment(
+    id: UUID,
+    data: FeePaymentCreate,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    payment = await student_service.add_payment(db, id, data)
+    return FeePaymentResponse.model_validate(payment)
+
+
+@router.delete("/{id}/payments/{payment_id}", status_code=204)
+async def delete_student_payment(
+    id: UUID,
+    payment_id: UUID,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    deleted = await student_service.delete_payment(db, id, payment_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Payment not found")

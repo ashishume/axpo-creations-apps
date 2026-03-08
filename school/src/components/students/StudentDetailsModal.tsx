@@ -12,7 +12,8 @@ import {
   getPaymentsByCategory,
   getRunningBalances,
   getDiscountedMonthlyFees,
-  getSiblingDiscount 
+  getSiblingDiscount,
+  getNextUnpaidMonth,
 } from "../../lib/studentUtils";
 import { cn } from "../../lib/utils";
 import { User, Phone, MapPin, Heart, AlertTriangle, DollarSign, Camera, X, Image } from "lucide-react";
@@ -57,6 +58,7 @@ export function StudentDetailsModal({
   const [editingPersonal, setEditingPersonal] = useState(false);
   const [receiptPhotoPreview, setReceiptPhotoPreview] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("monthly");
+  const [paymentMonth, setPaymentMonth] = useState<string>(() => getNextUnpaidMonth(student, "monthly"));
   const amountInputRef = useRef<HTMLInputElement>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
   
@@ -64,6 +66,18 @@ export function StudentDetailsModal({
   useEffect(() => {
     setShowPaymentForm(initialTab === "payments");
   }, [student.id, student.payments.length, initialTab]);
+
+  // When form is shown or category changes, set "For Month" to next unpaid month for that category
+  const nextUnpaidMonth = getNextUnpaidMonth(student, "monthly");
+  const nextUnpaidMonthTransport = getNextUnpaidMonth(student, "transport");
+  useEffect(() => {
+    if (!showPaymentForm) return;
+    setPaymentMonth(selectedCategory === "transport" ? nextUnpaidMonthTransport : nextUnpaidMonth);
+  }, [showPaymentForm, selectedCategory, nextUnpaidMonth, nextUnpaidMonthTransport]);
+  // Reset month when student changes (e.g. after recording a payment we update the student in parent)
+  useEffect(() => {
+    setPaymentMonth(getNextUnpaidMonth(student, selectedCategory === "transport" ? "transport" : "monthly"));
+  }, [student.id, student.payments.length, selectedCategory]);
 
   const target = getTargetAmount(student, studentClass);
   const paid = getTotalPaid(student);
@@ -159,7 +173,7 @@ export function StudentDetailsModal({
       method, 
       receiptNumber: receiptNumber || "-",
       feeCategory,
-      month: feeCategory === "monthly" ? month : undefined,
+      month: (feeCategory === "monthly" || feeCategory === "transport") ? month : undefined,
       receiptPhotoUrl
     });
     setShowPaymentForm(false);
@@ -567,7 +581,11 @@ export function StudentDetailsModal({
             </div>
             
             {showPaymentForm && (
-              <form onSubmit={handlePaymentSubmit} className="rounded-lg border border-slate-200 p-4 space-y-3">
+              <form
+                key={`payment-form-${paymentMonth}`}
+                onSubmit={handlePaymentSubmit}
+                className="rounded-lg border border-slate-200 p-4 space-y-3"
+              >
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-600">Fee Category *</label>
@@ -618,9 +636,15 @@ export function StudentDetailsModal({
                     <input
                       name="month"
                       type="month"
-                      defaultValue={new Date().toISOString().slice(0, 7)}
+                      value={paymentMonth}
+                      onChange={(e) => setPaymentMonth(e.target.value)}
                       className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
                     />
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {selectedCategory === "monthly" || selectedCategory === "transport"
+                        ? "Defaults to next unpaid month"
+                        : "Leave empty for one-time fees"}
+                    </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">

@@ -4,8 +4,8 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
-from app.teaching.models.student import Student
-from app.teaching.schemas.student import StudentCreate, StudentUpdate
+from app.teaching.models.student import Student, FeePayment
+from app.teaching.schemas.student import StudentCreate, StudentUpdate, FeePaymentCreate
 from app.teaching.repositories.student import student_repository
 
 
@@ -45,6 +45,28 @@ class StudentService:
     async def delete(self, db: AsyncSession, id: UUID) -> None:
         student = await self.get_or_404(db, id)
         await student_repository.delete(db, student)
+
+    async def add_payment(
+        self, db: AsyncSession, student_id: UUID, data: FeePaymentCreate
+    ) -> FeePayment:
+        await self.get_or_404(db, student_id)
+        return await student_repository.add_payment(
+            db,
+            student_id,
+            payment_date=data.date,
+            amount=data.amount,
+            method=data.method,
+            receipt_number=data.receipt_number,
+            fee_category=data.fee_category,
+            month=data.month,
+            receipt_photo_url=data.receipt_photo_url,
+        )
+
+    async def delete_payment(
+        self, db: AsyncSession, student_id: UUID, payment_id: UUID
+    ) -> bool:
+        await self.get_or_404(db, student_id)
+        return await student_repository.delete_payment(db, payment_id, student_id)
 
 
 student_service = StudentService()

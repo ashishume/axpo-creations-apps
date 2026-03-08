@@ -1,10 +1,12 @@
 """Student repository: DB operations only."""
+from datetime import date
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.teaching.models.student import Student
+from app.teaching.models.student import Student, FeePayment
 
 
 class StudentRepository:
@@ -36,6 +38,48 @@ class StudentRepository:
     async def delete(self, db: AsyncSession, student: Student) -> None:
         await db.delete(student)
         await db.flush()
+
+    async def add_payment(
+        self,
+        db: AsyncSession,
+        student_id: UUID,
+        *,
+        payment_date: date,
+        amount: Decimal,
+        method: str,
+        receipt_number: str | None,
+        fee_category: str,
+        month: str | None = None,
+        receipt_photo_url: str | None = None,
+    ) -> FeePayment:
+        payment = FeePayment(
+            student_id=student_id,
+            date=payment_date,
+            amount=amount,
+            method=method,
+            receipt_number=receipt_number or None,
+            fee_category=fee_category,
+            month=month,
+            receipt_photo_url=receipt_photo_url,
+        )
+        db.add(payment)
+        await db.flush()
+        await db.refresh(payment)
+        return payment
+
+    async def delete_payment(self, db: AsyncSession, payment_id: UUID, student_id: UUID) -> bool:
+        result = await db.execute(
+            select(FeePayment).where(
+                FeePayment.id == payment_id,
+                FeePayment.student_id == student_id,
+            )
+        )
+        payment = result.scalar_one_or_none()
+        if not payment:
+            return False
+        await db.delete(payment)
+        await db.flush()
+        return True
 
 
 student_repository = StudentRepository()

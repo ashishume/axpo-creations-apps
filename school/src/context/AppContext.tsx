@@ -91,7 +91,7 @@ interface AppContextValue extends AppState {
   addStudents: (students: Omit<Student, "id" | "payments">[]) => void;
   updateStudent: (id: string, data: Partial<Student>) => void;
   deleteStudent: (id: string) => void;
-  addFeePayment: (studentId: string, payment: Omit<FeePayment, "id">) => void;
+  addFeePayment: (studentId: string, payment: Omit<FeePayment, "id">) => Promise<FeePayment | void>;
 
   // Stocks
   addStock: (stock: Omit<Stock, "id" | "transactions">) => void;
@@ -429,9 +429,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await refetchAll();
   }, [refetchAll]);
 
-  const addFeePayment = useCallback(async (studentId: string, payment: Omit<FeePayment, "id">) => {
-    await studentsRepository.addPayment(studentId, payment);
+  const addFeePayment = useCallback(async (studentId: string, payment: Omit<FeePayment, "id">): Promise<FeePayment | void> => {
+    const created = await studentsRepository.addPayment(studentId, payment);
     await refetchAll();
+    return created;
   }, [refetchAll]);
 
   const addStock = useCallback(async (data: Omit<Stock, "id" | "transactions">) => {

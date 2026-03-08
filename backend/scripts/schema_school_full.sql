@@ -172,10 +172,13 @@ CREATE TABLE IF NOT EXISTS school_xx_fee_payments (
   receipt_number VARCHAR(100),
   fee_category VARCHAR(50) NOT NULL,
   month VARCHAR(7),
+  receipt_photo_url TEXT,
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
 );
+-- Ensure column exists for existing deployments (idempotent)
+ALTER TABLE school_xx_fee_payments ADD COLUMN IF NOT EXISTS receipt_photo_url TEXT;
 
 -- -----------------------------------------------------------------------------
 -- Staff (depends: sessions, users)

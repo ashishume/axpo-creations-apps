@@ -1,8 +1,25 @@
-import type { Student, StudentPersonalDetails } from '../../../types';
+import type { Student, StudentPersonalDetails, FeePayment } from '../../../types';
 import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
+function mapPayment(p: Record<string, unknown>): FeePayment {
+  return {
+    id: String(p.id),
+    date: String(p.date ?? ''),
+    amount: Number(p.amount ?? 0),
+    method: (p.method as FeePayment['method']) ?? 'Cash',
+    receiptNumber: String(p.receipt_number ?? ''),
+    feeCategory: (p.fee_category as FeePayment['feeCategory']) ?? 'other',
+    month: p.month != null ? String(p.month) : undefined,
+    receiptPhotoUrl: p.receipt_photo_url != null ? String(p.receipt_photo_url) : undefined,
+  };
+}
+
 function mapStudent(r: Record<string, unknown>): Student {
+  const paymentsRaw = r.payments;
+  const payments: FeePayment[] = Array.isArray(paymentsRaw)
+    ? paymentsRaw.map((p) => mapPayment(p as Record<string, unknown>))
+    : [];
   return {
     id: String(r.id),
     sessionId: String(r.session_id ?? ''),
@@ -30,7 +47,7 @@ function mapStudent(r: Record<string, unknown>): Student {
     dueDayOfMonth: r.due_day_of_month != null ? Number(r.due_day_of_month) : undefined,
     lateFeeAmount: r.late_fee_amount != null ? Number(r.late_fee_amount) : undefined,
     lateFeeFrequency: r.late_fee_frequency as Student['lateFeeFrequency'] | undefined,
-    payments: [],
+    payments,
   };
 }
 
@@ -118,8 +135,8 @@ export const studentsRepositoryApi = {
     await teachingFetch(`/students/${id}`, { method: 'DELETE' });
   },
 
-  async addFeePayment(_studentId: string, _payment: { date: string; amount: number; method: string; receiptNumber: string; feeCategory: string; month?: string }): Promise<void> {
-    throw new Error('Fee payments not available via API yet');
+  async addFeePayment(studentId: string, payment: { date: string; amount: number; method: string; receiptNumber: string; feeCategory: string; month?: string; receiptPhotoUrl?: string }): Promise<void> {
+    await this.addPayment(studentId, payment);
   },
 
   async createMany(students: Omit<Student, 'id' | 'payments'>[]): Promise<Student[]> {
@@ -156,8 +173,24 @@ export const studentsRepositoryApi = {
     return Array.isArray(list) ? list.map(mapStudent) : [];
   },
 
-  async addPayment(_studentId: string, _payment: { date: string; amount: number; method: string; receiptNumber: string; feeCategory: string; month?: string }): Promise<{ id: string; date: string; amount: number; method: string; receiptNumber: string; feeCategory: string; month?: string }> {
-    throw new Error('Fee payments not available via API yet');
+  async addPayment(
+    studentId: string,
+    payment: { date: string; amount: number; method: string; receiptNumber: string; feeCategory: string; month?: string; receiptPhotoUrl?: string }
+  ): Promise<FeePayment> {
+    const body = {
+      date: payment.date,
+      amount: payment.amount,
+      method: payment.method,
+      receipt_number: payment.receiptNumber ?? null,
+      fee_category: payment.feeCategory,
+      month: payment.month ?? null,
+      receipt_photo_url: payment.receiptPhotoUrl ?? null,
+    };
+    const r = await teachingFetchJson<Record<string, unknown>>(`/students/${studentId}/payments`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return mapPayment(r);
   },
 
   async getPaginated(
@@ -178,7 +211,7 @@ export const studentsRepositoryApi = {
     return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   },
 
-  async deletePayment(_studentId: string, _paymentId: string): Promise<void> {
-    throw new Error('Fee payments not available via API yet');
+  async deletePayment(studentId: string, paymentId: string): Promise<void> {
+    await teachingFetch(`/students/${studentId}/payments/${paymentId}`, { method: 'DELETE' });
   },
 };
