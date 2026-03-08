@@ -60,6 +60,15 @@ export default function PrivacyPolicy() {
           </li>
           <li>
             <strong className="dark:text-slate-300 text-slate-700">
+              In-app purchases and subscriptions:
+            </strong>{" "}
+            We do not collect or store your payment card details. Purchase and
+            subscription status are processed by Apple (on iOS) or the relevant
+            platform; we may receive anonymized or minimal purchase information
+            (e.g. that your subscription is active) to enable premium features.
+          </li>
+          <li>
+            <strong className="dark:text-slate-300 text-slate-700">
               Device/local data:
             </strong>{" "}
             We use local storage (e.g. on your device) to keep you signed in and
