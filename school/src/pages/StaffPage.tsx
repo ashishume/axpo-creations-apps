@@ -325,7 +325,7 @@ export function StaffPage() {
                                   {formatDate(lastPaid.date)}
                                 </span>
                                 <span className="text-xs text-slate-500">
-                                  {formatMonthYear(lastPaid.month)}
+                                  {formatMonthYear(lastPaid.month ?? '')}
                                 </span>
                                 {lastPaid.lateDays > 0 && (
                                   <span className="inline-flex items-center gap-1 text-xs text-amber-600">

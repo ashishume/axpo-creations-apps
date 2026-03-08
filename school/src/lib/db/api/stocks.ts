@@ -9,7 +9,7 @@ function mapTransaction(t: Record<string, unknown>): StockTransaction {
     type: (t.type as StockTransaction['type']) ?? 'sale',
     amount: Number(t.amount ?? 0),
     quantity: t.quantity != null ? Number(t.quantity) : undefined,
-    description: t.description != null ? String(t.description) : undefined,
+    description: t.description != null ? String(t.description) : '',
     receiptNumber: t.receipt_number != null ? String(t.receipt_number) : undefined,
   };
 }
