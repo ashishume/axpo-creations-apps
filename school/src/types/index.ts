@@ -232,3 +232,56 @@ export interface FixedMonthlyCost {
   category: ExpenseCategory;
   isActive: boolean;
 }
+
+// Leave Management
+export type LeaveApplicantType = "staff" | "student";
+export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export interface LeaveType {
+  id: string;
+  sessionId: string;
+  name: string;
+  code: string;
+  applicableTo: "staff" | "student" | "both";
+  maxDaysPerYear?: number;
+  requiresDocument: boolean;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface LeaveBalance {
+  id: string;
+  staffId: string;
+  leaveTypeId: string;
+  leaveType?: LeaveType;
+  year: string;
+  totalDays: number;
+  usedDays: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface LeaveRequest {
+  id: string;
+  sessionId: string;
+  leaveTypeId?: string;
+  leaveType?: LeaveType;
+  applicantType: LeaveApplicantType;
+  staffId?: string;
+  staff?: Staff;
+  studentId?: string;
+  student?: Student;
+  fromDate: string;
+  toDate: string;
+  daysCount: number;
+  reason: string;
+  documentUrl?: string;
+  status: LeaveStatus;
+  appliedAt: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewerRemarks?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

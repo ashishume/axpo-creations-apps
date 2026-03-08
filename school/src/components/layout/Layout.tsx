@@ -14,6 +14,7 @@ import { StudentsPage } from "../../pages/StudentsPage";
 import { StaffPage } from "../../pages/StaffPage";
 import { ExpensesPage } from "../../pages/ExpensesPage";
 import { StocksPage } from "../../pages/StocksPage";
+import { LeavesPage } from "../../pages/LeavesPage";
 import { YearReportPage } from "../../pages/YearReportPage";
 import { UsersPage } from "../../pages/UsersPage";
 import { RolesPage } from "../../pages/RolesPage";
@@ -31,6 +32,7 @@ const PAGES: Record<PageId, React.ReactNode> = {
   staff: <StaffPage />,
   expenses: <ExpensesPage />,
   stocks: <StocksPage />,
+  leaves: <LeavesPage />,
   report: <YearReportPage />,
   users: <UsersPage />,
   roles: <RolesPage />,

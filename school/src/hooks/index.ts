@@ -8,6 +8,7 @@ export * from './useStudents';
 export * from './useStaff';
 export * from './useExpenses';
 export * from './useStocks';
+export * from './useLeaves';
 
 // Auth hooks
 export * from './useUsers';

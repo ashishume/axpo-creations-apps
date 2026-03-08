@@ -7,6 +7,7 @@ from app.teaching.services.student import student_service
 from app.teaching.services.staff import staff_service
 from app.teaching.services.expense import expense_service
 from app.teaching.services.stock import stock_service
+from app.teaching.services.leave import leave_service
 
 __all__ = [
     "auth_service",
@@ -17,4 +18,5 @@ __all__ = [
     "staff_service",
     "expense_service",
     "stock_service",
+    "leave_service",
 ]

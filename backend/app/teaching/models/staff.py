@@ -39,6 +39,12 @@ class Staff(TeachingBase):
     salary_payments: Mapped[list["SalaryPayment"]] = relationship(
         "SalaryPayment", back_populates="staff", lazy="selectin"
     )
+    leave_balances: Mapped[list["LeaveBalance"]] = relationship(
+        "LeaveBalance", back_populates="staff", lazy="selectin"
+    )
+    leave_requests: Mapped[list["LeaveRequest"]] = relationship(
+        "LeaveRequest", back_populates="staff", lazy="selectin"
+    )
 
 
 class SalaryPayment(TeachingBase):

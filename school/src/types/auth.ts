@@ -31,7 +31,11 @@ export type Permission =
   | 'schools:delete'
   | 'app:lock'
   | 'plans:manage'
-  | 'assistant:use';
+  | 'assistant:use'
+  | 'leaves:view'
+  | 'leaves:create'
+  | 'leaves:approve'
+  | 'leaves:manage';
 
 // Permission metadata for UI display
 export interface PermissionMeta {
@@ -56,6 +60,7 @@ export const PERMISSION_MODULES = {
   app: ['app:lock'],
   plans: ['plans:manage'],
   assistant: ['assistant:use'],
+  leaves: ['leaves:view', 'leaves:create', 'leaves:approve', 'leaves:manage'],
 } as const;
 
 // All available permissions

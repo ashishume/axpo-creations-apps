@@ -9,6 +9,7 @@ from app.teaching.repositories.staff import StaffRepository
 from app.teaching.repositories.expense import ExpenseRepository
 from app.teaching.repositories.stock import StockRepository
 from app.teaching.repositories.fixed_cost import FixedCostRepository
+from app.teaching.repositories.leave import LeaveRepository
 from app.teaching.repositories.role import RoleRepository
 from app.teaching.repositories.user import UserRepository
 
@@ -22,6 +23,7 @@ __all__ = [
     "ExpenseRepository",
     "StockRepository",
     "FixedCostRepository",
+    "LeaveRepository",
     "RoleRepository",
     "UserRepository",
 ]

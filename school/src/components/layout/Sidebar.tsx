@@ -17,6 +17,7 @@ import {
   Building2,
   Bot,
   Calendar,
+  CalendarOff,
 } from "lucide-react";
 import { Fragment } from "react";
 import { NavLink } from "react-router-dom";
@@ -40,7 +41,8 @@ export type PageId =
   | "users"
   | "roles"
   | "subscription"
-  | "assistant";
+  | "assistant"
+  | "leaves";
 
 export const PAGE_PATHS: Record<PageId, string> = {
   dashboard: "/",
@@ -55,6 +57,7 @@ export const PAGE_PATHS: Record<PageId, string> = {
   roles: "/roles",
   subscription: "/subscription",
   assistant: "/assistant",
+  leaves: "/leaves",
 };
 
 const nav: { id: PageId; label: string; icon: React.ElementType; permission?: Permission }[] = [
@@ -66,6 +69,7 @@ const nav: { id: PageId; label: string; icon: React.ElementType; permission?: Pe
   { id: "staff", label: "Staff & Salary", icon: UserCog, permission: "staff:view" },
   { id: "expenses", label: "Expenses", icon: Receipt, permission: "expenses:view" },
   { id: "stocks", label: "Stock & Publishers", icon: Package, permission: "stocks:view" },
+  { id: "leaves", label: "Leave Management", icon: CalendarOff, permission: "leaves:view" },
   { id: "report", label: "Year-End Report", icon: FileText, permission: "reports:view" },
   // { id: "subscription", label: "Subscription & Plan", icon: CreditCard, permission: "schools:view" },
   { id: "users", label: "User Management", icon: UserPlus, permission: "users:view" },

@@ -10,6 +10,7 @@ from app.teaching.models.staff import Staff, SalaryPayment
 from app.teaching.models.expense import Expense
 from app.teaching.models.fixed_cost import FixedMonthlyCost
 from app.teaching.models.stock import Stock, StockTransaction
+from app.teaching.models.leave import LeaveType, LeaveBalance, LeaveRequest
 
 __all__ = [
     "TeachingBase",
@@ -29,4 +30,7 @@ __all__ = [
     "FixedMonthlyCost",
     "Stock",
     "StockTransaction",
+    "LeaveType",
+    "LeaveBalance",
+    "LeaveRequest",
 ]

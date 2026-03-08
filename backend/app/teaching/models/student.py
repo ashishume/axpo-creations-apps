@@ -59,6 +59,9 @@ class Student(TeachingBase):
     payments: Mapped[list["FeePayment"]] = relationship(
         "FeePayment", back_populates="student", lazy="selectin"
     )
+    leave_requests: Mapped[list["LeaveRequest"]] = relationship(
+        "LeaveRequest", back_populates="student", lazy="selectin"
+    )
 
 
 class FeePayment(TeachingBase):

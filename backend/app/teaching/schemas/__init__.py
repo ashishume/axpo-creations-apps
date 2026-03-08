@@ -12,6 +12,18 @@ from app.teaching.schemas.student import StudentCreate, StudentUpdate, StudentRe
 from app.teaching.schemas.staff import StaffCreate, StaffUpdate, StaffResponse
 from app.teaching.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from app.teaching.schemas.stock import StockCreate, StockUpdate, StockResponse
+from app.teaching.schemas.leave import (
+    LeaveTypeCreate,
+    LeaveTypeUpdate,
+    LeaveTypeResponse,
+    LeaveBalanceCreate,
+    LeaveBalanceUpdate,
+    LeaveBalanceResponse,
+    LeaveRequestCreate,
+    LeaveRequestUpdate,
+    LeaveRequestReview,
+    LeaveRequestResponse,
+)
 
 __all__ = [
     "LoginRequest",
@@ -39,4 +51,14 @@ __all__ = [
     "StockCreate",
     "StockUpdate",
     "StockResponse",
+    "LeaveTypeCreate",
+    "LeaveTypeUpdate",
+    "LeaveTypeResponse",
+    "LeaveBalanceCreate",
+    "LeaveBalanceUpdate",
+    "LeaveBalanceResponse",
+    "LeaveRequestCreate",
+    "LeaveRequestUpdate",
+    "LeaveRequestReview",
+    "LeaveRequestResponse",
 ]

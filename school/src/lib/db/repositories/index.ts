@@ -10,6 +10,7 @@ import { staffRepositoryApi } from '../api/staff';
 import { expensesRepositoryApi } from '../api/expenses';
 import { stocksRepositoryApi } from '../api/stocks';
 import { fixedCostsRepositoryApi } from '../api/fixedCosts';
+import { leavesRepositoryApi } from '../api/leaves';
 
 import { authRepository as authRepositorySupabase } from './auth';
 import { organizationsRepository as organizationsRepositorySupabase } from './organizations';
@@ -22,6 +23,7 @@ import { staffRepository as staffRepositorySupabase, type ExtendedSalaryPayment 
 import { expensesRepository as expensesRepositorySupabase } from './expenses';
 import { stocksRepository as stocksRepositorySupabase } from './stocks';
 import { fixedCostsRepository as fixedCostsRepositorySupabase } from './fixedCosts';
+import { leavesRepositorySupabase } from './leaves';
 
 const useApi = isTeachingApiConfigured();
 
@@ -36,5 +38,6 @@ export const staffRepository = useApi ? staffRepositoryApi : staffRepositorySupa
 export const expensesRepository = useApi ? expensesRepositoryApi : expensesRepositorySupabase;
 export const stocksRepository = useApi ? stocksRepositoryApi : stocksRepositorySupabase;
 export const fixedCostsRepository = useApi ? fixedCostsRepositoryApi : fixedCostsRepositorySupabase;
+export const leavesRepository = useApi ? leavesRepositoryApi : leavesRepositorySupabase;
 
 export type { PaginatedResult, ExtendedSalaryPayment };
