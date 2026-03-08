@@ -71,6 +71,7 @@ class LeaveRepository:
     ) -> LeaveBalance | None:
         result = await db.execute(
             select(LeaveBalance)
+            .options(selectinload(LeaveBalance.leave_type))
             .where(
                 LeaveBalance.staff_id == staff_id,
                 LeaveBalance.leave_type_id == leave_type_id,
@@ -96,8 +97,13 @@ class LeaveRepository:
     async def add_balance(self, db: AsyncSession, balance: LeaveBalance) -> LeaveBalance:
         db.add(balance)
         await db.flush()
-        await db.refresh(balance)
-        return balance
+        # Re-query with leave_type loaded so serialization doesn't trigger lazy load
+        result = await db.execute(
+            select(LeaveBalance)
+            .options(selectinload(LeaveBalance.leave_type))
+            .where(LeaveBalance.id == balance.id)
+        )
+        return result.scalar_one()
 
     async def update_balance(self, db: AsyncSession, balance: LeaveBalance) -> LeaveBalance:
         await db.flush()

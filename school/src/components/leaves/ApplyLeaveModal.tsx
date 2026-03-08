@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
-import { useApplyLeave } from "../../hooks/useLeaves";
-import type { LeaveType, Staff, Student } from "../../types";
+import { useApplyLeave, useLeaveBalances } from "../../hooks/useLeaves";
+import type { LeaveType, LeaveBalance, Staff, Student } from "../../types";
 import type { User } from "../../types/auth";
 
 function daysBetween(from: string, to: string): number {
@@ -46,7 +46,23 @@ export function ApplyLeaveModal({
   const [reason, setReason] = useState<string>("");
   const [documentUrl, setDocumentUrl] = useState<string>("");
 
+  const preselectedStaffId = currentUser?.staffId ?? "";
+  const preselectedStudentId = currentUser?.studentId ?? "";
+  const effectiveStaffId = applicantType === "staff" ? (staffId || preselectedStaffId) : "";
+  const { data: staffBalances = [] } = useLeaveBalances(effectiveStaffId, sessionYear, {
+    enabled: applicantType === "staff" && !!effectiveStaffId && !!sessionYear,
+  });
+
   const applyLeave = useApplyLeave();
+
+  const selectedLeaveBalance = useMemo((): LeaveBalance | undefined => {
+    if (applicantType !== "staff" || !leaveTypeId) return undefined;
+    return staffBalances.find((b) => b.leaveTypeId === leaveTypeId);
+  }, [applicantType, leaveTypeId, staffBalances]);
+
+  const availableDays = selectedLeaveBalance
+    ? selectedLeaveBalance.totalDays - selectedLeaveBalance.usedDays
+    : null;
 
   const applicableTypes = useMemo(() => {
     if (applicantType === "staff")
@@ -69,6 +85,21 @@ export function ApplyLeaveModal({
     if (!leaveTypeId) {
       onError("Please select a leave type.");
       return;
+    }
+    if (applicantType === "staff") {
+      if (!selectedLeaveBalance) {
+        onError(
+          "Leave balance not initialized for this staff. Ask admin to initialize in Leave Management (Balances tab)."
+        );
+        return;
+      }
+      const available = selectedLeaveBalance.totalDays - selectedLeaveBalance.usedDays;
+      if (daysCount > available) {
+        onError(
+          `Insufficient leave balance. Available: ${available} days for this leave type.`
+        );
+        return;
+      }
     }
     if (!fromDate || !toDate) {
       onError("Please select from and to dates.");
@@ -101,9 +132,6 @@ export function ApplyLeaveModal({
       onError(err instanceof Error ? err.message : "Failed to apply for leave");
     }
   };
-
-  const preselectedStaffId = currentUser?.staffId ?? "";
-  const preselectedStudentId = currentUser?.studentId ?? "";
 
   return (
     <Modal open={open} onClose={onClose} title="Apply for leave">
@@ -178,6 +206,19 @@ export function ApplyLeaveModal({
               </option>
             ))}
           </select>
+          {applicantType === "staff" && effectiveStaffId && leaveTypeId && (
+            <div className="mt-2 text-sm">
+              {selectedLeaveBalance ? (
+                <span className="text-slate-600">
+                  Available balance: <strong>{availableDays}</strong> days
+                </span>
+              ) : (
+                <span className="text-amber-700">
+                  Leave balance not initialized for this staff. Ask admin to initialize in Leave Management → Balances.
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

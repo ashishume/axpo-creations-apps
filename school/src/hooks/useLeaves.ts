@@ -33,11 +33,11 @@ export function useLeaveRequest(id: string) {
   });
 }
 
-export function useLeaveBalances(staffId: string, year?: string) {
+export function useLeaveBalances(staffId: string, year?: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: [QUERY_KEY_LEAVE_BALANCES, staffId, year],
     queryFn: () => leavesRepository.getLeaveBalances(staffId, year),
-    enabled: !!staffId,
+    enabled: options?.enabled !== false && !!staffId,
   });
 }
 

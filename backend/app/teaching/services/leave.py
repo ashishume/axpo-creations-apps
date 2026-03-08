@@ -113,6 +113,10 @@ class LeaveService:
         leave_types = await leave_repository.list_leave_types(
             db, session_id, applicable_to="staff", active_only=True
         )
+        if not leave_types:
+            raise ValidationError(
+                "No staff leave types configured for this session. Add leave types in the Leave Types tab first."
+            )
         out = []
         for lt in leave_types:
             existing = await leave_repository.get_balance(
@@ -168,11 +172,7 @@ class LeaveService:
                             "Leave request exceeds maximum days for this leave type"
                         )
 
-        request = LeaveRequest(
-            **data.model_dump(),
-            days_count=days_count,
-            status="pending",
-        )
+        request = LeaveRequest(**data.model_dump(), status="pending")
         return await leave_repository.add_leave_request(db, request)
 
     async def get_leave_request(

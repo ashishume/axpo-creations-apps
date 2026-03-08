@@ -314,6 +314,11 @@ export const leavesRepositorySupabase = {
 
   async initializeBalances(staffId: string, sessionId: string, year: string): Promise<LeaveBalance[]> {
     const types = await this.getLeaveTypes(sessionId, 'staff');
+    if (types.length === 0) {
+      throw new Error(
+        'No staff leave types configured for this session. Add leave types in the Leave Types tab first.'
+      );
+    }
     const supabase = getSupabase();
     const results: LeaveBalance[] = [];
     for (const lt of types) {

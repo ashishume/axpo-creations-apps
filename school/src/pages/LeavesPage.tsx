@@ -64,9 +64,14 @@ export function LeavesPage() {
     selectedSessionId ?? "",
     { status: statusFilter || undefined, applicantType: applicantFilter || undefined }
   );
+  const staffLeaveTypes = useMemo(
+    () => leaveTypes.filter((t) => t.applicableTo === "staff" || t.applicableTo === "both"),
+    [leaveTypes]
+  );
   const { data: leaveBalances = [] } = useLeaveBalances(
-    balancesStaffId || (hasPermission("leaves:manage") ? staff[0]?.id ?? "" : ""),
-    balancesYear || sessionYear
+    balancesStaffId,
+    balancesYear || sessionYear,
+    { enabled: !!balancesStaffId }
   );
 
   const applyLeaveMutation = useApplyLeave();
@@ -376,17 +381,32 @@ export function LeavesPage() {
                 />
                 <Button
                   size="sm"
-                  disabled={!balancesStaffId || !sessionYear}
+                  disabled={!balancesStaffId || (!balancesYear && !sessionYear) || initializeBalancesMutation.isPending}
                   onClick={() => {
-                    if (balancesStaffId && (balancesYear || sessionYear))
-                      initializeBalancesMutation.mutate({
+                    if (!balancesStaffId || !(balancesYear || sessionYear)) return;
+                    if (staffLeaveTypes.length === 0) {
+                      toast(
+                        "No staff leave types configured. Add leave types in the Leave Types tab first.",
+                        "error"
+                      );
+                      return;
+                    }
+                    initializeBalancesMutation.mutate(
+                      {
                         staffId: balancesStaffId,
                         sessionId: selectedSessionId!,
                         year: balancesYear || sessionYear,
-                      });
+                      },
+                      {
+                        onSuccess: () =>
+                          toast("Leave balances initialized for this staff/year."),
+                        onError: (err) =>
+                          toast(err instanceof Error ? err.message : "Failed to initialize balances", "error"),
+                      }
+                    );
                   }}
                 >
-                  Initialize balances
+                  {initializeBalancesMutation.isPending ? "Initializing…" : "Initialize balances"}
                 </Button>
               </div>
             )}
@@ -398,7 +418,7 @@ export function LeavesPage() {
                     <th className="pb-2 pr-4 font-medium">Year</th>
                     <th className="pb-2 pr-4 font-medium">Total</th>
                     <th className="pb-2 pr-4 font-medium">Used</th>
-                    <th className="pb-2 font-medium">Remaining</th>
+                    <th className="pb-2 font-medium">Available</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -414,11 +434,16 @@ export function LeavesPage() {
                 </tbody>
               </table>
             </div>
-            {(!balancesStaffId && hasPermission("leaves:manage")) && (
+            {!balancesStaffId && hasPermission("leaves:manage") && (
               <p className="text-sm text-slate-500">Select a staff member to view leave balances.</p>
             )}
             {balancesStaffId && leaveBalances.length === 0 && (
-              <p className="text-sm text-slate-500">No balances for this staff/year. Use Initialize balances to create.</p>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Leave balances are not initialized for this staff/year.{" "}
+                {staffLeaveTypes.length === 0
+                  ? "Add leave types in the Leave Types tab first, then click Initialize balances."
+                  : "Click Initialize balances above to create them."}
+              </div>
             )}
           </CardContent>
         </Card>
