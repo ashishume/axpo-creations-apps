@@ -1,10 +1,16 @@
 """Stock routes for teaching."""
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.teaching.dependencies import get_teaching_db_session, get_current_teaching_user
-from app.teaching.schemas.stock import StockCreate, StockUpdate, StockResponse
+from app.teaching.schemas.stock import (
+    StockCreate,
+    StockUpdate,
+    StockResponse,
+    StockTransactionCreate,
+    StockTransactionResponse,
+)
 from app.teaching.services.stock import stock_service
 from app.teaching.models.user import User
 
@@ -74,3 +80,26 @@ async def delete_stock(
     user: User = Depends(get_current_teaching_user),
 ):
     await stock_service.delete(db, id)
+
+
+@router.post("/{id}/transactions", response_model=StockTransactionResponse)
+async def add_stock_transaction(
+    id: UUID,
+    data: StockTransactionCreate,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    tx = await stock_service.add_transaction(db, id, data)
+    return StockTransactionResponse.model_validate(tx)
+
+
+@router.delete("/{id}/transactions/{transaction_id}", status_code=204)
+async def delete_stock_transaction(
+    id: UUID,
+    transaction_id: UUID,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    deleted = await stock_service.delete_transaction(db, id, transaction_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Transaction not found")

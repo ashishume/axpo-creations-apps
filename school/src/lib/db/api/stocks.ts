@@ -2,7 +2,23 @@ import type { Stock, StockTransaction } from '../../../types';
 import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
+function mapTransaction(t: Record<string, unknown>): StockTransaction {
+  return {
+    id: String(t.id),
+    date: String(t.date ?? ''),
+    type: (t.type as StockTransaction['type']) ?? 'sale',
+    amount: Number(t.amount ?? 0),
+    quantity: t.quantity != null ? Number(t.quantity) : undefined,
+    description: t.description != null ? String(t.description) : undefined,
+    receiptNumber: t.receipt_number != null ? String(t.receipt_number) : undefined,
+  };
+}
+
 function mapStock(r: Record<string, unknown>): Stock {
+  const transactionsRaw = r.transactions;
+  const transactions: StockTransaction[] = Array.isArray(transactionsRaw)
+    ? (transactionsRaw as Record<string, unknown>[]).map((t) => mapTransaction(t))
+    : [];
   return {
     id: String(r.id),
     sessionId: String(r.session_id ?? ''),
@@ -10,7 +26,7 @@ function mapStock(r: Record<string, unknown>): Stock {
     description: String(r.description ?? ''),
     purchaseDate: String(r.purchase_date ?? ''),
     totalCreditAmount: Number(r.total_credit_amount ?? 0),
-    transactions: [],
+    transactions,
     status: (r.status as 'open' | 'cleared') ?? 'open',
     settledDate: r.settled_date != null ? String(r.settled_date) : undefined,
     settledAmount: r.settled_amount != null ? Number(r.settled_amount) : undefined,
@@ -72,8 +88,20 @@ export const stocksRepositoryApi = {
     await teachingFetch(`/stocks/${id}`, { method: 'DELETE' });
   },
 
-  async addTransaction(_stockId: string, _transaction: Omit<StockTransaction, 'id'>): Promise<StockTransaction> {
-    throw new Error('Stock transactions not available via API yet');
+  async addTransaction(stockId: string, transaction: Omit<StockTransaction, 'id'>): Promise<StockTransaction> {
+    const body = {
+      date: transaction.date,
+      type: transaction.type,
+      amount: transaction.amount,
+      quantity: transaction.quantity ?? null,
+      description: transaction.description ?? null,
+      receipt_number: transaction.receiptNumber ?? null,
+    };
+    const r = await teachingFetchJson<Record<string, unknown>>(`/stocks/${stockId}/transactions`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return mapTransaction(r);
   },
 
   async getPaginated(
@@ -94,8 +122,8 @@ export const stocksRepositoryApi = {
     return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   },
 
-  async deleteTransaction(_stockId: string, _transactionId: string): Promise<void> {
-    throw new Error('Stock transactions not available via API yet');
+  async deleteTransaction(stockId: string, transactionId: string): Promise<void> {
+    await teachingFetch(`/stocks/${stockId}/transactions/${transactionId}`, { method: 'DELETE' });
   },
 
   async settle(_stockId: string, _settledAmount: number): Promise<void> {

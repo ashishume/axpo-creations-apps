@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import TeachingBase
 
@@ -30,6 +30,10 @@ class Stock(TeachingBase):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+    transactions: Mapped[list["StockTransaction"]] = relationship(
+        "StockTransaction", back_populates="stock", lazy="selectin"
+    )
+
 
 class StockTransaction(TeachingBase):
     __tablename__ = "school_xx_stock_transactions"
@@ -48,3 +52,5 @@ class StockTransaction(TeachingBase):
     receipt_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    stock: Mapped["Stock"] = relationship("Stock", back_populates="transactions")

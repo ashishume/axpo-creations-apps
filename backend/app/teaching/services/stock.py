@@ -4,8 +4,8 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
-from app.teaching.models.stock import Stock
-from app.teaching.schemas.stock import StockCreate, StockUpdate
+from app.teaching.models.stock import Stock, StockTransaction
+from app.teaching.schemas.stock import StockCreate, StockUpdate, StockTransactionCreate
 from app.teaching.repositories.stock import stock_repository
 
 
@@ -45,6 +45,27 @@ class StockService:
     async def delete(self, db: AsyncSession, id: UUID) -> None:
         stock = await self.get_or_404(db, id)
         await stock_repository.delete(db, stock)
+
+    async def add_transaction(
+        self, db: AsyncSession, stock_id: UUID, data: StockTransactionCreate
+    ) -> StockTransaction:
+        await self.get_or_404(db, stock_id)
+        return await stock_repository.add_transaction(
+            db,
+            stock_id,
+            transaction_date=data.date,
+            type=data.type,
+            amount=data.amount,
+            quantity=data.quantity,
+            description=data.description,
+            receipt_number=data.receipt_number,
+        )
+
+    async def delete_transaction(
+        self, db: AsyncSession, stock_id: UUID, transaction_id: UUID
+    ) -> bool:
+        await self.get_or_404(db, stock_id)
+        return await stock_repository.delete_transaction(db, transaction_id, stock_id)
 
 
 stock_service = StockService()

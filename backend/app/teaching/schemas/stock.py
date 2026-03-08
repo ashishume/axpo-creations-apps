@@ -36,9 +36,31 @@ class StockUpdate(BaseModel):
     notes: str | None = None
 
 
+class StockTransactionCreate(BaseModel):
+    date: date
+    type: str  # purchase, sale, return
+    amount: Decimal
+    quantity: int | None = None
+    description: str | None = None
+    receipt_number: str | None = None
+
+
+class StockTransactionResponse(BaseModel):
+    id: UUID
+    date: date
+    type: str
+    amount: Decimal
+    quantity: int | None = None
+    description: str | None = None
+    receipt_number: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
 class StockResponse(StockBase):
     id: UUID
     created_at: datetime
     updated_at: datetime
+    transactions: list[StockTransactionResponse] = []
 
     model_config = {"from_attributes": True}
