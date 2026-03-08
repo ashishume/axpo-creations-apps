@@ -246,7 +246,7 @@ export function LeavesPage() {
                           <span
                             className={cn(
                               "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                              statusColors[r.status]
+                              statusColors[r.status as LeaveRequestType["status"]] ?? "bg-slate-100 text-slate-600"
                             )}
                           >
                             {r.status === "pending" && <Clock className="h-3 w-3" />}

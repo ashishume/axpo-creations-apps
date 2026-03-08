@@ -1,5 +1,5 @@
 import { getSupabase } from '../supabase';
-import type { LeaveType, LeaveBalance, LeaveRequest } from '../../types';
+import type { LeaveType, LeaveBalance, LeaveRequest } from '../../../types';
 
 function mapLeaveType(row: Record<string, unknown>): LeaveType {
   return {
