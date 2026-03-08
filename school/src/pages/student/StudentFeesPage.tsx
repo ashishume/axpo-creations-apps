@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useStudent } from '../../hooks/useStudents';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, formatMonthYear } from '../../lib/utils';
 import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
@@ -197,7 +197,7 @@ export function StudentFeesPage() {
 
                   return (
                     <tr key={month} className="border-b border-slate-100">
-                      <td className="py-3 pr-4 font-medium text-slate-900">{month}</td>
+                      <td className="py-3 pr-4 font-medium text-slate-900">{formatMonthYear(month)}</td>
                       <td className="py-3 pr-4 text-right">{formatCurrency(totalMonthly)}</td>
                       <td className="py-3 pr-4 text-right">{formatCurrency(paidAmount)}</td>
                       <td className="py-3 text-center">

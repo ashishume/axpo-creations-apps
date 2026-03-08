@@ -23,7 +23,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
       "Axpo Assistant (AI chat)",
       "Natural language CRUD",
       "Session-scoped chat history",
-      "OpenAI or Gemini powered",
+      "OpenRouter powered",
       "Priority support",
     ],
   },

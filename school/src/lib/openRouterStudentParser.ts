@@ -1,35 +1,17 @@
 /**
- * Parse "add student(s)" natural language using Google Gemini API.
+ * Parse "add student(s)" natural language using OpenRouter API.
  * Returns the same ParseResult shape as studentChatParser for drop-in use.
  */
 
 import type { StudentPersonalDetails } from "../types";
 import type { ParseResult, ParsedStudent } from "./studentChatParser";
+import { openRouterChat, isOpenRouterAvailable } from "./openRouter";
 
-const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
-// Free-tier models; try in order (names vary by region / API version). Override with VITE_GEMINI_MODEL if needed.
-const DEFAULT_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
-
-function getModelsToTry(): string[] {
-  const envModel =
-    typeof import.meta !== "undefined" && import.meta.env?.VITE_GEMINI_MODEL
-      ? String(import.meta.env.VITE_GEMINI_MODEL).trim()
-      : "";
-  if (envModel) return [envModel, ...DEFAULT_MODELS.filter((m) => m !== envModel)];
-  return DEFAULT_MODELS;
+export function isLLMAvailableForAddStudents(): boolean {
+  return isOpenRouterAvailable();
 }
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
-
-function getApiKey(): string | undefined {
-  return typeof import.meta !== "undefined" && import.meta.env?.VITE_GEMINI_API_KEY
-    ? String(import.meta.env.VITE_GEMINI_API_KEY).trim()
-    : undefined;
-}
-
-export function isGeminiAvailable(): boolean {
-  return !!getApiKey();
-}
 
 const SYSTEM_PROMPT = `You are a strict JSON extractor for a school app. The user will type a natural language request to ADD one or more students. Your job is to extract structured data and return ONLY valid JSON, no markdown or explanation.
 
@@ -66,9 +48,8 @@ function buildUserPrompt(userInput: string): string {
   return `Extract student(s) to add from this message. Return JSON only.\n\n"${userInput}"`;
 }
 
-function parseGeminiJson(text: string): { students: ParsedStudent[]; error?: string } {
+function parseJsonResponse(text: string): { students: ParsedStudent[]; error?: string } {
   const trimmed = text.trim();
-  // Strip markdown code block if present
   const jsonStr = trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
   const parsed = JSON.parse(jsonStr) as {
     students?: Array<{
@@ -118,10 +99,9 @@ function parseGeminiJson(text: string): { students: ParsedStudent[]; error?: str
   return { students, error: students.length === 0 ? "No student names found." : undefined };
 }
 
-export async function parseAddStudentsWithGemini(userInput: string): Promise<ParseResult> {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    return { success: false, students: [], error: "Gemini API key not configured." };
+export async function parseAddStudentsWithOpenRouter(userInput: string): Promise<ParseResult> {
+  if (!isOpenRouterAvailable()) {
+    return { success: false, students: [], error: "OpenRouter API key not configured. Set VITE_OPENROUTER_API_KEY in .env.local." };
   }
 
   const trimmed = userInput.trim();
@@ -129,79 +109,23 @@ export async function parseAddStudentsWithGemini(userInput: string): Promise<Par
     return { success: false, students: [], error: "Enter a message to add student(s)." };
   }
 
-  const body = {
-    contents: [
-      {
-        role: "user",
-        parts: [
-          { text: SYSTEM_PROMPT + "\n\n" + buildUserPrompt(trimmed) },
-        ],
-      },
-    ],
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.1,
-      maxOutputTokens: 1024,
-    },
-  };
-
-  interface GeminiPart {
-    text?: string;
-  }
-  interface GeminiContent {
-    parts?: GeminiPart[];
-  }
-  interface GeminiCandidate {
-    content?: GeminiContent;
-  }
-
-  let lastError = "";
-  for (const model of getModelsToTry()) {
-    try {
-      const url = `${GEMINI_API_BASE}/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      const responseText = await res.text();
-      if (!res.ok) {
-        const isModelNotFound =
-          res.status === 404 ||
-          /not found|not supported for generateContent/i.test(responseText);
-        lastError = (() => {
-          try {
-            const errJson = JSON.parse(responseText);
-            return errJson?.error?.message ?? responseText?.slice(0, 200) ?? `API error (${res.status})`;
-          } catch {
-            return responseText?.slice(0, 200) || `API error (${res.status})`;
-          }
-        })();
-        if (isModelNotFound) continue;
-        if (res.status === 429) return { success: false, students: [], error: "Rate limit exceeded. Please try again in a moment." };
-        return { success: false, students: [], error: lastError };
-      }
-
-      const data = JSON.parse(responseText) as { candidates?: GeminiCandidate[] };
-      const textPart = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!textPart) {
-        return { success: false, students: [], error: "No response from Gemini." };
-      }
-
-      const { students, error } = parseGeminiJson(textPart);
-      if (error && students.length === 0) {
-        return { success: false, students: [], error };
-      }
-      return { success: true, students };
-    } catch (e) {
-      lastError = e instanceof Error ? e.message : String(e);
+  try {
+    const content = await openRouterChat(
+      [
+        { role: "user", content: SYSTEM_PROMPT + "\n\n" + buildUserPrompt(trimmed) },
+      ],
+      { temperature: 0.1, max_tokens: 1024, response_format: { type: "json_object" } }
+    );
+    const { students, error } = parseJsonResponse(content);
+    if (error && students.length === 0) {
+      return { success: false, students: [], error };
     }
+    return { success: true, students };
+  } catch (e) {
+    return {
+      success: false,
+      students: [],
+      error: e instanceof Error ? e.message : String(e),
+    };
   }
-
-  return {
-    success: false,
-    students: [],
-    error: lastError || "No Gemini model available. Check VITE_GEMINI_API_KEY and try again.",
-  };
 }

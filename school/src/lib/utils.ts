@@ -18,12 +18,25 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+/** Format a date string for display (e.g. "26 May 2026"). Handles ISO and YYYY-MM-DD. */
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-IN", {
-    day: "2-digit",
+  if (!dateStr || typeof dateStr !== "string") return "—";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
     month: "short",
     year: "numeric",
   });
+}
+
+/** Format YYYY-MM to readable month and year (e.g. "March 2026"). */
+export function formatMonthYear(monthStr: string): string {
+  if (!monthStr || typeof monthStr !== "string") return "—";
+  const [y, m] = monthStr.split("-").map(Number);
+  if (!y || !m || m < 1 || m > 12) return monthStr;
+  const d = new Date(y, m - 1, 1);
+  return d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 }
 
 // Class progression order

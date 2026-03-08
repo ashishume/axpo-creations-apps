@@ -4,7 +4,7 @@ import { useStudent } from '../../hooks/useStudents';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Pagination, usePagination } from '../../components/ui/Pagination';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, formatDate, formatMonthYear } from '../../lib/utils';
 import { Skeleton, SkeletonStats, SkeletonTable } from '../../components/ui/Skeleton';
 import { Download, Receipt, CreditCard, AlertCircle, Filter } from 'lucide-react';
 
@@ -91,7 +91,7 @@ export function StudentPaymentsPage() {
 PAYMENT RECEIPT
 ===============
 Receipt No: ${payment.receiptNumber || paymentId}
-Date: ${new Date(payment.date).toLocaleDateString()}
+Date: ${formatDate(payment.date)}
 
 Student: ${student.name}
 Student ID: ${student.studentId}
@@ -100,7 +100,7 @@ Payment Details:
 Category: ${CATEGORY_LABELS[payment.feeCategory] || payment.feeCategory}
 Amount: ${formatCurrency(payment.amount)}
 Method: ${payment.method}
-${payment.month ? `Month: ${payment.month}` : ''}
+${payment.month ? `Month: ${formatMonthYear(payment.month)}` : ''}
 
 Thank you for your payment!
     `.trim();
@@ -210,7 +210,7 @@ Thank you for your payment!
                     {paginatedPayments.map((payment) => (
                       <tr key={payment.id} className="border-b border-slate-100">
                         <td className="py-3 pr-4 text-slate-900">
-                          {new Date(payment.date).toLocaleDateString()}
+                          {formatDate(payment.date)}
                         </td>
                         <td className="py-3 pr-4 text-slate-600">
                           {payment.receiptNumber || '—'}
@@ -221,7 +221,7 @@ Thank you for your payment!
                           </span>
                         </td>
                         <td className="py-3 pr-4 text-slate-600">
-                          {payment.month || '—'}
+                          {payment.month ? formatMonthYear(payment.month) : '—'}
                         </td>
                         <td className="py-3 pr-4 text-right font-medium text-green-600">
                           {formatCurrency(payment.amount)}

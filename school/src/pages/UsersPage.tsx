@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { User, CreateUserRequest } from '../types/auth';
 import { SUPER_ADMIN_ROLE_NAME } from '../types/auth';
+import { formatDate } from '../lib/utils';
 
 export function UsersPage() {
   const { page, pageSize, setPage, setPageSize } = usePagination(10);
@@ -257,7 +258,7 @@ export function UsersPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
                       {user.lastLoginAt
-                        ? new Date(user.lastLoginAt).toLocaleDateString()
+                        ? formatDate(user.lastLoginAt)
                         : 'Never'}
                     </td>
                     <td className="px-6 py-4 text-right">

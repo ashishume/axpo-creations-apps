@@ -1,10 +1,11 @@
 """Staff repository: DB operations only."""
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.teaching.models.staff import Staff
+from app.teaching.models.staff import Staff, SalaryPayment
 
 
 class StaffRepository:
@@ -36,6 +37,87 @@ class StaffRepository:
     async def delete(self, db: AsyncSession, staff: Staff) -> None:
         await db.delete(staff)
         await db.flush()
+
+    async def add_salary_payment(
+        self,
+        db: AsyncSession,
+        staff_id: UUID,
+        *,
+        month: str,
+        amount,
+        status: str = "Paid",
+        payment_date: date | None = None,
+        method: str | None = None,
+        due_date: str | None = None,
+    ) -> SalaryPayment:
+        from decimal import Decimal
+        due = due_date or f"{month}-05"
+        try:
+            due_parsed = date.fromisoformat(due) if isinstance(due, str) else due
+        except (TypeError, ValueError):
+            due_parsed = date.fromisoformat(f"{month}-05")
+        payment = SalaryPayment(
+            staff_id=staff_id,
+            month=month,
+            expected_amount=Decimal(str(amount)),
+            paid_amount=Decimal(str(amount)),
+            status=status,
+            due_date=due_parsed,
+            payment_date=payment_date,
+            method=method,
+        )
+        db.add(payment)
+        await db.flush()
+        await db.refresh(payment)
+        return payment
+
+    async def update_salary_payment(
+        self,
+        db: AsyncSession,
+        payment_id: UUID,
+        staff_id: UUID,
+        *,
+        paid_amount=None,
+        status: str | None = None,
+        payment_date=None,
+        method: str | None = None,
+    ) -> SalaryPayment | None:
+        result = await db.execute(
+            select(SalaryPayment).where(
+                SalaryPayment.id == payment_id,
+                SalaryPayment.staff_id == staff_id,
+            )
+        )
+        payment = result.scalar_one_or_none()
+        if not payment:
+            return None
+        if paid_amount is not None:
+            payment.paid_amount = paid_amount
+        if status is not None:
+            payment.status = status
+        if payment_date is not None:
+            payment.payment_date = payment_date
+        if method is not None:
+            payment.method = method
+        await db.flush()
+        await db.refresh(payment)
+        return payment
+
+    async def delete_salary_payment(
+        self, db: AsyncSession, payment_id: UUID, staff_id: UUID
+    ) -> bool:
+        result = await db.execute(
+            select(SalaryPayment).where(
+                SalaryPayment.id == payment_id,
+                SalaryPayment.staff_id == staff_id,
+            )
+        )
+        payment = result.scalar_one_or_none()
+        if not payment:
+            return False
+        await db.delete(payment)
+        await db.flush()
+        return True
 
 
 staff_repository = StaffRepository()

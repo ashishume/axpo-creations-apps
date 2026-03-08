@@ -1,7 +1,7 @@
 import { useAuth } from '../../context/AuthContext';
 import { useStudent } from '../../hooks/useStudents';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, formatDate } from '../../lib/utils';
 import { SkeletonDashboard } from '../../components/ui/Skeleton';
 import { GraduationCap, CreditCard, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -201,7 +201,7 @@ export function StudentDashboardPage() {
                           {formatCurrency(payment.amount)}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {new Date(payment.date).toLocaleDateString()} · {payment.method}
+                          {formatDate(payment.date)} · {payment.method}
                         </p>
                       </div>
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">

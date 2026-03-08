@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import type { Student, StudentClass, PaymentMethod, StudentPersonalDetails } from "../../types";
-import { formatCurrency, formatDate } from "../../lib/utils";
+import { formatCurrency, formatDate, formatMonthYear } from "../../lib/utils";
 import { 
   getTotalPaid, 
   getRemaining, 
@@ -70,6 +70,16 @@ export function StudentDetailsModal({
   // When form is shown or category changes, set "For Month" to next unpaid month for that category
   const nextUnpaidMonth = getNextUnpaidMonth(student, "monthly");
   const nextUnpaidMonthTransport = getNextUnpaidMonth(student, "transport");
+  // Months for "For Month" dropdown: 12 back to 12 ahead (readable labels)
+  const monthOptions = useMemo(() => {
+    const out: string[] = [];
+    const now = new Date();
+    for (let i = -12; i <= 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return out;
+  }, []);
   useEffect(() => {
     if (!showPaymentForm) return;
     setPaymentMonth(selectedCategory === "transport" ? nextUnpaidMonthTransport : nextUnpaidMonth);
@@ -633,13 +643,18 @@ export function StudentDetailsModal({
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-600">For Month</label>
-                    <input
+                    <select
                       name="month"
-                      type="month"
                       value={paymentMonth}
                       onChange={(e) => setPaymentMonth(e.target.value)}
                       className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
-                    />
+                    >
+                      {monthOptions.map((m) => (
+                        <option key={m} value={m}>
+                          {formatMonthYear(m)}
+                        </option>
+                      ))}
+                    </select>
                     <p className="mt-0.5 text-xs text-slate-500">
                       {selectedCategory === "monthly" || selectedCategory === "transport"
                         ? "Defaults to next unpaid month"

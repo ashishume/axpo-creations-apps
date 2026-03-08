@@ -8,8 +8,7 @@ import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
 import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { BulkImportModal } from "../components/import/BulkImportModal";
 import type { Staff as StaffType, StaffRole, SalaryPayment } from "../types";
-import { formatCurrency } from "../lib/utils";
-import { cn } from "../lib/utils";
+import { formatCurrency, formatDate, formatMonthYear, cn } from "../lib/utils";
 import { SearchInput } from "../components/ui/SearchInput";
 import { FilterChips } from "../components/ui/FilterChips";
 
@@ -62,7 +61,7 @@ function getCurrentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-// Generate last 12 months
+// Generate last 12 months (current + 11 past)
 function getLast12Months(): string[] {
   const months: string[] = [];
   const now = new Date();
@@ -71,6 +70,13 @@ function getLast12Months(): string[] {
     months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
   }
   return months;
+}
+
+// Build months to show in salary history: last 12 months + any month that has a payment (e.g. future advance)
+// Sorted newest first so future/current appear at top
+function getSalaryHistoryMonths(last12: string[], paymentMonths: string[]): string[] {
+  const set = new Set<string>([...last12, ...paymentMonths]);
+  return Array.from(set).sort((a, b) => b.localeCompare(a));
 }
 
 // Generate current month + next 6 months for salary payment
@@ -316,10 +322,10 @@ export function StaffPage() {
                             {lastPaid.date ? (
                               <div className="flex flex-col">
                                 <span className="text-slate-900">
-                                  {new Date(lastPaid.date).toLocaleDateString()}
+                                  {formatDate(lastPaid.date)}
                                 </span>
                                 <span className="text-xs text-slate-500">
-                                  {lastPaid.month}
+                                  {formatMonthYear(lastPaid.month)}
                                 </span>
                                 {lastPaid.lateDays > 0 && (
                                   <span className="inline-flex items-center gap-1 text-xs text-amber-600">
@@ -490,11 +496,12 @@ export function StaffPage() {
                 {payableMonths.map((month) => {
                   const paymentsForMonth = salaryModal.salaryPayments.filter(p => p.month === month);
                   const paidCount = paymentsForMonth.filter(p => p.status === "Paid").length;
-                  const monthLabel = month === currentMonth ? `${month} (Current)` : month;
-                  const suffix = paidCount > 0 ? `- Paid (${paidCount} payment${paidCount > 1 ? "s" : ""})` : paymentsForMonth.length ? `- ${paymentsForMonth[0].status}` : "";
+                  const monthLabel = formatMonthYear(month);
+                  const currentLabel = month === currentMonth ? ` (Current)` : "";
+                  const suffix = paidCount > 0 ? ` – Paid (${paidCount} payment${paidCount > 1 ? "s" : ""})` : paymentsForMonth.length ? ` – ${paymentsForMonth[0].status}` : "";
                   return (
                     <option key={month} value={month}>
-                      {monthLabel} {suffix}
+                      {monthLabel}{currentLabel}{suffix}
                     </option>
                   );
                 })}
@@ -595,17 +602,23 @@ export function StaffPage() {
         }}
       />
 
-      {/* Salary History Modal */}
-      {salaryHistoryModal && (
+      {/* Salary History Modal - use latest staff from context so payments stay in sync */}
+      {salaryHistoryModal && (() => {
+        const historyStaff = staff.find((s) => s.id === salaryHistoryModal.id) ?? salaryHistoryModal;
+        const monthsToShow = getSalaryHistoryMonths(
+          last12Months,
+          historyStaff.salaryPayments.map((p) => p.month)
+        );
+        return (
         <Modal
           open={!!salaryHistoryModal}
           onClose={() => setSalaryHistoryModal(null)}
-          title={`Salary History – ${salaryHistoryModal.name}`}
+          title={`Salary History – ${historyStaff.name}`}
         >
           <div className="space-y-4">
             <div className="rounded-lg bg-slate-50 p-3">
               <p className="text-sm text-slate-600">
-                Monthly Salary: <strong>{formatCurrency(salaryHistoryModal.monthlySalary)}</strong>
+                Monthly Salary: <strong>{formatCurrency(historyStaff.monthlySalary)}</strong>
               </p>
             </div>
             
@@ -621,8 +634,8 @@ export function StaffPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {last12Months.map((month) => {
-                    const paymentsForMonth = salaryHistoryModal.salaryPayments.filter(p => p.month === month);
+                  {monthsToShow.map((month) => {
+                    const paymentsForMonth = historyStaff.salaryPayments.filter(p => p.month === month);
                     const totalAmount = paymentsForMonth.reduce((s, p) => s + p.amount, 0);
                     const anyPaid = paymentsForMonth.some(p => p.status === "Paid");
                     const firstPayment = paymentsForMonth[0];
@@ -633,7 +646,7 @@ export function StaffPage() {
                     
                     return (
                       <tr key={month} className="border-b border-slate-100">
-                        <td className="py-2 pr-4 font-medium text-slate-900">{month}</td>
+                        <td className="py-2 pr-4 font-medium text-slate-900">{formatMonthYear(month)}</td>
                         <td className="py-2 pr-4">
                           {firstPayment ? (
                             <span className={cn(
@@ -656,7 +669,7 @@ export function StaffPage() {
                         </td>
                         <td className="py-2 pr-4">
                           {firstPayment?.paymentDate 
-                            ? new Date(firstPayment.paymentDate).toLocaleDateString() 
+                            ? formatDate(firstPayment.paymentDate) 
                             : "—"}
                         </td>
                         <td className="py-2">
@@ -684,7 +697,7 @@ export function StaffPage() {
                   Total Paid (Last 12 months):{" "}
                   <strong>
                     {formatCurrency(
-                      salaryHistoryModal.salaryPayments
+                      historyStaff.salaryPayments
                         .filter((p) => last12Months.includes(p.month) && p.status === "Paid")
                         .reduce((sum, p) => sum + p.amount, 0)
                     )}
@@ -695,7 +708,8 @@ export function StaffPage() {
             </div>
           </div>
         </Modal>
-      )}
+        );
+      })()}
     </div>
   );
 }

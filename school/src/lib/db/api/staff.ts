@@ -1,9 +1,27 @@
-import type { Staff, StaffRole } from '../../../types';
+import type { Staff, StaffRole, SalaryPayment } from '../../../types';
 import type { ExtendedSalaryPayment } from '../repositories/staff';
 import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
+function mapSalaryPayment(p: Record<string, unknown>): ExtendedSalaryPayment {
+  return {
+    id: String(p.id),
+    month: String(p.month ?? ''),
+    amount: Number(p.paid_amount ?? p.amount ?? 0),
+    status: (p.status as SalaryPayment['status']) ?? 'Paid',
+    paymentDate: p.payment_date != null ? String(p.payment_date) : undefined,
+    method: (p.method as SalaryPayment['method']) ?? undefined,
+    dueDate: p.due_date != null ? String(p.due_date) : undefined,
+    expectedAmount: p.expected_amount != null ? Number(p.expected_amount) : undefined,
+    lateDays: p.late_days != null ? Number(p.late_days) : undefined,
+  };
+}
+
 function mapStaff(r: Record<string, unknown>): Staff {
+  const paymentsRaw = r.salary_payments;
+  const salaryPayments: SalaryPayment[] = Array.isArray(paymentsRaw)
+    ? (paymentsRaw as Record<string, unknown>[]).map((p) => mapSalaryPayment(p))
+    : [];
   return {
     id: String(r.id),
     sessionId: String(r.session_id ?? ''),
@@ -12,7 +30,7 @@ function mapStaff(r: Record<string, unknown>): Staff {
     role: (r.role as StaffRole) ?? 'Teacher',
     monthlySalary: Number(r.monthly_salary ?? 0),
     subjectOrGrade: r.subject_or_grade != null ? String(r.subject_or_grade) : undefined,
-    salaryPayments: [],
+    salaryPayments,
   };
 }
 
@@ -89,16 +107,39 @@ export const staffRepositoryApi = {
     return Array.isArray(list) ? list.map(mapStaff) : [];
   },
 
-  async addSalaryPayment(_staffId: string, _payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'>): Promise<ExtendedSalaryPayment> {
-    throw new Error('Salary payments not available via API yet');
+  async addSalaryPayment(staffId: string, payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'>): Promise<ExtendedSalaryPayment> {
+    const body = {
+      month: payment.month,
+      amount: payment.amount,
+      status: payment.status ?? 'Paid',
+      payment_date: payment.paymentDate ?? null,
+      method: payment.method ?? null,
+      due_date: payment.dueDate ?? null,
+    };
+    const r = await teachingFetchJson<Record<string, unknown>>(`/staff/${staffId}/payments`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return mapSalaryPayment(r);
   },
 
-  async addSalaryPaymentsBatch(_payments: { staffId: string; payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'> }[]): Promise<void> {
-    throw new Error('Salary payments not available via API yet');
+  async addSalaryPaymentsBatch(payments: { staffId: string; payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'> }[]): Promise<void> {
+    for (const { staffId, payment } of payments) {
+      await this.addSalaryPayment(staffId, payment);
+    }
   },
 
-  async updateSalaryPayment(_staffId: string, _paymentId: string, _updates: Partial<ExtendedSalaryPayment>): Promise<ExtendedSalaryPayment> {
-    throw new Error('Salary payments not available via API yet');
+  async updateSalaryPayment(staffId: string, paymentId: string, updates: Partial<ExtendedSalaryPayment>): Promise<ExtendedSalaryPayment> {
+    const body: Record<string, unknown> = {};
+    if (updates.amount !== undefined) body.paid_amount = updates.amount;
+    if (updates.status !== undefined) body.status = updates.status;
+    if (updates.paymentDate !== undefined) body.payment_date = updates.paymentDate;
+    if (updates.method !== undefined) body.method = updates.method;
+    const r = await teachingFetchJson<Record<string, unknown>>(`/staff/${staffId}/payments/${paymentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+    return mapSalaryPayment(r);
   },
 
   async getPaginated(
@@ -119,15 +160,22 @@ export const staffRepositoryApi = {
     return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   },
 
-  async deleteSalaryPayment(_staffId: string, _paymentId: string): Promise<void> {
-    throw new Error('Salary payments not available via API yet');
+  async deleteSalaryPayment(staffId: string, paymentId: string): Promise<void> {
+    await teachingFetch(`/staff/${staffId}/payments/${paymentId}`, { method: 'DELETE' });
   },
 
-  async getLastPaidDate(_staffId: string): Promise<string | null> {
-    return null;
+  async getLastPaidDate(staffId: string): Promise<string | null> {
+    const staff = await this.getById(staffId);
+    if (!staff?.salaryPayments?.length) return null;
+    const withDate = staff.salaryPayments
+      .filter((p) => p.paymentDate)
+      .sort((a, b) => (b.paymentDate ?? '').localeCompare(a.paymentDate ?? ''));
+    return withDate[0]?.paymentDate ?? null;
   },
 
-  async getSalaryStatus(_staffId: string, _month: string): Promise<ExtendedSalaryPayment | null> {
-    return null;
+  async getSalaryStatus(staffId: string, month: string): Promise<ExtendedSalaryPayment | null> {
+    const staff = await this.getById(staffId);
+    const found = staff?.salaryPayments?.find((p) => p.month === month);
+    return found ? (found as ExtendedSalaryPayment) : null;
   },
 };

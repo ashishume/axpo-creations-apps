@@ -1,9 +1,39 @@
 """Staff schemas."""
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel
+
+
+class SalaryPaymentCreate(BaseModel):
+    month: str
+    amount: Decimal
+    status: str = "Paid"
+    payment_date: date | None = None
+    method: str | None = None
+    due_date: str | None = None
+
+
+class SalaryPaymentResponse(BaseModel):
+    id: UUID
+    month: str
+    paid_amount: Decimal
+    status: str
+    payment_date: date | None = None
+    method: str | None = None
+    due_date: date | None = None
+    late_days: int = 0
+    expected_amount: Decimal | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class SalaryPaymentUpdate(BaseModel):
+    paid_amount: Decimal | None = None
+    status: str | None = None
+    payment_date: date | None = None
+    method: str | None = None
 
 
 class StaffBase(BaseModel):
@@ -40,5 +70,6 @@ class StaffResponse(StaffBase):
     user_id: UUID | None
     created_at: datetime
     updated_at: datetime
+    salary_payments: list[SalaryPaymentResponse] = []
 
     model_config = {"from_attributes": True}

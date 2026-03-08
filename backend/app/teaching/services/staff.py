@@ -4,8 +4,8 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
-from app.teaching.models.staff import Staff
-from app.teaching.schemas.staff import StaffCreate, StaffUpdate
+from app.teaching.models.staff import Staff, SalaryPayment
+from app.teaching.schemas.staff import StaffCreate, StaffUpdate, SalaryPaymentCreate, SalaryPaymentUpdate
 from app.teaching.repositories.staff import staff_repository
 
 
@@ -45,6 +45,41 @@ class StaffService:
     async def delete(self, db: AsyncSession, id: UUID) -> None:
         staff = await self.get_or_404(db, id)
         await staff_repository.delete(db, staff)
+
+    async def add_salary_payment(
+        self, db: AsyncSession, staff_id: UUID, data: SalaryPaymentCreate
+    ) -> SalaryPayment:
+        await self.get_or_404(db, staff_id)
+        return await staff_repository.add_salary_payment(
+            db,
+            staff_id,
+            month=data.month,
+            amount=data.amount,
+            status=data.status,
+            payment_date=data.payment_date,
+            method=data.method,
+            due_date=data.due_date,
+        )
+
+    async def update_salary_payment(
+        self, db: AsyncSession, staff_id: UUID, payment_id: UUID, data: SalaryPaymentUpdate
+    ) -> SalaryPayment | None:
+        await self.get_or_404(db, staff_id)
+        return await staff_repository.update_salary_payment(
+            db,
+            payment_id,
+            staff_id,
+            paid_amount=data.paid_amount,
+            status=data.status,
+            payment_date=data.payment_date,
+            method=data.method,
+        )
+
+    async def delete_salary_payment(
+        self, db: AsyncSession, staff_id: UUID, payment_id: UUID
+    ) -> bool:
+        await self.get_or_404(db, staff_id)
+        return await staff_repository.delete_salary_payment(db, payment_id, staff_id)
 
 
 staff_service = StaffService()

@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import TeachingBase
 
@@ -36,6 +36,10 @@ class Staff(TeachingBase):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+    salary_payments: Mapped[list["SalaryPayment"]] = relationship(
+        "SalaryPayment", back_populates="staff", lazy="selectin"
+    )
+
 
 class SalaryPayment(TeachingBase):
     __tablename__ = "school_xx_salary_payments"
@@ -57,3 +61,5 @@ class SalaryPayment(TeachingBase):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    staff: Mapped["Staff"] = relationship("Staff", back_populates="salary_payments")

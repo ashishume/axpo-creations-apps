@@ -1,7 +1,9 @@
 /**
- * Axpo Assistant - Multi-intent natural language parser using Google Gemini API.
+ * Axpo Assistant - Multi-intent natural language parser using OpenRouter API.
  * Handles CRUD for students, staff, expenses, stocks, fixed costs, and analytics queries.
  */
+
+import { openRouterChat, isOpenRouterAvailable } from "./openRouter";
 
 import type {
   FeeType,
@@ -179,74 +181,9 @@ export interface IntentResult {
   error?: string;
 }
 
-// ============================================================================
-// Gemini API Configuration
-// ============================================================================
-
-const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const DEFAULT_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
-
-function getModelsToTry(): string[] {
-  const envModel =
-    typeof import.meta !== "undefined" && import.meta.env?.VITE_GEMINI_MODEL
-      ? String(import.meta.env.VITE_GEMINI_MODEL).trim()
-      : "";
-  if (envModel) return [envModel, ...DEFAULT_MODELS.filter((m) => m !== envModel)];
-  return DEFAULT_MODELS;
-}
-
-function getApiKey(): string | undefined {
-  return typeof import.meta !== "undefined" && import.meta.env?.VITE_GEMINI_API_KEY
-    ? String(import.meta.env.VITE_GEMINI_API_KEY).trim()
-    : undefined;
-}
-
-export function getGeminiApiKey(): string | undefined {
-  return getApiKey();
-}
-
-export function isGeminiAvailable(): boolean {
-  return !!getApiKey();
-}
-
-// ============================================================================
-// OpenAI API Configuration
-// ============================================================================
-
-const OPENAI_API_BASE = "https://api.openai.com/v1";
-const OPENAI_DEFAULT_MODEL = "gpt-4o-mini";
-
-function getOpenAIKey(): string | undefined {
-  return typeof import.meta !== "undefined" && import.meta.env?.VITE_OPENAI_API_KEY
-    ? String(import.meta.env.VITE_OPENAI_API_KEY).trim()
-    : undefined;
-}
-
-function getOpenAIModel(): string {
-  return typeof import.meta !== "undefined" && import.meta.env?.VITE_OPENAI_MODEL
-    ? String(import.meta.env.VITE_OPENAI_MODEL).trim()
-    : OPENAI_DEFAULT_MODEL;
-}
-
-export function isOpenAIAvailable(): boolean {
-  return !!getOpenAIKey();
-}
-
-/** Which LLM provider to prefer when both API keys are set. */
-function getPreferredProvider(): "gemini" | "openai" | null {
-  const env = typeof import.meta !== "undefined" && import.meta.env?.VITE_LLM_PROVIDER
-    ? String(import.meta.env.VITE_LLM_PROVIDER).trim().toLowerCase()
-    : "";
-  if (env === "openai") return "openai";
-  if (env === "gemini") return "gemini";
-  if (getApiKey()) return "gemini";
-  if (getOpenAIKey()) return "openai";
-  return null;
-}
-
-/** True if at least one LLM (Gemini or OpenAI) is configured. */
+/** True if OpenRouter is configured (Axpo Assistant and NL parsing). */
 export function isLLMAvailable(): boolean {
-  return isGeminiAvailable() || isOpenAIAvailable();
+  return isOpenRouterAvailable();
 }
 
 // ============================================================================
@@ -412,16 +349,6 @@ For add_class always set "entity": "class" and "operation": "add". Extract any f
 // API Functions
 // ============================================================================
 
-interface GeminiPart {
-  text?: string;
-}
-interface GeminiContent {
-  parts?: GeminiPart[];
-}
-interface GeminiCandidate {
-  content?: GeminiContent;
-}
-
 function capArray<T>(arr: T[]): T[] {
   return arr.length > MAX_BATCH_SIZE ? arr.slice(0, MAX_BATCH_SIZE) : arr;
 }
@@ -433,7 +360,7 @@ function normalizeParsedData(_intent: IntentType, data: unknown): IntentResult["
   return capped as IntentResult["data"];
 }
 
-function parseGeminiResponse(text: string): IntentResult {
+function parseIntentResponse(text: string): IntentResult {
   const trimmed = text.trim();
   // Strip markdown code block if present
   const jsonStr = trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
@@ -473,97 +400,24 @@ function parseGeminiResponse(text: string): IntentResult {
   }
 }
 
-async function parseAxpoIntentWithGemini(trimmed: string): Promise<IntentResult> {
-  const apiKey = getApiKey();
-  if (!apiKey) return { success: false, intent: "unknown", error: "Gemini API key not configured." };
-
-  const body = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: SYSTEM_PROMPT + "\n\nUser message:\n\"" + trimmed + "\"" }],
-      },
-    ],
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.1,
-      maxOutputTokens: 2048,
-    },
-  };
-
-  let lastError = "";
-  for (const model of getModelsToTry()) {
-    try {
-      const url = `${GEMINI_API_BASE}/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const responseText = await res.text();
-      if (!res.ok) {
-        const isModelNotFound = res.status === 404 || /not found|not supported for generateContent/i.test(responseText);
-        lastError = (() => {
-          try {
-            const errJson = JSON.parse(responseText);
-            return errJson?.error?.message ?? responseText?.slice(0, 200) ?? `API error (${res.status})`;
-          } catch {
-            return responseText?.slice(0, 200) || `API error (${res.status})`;
-          }
-        })();
-        if (isModelNotFound) continue;
-        if (res.status === 429) return { success: false, intent: "unknown", error: "Rate limit exceeded. Please try again in a moment." };
-        return { success: false, intent: "unknown", error: lastError };
-      }
-      const data = JSON.parse(responseText) as { candidates?: GeminiCandidate[] };
-      const textPart = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!textPart) return { success: false, intent: "unknown", error: "No response from Gemini." };
-      return parseGeminiResponse(textPart);
-    } catch (e) {
-      lastError = e instanceof Error ? e.message : String(e);
-    }
+async function parseAxpoIntentWithOpenRouter(trimmed: string): Promise<IntentResult> {
+  if (!isOpenRouterAvailable()) {
+    return {
+      success: false,
+      intent: "unknown",
+      error: "OpenRouter API key not configured. Set VITE_OPENROUTER_API_KEY in .env.local.",
+    };
   }
-  return { success: false, intent: "unknown", error: lastError || "No Gemini model available." };
-}
-
-async function parseAxpoIntentWithOpenAI(trimmed: string): Promise<IntentResult> {
-  const apiKey = getOpenAIKey();
-  if (!apiKey) return { success: false, intent: "unknown", error: "OpenAI API key not configured." };
 
   try {
-    const res = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: getOpenAIModel(),
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `User message:\n"${trimmed}"` },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.1,
-        max_tokens: 2048,
-      }),
-    });
-    const responseText = await res.text();
-    if (!res.ok) {
-      let errMsg = responseText?.slice(0, 200) || `API error (${res.status})`;
-      try {
-        const errJson = JSON.parse(responseText);
-        errMsg = errJson?.error?.message ?? errMsg;
-      } catch {
-        // use errMsg as is
-      }
-      if (res.status === 429) return { success: false, intent: "unknown", error: "Rate limit exceeded. Please try again in a moment." };
-      return { success: false, intent: "unknown", error: errMsg };
-    }
-    const data = JSON.parse(responseText) as { choices?: Array<{ message?: { content?: string } }> };
-    const textPart = data?.choices?.[0]?.message?.content;
-    if (!textPart) return { success: false, intent: "unknown", error: "No response from OpenAI." };
-    return parseGeminiResponse(textPart);
+    const content = await openRouterChat(
+      [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `User message:\n"${trimmed}"` },
+      ],
+      { temperature: 0.1, max_tokens: 2048, response_format: { type: "json_object" } }
+    );
+    return parseIntentResponse(content);
   } catch (e) {
     return {
       success: false,
@@ -578,27 +432,7 @@ export async function parseAxpoIntent(userInput: string): Promise<IntentResult> 
   if (!trimmed) {
     return { success: false, intent: "unknown", error: "Please enter a message." };
   }
-
-  const provider = getPreferredProvider();
-  if (!provider) {
-    return {
-      success: false,
-      intent: "unknown",
-      error: "No LLM configured. Add VITE_GEMINI_API_KEY or VITE_OPENAI_API_KEY to your .env.local file.",
-    };
-  }
-
-  if (provider === "openai") {
-    const result = await parseAxpoIntentWithOpenAI(trimmed);
-    if (result.success) return result;
-    if (isGeminiAvailable()) return parseAxpoIntentWithGemini(trimmed);
-    return result;
-  }
-
-  const result = await parseAxpoIntentWithGemini(trimmed);
-  if (result.success) return result;
-  if (isOpenAIAvailable()) return parseAxpoIntentWithOpenAI(trimmed);
-  return result;
+  return parseAxpoIntentWithOpenRouter(trimmed);
 }
 
 // ============================================================================
