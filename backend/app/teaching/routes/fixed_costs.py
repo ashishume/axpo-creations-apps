@@ -7,6 +7,7 @@ from app.teaching.dependencies import get_teaching_db_session, get_current_teach
 from app.teaching.schemas.fixed_cost import FixedCostCreate, FixedCostUpdate, FixedCostResponse
 from app.teaching.services.fixed_cost import fixed_cost_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_session_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,7 +21,10 @@ async def list_fixed_costs(
     user: User = Depends(get_current_teaching_user),
 ):
     if session_id is not None:
+        await enforce_session_access(db, user, session_id)
         costs = await fixed_cost_service.list_by_session(db, session_id)
+    elif user.organization_id:
+        costs = await fixed_cost_service.list_by_organization(db, user.organization_id)
     else:
         costs = await fixed_cost_service.list_all(db)
     return [FixedCostResponse.model_validate(c) for c in costs]
@@ -32,6 +36,7 @@ async def create_fixed_cost(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, data.session_id)
     cost = await fixed_cost_service.create(db, data)
     return FixedCostResponse.model_validate(cost)
 
@@ -42,6 +47,9 @@ async def create_fixed_costs_bulk(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    session_ids = {d.session_id for d in data}
+    for sid in session_ids:
+        await enforce_session_access(db, user, sid)
     costs = await fixed_cost_service.create_many(db, data)
     return [FixedCostResponse.model_validate(c) for c in costs]
 
@@ -53,6 +61,7 @@ async def get_fixed_cost(
     user: User = Depends(get_current_teaching_user),
 ):
     cost = await fixed_cost_service.get_or_404(db, id)
+    await enforce_session_access(db, user, cost.session_id)
     return FixedCostResponse.model_validate(cost)
 
 
@@ -63,6 +72,8 @@ async def update_fixed_cost(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await fixed_cost_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     cost = await fixed_cost_service.update(db, id, data)
     return FixedCostResponse.model_validate(cost)
 
@@ -73,4 +84,6 @@ async def delete_fixed_cost(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await fixed_cost_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     await fixed_cost_service.delete(db, id)

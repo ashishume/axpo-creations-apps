@@ -19,6 +19,7 @@ from app.teaching.schemas.auth import (
 from app.teaching.services.user import user_service
 from app.teaching.repositories.role import role_repository
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_user_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,7 +56,10 @@ async def list_users(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(require_teaching_permission("users:view")),
 ):
-    users, total = await user_service.list_paginated(db, page=page, page_size=page_size)
+    users, total = await user_service.list_paginated(
+        db, page=page, page_size=page_size,
+        organization_id=user.organization_id,
+    )
     return UserListResponse(
         users=[await _user_to_response(db, u) for u in users],
         total=total,
@@ -68,6 +72,8 @@ async def create_user(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(require_teaching_permission("users:create")),
 ):
+    if user.organization_id:
+        data = data.model_copy(update={"organization_id": user.organization_id})
     created = await user_service.create(db, data)
     return await _user_to_response(db, created)
 
@@ -79,6 +85,7 @@ async def get_user(
     user: User = Depends(require_teaching_permission("users:view")),
 ):
     u = await user_service.get_or_404(db, id)
+    await enforce_user_access(db, user, u)
     return await _user_to_response(db, u)
 
 
@@ -89,6 +96,8 @@ async def update_user(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(require_teaching_permission("users:edit")),
 ):
+    u = await user_service.get_or_404(db, id)
+    await enforce_user_access(db, user, u)
     updated = await user_service.update(db, id, data)
     return await _user_to_response(db, updated)
 
@@ -99,6 +108,8 @@ async def delete_user(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(require_teaching_permission("users:delete")),
 ):
+    u = await user_service.get_or_404(db, id)
+    await enforce_user_access(db, user, u)
     await user_service.delete(db, id)
 
 
@@ -109,4 +120,6 @@ async def reset_password(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(require_teaching_permission("users:edit")),
 ):
+    u = await user_service.get_or_404(db, id)
+    await enforce_user_access(db, user, u)
     await user_service.reset_password(db, id, data.new_password)

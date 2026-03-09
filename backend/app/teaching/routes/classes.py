@@ -7,6 +7,7 @@ from app.teaching.dependencies import get_teaching_db_session, get_current_teach
 from app.teaching.schemas.class_schema import ClassCreate, ClassUpdate, ClassResponse
 from app.teaching.services.class_service import class_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_session_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,7 @@ async def create_class(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, data.session_id)
     obj = await class_service.create(db, data)
     return ClassResponse.model_validate(obj)
 
@@ -30,7 +32,10 @@ async def list_classes(
     user: User = Depends(get_current_teaching_user),
 ):
     if session_id:
+        await enforce_session_access(db, user, session_id)
         items = await class_service.list_by_session(db, session_id)
+    elif user.organization_id:
+        items = await class_service.list_by_organization(db, user.organization_id)
     else:
         items = await class_service.list_all(db)
     return [ClassResponse.model_validate(c) for c in items]
@@ -42,6 +47,9 @@ async def create_classes_bulk(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    session_ids = {d.session_id for d in data}
+    for sid in session_ids:
+        await enforce_session_access(db, user, sid)
     items = await class_service.create_many(db, data)
     return [ClassResponse.model_validate(c) for c in items]
 
@@ -53,6 +61,7 @@ async def get_class(
     user: User = Depends(get_current_teaching_user),
 ):
     obj = await class_service.get_or_404(db, id)
+    await enforce_session_access(db, user, obj.session_id)
     return ClassResponse.model_validate(obj)
 
 
@@ -63,6 +72,8 @@ async def update_class(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await class_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     obj = await class_service.update(db, id, data)
     return ClassResponse.model_validate(obj)
 
@@ -73,4 +84,6 @@ async def delete_class(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await class_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     await class_service.delete(db, id)

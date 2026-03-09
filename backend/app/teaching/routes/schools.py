@@ -7,6 +7,7 @@ from app.teaching.dependencies import get_teaching_db_session, get_current_teach
 from app.teaching.schemas.school import SchoolCreate, SchoolUpdate, SchoolResponse
 from app.teaching.services.school import school_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_school_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,8 @@ async def create_school(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    if user.organization_id:
+        data = data.model_copy(update={"organization_id": user.organization_id})
     school = await school_service.create(db, data)
     return SchoolResponse.model_validate(school)
 
@@ -41,6 +44,7 @@ async def get_school(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_school_access(db, user, id)
     school = await school_service.get_or_404(db, id)
     return SchoolResponse.model_validate(school)
 
@@ -52,6 +56,7 @@ async def update_school(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_school_access(db, user, id)
     school = await school_service.update(db, id, data)
     return SchoolResponse.model_validate(school)
 
@@ -62,4 +67,5 @@ async def delete_school(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_school_access(db, user, id)
     await school_service.delete(db, id)

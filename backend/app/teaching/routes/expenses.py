@@ -7,6 +7,7 @@ from app.teaching.dependencies import get_teaching_db_session, get_current_teach
 from app.teaching.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from app.teaching.services.expense import expense_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_session_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,7 @@ async def create_expense(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, data.session_id)
     expense = await expense_service.create(db, data)
     return ExpenseResponse.model_validate(expense)
 
@@ -30,6 +32,7 @@ async def list_expenses(
     user: User = Depends(get_current_teaching_user),
 ):
     if session_id:
+        await enforce_session_access(db, user, session_id)
         expenses = await expense_service.list_by_session(db, session_id)
     elif user.organization_id:
         expenses = await expense_service.list_by_organization(db, user.organization_id)
@@ -44,6 +47,9 @@ async def create_expenses_bulk(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    session_ids = {d.session_id for d in data}
+    for sid in session_ids:
+        await enforce_session_access(db, user, sid)
     expenses = await expense_service.create_many(db, data)
     return [ExpenseResponse.model_validate(e) for e in expenses]
 
@@ -55,6 +61,7 @@ async def get_expense(
     user: User = Depends(get_current_teaching_user),
 ):
     expense = await expense_service.get_or_404(db, id)
+    await enforce_session_access(db, user, expense.session_id)
     return ExpenseResponse.model_validate(expense)
 
 
@@ -65,6 +72,8 @@ async def update_expense(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await expense_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     expense = await expense_service.update(db, id, data)
     return ExpenseResponse.model_validate(expense)
 
@@ -75,4 +84,6 @@ async def delete_expense(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await expense_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     await expense_service.delete(db, id)

@@ -16,6 +16,9 @@ class FixedCostService:
     async def list_by_session(self, db: AsyncSession, session_id: UUID) -> list[FixedMonthlyCost]:
         return await fixed_cost_repository.list_by_session(db, session_id)
 
+    async def list_by_organization(self, db: AsyncSession, organization_id: UUID) -> list[FixedMonthlyCost]:
+        return await fixed_cost_repository.list_by_organization(db, organization_id)
+
     async def get(self, db: AsyncSession, id: UUID) -> FixedMonthlyCost | None:
         return await fixed_cost_repository.get(db, id)
 

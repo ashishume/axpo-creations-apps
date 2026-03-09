@@ -13,6 +13,7 @@ from app.teaching.schemas.student import (
 )
 from app.teaching.services.student import student_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_session_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +26,7 @@ async def create_student(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, data.session_id)
     student = await student_service.create(db, data)
     return StudentResponse.model_validate(student)
 
@@ -36,6 +38,7 @@ async def list_students(
     user: User = Depends(get_current_teaching_user),
 ):
     if session_id:
+        await enforce_session_access(db, user, session_id)
         students = await student_service.list_by_session(db, session_id)
     elif user.organization_id:
         students = await student_service.list_by_organization(db, user.organization_id)
@@ -50,6 +53,9 @@ async def create_students_bulk(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    session_ids = {d.session_id for d in data}
+    for sid in session_ids:
+        await enforce_session_access(db, user, sid)
     students = await student_service.create_many(db, data)
     return [StudentResponse.model_validate(s) for s in students]
 
@@ -61,6 +67,7 @@ async def get_student(
     user: User = Depends(get_current_teaching_user),
 ):
     student = await student_service.get_or_404(db, id)
+    await enforce_session_access(db, user, student.session_id)
     return StudentResponse.model_validate(student)
 
 
@@ -71,6 +78,8 @@ async def update_student(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await student_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     student = await student_service.update(db, id, data)
     return StudentResponse.model_validate(student)
 
@@ -81,6 +90,8 @@ async def delete_student(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await student_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     await student_service.delete(db, id)
 
 
@@ -91,6 +102,8 @@ async def add_student_payment(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await student_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     payment = await student_service.add_payment(db, id, data)
     return FeePaymentResponse.model_validate(payment)
 
@@ -102,6 +115,8 @@ async def delete_student_payment(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await student_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     deleted = await student_service.delete_payment(db, id, payment_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Payment not found")

@@ -7,6 +7,7 @@ from app.teaching.dependencies import get_teaching_db_session, get_current_teach
 from app.teaching.schemas.session import SessionCreate, SessionUpdate, SessionResponse
 from app.teaching.services.session import session_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_school_access, enforce_session_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,7 @@ async def create_session(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_school_access(db, user, data.school_id)
     session = await session_service.create(db, data)
     return SessionResponse.model_validate(session)
 
@@ -30,6 +32,7 @@ async def list_sessions(
     user: User = Depends(get_current_teaching_user),
 ):
     if school_id:
+        await enforce_school_access(db, user, school_id)
         sessions = await session_service.list_by_school(db, school_id)
     elif user.organization_id:
         sessions = await session_service.list_by_organization(db, user.organization_id)
@@ -44,6 +47,7 @@ async def get_session(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, id)
     session = await session_service.get_or_404(db, id)
     return SessionResponse.model_validate(session)
 
@@ -55,6 +59,7 @@ async def update_session(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, id)
     session = await session_service.update(db, id, data)
     return SessionResponse.model_validate(session)
 
@@ -65,4 +70,5 @@ async def delete_session(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, id)
     await session_service.delete(db, id)

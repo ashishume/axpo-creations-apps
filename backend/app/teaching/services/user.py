@@ -17,9 +17,12 @@ SUPER_ADMIN_ROLE_ID = UUID("00000000-0000-0000-0000-000000000000")
 
 class UserService:
     async def list_paginated(
-        self, db: AsyncSession, page: int = 1, page_size: int = 10
+        self, db: AsyncSession, page: int = 1, page_size: int = 10,
+        organization_id: UUID | None = None,
     ) -> tuple[list[User], int]:
-        return await user_repository.list_paginated(db, page=page, page_size=page_size)
+        return await user_repository.list_paginated(
+            db, page=page, page_size=page_size, organization_id=organization_id,
+        )
 
     async def get(self, db: AsyncSession, id: UUID) -> User | None:
         return await user_repository.get(db, id)

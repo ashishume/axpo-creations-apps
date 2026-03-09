@@ -13,6 +13,7 @@ from app.teaching.schemas.stock import (
 )
 from app.teaching.services.stock import stock_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_session_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +26,7 @@ async def create_stock(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, data.session_id)
     stock = await stock_service.create(db, data)
     return StockResponse.model_validate(stock)
 
@@ -36,6 +38,7 @@ async def list_stocks(
     user: User = Depends(get_current_teaching_user),
 ):
     if session_id:
+        await enforce_session_access(db, user, session_id)
         stocks = await stock_service.list_by_session(db, session_id)
     elif user.organization_id:
         stocks = await stock_service.list_by_organization(db, user.organization_id)
@@ -50,6 +53,9 @@ async def create_stocks_bulk(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    session_ids = {d.session_id for d in data}
+    for sid in session_ids:
+        await enforce_session_access(db, user, sid)
     stocks = await stock_service.create_many(db, data)
     return [StockResponse.model_validate(s) for s in stocks]
 
@@ -61,6 +67,7 @@ async def get_stock(
     user: User = Depends(get_current_teaching_user),
 ):
     stock = await stock_service.get_or_404(db, id)
+    await enforce_session_access(db, user, stock.session_id)
     return StockResponse.model_validate(stock)
 
 
@@ -71,6 +78,8 @@ async def update_stock(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await stock_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     stock = await stock_service.update(db, id, data)
     return StockResponse.model_validate(stock)
 
@@ -81,6 +90,8 @@ async def delete_stock(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await stock_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     await stock_service.delete(db, id)
 
 
@@ -91,6 +102,8 @@ async def add_stock_transaction(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await stock_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     tx = await stock_service.add_transaction(db, id, data)
     return StockTransactionResponse.model_validate(tx)
 
@@ -102,6 +115,8 @@ async def delete_stock_transaction(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await stock_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     deleted = await stock_service.delete_transaction(db, id, transaction_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Transaction not found")

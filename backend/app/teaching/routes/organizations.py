@@ -7,6 +7,8 @@ from app.teaching.dependencies import get_teaching_db_session, get_current_teach
 from app.teaching.schemas.organization import OrganizationCreate, OrganizationUpdate, OrganizationResponse
 from app.teaching.services.organization import organization_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_org_access
+from app.core.exceptions import ForbiddenError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +21,8 @@ async def create_organization(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    if user.organization_id:
+        raise ForbiddenError("Only Super Admin can create organizations")
     org = await organization_service.create(db, data)
     return OrganizationResponse.model_validate(org)
 
@@ -41,6 +45,7 @@ async def get_organization(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_org_access(db, user, id)
     org = await organization_service.get_or_404(db, id)
     return OrganizationResponse.model_validate(org)
 
@@ -52,6 +57,7 @@ async def update_organization(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_org_access(db, user, id)
     org = await organization_service.update(db, id, data)
     return OrganizationResponse.model_validate(org)
 
@@ -62,4 +68,6 @@ async def delete_organization(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    if user.organization_id:
+        raise ForbiddenError("Only Super Admin can delete organizations")
     await organization_service.delete(db, id)

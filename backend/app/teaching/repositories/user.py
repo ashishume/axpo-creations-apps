@@ -17,13 +17,17 @@ class UserRepository:
         return result.scalar_one_or_none()
 
     async def list_paginated(
-        self, db: AsyncSession, page: int = 1, page_size: int = 10
+        self, db: AsyncSession, page: int = 1, page_size: int = 10,
+        organization_id: UUID | None = None,
     ) -> tuple[list[User], int]:
         offset = (page - 1) * page_size
-        count_result = await db.execute(select(func.count(User.id)))
+        base = select(User)
+        if organization_id is not None:
+            base = base.where(User.organization_id == organization_id)
+        count_result = await db.execute(select(func.count()).select_from(base.subquery()))
         total = count_result.scalar() or 0
         result = await db.execute(
-            select(User).order_by(User.created_at.desc()).offset(offset).limit(page_size)
+            base.order_by(User.created_at.desc()).offset(offset).limit(page_size)
         )
         users = list(result.scalars().all())
         return users, total

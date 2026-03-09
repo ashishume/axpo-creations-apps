@@ -14,6 +14,7 @@ from app.teaching.schemas.staff import (
 )
 from app.teaching.services.staff import staff_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_session_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +27,7 @@ async def create_staff(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, data.session_id)
     staff = await staff_service.create(db, data)
     return StaffResponse.model_validate(staff)
 
@@ -37,6 +39,7 @@ async def list_staff(
     user: User = Depends(get_current_teaching_user),
 ):
     if session_id:
+        await enforce_session_access(db, user, session_id)
         staff_list = await staff_service.list_by_session(db, session_id)
     elif user.organization_id:
         staff_list = await staff_service.list_by_organization(db, user.organization_id)
@@ -51,6 +54,9 @@ async def create_staff_bulk(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    session_ids = {d.session_id for d in data}
+    for sid in session_ids:
+        await enforce_session_access(db, user, sid)
     staff_list = await staff_service.create_many(db, data)
     return [StaffResponse.model_validate(s) for s in staff_list]
 
@@ -62,6 +68,7 @@ async def get_staff(
     user: User = Depends(get_current_teaching_user),
 ):
     staff = await staff_service.get_or_404(db, id)
+    await enforce_session_access(db, user, staff.session_id)
     return StaffResponse.model_validate(staff)
 
 
@@ -72,6 +79,8 @@ async def update_staff(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await staff_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     staff = await staff_service.update(db, id, data)
     return StaffResponse.model_validate(staff)
 
@@ -82,6 +91,8 @@ async def delete_staff(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await staff_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     await staff_service.delete(db, id)
 
 
@@ -92,6 +103,8 @@ async def add_staff_salary_payment(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await staff_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     payment = await staff_service.add_salary_payment(db, id, data)
     return SalaryPaymentResponse.model_validate(payment)
 
@@ -104,6 +117,8 @@ async def update_staff_salary_payment(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await staff_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     payment = await staff_service.update_salary_payment(db, id, payment_id, data)
     if not payment:
         raise HTTPException(status_code=404, detail="Salary payment not found")
@@ -117,6 +132,8 @@ async def delete_staff_salary_payment(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await staff_service.get_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     deleted = await staff_service.delete_salary_payment(db, id, payment_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Salary payment not found")

@@ -20,6 +20,7 @@ from app.teaching.schemas.leave import (
 )
 from app.teaching.services.leave import leave_service
 from app.teaching.models.user import User
+from app.teaching.org_access import enforce_session_access
 
 router = APIRouter(prefix="/leaves", tags=["teaching-leaves"])
 
@@ -33,6 +34,7 @@ async def list_leave_types(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, session_id)
     types = await leave_service.list_leave_types(
         db, session_id, applicable_to=applicable_to
     )
@@ -45,6 +47,7 @@ async def create_leave_type(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, data.session_id)
     leave_type = await leave_service.create_leave_type(db, data)
     return LeaveTypeResponse.model_validate(leave_type)
 
@@ -56,6 +59,7 @@ async def get_leave_type(
     user: User = Depends(get_current_teaching_user),
 ):
     leave_type = await leave_service.get_leave_type_or_404(db, id)
+    await enforce_session_access(db, user, leave_type.session_id)
     return LeaveTypeResponse.model_validate(leave_type)
 
 
@@ -66,6 +70,8 @@ async def update_leave_type(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await leave_service.get_leave_type_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     leave_type = await leave_service.update_leave_type(db, id, data)
     return LeaveTypeResponse.model_validate(leave_type)
 
@@ -76,6 +82,8 @@ async def delete_leave_type(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await leave_service.get_leave_type_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     await leave_service.delete_leave_type(db, id)
 
 
@@ -91,6 +99,7 @@ async def list_leave_requests(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, session_id)
     requests = await leave_service.list_leave_requests(
         db,
         session_id,
@@ -108,6 +117,7 @@ async def apply_leave(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, data.session_id)
     request = await leave_service.apply_leave(db, data)
     return LeaveRequestResponse.model_validate(request)
 
@@ -119,6 +129,7 @@ async def get_leave_request(
     user: User = Depends(get_current_teaching_user),
 ):
     request = await leave_service.get_leave_request_or_404(db, id)
+    await enforce_session_access(db, user, request.session_id)
     return LeaveRequestResponse.model_validate(request)
 
 
@@ -129,6 +140,8 @@ async def update_leave_request(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await leave_service.get_leave_request_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     request = await leave_service.update_leave_request(db, id, data)
     return LeaveRequestResponse.model_validate(request)
 
@@ -140,6 +153,8 @@ async def approve_leave(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await leave_service.get_leave_request_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     request = await leave_service.approve_leave(db, id, user.id, data)
     return LeaveRequestResponse.model_validate(request)
 
@@ -151,6 +166,8 @@ async def reject_leave(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await leave_service.get_leave_request_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     request = await leave_service.reject_leave(db, id, user.id, data)
     return LeaveRequestResponse.model_validate(request)
 
@@ -161,6 +178,8 @@ async def cancel_leave(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    existing = await leave_service.get_leave_request_or_404(db, id)
+    await enforce_session_access(db, user, existing.session_id)
     request = await leave_service.cancel_leave(db, id)
     return LeaveRequestResponse.model_validate(request)
 
@@ -209,6 +228,7 @@ async def initialize_leave_balances(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    await enforce_session_access(db, user, session_id)
     balances = await leave_service.initialize_balances_for_staff(
         db, staff_id, session_id, year
     )
