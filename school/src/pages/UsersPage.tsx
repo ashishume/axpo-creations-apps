@@ -82,12 +82,13 @@ export function UsersPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    const organizationId = isSuperAdmin ? (createForm.organizationId ?? undefined) : (currentUser?.organizationId ?? undefined);
-    if (!organizationId) return;
+    const organizationId = isSuperAdmin
+      ? (createForm.organizationId || null)
+      : (currentUser?.organizationId || null);
     try {
       await createUser.mutateAsync({
         ...createForm,
-        organizationId: organizationId || null,
+        organizationId,
       });
       setShowCreateModal(false);
       setCreateForm({ username: '', email: '', name: '', roleId: '', password: '', organizationId: null, staffId: undefined });

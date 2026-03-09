@@ -30,6 +30,7 @@ def _user_to_response(user: User) -> UserResponse:
         email=user.email,
         name=user.name,
         role_id=user.role_id,
+        organization_id=user.organization_id,
         must_change_password=user.must_change_password,
         is_active=user.is_active,
         last_login_at=user.last_login_at,

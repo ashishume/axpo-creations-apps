@@ -8,6 +8,7 @@ function mapUser(r: Record<string, unknown>, _permissions: string[]): User {
     email: r.email != null ? String(r.email) : undefined,
     name: String(r.name ?? ''),
     roleId: String(r.role_id),
+    organizationId: r.organization_id != null ? String(r.organization_id) : undefined,
     role: undefined,
     mustChangePassword: Boolean(r.must_change_password),
     isActive: Boolean(r.is_active),

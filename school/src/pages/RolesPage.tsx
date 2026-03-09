@@ -30,6 +30,7 @@ const MODULE_LABELS: Record<string, string> = {
   app: 'App lock',
   plans: 'Plans',
   assistant: 'Axpo Assistant',
+  leaves: 'Leave Management',
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -39,6 +40,8 @@ const ACTION_LABELS: Record<string, string> = {
   delete: 'Delete',
   manage: 'Manage',
   use: 'Use',
+  approve: 'Approve',
+  lock: 'Lock',
 };
 
 function getPermissionLabel(permission: Permission): string {
