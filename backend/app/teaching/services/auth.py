@@ -40,6 +40,16 @@ class AuthService:
         result = await db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
+    async def change_password(
+        self, db: AsyncSession, user: User, current_password: str, new_password: str
+    ) -> None:
+        if not user.password_hash or not verify_password(current_password, user.password_hash):
+            raise UnauthorizedError("Current password is incorrect")
+        user.password_hash = hash_password(new_password)
+        user.must_change_password = False
+        await db.flush()
+        await db.refresh(user)
+
     async def get_permissions_for_user(self, db: AsyncSession, user: User) -> list[str]:
         result = await db.execute(
             select(RolePermission.permission_id).where(RolePermission.role_id == user.role_id)

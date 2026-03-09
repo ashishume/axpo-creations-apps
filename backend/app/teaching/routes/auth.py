@@ -7,7 +7,7 @@ from app.teaching.dependencies import (
     get_current_teaching_user,
     get_teaching_refresh_token,
 )
-from app.teaching.schemas.auth import LoginRequest, LoginResponse, RefreshResponse, UserResponse, MeResponse
+from app.teaching.schemas.auth import LoginRequest, LoginResponse, RefreshResponse, UserResponse, MeResponse, ChangePasswordRequest
 from app.teaching.services.auth import auth_service
 from app.teaching.models.user import User
 
@@ -63,6 +63,15 @@ async def refresh(
     new_access = create_access_token({"sub": payload["sub"]}, domain="teaching")
     set_access_cookie(response, new_access)
     return RefreshResponse(message="Token refreshed")
+
+
+@router.post("/change-password", status_code=204)
+async def change_password(
+    data: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    await auth_service.change_password(db, user, data.current_password, data.new_password)
 
 
 @router.get("/me", response_model=MeResponse)
