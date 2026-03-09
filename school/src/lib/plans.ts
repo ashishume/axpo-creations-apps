@@ -1,6 +1,7 @@
 import type { SubscriptionPlanInfo } from "../types";
 
-export const BILLING_INTERVALS = ["monthly", "quarterly", "annual"] as const;
+// Annual plan disabled for now; uncomment "annual" to enable.
+export const BILLING_INTERVALS = ["monthly", "quarterly" /* , "annual" */] as const;
 export type BillingInterval = (typeof BILLING_INTERVALS)[number];
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
@@ -8,7 +9,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
     id: "starter",
     name: "Starter",
     price: 2000,
-    pricing: { monthly: 2000, quarterly: 5400, annual: 19200 },
+    pricing: { monthly: 2000, quarterly: 5500 /* , annual: 19200 */ },
     features: [
       "Dashboard & reports",
       "Students & fees",
@@ -22,7 +23,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
     id: "premium",
     name: "Axpo Assistant",
     price: 2500,
-    pricing: { monthly: 2500, quarterly: 6750, annual: 24000 },
+    pricing: { monthly: 2500, quarterly: 6900 /* , annual: 24000 */ },
     features: [
       "Everything in Starter",
       "Axpo Assistant (AI chat)",

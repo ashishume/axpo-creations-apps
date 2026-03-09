@@ -12,7 +12,7 @@ import { BulkImportModal } from "../components/import/BulkImportModal";
 import { PaymentReceiptModal } from "../components/receipt/PaymentReceiptModal";
 import { StudentDetailsModal } from "../components/students/StudentDetailsModal";
 import { AddStudentsVerifyModal, type PendingStudent } from "../components/students/AddStudentsVerifyModal";
-import type { Student as StudentType, FeeType, PaymentMethod, StudentClass } from "../types";
+import type { Student as StudentType, FeeType, PaymentMethod, StudentClass, StudentPersonalDetails } from "../types";
 import { formatCurrency, formatDate } from "../lib/utils";
 import {
   getTotalPaid,
@@ -1148,7 +1148,7 @@ export function StudentsPage() {
                 fatherName: r.fatherName,
                 motherName: r.motherName,
                 guardianPhone: r.guardianPhone,
-                bloodGroup: (r.bloodGroup && ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(r.bloodGroup)) ? r.bloodGroup as "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" : "",
+                bloodGroup: ((r.bloodGroup && ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(r.bloodGroup)) ? r.bloodGroup : "") as StudentPersonalDetails["bloodGroup"],
                 currentAddress: r.currentAddress,
                 permanentAddress: r.permanentAddress,
                 healthIssues: r.healthIssues,

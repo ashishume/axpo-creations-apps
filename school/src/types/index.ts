@@ -8,7 +8,7 @@ export interface SubscriptionPlanInfo {
   name: string;
   price: number;
   /** Price per billing interval (monthly, quarterly, annual). */
-  pricing?: { monthly: number; quarterly: number; annual: number };
+  pricing?: { monthly: number; quarterly: number; annual?: number };
   features: string[];
 }
 
