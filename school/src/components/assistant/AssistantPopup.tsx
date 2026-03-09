@@ -47,8 +47,7 @@ import { getTotalPaid, getRemaining } from "../../lib/studentUtils";
 import { generateId, cn } from "../../lib/utils";
 import { loadChatHistory, saveChatHistory, type StoredChatMessage } from "../../lib/assistantChatHistory";
 import { useAuth } from "../../context/AuthContext";
-import { planIncludesAssistant } from "../../lib/plans";
-import { DEFAULT_ROLE_IDS } from "../../types/auth";
+import { SUPER_ADMIN_ROLE_NAME } from "../../types/auth";
 
 // ============================================================================
 // Types
@@ -150,10 +149,9 @@ export function AssistantPopup() {
   const sessionStocks = stocks.filter((s) => s.sessionId === selectedSessionId);
   const sessionFixedCosts = fixedCosts.filter((fc) => fc.sessionId === selectedSessionId);
 
-  const isSuperAdmin = user?.roleId === DEFAULT_ROLE_IDS.SUPER_ADMIN;
+  const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
   const canAccessAssistant = hasPermission("assistant:use") || isSuperAdmin;
-  const hasAssistantPlan = selectedSchool ? planIncludesAssistant(selectedSchool.planId ?? "starter") : false;
-  const canUseAssistant = canAccessAssistant && (hasAssistantPlan || isSuperAdmin);
+  const canUseAssistant = canAccessAssistant;
 
   // Load chat history on mount (from DB or localStorage)
   useEffect(() => {

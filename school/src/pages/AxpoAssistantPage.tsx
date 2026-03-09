@@ -52,8 +52,7 @@ import { getTotalPaid, getRemaining } from "../lib/studentUtils";
 import { generateId } from "../lib/utils";
 import { loadChatHistory, saveChatHistory, type StoredChatMessage } from "../lib/assistantChatHistory";
 import { useAuth } from "../context/AuthContext";
-import { planIncludesAssistant } from "../lib/plans";
-import { DEFAULT_ROLE_IDS } from "../types/auth";
+import { SUPER_ADMIN_ROLE_NAME } from "../types/auth";
 
 // ============================================================================
 // Types
@@ -162,10 +161,9 @@ export function AxpoAssistantPage() {
   const sessionStocks = stocks.filter((s) => s.sessionId === selectedSessionId);
   const sessionFixedCosts = fixedCosts.filter((fc) => fc.sessionId === selectedSessionId);
 
-  const isSuperAdmin = user?.roleId === DEFAULT_ROLE_IDS.SUPER_ADMIN;
+  const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
   const canAccessAssistant = hasPermission("assistant:use") || isSuperAdmin;
-  const hasAssistantPlan = selectedSchool ? planIncludesAssistant(selectedSchool.planId ?? "starter") : false;
-  const canUseAssistant = canAccessAssistant && (hasAssistantPlan || isSuperAdmin);
+  const canUseAssistant = canAccessAssistant;
   const useLLM = isLLMAvailable();
 
   // Load chat history when session changes (from DB or localStorage)
@@ -1083,24 +1081,6 @@ export function AxpoAssistantPage() {
     );
   }
 
-  if (!hasAssistantPlan && !isSuperAdmin) {
-    return (
-      <div className="flex h-full items-center justify-center p-8">
-        <Card className="max-w-md border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg">
-            <Bot className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="mb-2 text-xl font-semibold text-slate-900">Axpo Assistant is a Premium Feature</h2>
-          <p className="mb-4 text-slate-600">
-            Upgrade this school to the <strong>Axpo Assistant</strong> plan to use AI-powered chat for students, staff, expenses, and more.
-          </p>
-          <p className="text-sm text-slate-500">
-            Go to Subscription &amp; Plan to upgrade, or contact your Super Admin.
-          </p>
-        </Card>
-      </div>
-    );
-  }
 
   if (!selectedSessionId) {
     return (
