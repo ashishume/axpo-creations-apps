@@ -19,14 +19,17 @@ import { YearReportPage } from "../../pages/YearReportPage";
 import { UsersPage } from "../../pages/UsersPage";
 import { RolesPage } from "../../pages/RolesPage";
 import { SubscriptionPage } from "../../pages/SubscriptionPage";
+import { OrgSubscriptionsPage } from "../../pages/OrgSubscriptionsPage";
 import { AxpoAssistantPage } from "../../pages/AxpoAssistantPage";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/Button";
 import { AssistantPopup } from "../assistant/AssistantPopup";
+import { SubscriptionExpiredOverlay } from "../SubscriptionExpiredOverlay";
 
 const PAGES: Record<PageId, React.ReactNode> = {
   dashboard: <DashboardPage />,
   organizations: <OrganizationsPage />,
+  orgSubscriptions: <OrgSubscriptionsPage />,
   schools: <SchoolsPage />,
   students: <StudentsPage />,
   staff: <StaffPage />,
@@ -131,6 +134,7 @@ export function Layout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
+      <SubscriptionExpiredOverlay />
       <input
         ref={fileInputRef}
         type="file"

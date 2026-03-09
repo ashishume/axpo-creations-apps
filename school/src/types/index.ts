@@ -1,10 +1,14 @@
-// Subscription plan IDs: Starter (base), AI Assistant (premium with Axpo Assistant)
-export type PlanId = "starter" | "ai_assistant";
+// Subscription plan IDs: Starter (base), Premium (Axpo Assistant)
+export type PlanId = "starter" | "premium" | "ai_assistant";
+
+export type BillingInterval = "monthly" | "quarterly" | "annual";
 
 export interface SubscriptionPlanInfo {
   id: PlanId;
   name: string;
   price: number;
+  /** Price per billing interval (monthly, quarterly, annual). */
+  pricing?: { monthly: number; quarterly: number; annual: number };
   features: string[];
 }
 

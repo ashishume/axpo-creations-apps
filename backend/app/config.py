@@ -1,4 +1,6 @@
 """Application configuration from environment."""
+import json
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -43,13 +45,35 @@ class Settings(BaseSettings):
 
     # AI Assistant (OpenRouter)
     OPENROUTER_API_KEY: str | None = None
-    OPENROUTER_MODEL: str = "google/gemini-2.0-flash"
+    OPENROUTER_MODEL: str = "openai/gpt-4o-mini"
 
     # Razorpay (Teaching subscription)
     RAZORPAY_KEY_ID: str | None = None
     RAZORPAY_KEY_SECRET: str | None = None
-    RAZORPAY_PLAN_ID: str | None = None
+    RAZORPAY_PLAN_ID: str | None = None  # Legacy single plan; prefer RAZORPAY_PLAN_IDS
+    RAZORPAY_PLAN_IDS: dict[str, str] | None = None  # From JSON env: {"starter_monthly": "plan_xxx", ...}
     RAZORPAY_WEBHOOK_SECRET: str | None = None
+
+    @field_validator("RAZORPAY_PLAN_IDS", mode="before")
+    @classmethod
+    def parse_plan_ids(cls, v: str | None) -> dict[str, str] | None:
+        if v is None or v == "":
+            return None
+        if isinstance(v, dict):
+            return v
+        try:
+            return json.loads(v)
+        except (json.JSONDecodeError, TypeError):
+            return None
+
+    def get_razorpay_plan_id(self, plan_type: str, billing_interval: str) -> str | None:
+        """Return Razorpay plan ID for plan_type + billing_interval, or RAZORPAY_PLAN_ID fallback."""
+        key = f"{plan_type}_{billing_interval}"
+        if self.RAZORPAY_PLAN_IDS and key in self.RAZORPAY_PLAN_IDS:
+            return self.RAZORPAY_PLAN_IDS[key]
+        if billing_interval == "monthly" and self.RAZORPAY_PLAN_ID:
+            return self.RAZORPAY_PLAN_ID
+        return None
 
 
 def get_settings() -> Settings:

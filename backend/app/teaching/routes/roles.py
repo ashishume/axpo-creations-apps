@@ -3,14 +3,22 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from app.teaching.dependencies import get_teaching_db_session, get_current_teaching_user
+from app.teaching.dependencies import (
+    get_teaching_db_session,
+    get_current_teaching_user,
+    require_active_org_subscription,
+)
 from app.teaching.schemas.role import RoleCreate, RoleUpdate, RoleResponse
 from app.teaching.services.role import role_service
 from app.teaching.models.user import User
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-router = APIRouter(prefix="/roles", tags=["teaching-roles"])
+router = APIRouter(
+    prefix="/roles",
+    tags=["teaching-roles"],
+    dependencies=[Depends(require_active_org_subscription)],
+)
 
 
 def _role_to_response(role, permissions: list[str]) -> RoleResponse:

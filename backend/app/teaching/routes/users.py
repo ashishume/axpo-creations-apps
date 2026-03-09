@@ -7,6 +7,7 @@ from app.teaching.dependencies import (
     get_teaching_db_session,
     get_current_teaching_user,
     require_teaching_permission,
+    require_active_org_subscription,
 )
 from app.teaching.schemas.auth import (
     UserResponse,
@@ -23,7 +24,11 @@ from app.teaching.org_access import enforce_user_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-router = APIRouter(prefix="/users", tags=["teaching-users"])
+router = APIRouter(
+    prefix="/users",
+    tags=["teaching-users"],
+    dependencies=[Depends(require_active_org_subscription)],
+)
 
 
 async def _user_to_response(db: AsyncSession, user: User) -> UserResponse:

@@ -3,7 +3,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.teaching.dependencies import get_teaching_db_session, get_current_teaching_user
+from app.teaching.dependencies import (
+    get_teaching_db_session,
+    get_current_teaching_user,
+    require_active_org_subscription,
+)
 from app.teaching.schemas.stock import (
     StockCreate,
     StockUpdate,
@@ -17,7 +21,11 @@ from app.teaching.org_access import enforce_session_access
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-router = APIRouter(prefix="/stocks", tags=["teaching-stocks"])
+router = APIRouter(
+    prefix="/stocks",
+    tags=["teaching-stocks"],
+    dependencies=[Depends(require_active_org_subscription)],
+)
 
 
 @router.post("", response_model=StockResponse)

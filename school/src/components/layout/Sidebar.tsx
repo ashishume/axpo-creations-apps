@@ -19,6 +19,7 @@ import {
   Calendar,
   CalendarOff,
   CreditCard,
+  Wallet,
 } from "lucide-react";
 import { Fragment } from "react";
 import { NavLink } from "react-router-dom";
@@ -33,6 +34,7 @@ import { SUPER_ADMIN_ROLE_NAME, type Permission } from "../../types/auth";
 export type PageId =
   | "dashboard"
   | "organizations"
+  | "orgSubscriptions"
   | "schools"
   | "students"
   | "staff"
@@ -48,6 +50,7 @@ export type PageId =
 export const PAGE_PATHS: Record<PageId, string> = {
   dashboard: "/",
   organizations: "/organizations",
+  orgSubscriptions: "/org-subscriptions",
   schools: "/schools",
   students: "/students",
   staff: "/staff",
@@ -65,6 +68,7 @@ const nav: { id: PageId; label: string; icon: React.ElementType; permission?: Pe
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:view" },
   { id: "assistant", label: "Axpo Assistant", icon: Bot, permission: "assistant:use" },
   { id: "organizations", label: "Organizations", icon: Building2, permission: "schools:create" },
+  { id: "orgSubscriptions", label: "Org subscriptions", icon: Wallet, permission: "schools:create" },
   { id: "schools", label: "Schools & Sessions", icon: School, permission: "schools:view" },
   { id: "students", label: "Students & Fees", icon: Users, permission: "students:view" },
   { id: "staff", label: "Staff & Salary", icon: UserCog, permission: "staff:view" },
@@ -207,6 +211,7 @@ export function Sidebar({
         >
           {nav.map(({ id, label, icon: Icon, permission }) => {
             if (id === "organizations" && !isSuperAdmin) return null;
+            if (id === "orgSubscriptions" && !isSuperAdmin) return null;
             if (id === "assistant" && !canAccessAssistant) return null;
             const isAssistant = id === "assistant";
             const link = (

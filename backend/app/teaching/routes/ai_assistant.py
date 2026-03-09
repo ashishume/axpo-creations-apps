@@ -1,12 +1,16 @@
 """AI Assistant (Axpo Assistant) routes - parse natural language to intents."""
 from fastapi import APIRouter, Depends
 
-from app.teaching.dependencies import get_current_teaching_user
+from app.teaching.dependencies import get_current_teaching_user, require_active_org_subscription
 from app.teaching.models.user import User
 from app.teaching.schemas.ai_assistant import AIStatusResponse, ParseRequest, ParseResponse
 from app.teaching.services.ai_assistant import is_ai_available, parse_intent
 
-router = APIRouter(prefix="/ai-assistant", tags=["teaching-ai-assistant"])
+router = APIRouter(
+    prefix="/ai-assistant",
+    tags=["teaching-ai-assistant"],
+    dependencies=[Depends(require_active_org_subscription)],
+)
 
 
 @router.get("/status", response_model=AIStatusResponse)

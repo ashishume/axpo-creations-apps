@@ -5,7 +5,11 @@ from fastapi import APIRouter, Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.teaching.dependencies import get_teaching_db_session, get_current_teaching_user
+from app.teaching.dependencies import (
+    get_teaching_db_session,
+    get_current_teaching_user,
+    require_active_org_subscription,
+)
 from app.teaching.schemas.leave import (
     LeaveTypeCreate,
     LeaveTypeUpdate,
@@ -22,7 +26,11 @@ from app.teaching.services.leave import leave_service
 from app.teaching.models.user import User
 from app.teaching.org_access import enforce_session_access
 
-router = APIRouter(prefix="/leaves", tags=["teaching-leaves"])
+router = APIRouter(
+    prefix="/leaves",
+    tags=["teaching-leaves"],
+    dependencies=[Depends(require_active_org_subscription)],
+)
 
 
 # ----- Leave Types -----

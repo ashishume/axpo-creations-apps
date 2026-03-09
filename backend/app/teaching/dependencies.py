@@ -70,3 +70,36 @@ def require_teaching_permission(permission: str):
         return user
 
     return _require
+
+
+async def require_active_org_subscription(
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+) -> User:
+    """
+    Require valid user and, if org user, an active non-locked org subscription.
+    Super Admin (organization_id is None) always passes.
+    Raises 403 with detail 'subscription_required' when org has no active subscription or is locked.
+    """
+    from fastapi import HTTPException
+    from app.teaching.models.subscription import OrgSubscription
+
+    if user.organization_id is None:
+        return user
+    result = await db.execute(
+        select(OrgSubscription).where(OrgSubscription.organization_id == user.organization_id)
+    )
+    row = result.scalar_one_or_none()
+    if row is None:
+        raise HTTPException(status_code=403, detail="subscription_required")
+    if row.is_locked:
+        raise HTTPException(status_code=403, detail="subscription_required")
+    if row.status != "active":
+        raise HTTPException(status_code=403, detail="subscription_required")
+    if row.current_period_end and not row.razorpay_subscription_id:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        end_utc = row.current_period_end if row.current_period_end.tzinfo else row.current_period_end.replace(tzinfo=timezone.utc)
+        if end_utc < now:
+            raise HTTPException(status_code=403, detail="subscription_required")
+    return user

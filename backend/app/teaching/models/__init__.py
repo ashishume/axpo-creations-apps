@@ -11,7 +11,7 @@ from app.teaching.models.expense import Expense
 from app.teaching.models.fixed_cost import FixedMonthlyCost
 from app.teaching.models.stock import Stock, StockTransaction
 from app.teaching.models.leave import LeaveType, LeaveBalance, LeaveRequest
-from app.teaching.models.subscription import UserSubscription, PremiumCoupon, CouponRedemption
+from app.teaching.models.subscription import OrgSubscription, UserSubscription, PremiumCoupon, CouponRedemption
 
 __all__ = [
     "TeachingBase",
@@ -34,6 +34,7 @@ __all__ = [
     "LeaveType",
     "LeaveBalance",
     "LeaveRequest",
+    "OrgSubscription",
     "UserSubscription",
     "PremiumCoupon",
     "CouponRedemption",

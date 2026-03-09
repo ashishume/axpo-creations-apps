@@ -3,9 +3,11 @@ from fastapi import APIRouter
 
 from app.teaching.routes import (
     auth,
+    admin_subscriptions,
     ai_assistant,
     dashboard,
     organizations,
+    org_subscription,
     roles,
     schools,
     sessions,
@@ -23,6 +25,8 @@ from app.teaching.routes import (
 router = APIRouter()
 
 router.include_router(auth.router)
+router.include_router(org_subscription.router)
+router.include_router(admin_subscriptions.router)
 router.include_router(ai_assistant.router)
 router.include_router(dashboard.router)
 router.include_router(users.router)

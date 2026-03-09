@@ -1,15 +1,20 @@
 import { useState } from "react";
-import { useApp } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useApp } from "../context/AppContext";
 import { useSubscription } from "../providers/SubscriptionProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
-import { SUBSCRIPTION_PLANS } from "../lib/plans";
-import { subscriptionApi } from "../lib/db/api/subscription";
+import {
+  SUBSCRIPTION_PLANS,
+  BILLING_INTERVALS,
+  getPlanPrice,
+  type BillingInterval,
+} from "../lib/plans";
+import { orgSubscriptionApi } from "../lib/db/api/orgSubscription";
 import { isTeachingApiConfigured } from "../lib/api/client";
-import type { PlanId } from "../types";
 import { DEFAULT_ROLE_IDS } from "../types/auth";
-import { CreditCard, Check, Crown, X } from "lucide-react";
+import { CreditCard, Check, Crown, X, Settings } from "lucide-react";
 
 const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
 
@@ -43,57 +48,60 @@ function loadRazorpay(): Promise<void> {
   });
 }
 
+function formatDate(s: string | null | undefined): string {
+  if (!s) return "—";
+  try {
+    return new Date(s).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return s;
+  }
+}
+
 export function SubscriptionPage() {
-  const { schools, selectedSchoolId, updateSchool, toast } = useApp();
+  const navigate = useNavigate();
+  const { toast } = useApp();
   const { user, hasPermission } = useAuth();
-  const { isPremium, status, planType, refetch } = useSubscription();
+  const {
+    isActive,
+    status,
+    planType,
+    billingInterval,
+    currentPeriodEnd,
+    refetch,
+  } = useSubscription();
+  const [billingIntervalChoice, setBillingIntervalChoice] = useState<BillingInterval>("monthly");
   const [subscribing, setSubscribing] = useState(false);
-  const [coupon, setCoupon] = useState("");
-  const [redeeming, setRedeeming] = useState(false);
   const isSuperAdmin = user?.roleId === DEFAULT_ROLE_IDS.SUPER_ADMIN;
   const canManagePlans = hasPermission("plans:manage") || isSuperAdmin;
   const showRazorpay = isTeachingApiConfigured();
 
-  const selectedSchool = selectedSchoolId
-    ? schools.find((s) => s.id === selectedSchoolId)
-    : null;
-  const currentPlanId: PlanId = selectedSchool?.planId ?? "starter";
-
-  const handleChangePlan = async (planId: PlanId) => {
-    if (!selectedSchoolId || currentPlanId === planId) return;
-    try {
-      await updateSchool(selectedSchoolId, { planId });
-      toast(`Plan updated to ${SUBSCRIPTION_PLANS.find((p) => p.id === planId)?.name ?? planId}`);
-    } catch (e) {
-      toast(String(e), "error");
-    }
-  };
-
-  const handleSubscribe = async () => {
+  const handleSubscribe = async (planId: string, interval: BillingInterval) => {
     if (!user) return;
     setSubscribing(true);
     try {
-      const result = await subscriptionApi.create("web");
+      const result = await orgSubscriptionApi.create(planId, interval);
       await loadRazorpay();
       if (!window.Razorpay) {
-        toast("Payment provider could not be loaded.", "error");
         return;
       }
       const rzp = new window.Razorpay({
         key: result.keyId,
         subscription_id: result.subscriptionId,
         name: "Axpo School",
-        description: "Premium subscription",
+        description: `Subscription (${planId}, ${interval})`,
         prefill: { name: user.name ?? undefined, email: user.email ?? undefined },
         handler: async (res) => {
           try {
-            await subscriptionApi.verify({
+            await orgSubscriptionApi.verify({
               razorpayPaymentId: res.razorpay_payment_id,
               razorpaySubscriptionId: res.razorpay_subscription_id,
               razorpaySignature: res.razorpay_signature,
-              platform: "web",
             });
-            toast("Premium activated!", "success");
+            toast("Subscription activated!", "success");
             refetch();
           } catch {
             toast("Verification failed. Contact support if charged.", "error");
@@ -108,78 +116,98 @@ export function SubscriptionPage() {
     }
   };
 
-  const handleRedeemCoupon = async () => {
-    const code = coupon.trim();
-    if (!code) return;
-    setRedeeming(true);
+  const handleCancel = async () => {
+    if (!window.confirm("Cancel your organization's subscription?")) return;
     try {
-      await subscriptionApi.redeemCoupon(code);
-      toast("Coupon applied. You now have Premium.", "success");
-      setCoupon("");
+      await orgSubscriptionApi.cancel();
+      toast("Subscription cancelled.", "success");
       refetch();
     } catch (e) {
-      toast(e instanceof Error ? e.message : "Invalid or expired coupon", "error");
-    } finally {
-      setRedeeming(false);
+      toast(e instanceof Error ? e.message : "Failed to cancel", "error");
     }
   };
 
-  const handleCancel = async () => {
-    if (!window.confirm("Cancel your Premium subscription?")) return;
-    try {
-      await subscriptionApi.cancel();
-      toast("Subscription cancelled.", "success");
-      refetch();
-    } catch {
-      toast("Failed to cancel", "error");
-    }
-  };
+  if (isSuperAdmin) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Subscription & Plans</h2>
+          <p className="text-slate-600">
+            As Super Admin, manage all organizations and their subscriptions from the admin panel.
+          </p>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <Button
+              variant="primary"
+              onClick={() => navigate("/org-subscriptions")}
+              className="gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Manage org subscriptions
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">Subscription & Plan</h2>
+        <h2 className="text-2xl font-bold text-slate-900">Organization subscription</h2>
         <p className="text-slate-600">
-          View and manage the subscription plan for this school.
+          View and manage your organization's subscription plan.
         </p>
       </div>
 
-      {!selectedSchool ? (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-slate-600">
-              Select a school from the header dropdown to see and manage its plan.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <Card className="border-indigo-200 bg-indigo-50/30">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <CreditCard className="h-5 w-5 text-indigo-600" />
-                Current school & plan
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="font-medium text-slate-900">{selectedSchool.name}</p>
-              <p className="mt-1 text-sm text-slate-600">
-                Active plan:{" "}
-                <span className="font-semibold text-indigo-700">
-                  {SUBSCRIPTION_PLANS.find((p) => p.id === currentPlanId)?.name ?? "Free"}
-                </span>
-              </p>
-            </CardContent>
-          </Card>
+      <Card className="border-indigo-200 bg-indigo-50/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <CreditCard className="h-5 w-5 text-indigo-600" />
+            Current subscription
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          <p className="font-medium text-slate-900">
+            Plan: {SUBSCRIPTION_PLANS.find((p) => p.id === planType)?.name ?? planType}
+            {billingInterval && ` · ${billingInterval}`}
+          </p>
+          <p className="text-sm text-slate-600">
+            Status: <span className="font-medium">{status ?? "inactive"}</span>
+            {currentPeriodEnd && isActive && (
+              <> · Renews: {formatDate(currentPeriodEnd)}</>
+            )}
+          </p>
+        </CardContent>
+      </Card>
 
-          <div className="grid gap-4 md:grid-cols-3">
+      {showRazorpay && canManagePlans && (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {BILLING_INTERVALS.map((interval) => (
+              <Button
+                key={interval}
+                size="sm"
+                variant={billingIntervalChoice === interval ? "primary" : "secondary"}
+                onClick={() => setBillingIntervalChoice(interval)}
+              >
+                {interval.charAt(0).toUpperCase() + interval.slice(1)}
+              </Button>
+            ))}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
             {SUBSCRIPTION_PLANS.map((plan) => {
-              const isCurrent = plan.id === currentPlanId;
+              const price = getPlanPrice(plan.id, billingIntervalChoice);
+              const isCurrent =
+                planType === plan.id && billingInterval === billingIntervalChoice && isActive;
               return (
                 <Card
                   key={plan.id}
-                  className={`relative transition-shadow ${isCurrent ? "ring-2 ring-indigo-500 shadow-md" : ""
-                    }`}
+                  className={`relative transition-shadow ${
+                    isCurrent ? "ring-2 ring-indigo-500 shadow-md" : ""
+                  }`}
                 >
                   {isCurrent && (
                     <div className="absolute right-3 top-3 flex items-center gap-1 rounded bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
@@ -189,10 +217,10 @@ export function SubscriptionPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
                     <p className="text-2xl font-bold text-slate-900">
-                      {plan.price === 0 ? "Free" : `₹${plan.price}`}
-                      {plan.price > 0 && (
-                        <span className="text-sm font-normal text-slate-500">/month</span>
-                      )}
+                      ₹{price}
+                      <span className="text-sm font-normal text-slate-500">
+                        /{billingIntervalChoice === "monthly" ? "month" : billingIntervalChoice === "quarterly" ? "3 months" : "year"}
+                      </span>
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -204,15 +232,15 @@ export function SubscriptionPage() {
                         </li>
                       ))}
                     </ul>
-                    {canManagePlans && (
+                    {!isCurrent && (
                       <Button
                         size="sm"
-                        variant={isCurrent ? "secondary" : "primary"}
-                        className="mt-2 w-full"
-                        onClick={() => handleChangePlan(plan.id)}
-                        disabled={isCurrent}
+                        className="mt-2 w-full gap-2"
+                        onClick={() => handleSubscribe(plan.id, billingIntervalChoice)}
+                        disabled={subscribing}
                       >
-                        {isCurrent ? "Current plan" : `Set as ${plan.name}`}
+                        <Crown className="h-4 w-4" />
+                        {subscribing ? "Opening checkout…" : `Subscribe ${plan.name}`}
                       </Button>
                     )}
                   </CardContent>
@@ -221,73 +249,22 @@ export function SubscriptionPage() {
             })}
           </div>
 
-          {canManagePlans && (
-            <p className="text-sm text-slate-500">
-              As Super Admin, you can change the plan for the selected school above. Other users can only view the current plan.
-            </p>
-          )}
-
-          {showRazorpay && (
+          {isActive && (
             <Card className="border-amber-200 bg-amber-50/30">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Crown className="h-5 w-5 text-amber-600" />
-                  Premium (Razorpay)
-                </CardTitle>
-                {isPremium ? (
-                  <span className="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-                    <Check className="h-4 w-4" /> Active
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
-                    <X className="h-4 w-4" /> {planType ?? "Free"}
-                  </span>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-slate-600">
-                  Plan: {planType ?? "free"} · Status: {status ?? "—"}
-                </p>
-                {!isPremium && (
-                  <>
-                    <Button
-                      size="sm"
-                      onClick={handleSubscribe}
-                      disabled={subscribing}
-                      className="gap-2"
-                    >
-                      <Crown className="h-4 w-4" />
-                      {subscribing ? "Opening checkout…" : "Subscribe with Razorpay"}
-                    </Button>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <input
-                        type="text"
-                        placeholder="Coupon code"
-                        value={coupon}
-                        onChange={(e) => setCoupon(e.target.value)}
-                        disabled={redeeming}
-                        className="max-w-[200px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                      />
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={handleRedeemCoupon}
-                        disabled={!coupon.trim() || redeeming}
-                      >
-                        {redeeming ? "Redeeming…" : "Redeem"}
-                      </Button>
-                    </div>
-                  </>
-                )}
-                {isPremium && (
-                  <Button size="sm" variant="secondary" onClick={handleCancel}>
-                    Cancel subscription
-                  </Button>
-                )}
+              <CardContent className="pt-6">
+                <Button size="sm" variant="secondary" onClick={handleCancel}>
+                  Cancel subscription
+                </Button>
               </CardContent>
             </Card>
           )}
         </>
+      )}
+
+      {!showRazorpay && canManagePlans && (
+        <p className="text-sm text-slate-500">
+          Payment is not configured. Contact your administrator to activate your organization's subscription.
+        </p>
       )}
     </div>
   );

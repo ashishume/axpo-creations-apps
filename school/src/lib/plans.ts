@@ -1,10 +1,14 @@
 import type { SubscriptionPlanInfo } from "../types";
 
+export const BILLING_INTERVALS = ["monthly", "quarterly", "annual"] as const;
+export type BillingInterval = (typeof BILLING_INTERVALS)[number];
+
 export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
   {
     id: "starter",
     name: "Starter",
     price: 2000,
+    pricing: { monthly: 2000, quarterly: 5400, annual: 19200 },
     features: [
       "Dashboard & reports",
       "Students & fees",
@@ -15,9 +19,10 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
     ],
   },
   {
-    id: "ai_assistant",
+    id: "premium",
     name: "Axpo Assistant",
     price: 2500,
+    pricing: { monthly: 2500, quarterly: 6750, annual: 24000 },
     features: [
       "Everything in Starter",
       "Axpo Assistant (AI chat)",
@@ -33,5 +38,13 @@ export const PLAN_IDS = SUBSCRIPTION_PLANS.map((p) => p.id) as readonly string[]
 
 /** Whether the plan includes the Axpo Assistant premium feature. */
 export function planIncludesAssistant(planId: string): boolean {
-  return planId === "ai_assistant";
+  return planId === "premium" || planId === "ai_assistant";
+}
+
+/** Get price for a plan and billing interval. */
+export function getPlanPrice(planId: string, interval: BillingInterval): number {
+  const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId);
+  if (!plan) return 0;
+  const pricing = (plan as SubscriptionPlanInfo & { pricing?: Record<BillingInterval, number> }).pricing;
+  return pricing?.[interval] ?? plan.price;
 }

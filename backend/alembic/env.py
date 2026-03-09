@@ -24,18 +24,15 @@ if target_db not in ("billing", "teaching"):
     raise ValueError("TARGET_DB must be 'billing' or 'teaching'")
 
 settings = get_settings()
-# Use sync driver for Alembic (postgresql+psycopg2)
+# Use sync driver for Alembic (postgresql+psycopg2). Escape % so ConfigParser doesn't treat it as interpolation (e.g. %21 in password).
+def _alembic_url(url: str) -> str:
+    return url.replace("postgresql+asyncpg", "postgresql+psycopg2").replace("%", "%%")
+
 if target_db == "billing":
-    config.set_main_option(
-        "sqlalchemy.url",
-        settings.BILLING_DATABASE_URL.replace("postgresql+asyncpg", "postgresql+psycopg2"),
-    )
+    config.set_main_option("sqlalchemy.url", _alembic_url(settings.BILLING_DATABASE_URL))
     target_metadata = BillingBase.metadata
 else:
-    config.set_main_option(
-        "sqlalchemy.url",
-        settings.TEACHING_DATABASE_URL.replace("postgresql+asyncpg", "postgresql+psycopg2"),
-    )
+    config.set_main_option("sqlalchemy.url", _alembic_url(settings.TEACHING_DATABASE_URL))
     target_metadata = TeachingBase.metadata
 
 

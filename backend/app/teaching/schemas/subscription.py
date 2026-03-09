@@ -45,3 +45,45 @@ class SubscriptionStatus(BaseModel):
         None,
         description="'razorpay' | 'apple' | None (coupon/free)",
     )
+
+
+# --- Org-level subscription schemas ---
+
+
+class OrgSubscriptionStatus(BaseModel):
+    """Current org subscription status."""
+
+    plan_type: str = Field(..., description="starter | premium")
+    billing_interval: str = Field(..., description="monthly | quarterly | annual")
+    status: str = Field(
+        ...,
+        description="active | inactive | cancelled | expired | pending | halted",
+    )
+    is_locked: bool = Field(False, description="Manually locked by Super Admin")
+    amount: float | None = None
+    current_period_start: datetime | None = None
+    current_period_end: datetime | None = None
+    razorpay_subscription_id: str | None = None
+
+
+class VerifyOrgPaymentRequest(BaseModel):
+    """Request body for verifying org payment after Razorpay checkout."""
+
+    razorpay_payment_id: str
+    razorpay_subscription_id: str
+    razorpay_signature: str
+
+
+class CreateOrgSubscriptionRequest(BaseModel):
+    """Request to create org subscription (plan + interval for checkout)."""
+
+    plan_type: str = Field(..., description="starter | premium")
+    billing_interval: str = Field(..., description="monthly | quarterly | annual")
+
+
+class GrantOrgSubscriptionRequest(BaseModel):
+    """Super Admin request to manually grant subscription."""
+
+    plan_type: str = Field(..., description="starter | premium")
+    billing_interval: str = Field(..., description="monthly | quarterly | annual")
+    duration_days: int = Field(..., ge=1, le=3650, description="Days of access")

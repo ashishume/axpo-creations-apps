@@ -3,7 +3,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from app.teaching.dependencies import get_teaching_db_session, get_current_teaching_user
+from app.teaching.dependencies import (
+    get_teaching_db_session,
+    get_current_teaching_user,
+    require_active_org_subscription,
+)
 from app.teaching.schemas.organization import OrganizationCreate, OrganizationUpdate, OrganizationResponse
 from app.teaching.services.organization import organization_service
 from app.teaching.models.user import User
@@ -12,7 +16,11 @@ from app.core.exceptions import ForbiddenError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-router = APIRouter(prefix="/organizations", tags=["teaching-organizations"])
+router = APIRouter(
+    prefix="/organizations",
+    tags=["teaching-organizations"],
+    dependencies=[Depends(require_active_org_subscription)],
+)
 
 
 @router.post("", response_model=OrganizationResponse)
