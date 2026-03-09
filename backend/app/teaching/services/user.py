@@ -41,6 +41,7 @@ class UserService:
             email=data.email,
             name=data.name,
             role_id=data.role_id,
+            organization_id=data.organization_id,
             password_hash=hash_password(data.password),
             must_change_password=True,
             is_active=True,
@@ -61,6 +62,8 @@ class UserService:
             user.role_id = data.role_id
         if data.is_active is not None:
             user.is_active = data.is_active
+        if data.organization_id is not None:
+            user.organization_id = data.organization_id
         if data.staff_id is not None:
             user.staff_id = data.staff_id
         if data.student_id is not None:

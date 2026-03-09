@@ -8,6 +8,7 @@ function mapUser(r: Record<string, unknown>, _permissions: string[]): User {
     email: r.email != null ? String(r.email) : undefined,
     name: String(r.name ?? ''),
     roleId: String(r.role_id),
+    organizationId: r.organization_id != null ? String(r.organization_id) : undefined,
     role: undefined,
     mustChangePassword: Boolean(r.must_change_password),
     isActive: Boolean(r.is_active),
@@ -43,8 +44,18 @@ export const authRepositoryApi = {
     }
   },
 
-  async changePassword(_userId: string, _request: ChangePasswordRequest): Promise<void> {
-    throw new Error('Change password is not available when using the API. Use profile or contact admin.');
+  async changePassword(_userId: string, request: ChangePasswordRequest): Promise<void> {
+    const res = await teachingFetch('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({
+        current_password: request.currentPassword,
+        new_password: request.newPassword,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error((err as { detail?: string }).detail ?? res.statusText);
+    }
   },
 
   async getUsers(page: number = 1, pageSize: number = 10): Promise<{ users: User[]; total: number }> {

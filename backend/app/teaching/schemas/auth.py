@@ -19,6 +19,7 @@ class UserResponse(BaseModel):
     email: str | None
     name: str
     role_id: UUID
+    organization_id: UUID | None
     must_change_password: bool
     is_active: bool
     last_login_at: Optional[datetime]
@@ -73,4 +74,9 @@ class UpdateUserRequest(BaseModel):
 
 
 class ResetPasswordRequest(BaseModel):
+    new_password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
     new_password: str
