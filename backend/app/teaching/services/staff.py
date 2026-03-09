@@ -36,6 +36,9 @@ class StaffService:
     async def list_all(self, db: AsyncSession) -> list[Staff]:
         return await staff_repository.list_all(db)
 
+    async def list_by_organization(self, db: AsyncSession, organization_id: UUID) -> list[Staff]:
+        return await staff_repository.list_by_organization(db, organization_id)
+
     async def update(self, db: AsyncSession, id: UUID, data: StaffUpdate) -> Staff:
         staff = await self.get_or_404(db, id)
         for k, v in data.model_dump(exclude_unset=True).items():

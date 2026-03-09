@@ -13,12 +13,19 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RoleInfo(BaseModel):
+    id: UUID
+    name: str
+    is_system: bool
+
+
 class UserResponse(BaseModel):
     id: UUID
     username: str
     email: str | None
     name: str
     role_id: UUID
+    role: RoleInfo | None = None
     organization_id: UUID | None
     must_change_password: bool
     is_active: bool

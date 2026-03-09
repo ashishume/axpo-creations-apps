@@ -38,6 +38,8 @@ async def list_staff(
 ):
     if session_id:
         staff_list = await staff_service.list_by_session(db, session_id)
+    elif user.organization_id:
+        staff_list = await staff_service.list_by_organization(db, user.organization_id)
     else:
         staff_list = await staff_service.list_all(db)
     return [StaffResponse.model_validate(s) for s in staff_list]

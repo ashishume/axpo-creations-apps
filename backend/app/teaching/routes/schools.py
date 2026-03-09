@@ -28,7 +28,10 @@ async def list_schools(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
-    schools = await school_service.list_all(db)
+    if user.organization_id:
+        schools = await school_service.list_by_organization(db, user.organization_id)
+    else:
+        schools = await school_service.list_all(db)
     return [SchoolResponse.model_validate(s) for s in schools]
 
 

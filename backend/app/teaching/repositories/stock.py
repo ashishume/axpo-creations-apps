@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.teaching.models.stock import Stock, StockTransaction
+from app.teaching.models.school import School, Session
 
 
 class StockRepository:
@@ -20,6 +21,16 @@ class StockRepository:
     async def list_by_session(self, db: AsyncSession, session_id: UUID) -> list[Stock]:
         result = await db.execute(
             select(Stock).where(Stock.session_id == session_id).order_by(Stock.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def list_by_organization(self, db: AsyncSession, organization_id: UUID) -> list[Stock]:
+        result = await db.execute(
+            select(Stock)
+            .join(Session, Stock.session_id == Session.id)
+            .join(School, Session.school_id == School.id)
+            .where(School.organization_id == organization_id)
+            .order_by(Stock.created_at.desc())
         )
         return list(result.scalars().all())
 

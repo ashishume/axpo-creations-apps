@@ -7,13 +7,41 @@ from app.teaching.dependencies import (
     get_current_teaching_user,
     get_teaching_refresh_token,
 )
-from app.teaching.schemas.auth import LoginRequest, LoginResponse, RefreshResponse, UserResponse, MeResponse, ChangePasswordRequest
+from app.teaching.schemas.auth import (
+    LoginRequest, LoginResponse, RefreshResponse,
+    UserResponse, RoleInfo, MeResponse, ChangePasswordRequest,
+)
 from app.teaching.services.auth import auth_service
+from app.teaching.repositories.role import role_repository
 from app.teaching.models.user import User
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/auth", tags=["teaching-auth"])
+
+
+async def _build_user_response(db: AsyncSession, user: User) -> UserResponse:
+    """Build UserResponse with embedded role info."""
+    role_info = None
+    role = await role_repository.get(db, user.role_id)
+    if role:
+        role_info = RoleInfo(id=role.id, name=role.name, is_system=role.is_system)
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        name=user.name,
+        role_id=user.role_id,
+        role=role_info,
+        organization_id=user.organization_id,
+        must_change_password=user.must_change_password,
+        is_active=user.is_active,
+        last_login_at=user.last_login_at,
+        staff_id=user.staff_id,
+        student_id=user.student_id,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
+    )
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -27,21 +55,7 @@ async def login(
     set_auth_cookies(response, access, refresh)
     permissions = await auth_service.get_permissions_for_user(db, user)
     return LoginResponse(
-        user=UserResponse(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            name=user.name,
-            role_id=user.role_id,
-            organization_id=user.organization_id,
-            must_change_password=user.must_change_password,
-            is_active=user.is_active,
-            last_login_at=user.last_login_at,
-            staff_id=user.staff_id,
-            student_id=user.student_id,
-            created_at=user.created_at,
-            updated_at=user.updated_at,
-        ),
+        user=await _build_user_response(db, user),
         permissions=permissions,
     )
 
@@ -81,20 +95,6 @@ async def me(
 ):
     permissions = await auth_service.get_permissions_for_user(db, user)
     return MeResponse(
-        user=UserResponse(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            name=user.name,
-            role_id=user.role_id,
-            organization_id=user.organization_id,
-            must_change_password=user.must_change_password,
-            is_active=user.is_active,
-            last_login_at=user.last_login_at,
-            staff_id=user.staff_id,
-            student_id=user.student_id,
-            created_at=user.created_at,
-            updated_at=user.updated_at,
-        ),
+        user=await _build_user_response(db, user),
         permissions=permissions,
     )

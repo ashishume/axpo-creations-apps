@@ -6,6 +6,7 @@ const DEFAULT_PLAN: PlanId = 'starter';
 function mapSchool(r: Record<string, unknown>): School {
   return {
     id: String(r.id),
+    organizationId: r.organization_id != null ? String(r.organization_id) : undefined,
     name: String(r.name ?? ''),
     address: String(r.address ?? ''),
     contact: String(r.contact ?? ''),
@@ -38,13 +39,14 @@ export const schoolsRepositoryApi = {
   },
 
   async create(school: Omit<School, 'id'>): Promise<School> {
-    const body = {
+    const body: Record<string, unknown> = {
       name: school.name,
       address: school.address,
       contact: school.contact,
       is_locked: school.isLocked ?? false,
       plan_id: school.planId ?? DEFAULT_PLAN,
     };
+    if (school.organizationId) body.organization_id = school.organizationId;
     const r = await teachingFetchJson<Record<string, unknown>>('/schools', { method: 'POST', body: JSON.stringify(body) });
     return mapSchool(r);
   },
@@ -56,6 +58,7 @@ export const schoolsRepositoryApi = {
     if (updates.contact !== undefined) body.contact = updates.contact;
     if (updates.isLocked !== undefined) body.is_locked = updates.isLocked;
     if (updates.planId !== undefined) body.plan_id = updates.planId;
+    if (updates.organizationId !== undefined) body.organization_id = updates.organizationId;
     const r = await teachingFetchJson<Record<string, unknown>>(`/schools/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
     return mapSchool(r);
   },

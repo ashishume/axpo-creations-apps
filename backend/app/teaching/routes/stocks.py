@@ -37,6 +37,8 @@ async def list_stocks(
 ):
     if session_id:
         stocks = await stock_service.list_by_session(db, session_id)
+    elif user.organization_id:
+        stocks = await stock_service.list_by_organization(db, user.organization_id)
     else:
         stocks = await stock_service.list_all(db)
     return [StockResponse.model_validate(s) for s in stocks]

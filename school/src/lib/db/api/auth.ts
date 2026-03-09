@@ -1,7 +1,20 @@
-import type { User, Permission, LoginCredentials, ChangePasswordRequest, CreateUserRequest, UpdateUserRequest } from '../../../types/auth';
+import type { User, Role, Permission, LoginCredentials, ChangePasswordRequest, CreateUserRequest, UpdateUserRequest } from '../../../types/auth';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
+function mapRole(r: Record<string, unknown>): Role | undefined {
+  if (!r) return undefined;
+  return {
+    id: String(r.id),
+    name: String(r.name ?? ''),
+    isSystem: Boolean(r.is_system),
+    permissions: [],
+    createdAt: '',
+    updatedAt: '',
+  };
+}
+
 function mapUser(r: Record<string, unknown>, _permissions: string[]): User {
+  const roleData = r.role as Record<string, unknown> | null | undefined;
   return {
     id: String(r.id),
     username: String(r.username ?? ''),
@@ -9,7 +22,7 @@ function mapUser(r: Record<string, unknown>, _permissions: string[]): User {
     name: String(r.name ?? ''),
     roleId: String(r.role_id),
     organizationId: r.organization_id != null ? String(r.organization_id) : undefined,
-    role: undefined,
+    role: roleData ? mapRole(roleData) : undefined,
     mustChangePassword: Boolean(r.must_change_password),
     isActive: Boolean(r.is_active),
     lastLoginAt: r.last_login_at != null ? String(r.last_login_at) : undefined,

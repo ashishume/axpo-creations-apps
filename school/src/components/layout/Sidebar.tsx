@@ -27,7 +27,7 @@ import { PermissionGate } from "../auth/PermissionGate";
 import { useAuth } from "../../context/AuthContext";
 import { useApp } from "../../context/AppContext";
 import { planIncludesAssistant } from "../../lib/plans";
-import type { Permission } from "../../types/auth";
+import { SUPER_ADMIN_ROLE_NAME, type Permission } from "../../types/auth";
 
 export type PageId =
   | "dashboard"
@@ -93,7 +93,7 @@ export function Sidebar({
 }: SidebarProps) {
   const { user, signOut, hasPermission } = useAuth();
   const { schools, sessions, selectedSchoolId, selectedSessionId, setSelectedSchool, setSelectedSession } = useApp();
-  const isSuperAdmin = user != null && user.organizationId == null;
+  const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
   const selectedSchool = selectedSchoolId ? schools.find((s) => s.id === selectedSchoolId) : null;
   const hasAssistantPlan = selectedSchool ? planIncludesAssistant(selectedSchool.planId ?? "starter") : false;
   const canAccessAssistant = hasPermission("assistant:use") || isSuperAdmin;

@@ -28,6 +28,9 @@ async def list_organizations(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    if user.organization_id:
+        org = await organization_service.get(db, user.organization_id)
+        return [OrganizationResponse.model_validate(org)] if org else []
     orgs = await organization_service.list_all(db)
     return [OrganizationResponse.model_validate(o) for o in orgs]
 

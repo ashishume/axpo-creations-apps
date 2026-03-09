@@ -8,6 +8,7 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { PermissionGate } from "../components/auth/PermissionGate";
 import { Plus, Pencil, Trash2, Calendar, ArrowUpCircle, CheckCircle2, Lock, Unlock } from "lucide-react";
 import type { School, Session } from "../types";
+import { SUPER_ADMIN_ROLE_NAME } from "../types/auth";
 import { isSessionCompleted } from "../lib/utils";
 
 export function SchoolsPage() {
@@ -32,7 +33,7 @@ export function SchoolsPage() {
   const [confirmDelete, setConfirmDelete] = useState<{ type: "school" | "session"; id: string; name: string } | null>(null);
   const [promoteModal, setPromoteModal] = useState<{ open: boolean; fromSession?: Session } | null>(null);
 
-  const isSuperAdmin = user?.organizationId == null;
+  const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
   
   // Get sessions grouped by school for the promote modal
   const getSessionsForSchool = (schoolId: string) => 

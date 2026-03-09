@@ -37,6 +37,8 @@ async def list_students(
 ):
     if session_id:
         students = await student_service.list_by_session(db, session_id)
+    elif user.organization_id:
+        students = await student_service.list_by_organization(db, user.organization_id)
     else:
         students = await student_service.list_all(db)
     return [StudentResponse.model_validate(s) for s in students]

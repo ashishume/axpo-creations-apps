@@ -16,6 +16,14 @@ class SchoolRepository:
         result = await db.execute(select(School).order_by(School.created_at.desc()))
         return list(result.scalars().all())
 
+    async def list_by_organization(self, db: AsyncSession, organization_id: UUID) -> list[School]:
+        result = await db.execute(
+            select(School)
+            .where(School.organization_id == organization_id)
+            .order_by(School.created_at.desc())
+        )
+        return list(result.scalars().all())
+
     async def add(self, db: AsyncSession, school: School) -> School:
         db.add(school)
         await db.flush()

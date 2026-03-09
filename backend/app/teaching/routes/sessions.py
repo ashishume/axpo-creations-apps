@@ -31,6 +31,8 @@ async def list_sessions(
 ):
     if school_id:
         sessions = await session_service.list_by_school(db, school_id)
+    elif user.organization_id:
+        sessions = await session_service.list_by_organization(db, user.organization_id)
     else:
         sessions = await session_service.list_all(db)
     return [SessionResponse.model_validate(s) for s in sessions]

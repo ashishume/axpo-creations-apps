@@ -38,6 +38,7 @@ import {
 } from "../lib/db/repositories";
 import { getAggregatedDashboard } from "../lib/db/repositories/dashboard";
 import { useAuth } from "./AuthContext";
+import { SUPER_ADMIN_ROLE_NAME } from "../types/auth";
 import {
   createSampleSchools,
   createSampleSessions,
@@ -161,7 +162,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const isSuperAdmin = user != null && user.organizationId == null;
+  const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
 
   const [schools, setSchools] = useState<School[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -196,8 +197,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setStocks(aggregated.stocks);
         setFixedCosts(aggregated.fixedCosts);
         setOrganizations(aggregated.organizations);
-        // RPC returns orgs only when auth.uid() is set (Supabase Auth). With local auth, RPC returns [] for orgs — fetch separately for Super Admin
-        if (isSuperAdmin && aggregated.organizations.length === 0) {
+        // RPC may not return orgs (Supabase Auth only). Fetch separately if empty.
+        if (aggregated.organizations.length === 0) {
           try {
             const orgs = await organizationsRepository.getAll();
             setOrganizations(orgs);
@@ -225,14 +226,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setExpenses(e);
       setStocks(stk);
       setFixedCosts(fc);
-      if (isSuperAdmin) {
-        try {
-          const orgs = await organizationsRepository.getAll();
-          setOrganizations(orgs);
-        } catch {
-          setOrganizations([]);
-        }
-      } else {
+      try {
+        const orgs = await organizationsRepository.getAll();
+        setOrganizations(orgs);
+      } catch {
         setOrganizations([]);
       }
     } catch {
@@ -251,7 +248,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // User-scoped visibility: Super Admin = all; Org Admin = org's schools; Manager/school user = staff's school only
   const allowedSchoolIds = useMemo(() => {
     if (!user) return [];
-    if (user.organizationId == null) return schools.map((s) => s.id);
+    if (isSuperAdmin) return schools.map((s) => s.id);
     if (user.staffId) {
       const staffMember = staff.find((s) => s.id === user.staffId);
       if (!staffMember) return [];

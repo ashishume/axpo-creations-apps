@@ -31,6 +31,8 @@ async def list_expenses(
 ):
     if session_id:
         expenses = await expense_service.list_by_session(db, session_id)
+    elif user.organization_id:
+        expenses = await expense_service.list_by_organization(db, user.organization_id)
     else:
         expenses = await expense_service.list_all(db)
     return [ExpenseResponse.model_validate(e) for e in expenses]
