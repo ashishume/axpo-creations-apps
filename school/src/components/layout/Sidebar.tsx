@@ -71,7 +71,7 @@ const nav: { id: PageId; label: string; icon: React.ElementType; permission?: Pe
   { id: "stocks", label: "Stock & Publishers", icon: Package, permission: "stocks:view" },
   { id: "leaves", label: "Leave Management", icon: CalendarOff, permission: "leaves:view" },
   { id: "report", label: "Year-End Report", icon: FileText, permission: "reports:view" },
-  // { id: "subscription", label: "Subscription & Plan", icon: CreditCard, permission: "schools:view" },
+  { id: "subscription", label: "Subscription & Plan", icon: CreditCard, permission: "schools:view" },
   { id: "users", label: "User Management", icon: UserPlus, permission: "users:view" },
   { id: "roles", label: "Roles & Permissions", icon: Shield, permission: "roles:manage" },
 ];
@@ -205,47 +205,47 @@ export function Sidebar({
           className="h-full space-y-0.5 overflow-y-auto p-2"
         >
           {nav.map(({ id, label, icon: Icon, permission }) => {
-          if (id === "organizations" && !isSuperAdmin) return null;
-          if (id === "assistant" && !canAccessAssistant) return null;
-          const isAssistant = id === "assistant";
-          const link = (
-            <NavLink
-              key={id}
-              to={PAGE_PATHS[id]}
-              end={id === "dashboard"}
-              onClick={onNavClick}
-              className={({ isActive }) =>
-                cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors min-h-[44px]",
-                  isActive ? "bg-indigo-100 text-indigo-800" : "text-slate-700 hover:bg-slate-100"
-                )
-              }
-            >
-              <Icon className="h-5 w-5 shrink-0" />
-              <span className="flex-1 truncate">{label}</span>
-              {isAssistant && (
-                <span
-                  className={cn(
-                    "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                    hasAssistantPlan ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                  )}
-                >
-                  {hasAssistantPlan ? "Pro" : "Premium"}
-                </span>
-              )}
-            </NavLink>
-          );
-
-          if (permission && id !== "assistant") {
-            return (
-              <PermissionGate key={id} permission={permission}>
-                {link}
-              </PermissionGate>
+            if (id === "organizations" && !isSuperAdmin) return null;
+            if (id === "assistant" && !canAccessAssistant) return null;
+            const isAssistant = id === "assistant";
+            const link = (
+              <NavLink
+                key={id}
+                to={PAGE_PATHS[id]}
+                end={id === "dashboard"}
+                onClick={onNavClick}
+                className={({ isActive }) =>
+                  cn(
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors min-h-[44px]",
+                    isActive ? "bg-indigo-100 text-indigo-800" : "text-slate-700 hover:bg-slate-100"
+                  )
+                }
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                <span className="flex-1 truncate">{label}</span>
+                {isAssistant && (
+                  <span
+                    className={cn(
+                      "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                      hasAssistantPlan ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                    )}
+                  >
+                    {hasAssistantPlan ? "Pro" : "Premium"}
+                  </span>
+                )}
+              </NavLink>
             );
-          }
 
-          return <Fragment key={id}>{link}</Fragment>;
-        })}
+            if (permission && id !== "assistant") {
+              return (
+                <PermissionGate key={id} permission={permission}>
+                  {link}
+                </PermissionGate>
+              );
+            }
+
+            return <Fragment key={id}>{link}</Fragment>;
+          })}
         </nav>
         {/* Bottom gradient when more items below */}
         {showBottomGradient && (

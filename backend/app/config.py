@@ -41,6 +41,16 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,https://school.axpocreation.com,https://billing.axpocreation.com"
 
+    # AI Assistant (OpenRouter)
+    OPENROUTER_API_KEY: str | None = None
+    OPENROUTER_MODEL: str = "google/gemini-2.0-flash"
+
+    # Razorpay (Teaching subscription)
+    RAZORPAY_KEY_ID: str | None = None
+    RAZORPAY_KEY_SECRET: str | None = None
+    RAZORPAY_PLAN_ID: str | None = None
+    RAZORPAY_WEBHOOK_SECRET: str | None = None
+
 
 def get_settings() -> Settings:
     """Return application settings."""

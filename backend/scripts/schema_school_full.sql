@@ -309,6 +309,45 @@ CREATE INDEX IF NOT EXISTS idx_school_xx_stocks_session ON school_xx_stocks(sess
 CREATE INDEX IF NOT EXISTS idx_school_xx_stock_transactions_stock ON school_xx_stock_transactions(stock_id);
 
 -- -----------------------------------------------------------------------------
+-- Subscription (Razorpay premium)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS school_xx_premium_coupons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT NOT NULL UNIQUE,
+  max_uses INT NOT NULL DEFAULT 1,
+  used_count INT NOT NULL DEFAULT 0,
+  duration_days INT NOT NULL DEFAULT 365,
+  valid_from TIMESTAMPTZ,
+  valid_until TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
+);
+
+CREATE TABLE IF NOT EXISTS school_xx_user_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES school_xx_users(id) ON DELETE CASCADE,
+  razorpay_subscription_id TEXT,
+  razorpay_payment_id TEXT,
+  plan_type VARCHAR(20) NOT NULL DEFAULT 'free' CHECK (plan_type IN ('free', 'premium')),
+  status VARCHAR(20) NOT NULL DEFAULT 'inactive' CHECK (status IN ('active', 'inactive', 'cancelled', 'expired', 'pending')),
+  amount NUMERIC(10, 2),
+  current_period_start TIMESTAMPTZ,
+  current_period_end TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
+);
+CREATE INDEX IF NOT EXISTS idx_school_xx_user_subscriptions_razorpay_sub_id ON school_xx_user_subscriptions(razorpay_subscription_id);
+
+CREATE TABLE IF NOT EXISTS school_xx_coupon_redemptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES school_xx_users(id) ON DELETE CASCADE,
+  user_email VARCHAR(255),
+  coupon_code TEXT NOT NULL,
+  coupon_id UUID NOT NULL REFERENCES school_xx_premium_coupons(id) ON DELETE CASCADE,
+  redeemed_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
+  success BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- -----------------------------------------------------------------------------
 -- Seed: permissions
 -- -----------------------------------------------------------------------------
 INSERT INTO school_xx_permissions (id, module, action, description) VALUES
@@ -406,6 +445,9 @@ ON CONFLICT (id) DO NOTHING;
 -- To drop all tables and recreate from scratch (destructive): run before above.
 -- =============================================================================
 /*
+DROP TABLE IF EXISTS school_xx_coupon_redemptions CASCADE;
+DROP TABLE IF EXISTS school_xx_user_subscriptions CASCADE;
+DROP TABLE IF EXISTS school_xx_premium_coupons CASCADE;
 DROP TABLE IF EXISTS school_xx_stock_transactions CASCADE;
 DROP TABLE IF EXISTS school_xx_stocks CASCADE;
 DROP TABLE IF EXISTS school_xx_fixed_monthly_costs CASCADE;

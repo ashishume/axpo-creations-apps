@@ -1,9 +1,11 @@
 /**
  * Axpo Assistant - Multi-intent natural language parser using OpenRouter API.
- * Handles CRUD for students, staff, expenses, stocks, fixed costs, and analytics queries.
+ * When Teaching API is configured, uses backend /ai-assistant/parse; otherwise uses client-side OpenRouter.
  */
 
 import { openRouterChat, isOpenRouterAvailable } from "./openRouter";
+import { isTeachingApiConfigured } from "./api/client";
+import { aiAssistantApi } from "./db/api/aiAssistant";
 
 import type {
   FeeType,
@@ -181,9 +183,9 @@ export interface IntentResult {
   error?: string;
 }
 
-/** True if OpenRouter is configured (Axpo Assistant and NL parsing). */
+/** True if AI is available: backend (when Teaching API configured) or client OpenRouter key. */
 export function isLLMAvailable(): boolean {
-  return isOpenRouterAvailable();
+  return isOpenRouterAvailable() || isTeachingApiConfigured();
 }
 
 // ============================================================================
@@ -431,6 +433,17 @@ export async function parseAxpoIntent(userInput: string): Promise<IntentResult> 
   const trimmed = userInput.trim();
   if (!trimmed) {
     return { success: false, intent: "unknown", error: "Please enter a message." };
+  }
+  if (isTeachingApiConfigured()) {
+    try {
+      return await aiAssistantApi.parseIntent(trimmed);
+    } catch (e) {
+      return {
+        success: false,
+        intent: "unknown",
+        error: e instanceof Error ? e.message : String(e),
+      };
+    }
   }
   return parseAxpoIntentWithOpenRouter(trimmed);
 }
