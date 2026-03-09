@@ -4,7 +4,7 @@ import { Button } from "../ui/Button";
 import { parseCSV, getColumn } from "../../lib/csv";
 import type { FeeType } from "../../types";
 import type { StaffRole } from "../../types";
-import { Upload, FileText, Download } from "lucide-react";
+import { Upload, FileText, Download, Loader2 } from "lucide-react";
 
 const FEE_TYPES: FeeType[] = [
   "Regular",
@@ -70,8 +70,8 @@ interface BulkImportModalProps {
   onClose: () => void;
   type: ImportType;
   sessionId: string | null;
-  onImportStudents: (rows: StudentImportRow[]) => void;
-  onImportStaff: (rows: StaffImportRow[]) => void;
+  onImportStudents: (rows: StudentImportRow[]) => Promise<void> | void;
+  onImportStaff: (rows: StaffImportRow[]) => Promise<void> | void;
 }
 
 function validateStudentRow(
@@ -228,6 +228,8 @@ export function BulkImportModal({
   const [parsed, setParsed] = useState<ParsedRow[]>([]);
   const [importResult, setImportResult] = useState<{ success: number; failed: number } | null>(null);
   const [shouldProcess, setShouldProcess] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const processCSV = useCallback(() => {
     if (!rawCsv.trim()) {
@@ -269,25 +271,35 @@ export function BulkImportModal({
     e.target.value = "";
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     const validRows = parsed.filter((p) => p.valid);
     if (validRows.length === 0 || !sessionId) return;
     const results = validRows.map((r) => {
       const result = type === "students" ? validateStudentRow(r.data) : validateStaffRow(r.data);
       return result.data!;
     });
-    if (type === "students") {
-      onImportStudents(results as StudentImportRow[]);
-    } else {
-      onImportStaff(results as StaffImportRow[]);
+    setIsImporting(true);
+    setImportError(null);
+    try {
+      if (type === "students") {
+        await onImportStudents(results as StudentImportRow[]);
+      } else {
+        await onImportStaff(results as StaffImportRow[]);
+      }
+      setImportResult({ success: results.length, failed: parsed.filter((p) => !p.valid).length });
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : "Import failed. Please try again.");
+    } finally {
+      setIsImporting(false);
     }
-    setImportResult({ success: results.length, failed: parsed.filter((p) => !p.valid).length });
   };
 
   const handleClose = () => {
+    if (isImporting) return;
     setRawCsv("");
     setParsed([]);
     setImportResult(null);
+    setImportError(null);
     onClose();
   };
 
@@ -385,14 +397,21 @@ export function BulkImportModal({
               <strong>{validCount}</strong> valid, <strong>{parsed.length - validCount}</strong> with errors
             </p>
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={handleClose}>
+              <Button variant="secondary" onClick={handleClose} disabled={isImporting}>
                 Cancel
               </Button>
               <Button
-                disabled={validCount === 0 || !sessionId}
+                disabled={validCount === 0 || !sessionId || isImporting}
                 onClick={handleImport}
               >
-                Import {validCount} {type === "students" ? "students" : "staff"}
+                {isImporting ? (
+                  <>
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>Import {validCount} {type === "students" ? "students" : "staff"}</>
+                )}
               </Button>
             </div>
           </>
@@ -404,6 +423,11 @@ export function BulkImportModal({
               <><strong>{importResult.failed}</strong> skipped (validation errors)</>
             )}
             {importResult.failed === 0 && " (all rows valid)."}
+          </div>
+        )}
+        {importError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            {importError}
           </div>
         )}
       </div>

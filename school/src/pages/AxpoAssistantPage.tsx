@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useApp } from "../context/AppContext";
+import { useClassesBySession } from "../hooks/useClasses";
+import { useStudentsBySession } from "../hooks/useStudents";
+import { useStaffBySession } from "../hooks/useStaff";
+import { useExpensesBySession } from "../hooks/useExpenses";
+import { useStocksBySession } from "../hooks/useStocks";
+import { useFixedCostsBySession } from "../hooks/useFixedCosts";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { ChatMessage, type ChatMessageData } from "../components/assistant/ChatMessage";
@@ -108,12 +114,6 @@ export function AxpoAssistantPage() {
     selectedSchoolId,
     schools,
     sessions,
-    classes,
-    students,
-    staff,
-    expenses,
-    stocks,
-    fixedCosts,
     addStudent,
     addStudents,
     updateStudent,
@@ -143,6 +143,13 @@ export function AxpoAssistantPage() {
     toast,
   } = useApp();
 
+  const { data: classes = [] } = useClassesBySession(selectedSessionId ?? "");
+  const { data: students = [] } = useStudentsBySession(selectedSessionId ?? "");
+  const { data: staff = [] } = useStaffBySession(selectedSessionId ?? "");
+  const { data: expenses = [] } = useExpensesBySession(selectedSessionId ?? "");
+  const { data: stocks = [] } = useStocksBySession(selectedSessionId ?? "");
+  const { data: fixedCosts = [] } = useFixedCostsBySession(selectedSessionId ?? "");
+
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -154,12 +161,12 @@ export function AxpoAssistantPage() {
 
   const selectedSchool = selectedSchoolId ? schools.find((s) => s.id === selectedSchoolId) : null;
   const selectedSession = sessions.find((s) => s.id === selectedSessionId);
-  const sessionClasses = classes.filter((c) => c.sessionId === selectedSessionId);
-  const sessionStudents = students.filter((s) => s.sessionId === selectedSessionId);
-  const sessionStaff = staff.filter((s) => s.sessionId === selectedSessionId);
-  const sessionExpenses = expenses.filter((e) => e.sessionId === selectedSessionId);
-  const sessionStocks = stocks.filter((s) => s.sessionId === selectedSessionId);
-  const sessionFixedCosts = fixedCosts.filter((fc) => fc.sessionId === selectedSessionId);
+  const sessionClasses = classes;
+  const sessionStudents = students;
+  const sessionStaff = staff;
+  const sessionExpenses = expenses;
+  const sessionStocks = stocks;
+  const sessionFixedCosts = fixedCosts;
 
   const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
   const canAccessAssistant = hasPermission("assistant:use") || isSuperAdmin;

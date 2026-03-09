@@ -124,9 +124,20 @@ export const staffRepositoryApi = {
   },
 
   async addSalaryPaymentsBatch(payments: { staffId: string; payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'> }[]): Promise<void> {
-    for (const { staffId, payment } of payments) {
-      await this.addSalaryPayment(staffId, payment);
-    }
+    if (payments.length === 0) return;
+    const body = payments.map(({ staffId, payment }) => ({
+      staff_id: staffId,
+      month: payment.month,
+      amount: payment.amount,
+      status: payment.status ?? 'Paid',
+      payment_date: payment.paymentDate ?? null,
+      method: payment.method ?? null,
+      due_date: payment.dueDate ?? null,
+    }));
+    await teachingFetchJson<Record<string, unknown>[]>('/staff/salary-payments/bulk', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   },
 
   async updateSalaryPayment(staffId: string, paymentId: string, updates: Partial<ExtendedSalaryPayment>): Promise<ExtendedSalaryPayment> {

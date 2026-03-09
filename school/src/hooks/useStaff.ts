@@ -55,6 +55,29 @@ export function useCreateStaff() {
   });
 }
 
+export function useCreateStaffBulk() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (staffMembers: Omit<Staff, 'id' | 'salaryPayments'>[]) => staffRepository.createMany(staffMembers),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function useAddSalaryPaymentsBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payments: { staffId: string; payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'> }[]) =>
+      staffRepository.addSalaryPaymentsBatch(payments),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
 export function useUpdateStaff() {
   const queryClient = useQueryClient();
 

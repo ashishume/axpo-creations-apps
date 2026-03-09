@@ -36,6 +36,16 @@ class SalaryPaymentUpdate(BaseModel):
     method: str | None = None
 
 
+class BulkSalaryPaymentItem(BaseModel):
+    staff_id: UUID
+    month: str
+    amount: Decimal
+    status: str = "Paid"
+    payment_date: date | None = None
+    method: str | None = None
+    due_date: str | None = None
+
+
 class StaffBase(BaseModel):
     session_id: UUID
     name: str

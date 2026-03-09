@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
+import { useStudents } from "../hooks/useStudents";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -16,7 +17,6 @@ export function SchoolsPage() {
   const {
     schools,
     sessions,
-    students,
     organizations,
     selectedSchoolId,
     addSchool,
@@ -28,6 +28,7 @@ export function SchoolsPage() {
     promoteStudentsToNewSession,
     toast,
   } = useApp();
+  const { data: students = [] } = useStudents();
   const [schoolModal, setSchoolModal] = useState<{ open: boolean; school?: School }>({ open: false });
   const [sessionModal, setSessionModal] = useState<{ open: boolean; session?: Session; schoolId?: string }>({ open: false });
   const [confirmDelete, setConfirmDelete] = useState<{ type: "school" | "session"; id: string; name: string } | null>(null);

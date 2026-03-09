@@ -36,9 +36,7 @@ import {
   organizationsRepository,
   fixedCostsRepository,
 } from "../lib/db/repositories";
-import { getAggregatedDashboard } from "../lib/db/repositories/dashboard";
 import { useAuth } from "./AuthContext";
-import { SUPER_ADMIN_ROLE_NAME } from "../types/auth";
 import {
   createSampleSchools,
   createSampleSessions,
@@ -134,7 +132,7 @@ interface AppContextValue extends AppState {
   dismissToast: (id: string) => void;
   loadSampleData: () => void;
   clearAllData: () => void;
-  exportData: () => BackupData;
+  exportData: () => Promise<BackupData>;
   importData: (data: BackupData) => void;
   
   // Session promotion
@@ -162,8 +160,6 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
-
   const [schools, setSchools] = useState<School[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [classes, setClasses] = useState<StudentClass[]>([]);
@@ -185,47 +181,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refetchAll = useCallback(async () => {
     setIsAppLoading(true);
     try {
-      // Prefer aggregated dashboard API (1 call); fall back to 8 separate calls if RPC not available
-      const aggregated = await getAggregatedDashboard();
-      if (aggregated) {
-        setSchools(aggregated.schools);
-        setSessions(aggregated.sessions);
-        setClasses(aggregated.classes);
-        setStudents(aggregated.students);
-        setStaff(aggregated.staff);
-        setExpenses(aggregated.expenses);
-        setStocks(aggregated.stocks);
-        setFixedCosts(aggregated.fixedCosts);
-        setOrganizations(aggregated.organizations);
-        // RPC may not return orgs (Supabase Auth only). Fetch separately if empty.
-        if (aggregated.organizations.length === 0) {
-          try {
-            const orgs = await organizationsRepository.getAll();
-            setOrganizations(orgs);
-          } catch {
-            setOrganizations([]);
-          }
-        }
-        return;
-      }
-      const [s, sess, c, st, sta, e, stk, fc] = await Promise.all([
+      const [s, sess] = await Promise.all([
         schoolsRepository.getAll(),
         sessionsRepository.getAll(),
-        classesRepository.getAll(),
-        studentsRepository.getAll(),
-        staffRepository.getAll(),
-        expensesRepository.getAll(),
-        stocksRepository.getAll(),
-        fixedCostsRepository.getAll(),
       ]);
       setSchools(s);
       setSessions(sess);
-      setClasses(c);
-      setStudents(st);
-      setStaff(sta);
-      setExpenses(e);
-      setStocks(stk);
-      setFixedCosts(fc);
       try {
         const orgs = await organizationsRepository.getAll();
         setOrganizations(orgs);
@@ -233,11 +194,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setOrganizations([]);
       }
     } catch {
-      // Supabase not configured or network error — leave state as-is
+      // Network error — leave state as-is
     } finally {
       setIsAppLoading(false);
     }
-  }, [isSuperAdmin]);
+  }, []);
 
   // Run refetch only once user is known (so isSuperAdmin is correct). Avoids double fetch on load.
   useEffect(() => {
@@ -245,56 +206,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     else refetchAll();
   }, [refetchAll, user]);
 
-  // User-scoped visibility: Super Admin = all; Org Admin = org's schools; Manager/school user = staff's school only
-  const allowedSchoolIds = useMemo(() => {
-    if (!user) return [];
-    if (isSuperAdmin) return schools.map((s) => s.id);
-    if (user.staffId) {
-      const staffMember = staff.find((s) => s.id === user.staffId);
-      if (!staffMember) return [];
-      const sess = sessions.find((s) => s.id === staffMember.sessionId);
-      return sess ? [sess.schoolId] : [];
-    }
-    return schools.filter((s) => s.organizationId === user.organizationId).map((s) => s.id);
-  }, [user, schools, staff, sessions]);
-
-  const allowedSessionIds = useMemo(
-    () => new Set(sessions.filter((s) => allowedSchoolIds.includes(s.schoolId)).map((s) => s.id)),
-    [sessions, allowedSchoolIds]
-  );
-
-  const filteredSchools = useMemo(
-    () => schools.filter((s) => allowedSchoolIds.includes(s.id)),
-    [schools, allowedSchoolIds]
-  );
-  const filteredSessions = useMemo(
-    () => sessions.filter((s) => allowedSchoolIds.includes(s.schoolId)),
-    [sessions, allowedSchoolIds]
-  );
-  const filteredClasses = useMemo(
-    () => classes.filter((c) => allowedSessionIds.has(c.sessionId)),
-    [classes, allowedSessionIds]
-  );
-  const filteredStudents = useMemo(
-    () => students.filter((s) => allowedSessionIds.has(s.sessionId)),
-    [students, allowedSessionIds]
-  );
-  const filteredStaff = useMemo(
-    () => staff.filter((s) => allowedSessionIds.has(s.sessionId)),
-    [staff, allowedSessionIds]
-  );
-  const filteredExpenses = useMemo(
-    () => expenses.filter((e) => allowedSessionIds.has(e.sessionId)),
-    [expenses, allowedSessionIds]
-  );
-  const filteredStocks = useMemo(
-    () => stocks.filter((s) => allowedSessionIds.has(s.sessionId)),
-    [stocks, allowedSessionIds]
-  );
-  const filteredFixedCosts = useMemo(
-    () => fixedCosts.filter((f) => allowedSessionIds.has(f.sessionId)),
-    [fixedCosts, allowedSessionIds]
-  );
+  // Backend enforces org-scoping, so schools/sessions from API are already user-scoped
+  const filteredSchools = schools;
+  const filteredSessions = sessions;
+  const filteredClasses = classes;
+  const filteredStudents = students;
+  const filteredStaff = staff;
+  const filteredExpenses = expenses;
+  const filteredStocks = stocks;
+  const filteredFixedCosts = fixedCosts;
   const filteredOrganizations = useMemo(() => {
     if (!user || user.organizationId == null) return organizations;
     return organizations.filter((o) => o.id === user.organizationId);
@@ -865,21 +785,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     storage.saveSelection({ schoolId: null, sessionId: null });
   }, []);
 
-  const exportData = useCallback((): BackupData => {
+  const exportData = useCallback(async (): Promise<BackupData> => {
+    const [allClasses, allStudents, allStaff, allExpenses, allStocks, allFixedCosts] = await Promise.all([
+      classesRepository.getAll(),
+      studentsRepository.getAll(),
+      staffRepository.getAll(),
+      expensesRepository.getAll(),
+      stocksRepository.getAll(),
+      fixedCostsRepository.getAll(),
+    ]);
     return {
       schemaVersion: BACKUP_SCHEMA_VERSION,
       schools,
       sessions,
-      classes,
-      students,
-      staff,
-      expenses,
-      stocks,
-      fixedCosts,
+      classes: allClasses,
+      students: allStudents,
+      staff: allStaff,
+      expenses: allExpenses,
+      stocks: allStocks,
+      fixedCosts: allFixedCosts,
       organizations,
       exportedAt: new Date().toISOString(),
     };
-  }, [schools, sessions, classes, students, staff, expenses, stocks, fixedCosts, organizations]);
+  }, [schools, sessions, organizations]);
 
   const importData = useCallback(async (data: BackupData) => {
     if (
@@ -993,14 +921,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const promoteStudentsToNewSession = useCallback(
     async (fromSessionId: string, toSessionId: string): Promise<{ promoted: number; graduated: number }> => {
-      const fromStudents = students.filter((s) => s.sessionId === fromSessionId);
-      const toClasses = classes.filter((c) => c.sessionId === toSessionId);
+      const fromStudents = await studentsRepository.getBySession(fromSessionId);
+      const fromClasses = await classesRepository.getBySession(fromSessionId);
+      const toClasses = await classesRepository.getBySession(toSessionId);
 
       let promoted = 0;
       let graduated = 0;
 
       for (const student of fromStudents) {
-        const currentClass = classes.find((c) => c.id === student.classId);
+        const currentClass = fromClasses.find((c) => c.id === student.classId);
         const currentClassName = currentClass?.name;
         const { payments: _p, ...studentData } = student;
 
@@ -1050,7 +979,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (promoted > 0) await refetchAll();
       return { promoted, graduated };
     },
-    [students, classes, refetchAll]
+    [refetchAll]
   );
 
   const value = useMemo<AppContextValue>(

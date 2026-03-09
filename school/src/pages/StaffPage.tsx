@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
+import { useStaffBySession, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useAddSalaryPayment } from "../hooks/useStaff";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -92,16 +93,23 @@ function getPayableMonths(): string[] {
 
 export function StaffPage() {
   const {
-    staff,
     sessions,
     selectedSessionId,
-    isAppLoading,
-    addStaff,
-    updateStaff,
-    deleteStaff,
-    addSalaryPayment,
     toast,
   } = useApp();
+
+  const { data: staff = [], isLoading: isAppLoading } = useStaffBySession(selectedSessionId ?? "");
+  const createStaff = useCreateStaff();
+  const createStaffBulk = useCreateStaffBulk();
+  const updateStaffMut = useUpdateStaff();
+  const deleteStaffMut = useDeleteStaff();
+  const addSalaryMut = useAddSalaryPayment();
+
+  const addStaff = (data: Omit<StaffType, "id" | "salaryPayments">) => createStaff.mutate(data);
+  const updateStaff = (id: string, data: Partial<Omit<StaffType, "id" | "salaryPayments">>) => updateStaffMut.mutate({ id, updates: data });
+  const deleteStaff = (id: string) => deleteStaffMut.mutate(id);
+  const addSalaryPayment = (staffId: string, payment: Omit<SalaryPayment, "id">) => addSalaryMut.mutate({ staffId, payment });
+
   const selectedSession = useMemo(
     () => (selectedSessionId ? sessions.find((s) => s.id === selectedSessionId) : null),
     [sessions, selectedSessionId]
@@ -120,10 +128,7 @@ export function StaffPage() {
   const currentMonth = useMemo(() => getCurrentMonth(), []);
   const payableMonths = useMemo(() => getPayableMonths(), []);
 
-  const list = useMemo(
-    () => (selectedSessionId ? staff.filter((s) => s.sessionId === selectedSessionId) : []),
-    [staff, selectedSessionId]
-  );
+  const list = staff;
 
   const filteredList = useMemo(() => {
     let out = list;
@@ -586,18 +591,17 @@ export function StaffPage() {
         type="staff"
         sessionId={selectedSessionId}
         onImportStudents={() => {}}
-        onImportStaff={(rows) => {
+        onImportStaff={async (rows) => {
           if (!selectedSessionId) return;
-          rows.forEach((r) =>
-            addStaff({
-              sessionId: selectedSessionId,
-              name: r.name,
-              employeeId: r.employeeId ?? "",
-              role: r.role,
-              monthlySalary: r.monthlySalary,
-              subjectOrGrade: r.subjectOrGrade,
-            })
-          );
+          const staffToCreate = rows.map((r) => ({
+            sessionId: selectedSessionId,
+            name: r.name,
+            employeeId: r.employeeId ?? "",
+            role: r.role,
+            monthlySalary: r.monthlySalary,
+            subjectOrGrade: r.subjectOrGrade,
+          }));
+          await createStaffBulk.mutateAsync(staffToCreate);
           toast(`${rows.length} staff member(s) imported`);
         }}
       />

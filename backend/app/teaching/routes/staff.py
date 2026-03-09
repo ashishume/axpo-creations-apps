@@ -11,6 +11,7 @@ from app.teaching.schemas.staff import (
     SalaryPaymentCreate,
     SalaryPaymentResponse,
     SalaryPaymentUpdate,
+    BulkSalaryPaymentItem,
 )
 from app.teaching.services.staff import staff_service
 from app.teaching.models.user import User
@@ -59,6 +60,20 @@ async def create_staff_bulk(
         await enforce_session_access(db, user, sid)
     staff_list = await staff_service.create_many(db, data)
     return [StaffResponse.model_validate(s) for s in staff_list]
+
+
+@router.post("/salary-payments/bulk", response_model=list[SalaryPaymentResponse])
+async def add_salary_payments_bulk(
+    data: list[BulkSalaryPaymentItem],
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    staff_ids = {item.staff_id for item in data}
+    for sid in staff_ids:
+        staff = await staff_service.get_or_404(db, sid)
+        await enforce_session_access(db, user, staff.session_id)
+    payments = await staff_service.add_salary_payments_bulk(db, data)
+    return [SalaryPaymentResponse.model_validate(p) for p in payments]
 
 
 @router.get("/{id}", response_model=StaffResponse)

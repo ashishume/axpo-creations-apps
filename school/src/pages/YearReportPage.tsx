@@ -1,5 +1,8 @@
 import { useMemo, useRef } from "react";
 import { useApp } from "../context/AppContext";
+import { useStudentsBySession } from "../hooks/useStudents";
+import { useStaffBySession } from "../hooks/useStaff";
+import { useExpensesBySession } from "../hooks/useExpenses";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
 import { formatCurrency } from "../lib/utils";
@@ -7,8 +10,12 @@ import { getTotalPaid, getPaymentStatus } from "../lib/studentUtils";
 import { FileDown } from "lucide-react";
 
 export function YearReportPage() {
-  const { students, staff, expenses, sessions, schools, selectedSessionId } = useApp();
+  const { sessions, schools, selectedSessionId } = useApp();
   const printRef = useRef<HTMLDivElement>(null);
+
+  const { data: sessionStudents = [] } = useStudentsBySession(selectedSessionId ?? "");
+  const { data: sessionStaff = [] } = useStaffBySession(selectedSessionId ?? "");
+  const { data: sessionExpenses = [] } = useExpensesBySession(selectedSessionId ?? "");
 
   const session = useMemo(
     () => sessions.find((s) => s.id === selectedSessionId),
@@ -17,19 +24,6 @@ export function YearReportPage() {
   const school = useMemo(
     () => (session ? schools.find((s) => s.id === session.schoolId) : null),
     [session, schools]
-  );
-
-  const sessionStudents = useMemo(
-    () => (selectedSessionId ? students.filter((s) => s.sessionId === selectedSessionId) : []),
-    [students, selectedSessionId]
-  );
-  const sessionStaff = useMemo(
-    () => (selectedSessionId ? staff.filter((s) => s.sessionId === selectedSessionId) : []),
-    [staff, selectedSessionId]
-  );
-  const sessionExpenses = useMemo(
-    () => (selectedSessionId ? expenses.filter((e) => e.sessionId === selectedSessionId) : []),
-    [expenses, selectedSessionId]
   );
 
   const report = useMemo(() => {

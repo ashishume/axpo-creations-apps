@@ -1,5 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
+import { useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useAddStudentPayment } from "../hooks/useStudents";
+import { useClassesBySession, useCreateClass, useUpdateClass, useDeleteClass } from "../hooks/useClasses";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -33,26 +35,35 @@ const statusColors: Record<PaymentStatus, string> = {
 
 export function StudentsPage() {
   const {
-    students,
     schools,
     sessions,
-    classes,
     selectedSchoolId,
     selectedSessionId,
-    isAppLoading,
-    addStudent,
-    updateStudent,
-    deleteStudent,
-    addFeePayment,
-    addClass,
-    updateClass,
-    deleteClass,
     toast,
   } = useApp();
-  const sessionClasses = useMemo(
-    () => (selectedSessionId ? classes.filter((c) => c.sessionId === selectedSessionId) : []),
-    [classes, selectedSessionId]
-  );
+
+  const { data: students = [], isLoading: studentsLoading } = useStudentsBySession(selectedSessionId ?? "");
+  const { data: sessionClasses = [], isLoading: classesLoading } = useClassesBySession(selectedSessionId ?? "");
+  const isAppLoading = studentsLoading || classesLoading;
+
+  const createStudent = useCreateStudent();
+  const createStudentsBulk = useCreateStudentsBulk();
+  const updateStudentMut = useUpdateStudent();
+  const deleteStudentMut = useDeleteStudent();
+  const addPaymentMut = useAddStudentPayment();
+  const createClass = useCreateClass();
+  const updateClassMut = useUpdateClass();
+  const deleteClassMut = useDeleteClass();
+
+  const addStudent = (data: Omit<StudentType, "id" | "payments">) => createStudent.mutate(data);
+  const updateStudent = (id: string, data: Partial<StudentType>) => updateStudentMut.mutate({ id, updates: data });
+  const deleteStudent = (id: string) => deleteStudentMut.mutate(id);
+  const addFeePayment = async (studentId: string, payment: Omit<import("../types").FeePayment, "id">) => {
+    return addPaymentMut.mutateAsync({ studentId, payment });
+  };
+  const addClass = (data: Omit<StudentClass, "id">) => createClass.mutate(data);
+  const updateClass = (id: string, data: Partial<StudentClass>) => updateClassMut.mutate({ id, updates: data });
+  const deleteClass = (id: string) => deleteClassMut.mutate(id);
   const studentFormRef = useRef<HTMLFormElement>(null);
   const studentPhotoInputRef = useRef<HTMLInputElement>(null);
   const [studentModal, setStudentModal] = useState<{ open: boolean; student?: StudentType }>({ open: false });
@@ -77,10 +88,7 @@ export function StudentsPage() {
   const [pendingAddStudents, setPendingAddStudents] = useState<PendingStudent[]>([]);
   const [isAddingStudents, setIsAddingStudents] = useState(false);
 
-  const list = useMemo(
-    () => (selectedSessionId ? students.filter((s) => s.sessionId === selectedSessionId) : []),
-    [students, selectedSessionId]
-  );
+  const list = students;
 
   // Keep details modal in sync with context (e.g. after recording a payment)
   useEffect(() => {
@@ -1111,10 +1119,9 @@ export function StudentsPage() {
         onClose={() => setImportModalOpen(false)}
         type="students"
         sessionId={selectedSessionId}
-        onImportStudents={(rows) => {
+        onImportStudents={async (rows) => {
           if (!selectedSessionId) return;
-          rows.forEach((r, idx) => {
-            // Match className to classId
+          const studentsToCreate = rows.map((r, idx) => {
             let classId: string | undefined;
             let matchedClass: typeof sessionClasses[0] | undefined;
             if (r.className) {
@@ -1123,25 +1130,20 @@ export function StudentsPage() {
               );
               classId = matchedClass?.id;
             }
-
-            // Use class defaults if not provided in CSV
-            addStudent({
+            return {
               sessionId: selectedSessionId,
               name: r.name,
               studentId: r.studentId ?? `STU-${Date.now()}-${idx}`,
               classId,
               feeType: r.feeType,
-              // Fee structure (fallback to class defaults)
               registrationFees: r.registrationFees ?? matchedClass?.registrationFees,
               admissionFees: r.admissionFees ?? matchedClass?.admissionFees,
               annualFund: r.annualFund ?? matchedClass?.annualFund,
               monthlyFees: r.monthlyFees ?? matchedClass?.monthlyFees,
               transportFees: r.transportFees,
-              // Late fee config (fallback to class defaults)
               dueDayOfMonth: r.dueDayOfMonth ?? matchedClass?.dueDayOfMonth,
               lateFeeAmount: r.lateFeeAmount ?? matchedClass?.lateFeeAmount,
               lateFeeFrequency: r.lateFeeFrequency ?? matchedClass?.lateFeeFrequency,
-              // Personal details (aligned with Add student form)
               personalDetails: (r.fatherName || r.motherName || r.guardianPhone || r.bloodGroup || r.currentAddress || r.permanentAddress || r.healthIssues) ? {
                 fatherName: r.fatherName,
                 motherName: r.motherName,
@@ -1151,12 +1153,12 @@ export function StudentsPage() {
                 permanentAddress: r.permanentAddress,
                 healthIssues: r.healthIssues,
               } : undefined,
-              // Legacy fields
               targetAmount: r.targetAmount,
               dueFrequency: r.dueFrequency,
               finePerDay: r.finePerDay,
-            });
+            };
           });
+          await createStudentsBulk.mutateAsync(studentsToCreate);
           toast(`${rows.length} student(s) imported`);
         }}
         onImportStaff={() => { }}

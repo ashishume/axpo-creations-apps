@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
+import { useExpensesBySession, useCreateExpense, useUpdateExpense, useDeleteExpense } from "../hooks/useExpenses";
+import { useFixedCostsBySession, useCreateFixedCost, useUpdateFixedCost, useDeleteFixedCost } from "../hooks/useFixedCosts";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -27,19 +29,25 @@ const fixedCostCategories: ExpenseCategory[] = [
 ];
 
 export function ExpensesPage() {
-  const {
-    expenses,
-    fixedCosts,
-    selectedSessionId,
-    isAppLoading,
-    addExpense,
-    updateExpense,
-    deleteExpense,
-    addFixedCost,
-    updateFixedCost,
-    deleteFixedCost,
-    toast,
-  } = useApp();
+  const { selectedSessionId, toast } = useApp();
+
+  const { data: expenses = [], isLoading: expLoading } = useExpensesBySession(selectedSessionId ?? "");
+  const { data: fixedCosts = [], isLoading: fcLoading } = useFixedCostsBySession(selectedSessionId ?? "");
+  const isAppLoading = expLoading || fcLoading;
+
+  const createExpense = useCreateExpense();
+  const updateExpenseMut = useUpdateExpense();
+  const deleteExpenseMut = useDeleteExpense();
+  const createFixedCost = useCreateFixedCost();
+  const updateFixedCostMut = useUpdateFixedCost();
+  const deleteFixedCostMut = useDeleteFixedCost();
+
+  const addExpense = (data: Omit<ExpenseType, "id">) => createExpense.mutate(data);
+  const updateExpense = (id: string, data: Partial<ExpenseType>) => updateExpenseMut.mutate({ id, updates: data });
+  const deleteExpense = (id: string) => deleteExpenseMut.mutate(id);
+  const addFixedCost = (data: Omit<FixedMonthlyCost, "id">) => createFixedCost.mutate(data);
+  const updateFixedCost = (id: string, data: Partial<FixedMonthlyCost>) => updateFixedCostMut.mutate({ id, updates: data });
+  const deleteFixedCost = (id: string) => deleteFixedCostMut.mutate(id);
   const [expenseModal, setExpenseModal] = useState<{ open: boolean; expense?: ExpenseType }>({ open: false });
   const [fixedCostModal, setFixedCostModal] = useState<{ open: boolean; cost?: FixedMonthlyCost }>({ open: false });
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; desc: string; type: "expense" | "fixedCost" } | null>(null);
@@ -49,9 +57,7 @@ export function ExpensesPage() {
   const [dateTo, setDateTo] = useState("");
 
   const list = useMemo(() => {
-    let items = selectedSessionId
-      ? expenses.filter((e) => e.sessionId === selectedSessionId)
-      : [];
+    let items = [...expenses];
     if (filterCat) items = items.filter((e) => e.category === filterCat);
     const q = searchQuery.trim().toLowerCase();
     if (q) {
@@ -64,14 +70,11 @@ export function ExpensesPage() {
     if (dateFrom) items = items.filter((e) => e.date >= dateFrom);
     if (dateTo) items = items.filter((e) => e.date <= dateTo);
     return items.sort((a, b) => b.date.localeCompare(a.date));
-  }, [expenses, selectedSessionId, filterCat, searchQuery, dateFrom, dateTo]);
+  }, [expenses, filterCat, searchQuery, dateFrom, dateTo]);
 
   const total = useMemo(() => list.reduce((s, e) => s + e.amount, 0), [list]);
 
-  const sessionFixedCosts = useMemo(
-    () => (selectedSessionId ? fixedCosts.filter((fc) => fc.sessionId === selectedSessionId) : []),
-    [fixedCosts, selectedSessionId]
-  );
+  const sessionFixedCosts = fixedCosts;
 
   const totalFixedMonthly = useMemo(
     () => sessionFixedCosts.filter(fc => fc.isActive).reduce((s, fc) => s + fc.amount, 0),

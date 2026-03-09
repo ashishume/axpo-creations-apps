@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
+import { useStaffBySession } from "../hooks/useStaff";
+import { useStudentsBySession } from "../hooks/useStudents";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
@@ -37,7 +39,10 @@ const statusColors: Record<LeaveRequestType["status"], string> = {
 };
 
 export function LeavesPage() {
-  const { sessions, staff, students, selectedSessionId, isAppLoading, toast } = useApp();
+  const { sessions, selectedSessionId, toast } = useApp();
+  const { data: staff = [] } = useStaffBySession(selectedSessionId ?? "");
+  const { data: students = [] } = useStudentsBySession(selectedSessionId ?? "");
+  const isAppLoading = false;
   const { user, hasPermission } = useAuth();
   const selectedSession = useMemo(
     () => (selectedSessionId ? sessions.find((s) => s.id === selectedSessionId) : null),

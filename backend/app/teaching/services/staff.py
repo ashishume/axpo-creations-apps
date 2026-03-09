@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.teaching.models.staff import Staff, SalaryPayment
-from app.teaching.schemas.staff import StaffCreate, StaffUpdate, SalaryPaymentCreate, SalaryPaymentUpdate
+from app.teaching.schemas.staff import StaffCreate, StaffUpdate, SalaryPaymentCreate, SalaryPaymentUpdate, BulkSalaryPaymentItem
 from app.teaching.repositories.staff import staff_repository
 
 
@@ -77,6 +77,27 @@ class StaffService:
             payment_date=data.payment_date,
             method=data.method,
         )
+
+    async def add_salary_payments_bulk(
+        self, db: AsyncSession, items: list[BulkSalaryPaymentItem]
+    ) -> list[SalaryPayment]:
+        staff_ids = {item.staff_id for item in items}
+        for sid in staff_ids:
+            await self.get_or_404(db, sid)
+        out = []
+        for item in items:
+            payment = await staff_repository.add_salary_payment(
+                db,
+                item.staff_id,
+                month=item.month,
+                amount=item.amount,
+                status=item.status,
+                payment_date=item.payment_date,
+                method=item.method,
+                due_date=item.due_date,
+            )
+            out.append(payment)
+        return out
 
     async def delete_salary_payment(
         self, db: AsyncSession, staff_id: UUID, payment_id: UUID

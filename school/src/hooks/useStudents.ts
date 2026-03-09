@@ -55,6 +55,17 @@ export function useCreateStudent() {
   });
 }
 
+export function useCreateStudentsBulk() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (students: Omit<Student, 'id' | 'payments'>[]) => studentsRepository.createMany(students),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
 export function useUpdateStudent() {
   const queryClient = useQueryClient();
 

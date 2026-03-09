@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useApp } from "../../context/AppContext";
+import { useClassesBySession } from "../../hooks/useClasses";
+import { useStudentsBySession } from "../../hooks/useStudents";
+import { useStaffBySession } from "../../hooks/useStaff";
+import { useExpensesBySession } from "../../hooks/useExpenses";
+import { useStocksBySession } from "../../hooks/useStocks";
+import { useFixedCostsBySession } from "../../hooks/useFixedCosts";
 import { Button } from "../ui/Button";
 import { ChatMessage, type ChatMessageData } from "./ChatMessage";
 import { InlineFormCard } from "./InlineFormCard";
@@ -93,12 +99,6 @@ export function AssistantPopup() {
     selectedSchoolId,
     schools,
     sessions,
-    classes,
-    students,
-    staff,
-    expenses,
-    stocks,
-    fixedCosts,
     addStudent,
     addStudents,
     updateStudent,
@@ -129,6 +129,16 @@ export function AssistantPopup() {
   } = useApp();
 
   const [isOpen, setIsOpen] = useState(false);
+
+  // Only fetch data when the popup is open to avoid unnecessary API calls on every page
+  const fetchEnabled = isOpen && !!selectedSessionId;
+  const sessionIdOrEmpty = selectedSessionId ?? "";
+  const { data: classes = [] } = useClassesBySession(fetchEnabled ? sessionIdOrEmpty : "");
+  const { data: students = [] } = useStudentsBySession(fetchEnabled ? sessionIdOrEmpty : "");
+  const { data: staff = [] } = useStaffBySession(fetchEnabled ? sessionIdOrEmpty : "");
+  const { data: expenses = [] } = useExpensesBySession(fetchEnabled ? sessionIdOrEmpty : "");
+  const { data: stocks = [] } = useStocksBySession(fetchEnabled ? sessionIdOrEmpty : "");
+  const { data: fixedCosts = [] } = useFixedCostsBySession(fetchEnabled ? sessionIdOrEmpty : "");
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [input, setInput] = useState("");
@@ -142,12 +152,12 @@ export function AssistantPopup() {
 
   const selectedSchool = selectedSchoolId ? schools.find((s) => s.id === selectedSchoolId) : null;
   const selectedSession = sessions.find((s) => s.id === selectedSessionId);
-  const sessionClasses = classes.filter((c) => c.sessionId === selectedSessionId);
-  const sessionStudents = students.filter((s) => s.sessionId === selectedSessionId);
-  const sessionStaff = staff.filter((s) => s.sessionId === selectedSessionId);
-  const sessionExpenses = expenses.filter((e) => e.sessionId === selectedSessionId);
-  const sessionStocks = stocks.filter((s) => s.sessionId === selectedSessionId);
-  const sessionFixedCosts = fixedCosts.filter((fc) => fc.sessionId === selectedSessionId);
+  const sessionClasses = classes;
+  const sessionStudents = students;
+  const sessionStaff = staff;
+  const sessionExpenses = expenses;
+  const sessionStocks = stocks;
+  const sessionFixedCosts = fixedCosts;
 
   const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
   const canAccessAssistant = hasPermission("assistant:use") || isSuperAdmin;

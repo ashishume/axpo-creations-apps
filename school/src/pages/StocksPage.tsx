@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
+import { useStocksBySession, useCreateStock, useUpdateStock, useDeleteStock, useAddStockTransaction } from "../hooks/useStocks";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -17,27 +18,30 @@ const statusColors = {
 };
 
 export function StocksPage() {
-  const {
-    stocks,
-    selectedSessionId,
-    isAppLoading,
-    addStock,
-    updateStock,
-    deleteStock,
-    addStockTransaction,
-    settleStock,
-    toast,
-  } = useApp();
+  const { selectedSessionId, toast } = useApp();
+
+  const { data: stocks = [], isLoading: isAppLoading } = useStocksBySession(selectedSessionId ?? "");
+  const createStock = useCreateStock();
+  const updateStockMut = useUpdateStock();
+  const deleteStockMut = useDeleteStock();
+  const addTxMut = useAddStockTransaction();
+
+  const addStock = (data: Omit<Stock, "id" | "transactions">) => createStock.mutate(data);
+  const updateStock = (id: string, data: Partial<Stock>) => updateStockMut.mutate({ id, updates: data });
+  const deleteStock = (id: string) => deleteStockMut.mutate(id);
+  const addStockTransaction = (stockId: string, transaction: Omit<import("../types").StockTransaction, "id">) =>
+    addTxMut.mutate({ stockId, transaction });
+  const settleStock = (stockId: string, settledAmount: number) => {
+    const settledDate = new Date().toISOString().slice(0, 10);
+    updateStockMut.mutate({ id: stockId, updates: { status: "cleared", settledDate, settledAmount } });
+  };
 
   const [stockModal, setStockModal] = useState<{ open: boolean; stock?: Stock }>({ open: false });
   const [transactionModal, setTransactionModal] = useState<{ open: boolean; stock: Stock; type: StockTransactionType } | null>(null);
   const [detailsStock, setDetailsStock] = useState<Stock | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
 
-  const sessionStocks = useMemo(
-    () => (selectedSessionId ? stocks.filter((s) => s.sessionId === selectedSessionId) : []),
-    [stocks, selectedSessionId]
-  );
+  const sessionStocks = stocks;
 
   const handleSaveStock = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
