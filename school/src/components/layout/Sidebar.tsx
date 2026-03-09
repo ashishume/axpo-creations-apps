@@ -18,6 +18,7 @@ import {
   Bot,
   Calendar,
   CalendarOff,
+  CreditCard,
 } from "lucide-react";
 import { Fragment } from "react";
 import { NavLink } from "react-router-dom";

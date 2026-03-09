@@ -4,7 +4,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
   {
     id: "starter",
     name: "Starter",
-    price: 0,
+    price: 2000,
     features: [
       "Dashboard & reports",
       "Students & fees",
@@ -17,13 +17,13 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
   {
     id: "ai_assistant",
     name: "Axpo Assistant",
-    price: 999,
+    price: 2500,
     features: [
       "Everything in Starter",
       "Axpo Assistant (AI chat)",
       "Natural language CRUD",
       "Session-scoped chat history",
-      "OpenRouter powered",
+      "AI powered",
       "Priority support",
     ],
   },
