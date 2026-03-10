@@ -741,7 +741,6 @@ export function AxpoAssistantPage() {
               },
               resolvedData: {
                 name: firstClass.name,
-                registrationFees: firstClass.registrationFees ?? 500,
                 registrationFees: firstClass.registrationFees ?? 3000,
                 annualFund: firstClass.annualFund ?? 1500,
                 monthlyFees: firstClass.monthlyFees ?? 3000,

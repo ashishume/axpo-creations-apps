@@ -763,7 +763,6 @@ export function AssistantPopup() {
               },
               resolvedData: {
                 name: firstClass.name,
-                registrationFees: firstClass.registrationFees ?? 500,
                 registrationFees: firstClass.registrationFees ?? 3000,
                 annualFund: firstClass.annualFund ?? 1500,
                 monthlyFees: firstClass.monthlyFees ?? 3000,
@@ -848,7 +847,6 @@ export function AssistantPopup() {
               },
               resolvedData: {
                 name: classLabel.replace(/^class\s*/i, "").trim() || classLabel,
-                registrationFees: 500,
                 registrationFees: 3000,
                 annualFund: 1500,
                 monthlyFees: 3000,
@@ -1048,7 +1046,6 @@ export function AssistantPopup() {
         const list = isMultipleClasses(data) ? data : [data as ParsedClassData];
         return list.slice(0, MAX_BATCH_SIZE).map((classData) => ({
           name: classData?.name || "",
-          registrationFees: classData?.registrationFees ?? 500,
           registrationFees: classData?.registrationFees ?? 3000,
           annualFund: classData?.annualFund ?? 1500,
           monthlyFees: classData?.monthlyFees ?? 3000,
