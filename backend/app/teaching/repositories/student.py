@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.teaching.models.student import Student, StudentEnrollment, FeePayment
 from app.teaching.models.school import School, Session
@@ -43,6 +44,16 @@ class StudentRepository:
         await db.flush()
         await db.refresh(student)
         return student
+
+    async def add_bulk(
+        self, db: AsyncSession, students: list[Student]
+    ) -> list[Student]:
+        """Add multiple students in a single transaction."""
+        db.add_all(students)
+        await db.flush()
+        for student in students:
+            await db.refresh(student)
+        return students
 
     async def update(self, db: AsyncSession, student: Student) -> Student:
         await db.flush()
@@ -120,6 +131,10 @@ class EnrollmentRepository:
             .order_by(StudentEnrollment.created_at.desc())
             .limit(limit)
             .offset(offset)
+            .options(
+                selectinload(StudentEnrollment.student),
+                selectinload(StudentEnrollment.payments),
+            )
         )
         return list(result.scalars().all())
 

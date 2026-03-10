@@ -53,6 +53,14 @@ class StudentCreate(StudentBase):
     pass
 
 
+class BulkStudentCreate(BaseModel):
+    students: list[StudentCreate]
+
+
+class BulkStudentResponse(BaseModel):
+    students: list[StudentResponse]
+
+
 class StudentUpdate(BaseModel):
     name: str | None = None
     student_id: str | None = None
@@ -140,4 +148,13 @@ class BulkEnrollmentCreate(BaseModel):
 
 class BulkEnrollmentResponse(BaseModel):
     enrolled: int
+    enrollments: list[EnrollmentResponse] = []
+
+
+class EnrollmentsBulkCreate(BaseModel):
+    """Create many enrollments with per-row fee structure (e.g. CSV import)."""
+    enrollments: list[EnrollmentCreate]
+
+
+class EnrollmentsBulkResponse(BaseModel):
     enrollments: list[EnrollmentResponse] = []

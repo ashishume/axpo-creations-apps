@@ -143,8 +143,15 @@ export function useAddStudentPayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ studentId, payment }: { studentId: string; payment: Omit<FeePayment, 'id'> }) =>
-      studentsRepository.addPayment(studentId, payment),
+    mutationFn: ({
+      studentId,
+      payment,
+      enrollmentId,
+    }: {
+      studentId: string;
+      payment: Omit<FeePayment, 'id' | 'enrollmentId'>;
+      enrollmentId?: string;
+    }) => studentsRepository.addPayment(studentId, payment, enrollmentId),
     onSuccess: (_, { studentId }) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, studentId] });
@@ -156,8 +163,15 @@ export function useDeleteStudentPayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ studentId, paymentId }: { studentId: string; paymentId: string }) =>
-      studentsRepository.deletePayment(studentId, paymentId),
+    mutationFn: ({
+      studentId,
+      paymentId,
+      enrollmentId,
+    }: {
+      studentId: string;
+      paymentId: string;
+      enrollmentId?: string;
+    }) => studentsRepository.deletePayment(studentId, paymentId, enrollmentId),
     onSuccess: (_, { studentId }) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, studentId] });
@@ -303,6 +317,7 @@ export function useAddEnrollmentPayment() {
     onSuccess: (_, { enrollmentId }) => {
       queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY, enrollmentId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }
@@ -316,6 +331,7 @@ export function useDeleteEnrollmentPayment() {
     onSuccess: (_, { enrollmentId }) => {
       queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY, enrollmentId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }

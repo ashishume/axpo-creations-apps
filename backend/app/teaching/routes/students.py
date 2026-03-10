@@ -14,6 +14,8 @@ from app.teaching.schemas.student import (
     StudentCreate,
     StudentUpdate,
     StudentResponse,
+    BulkStudentCreate,
+    BulkStudentResponse,
     EnrollmentCreate,
     EnrollmentUpdate,
     EnrollmentResponse,
@@ -21,6 +23,8 @@ from app.teaching.schemas.student import (
     FeePaymentResponse,
     BulkEnrollmentCreate,
     BulkEnrollmentResponse,
+    EnrollmentsBulkCreate,
+    EnrollmentsBulkResponse,
 )
 from app.teaching.services.student import student_service, enrollment_service
 from app.teaching.models.user import User
@@ -50,46 +54,45 @@ async def create_student(
     return StudentResponse.model_validate(student)
 
 
-@router.get("/{id}", response_model=StudentResponse)
-async def get_student(
-    id: UUID,
+@router.post("/bulk", response_model=BulkStudentResponse)
+async def create_students_bulk(
+    data: BulkStudentCreate,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
-    """Get student by ID."""
-    student = await student_service.get_or_404(db, id)
-    await enforce_school_access(db, user, student.school_id)
-    return StudentResponse.model_validate(student)
+    """Create multiple student identities in one request (e.g. for CSV import)."""
+    if not data.students:
+        return BulkStudentResponse(students=[])
+    await enforce_school_access(db, user, data.students[0].school_id)
+    students = await student_service.create_bulk(db, data)
+    return BulkStudentResponse(students=[StudentResponse.model_validate(s) for s in students])
 
 
-@router.patch("/{id}", response_model=StudentResponse)
-async def update_student(
-    id: UUID,
-    data: StudentUpdate,
+@router.get("", response_model=PaginatedResponse[StudentResponse])
+async def list_students(
+    limit: int | None = None,
+    offset: int = 0,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
-    """Update student identity information."""
-    existing = await student_service.get_or_404(db, id)
-    await enforce_school_access(db, user, existing.school_id)
-    student = await student_service.update(db, id, data)
-    return StudentResponse.model_validate(student)
-
-
-@router.delete("/{id}", status_code=204)
-async def delete_student(
-    id: UUID,
-    db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
-):
-    """Delete student (will cascade delete all enrollments and payments)."""
-    existing = await student_service.get_or_404(db, id)
-    await enforce_school_access(db, user, existing.school_id)
-    await student_service.delete(db, id)
+    """List students for the current organization (paginated)."""
+    if not user.organization_id:
+        raise HTTPException(status_code=400, detail="Organization required")
+    students = await student_service.list_by_organization(db, user.organization_id)
+    total = len(students)
+    page_size = min(limit if limit is not None else total, MAX_PAGE_SIZE)
+    items = students[offset : offset + page_size]
+    return PaginatedResponse(
+        items=[StudentResponse.model_validate(s) for s in items],
+        total=total,
+        limit=page_size,
+        offset=offset,
+        has_more=offset + len(items) < total,
+    )
 
 
 # ============================================
-# Enrollment Routes
+# Enrollment Routes (MUST come before /{id})
 # ============================================
 @router.post("/enroll", response_model=EnrollmentResponse)
 async def enroll_student(
@@ -114,6 +117,22 @@ async def enroll_students_bulk(
     enrollments = await enrollment_service.create_bulk(db, data)
     return BulkEnrollmentResponse(
         enrolled=len(enrollments),
+        enrollments=[EnrollmentResponse.model_validate(e) for e in enrollments],
+    )
+
+
+@router.post("/enrollments/bulk", response_model=EnrollmentsBulkResponse)
+async def create_enrollments_bulk(
+    data: EnrollmentsBulkCreate,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Create multiple enrollments with per-row fee structure (e.g. after bulk student import)."""
+    if not data.enrollments:
+        return EnrollmentsBulkResponse(enrollments=[])
+    await enforce_session_access(db, user, data.enrollments[0].session_id)
+    enrollments = await enrollment_service.create_bulk_enrollments(db, data)
+    return EnrollmentsBulkResponse(
         enrollments=[EnrollmentResponse.model_validate(e) for e in enrollments],
     )
 
@@ -223,3 +242,44 @@ async def delete_enrollment_payment(
     deleted = await enrollment_service.delete_payment(db, id, payment_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Payment not found")
+
+
+# ============================================
+# Student Routes (parameterized - MUST come after specific routes)
+# ============================================
+@router.get("/{id}", response_model=StudentResponse)
+async def get_student(
+    id: UUID,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Get student by ID."""
+    student = await student_service.get_or_404(db, id)
+    await enforce_school_access(db, user, student.school_id)
+    return StudentResponse.model_validate(student)
+
+
+@router.patch("/{id}", response_model=StudentResponse)
+async def update_student(
+    id: UUID,
+    data: StudentUpdate,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Update student identity information."""
+    existing = await student_service.get_or_404(db, id)
+    await enforce_school_access(db, user, existing.school_id)
+    student = await student_service.update(db, id, data)
+    return StudentResponse.model_validate(student)
+
+
+@router.delete("/{id}", status_code=204)
+async def delete_student(
+    id: UUID,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Delete student (will cascade delete all enrollments and payments)."""
+    existing = await student_service.get_or_404(db, id)
+    await enforce_school_access(db, user, existing.school_id)
+    await student_service.delete(db, id)
