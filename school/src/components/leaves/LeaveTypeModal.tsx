@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
+import { FormField } from "../ui/FormField";
+import { Checkbox } from "../ui/Checkbox";
 import { useCreateLeaveType, useUpdateLeaveType } from "../../hooks/useLeaves";
 import type { LeaveType } from "../../types";
 
@@ -91,75 +95,55 @@ export function LeaveTypeModal({
   return (
     <Modal open={open} onClose={onClose} title={leaveType ? "Edit leave type" : "Add leave type"}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
-          <input
+        <FormField label="Name" required>
+          <Input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="e.g. Sick Leave"
             required
           />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Code</label>
-          <input
+        </FormField>
+        <FormField label="Code" required>
+          <Input
             type="text"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="e.g. SL"
             required
           />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Applicable to</label>
-          <select
+        </FormField>
+        <FormField label="Applicable to">
+          <Select
             value={applicableTo}
             onChange={(e) => setApplicableTo(e.target.value as "staff" | "student" | "both")}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
           >
             <option value="staff">Staff</option>
             <option value="student">Student</option>
             <option value="both">Both</option>
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Max days per year (optional)</label>
-          <input
+          </Select>
+        </FormField>
+        <FormField label="Max days per year (optional)">
+          <Input
             type="number"
             min={0}
             value={maxDaysPerYear}
             onChange={(e) => setMaxDaysPerYear(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="Leave empty for unlimited"
           />
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="requiresDocument"
-            checked={requiresDocument}
-            onChange={(e) => setRequiresDocument(e.target.checked)}
-            className="rounded border-slate-300 dark:border-slate-500"
-          />
-          <label htmlFor="requiresDocument" className="text-sm text-slate-700 dark:text-slate-300">
-            Requires document
-          </label>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="isActive"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            className="rounded border-slate-300 dark:border-slate-500"
-          />
-          <label htmlFor="isActive" className="text-sm text-slate-700 dark:text-slate-300">
-            Active
-          </label>
-        </div>
+        </FormField>
+        <Checkbox
+          id="requiresDocument"
+          label="Requires document"
+          checked={requiresDocument}
+          onChange={(e) => setRequiresDocument(e.target.checked)}
+        />
+        <Checkbox
+          id="isActive"
+          label="Active"
+          checked={isActive}
+          onChange={(e) => setIsActive(e.target.checked)}
+        />
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel

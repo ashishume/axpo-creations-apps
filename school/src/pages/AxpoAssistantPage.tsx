@@ -8,6 +8,7 @@ import { useStocksBySession } from "../hooks/useStocks";
 import { useFixedCostsBySession } from "../hooks/useFixedCosts";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
+import { Textarea } from "../components/ui/Textarea";
 import { ChatMessage, type ChatMessageData } from "../components/assistant/ChatMessage";
 import { InlineFormCard } from "../components/assistant/InlineFormCard";
 import { type AnalyticsData } from "../components/assistant/AnalyticsCard";
@@ -1207,7 +1208,7 @@ export function AxpoAssistantPage() {
           {/* Input */}
           <form onSubmit={handleSubmit} className="flex items-center gap-2">
             <div className="min-w-0 flex-1">
-              <textarea
+              <Textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => {
@@ -1220,7 +1221,7 @@ export function AxpoAssistantPage() {
                 disabled={isProcessing || !!pendingAction}
                 placeholder="Ask me to add students, pay salaries, record expenses, or get analytics..."
                 rows={1}
-                className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 py-3 pl-4 pr-4 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 disabled:opacity-60"
+                className="min-h-0 resize-none rounded-xl border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 py-3 pl-4 pr-4 max-h-[150px] focus:bg-white dark:focus:bg-slate-800 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 disabled:opacity-60"
                 style={{ minHeight: "48px", maxHeight: "150px" }}
               />
             </div>

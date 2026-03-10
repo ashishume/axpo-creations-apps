@@ -11,11 +11,12 @@ import type { Stock, StockTransactionType } from "../types";
 import { formatCurrency, formatDate } from "../lib/utils";
 import { cn } from "../lib/utils";
 import { Tooltip } from "../components/ui/Tooltip";
-
-const statusColors = {
-  open: "bg-amber-100 text-amber-800",
-  cleared: "bg-green-100 text-green-800",
-};
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
+import { Textarea } from "../components/ui/Textarea";
+import { FormField } from "../components/ui/FormField";
+import { Badge } from "../components/ui/Badge";
+import { EmptyState } from "../components/ui/EmptyState";
 
 export function StocksPage() {
   const { selectedSessionId, toast } = useApp();
@@ -157,7 +158,7 @@ export function StocksPage() {
               Returns reduce the remaining stock value. Sales are shown as income in your dashboard.
             </p>
             {sessionStocks.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No stock purchases yet. Add one to get started.</p>
+              <EmptyState message="No stock purchases yet. Add one to get started." />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -187,9 +188,9 @@ export function StocksPage() {
                           <td className="py-3 pr-4 text-amber-600">{formatCurrency(totalReturned)}</td>
                           <td className="py-3 pr-4 font-medium">{formatCurrency(remainingCredit)}</td>
                           <td className="py-3 pr-4">
-                            <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", statusColors[s.status])}>
+                            <Badge variant={s.status === "open" ? "warning" : "success"}>
                               {s.status === "open" ? "Open" : "Cleared"}
-                            </span>
+                            </Badge>
                           </td>
                           <td className="py-3">
                             <div className="flex gap-1 [&_button]:min-h-[44px] [&_button]:min-w-[44px] [&_button]:touch-manipulation md:[&_button]:min-h-0 md:[&_button]:min-w-0">
@@ -293,60 +294,46 @@ export function StocksPage() {
         title={stockModal.stock ? "Edit stock purchase" : "Add stock purchase"}
       >
         <form onSubmit={handleSaveStock} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Publisher name *</label>
-            <input
+          <FormField label="Publisher name *" required>
+            <Input
               name="publisherName"
               type="text"
               required
               defaultValue={stockModal.stock?.publisherName}
               placeholder="e.g. ABC Publications"
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
-            <input
+          </FormField>
+          <FormField label="Description">
+            <Input
               name="description"
               type="text"
               defaultValue={stockModal.stock?.description}
               placeholder="e.g. Books for 2024-25 session"
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
-          </div>
+          </FormField>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Purchase date *</label>
-              <input
+            <FormField label="Purchase date *" required>
+              <Input
                 name="purchaseDate"
                 type="date"
                 required
                 defaultValue={stockModal.stock?.purchaseDate ?? new Date().toISOString().slice(0, 10)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Credit amount (₹) *</label>
-              <input
+            </FormField>
+            <FormField label="Credit amount (₹) *" required>
+              <Input
                 name="totalCreditAmount"
                 type="number"
                 required
                 min={1}
                 defaultValue={stockModal.stock?.totalCreditAmount}
                 placeholder="e.g. 100000"
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               />
-            </div>
+            </FormField>
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Notes</label>
-            <textarea
-              name="notes"
-              rows={2}
-              defaultValue={stockModal.stock?.notes}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-            />
-          </div>
+          <FormField label="Notes">
+            <Textarea name="notes" rows={2} defaultValue={stockModal.stock?.notes} />
+          </FormField>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setStockModal({ open: false })}>
               Cancel
@@ -370,54 +357,29 @@ export function StocksPage() {
                 : "Record items returned to publisher"}
             </p>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Date *</label>
-                <input
+              <FormField label="Date *" required>
+                <Input
                   name="date"
                   type="date"
                   required
                   defaultValue={new Date().toISOString().slice(0, 10)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Amount (₹) *</label>
-                <input
-                  name="amount"
-                  type="number"
-                  required
-                  min={1}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-                />
-              </div>
+              </FormField>
+              <FormField label="Amount (₹) *" required>
+                <Input name="amount" type="number" required min={1} />
+              </FormField>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Quantity (optional)</label>
-                <input
-                  name="quantity"
-                  type="number"
-                  min={1}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Receipt #</label>
-                <input
-                  name="receiptNumber"
-                  type="text"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-                />
-              </div>
+              <FormField label="Quantity (optional)">
+                <Input name="quantity" type="number" min={1} />
+              </FormField>
+              <FormField label="Receipt #">
+                <Input name="receiptNumber" type="text" />
+              </FormField>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
-              <input
-                name="description"
-                type="text"
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-              />
-            </div>
+            <FormField label="Description">
+              <Input name="description" type="text" />
+            </FormField>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => setTransactionModal(null)}>
                 Cancel

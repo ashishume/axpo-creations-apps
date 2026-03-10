@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
+import { FormField } from "../ui/FormField";
 import type {
   Student,
   StudentClass,
@@ -122,24 +125,17 @@ export function AddStudentsVerifyModal({
             {expandedIndex === index && (
               <div className="px-4 pb-4 pt-0 space-y-4 border-t border-slate-100 bg-white dark:bg-slate-900">
                 <div className="grid grid-cols-2 gap-3 pt-3">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">
-                      Name *
-                    </label>
-                    <input
+                  <FormField label="Name *" required>
+                    <Input
                       type="text"
                       value={s.name}
                       onChange={(e) =>
                         updateStudent(index, { name: e.target.value })
                       }
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">
-                      Student ID
-                    </label>
-                    <input
+                  </FormField>
+                  <FormField label="Student ID">
+                    <Input
                       type="text"
                       value={s.studentId || ""}
                       onChange={(e) =>
@@ -148,23 +144,18 @@ export function AddStudentsVerifyModal({
                         })
                       }
                       placeholder="Auto-generated if empty"
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     />
-                  </div>
+                  </FormField>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">
-                      Class
-                    </label>
-                    <select
+                  <FormField label="Class">
+                    <Select
                       value={s.classId ?? ""}
                       onChange={(e) =>
                         updateStudent(index, {
                           classId: e.target.value || undefined,
                         })
                       }
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     >
                       <option value="">— No class —</option>
                       {sessionClasses.map((c) => (
@@ -172,28 +163,24 @@ export function AddStudentsVerifyModal({
                           {c.name} (₹{c.monthlyFees.toLocaleString()}/month)
                         </option>
                       ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">
-                      Fee type
-                    </label>
-                    <select
+                    </Select>
+                  </FormField>
+                  <FormField label="Fee type">
+                    <Select
                       value={s.feeType}
                       onChange={(e) =>
                         updateStudent(index, {
                           feeType: e.target.value as FeeType,
                         })
                       }
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     >
                       {FEE_TYPES.map((ft) => (
                         <option key={ft} value={ft}>
                           {ft}
                         </option>
                       ))}
-                    </select>
-                  </div>
+                    </Select>
+                  </FormField>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs text-slate-600">
                   <div>
@@ -214,25 +201,25 @@ export function AddStudentsVerifyModal({
                     Personal details (optional)
                   </h5>
                   <div className="grid grid-cols-2 gap-2">
-                    <input
+                    <Input
                       type="text"
                       placeholder="Father name"
                       value={s.personalDetails?.fatherName ?? ""}
                       onChange={(e) =>
                         updatePersonal(index, { fatherName: e.target.value || undefined })
                       }
-                      className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                      className="rounded px-2 py-1.5 text-sm"
                     />
-                    <input
+                    <Input
                       type="text"
                       placeholder="Mother name"
                       value={s.personalDetails?.motherName ?? ""}
                       onChange={(e) =>
                         updatePersonal(index, { motherName: e.target.value || undefined })
                       }
-                      className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                      className="rounded px-2 py-1.5 text-sm"
                     />
-                    <input
+                    <Input
                       type="text"
                       placeholder="Guardian phone"
                       value={s.personalDetails?.guardianPhone ?? ""}
@@ -241,9 +228,9 @@ export function AddStudentsVerifyModal({
                           guardianPhone: e.target.value || undefined,
                         })
                       }
-                      className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                      className="rounded px-2 py-1.5 text-sm"
                     />
-                    <select
+                    <Select
                       value={s.personalDetails?.bloodGroup ?? ""}
                       onChange={(e) =>
                         updatePersonal(index, {
@@ -252,7 +239,7 @@ export function AddStudentsVerifyModal({
                             | undefined,
                         })
                       }
-                      className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                      className="rounded px-2 py-1.5 text-sm"
                     >
                       <option value="">Blood group</option>
                       {BLOOD_GROUPS.map((bg) => (
@@ -260,9 +247,9 @@ export function AddStudentsVerifyModal({
                           {bg}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
-                  <input
+                  <Input
                     type="text"
                     placeholder="Current address"
                     value={s.personalDetails?.currentAddress ?? ""}
@@ -271,9 +258,9 @@ export function AddStudentsVerifyModal({
                         currentAddress: e.target.value || undefined,
                       })
                     }
-                    className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                    className="rounded px-2 py-1.5 text-sm"
                   />
-                  <input
+                  <Input
                     type="text"
                     placeholder="Health issues / allergies"
                     value={s.personalDetails?.healthIssues ?? ""}
@@ -282,7 +269,7 @@ export function AddStudentsVerifyModal({
                         healthIssues: e.target.value || undefined,
                       })
                     }
-                    className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                    className="rounded px-2 py-1.5 text-sm"
                   />
                 </div>
                 {students.length > 1 && (

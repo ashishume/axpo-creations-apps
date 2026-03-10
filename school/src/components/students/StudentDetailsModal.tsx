@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
+import { Textarea } from "../ui/Textarea";
+import { FormField } from "../ui/FormField";
 import type { Student, StudentClass, PaymentMethod, StudentPersonalDetails } from "../../types";
 import { formatCurrency, formatDate, formatMonthYear } from "../../lib/utils";
 import { 
@@ -436,75 +440,38 @@ export function StudentDetailsModal({
             {editingPersonal ? (
               <form onSubmit={handlePersonalSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Father's Name</label>
-                    <input
-                      name="fatherName"
-                      type="text"
-                      defaultValue={student.personalDetails?.fatherName}
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Mother's Name</label>
-                    <input
-                      name="motherName"
-                      type="text"
-                      defaultValue={student.personalDetails?.motherName}
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-                    />
-                  </div>
+                  <FormField label="Father's Name">
+                    <Input name="fatherName" type="text" defaultValue={student.personalDetails?.fatherName} />
+                  </FormField>
+                  <FormField label="Mother's Name">
+                    <Input name="motherName" type="text" defaultValue={student.personalDetails?.motherName} />
+                  </FormField>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Guardian Phone</label>
-                    <input
-                      name="guardianPhone"
-                      type="tel"
-                      defaultValue={student.personalDetails?.guardianPhone}
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Blood Group</label>
-                    <select
-                      name="bloodGroup"
-                      defaultValue={student.personalDetails?.bloodGroup ?? ""}
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-                    >
+                  <FormField label="Guardian Phone">
+                    <Input name="guardianPhone" type="tel" defaultValue={student.personalDetails?.guardianPhone} />
+                  </FormField>
+                  <FormField label="Blood Group">
+                    <Select name="bloodGroup" defaultValue={student.personalDetails?.bloodGroup ?? ""}>
                       <option value="">Select</option>
                       {bloodGroups.map(bg => <option key={bg} value={bg}>{bg}</option>)}
-                    </select>
-                  </div>
+                    </Select>
+                  </FormField>
                 </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Current Address</label>
-                  <textarea
-                    name="currentAddress"
-                    rows={2}
-                    defaultValue={student.personalDetails?.currentAddress}
-                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Permanent Address</label>
-                  <textarea
-                    name="permanentAddress"
-                    rows={2}
-                    defaultValue={student.personalDetails?.permanentAddress}
-                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Health Issues (if any)</label>
-                  <textarea
+                <FormField label="Current Address">
+                  <Textarea name="currentAddress" rows={2} defaultValue={student.personalDetails?.currentAddress} />
+                </FormField>
+                <FormField label="Permanent Address">
+                  <Textarea name="permanentAddress" rows={2} defaultValue={student.personalDetails?.permanentAddress} />
+                </FormField>
+                <FormField label="Health Issues (if any)">
+                  <Textarea
                     name="healthIssues"
                     rows={2}
                     defaultValue={student.personalDetails?.healthIssues}
                     placeholder="Any allergies, medical conditions, etc."
-                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                   />
-                </div>
+                </FormField>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="secondary" onClick={() => setEditingPersonal(false)}>
                     Cancel
@@ -597,14 +564,13 @@ export function StudentDetailsModal({
                 className="rounded-lg border border-slate-200 p-4 space-y-3"
               >
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">Fee Category *</label>
-                    <select
+                  <FormField label="Fee Category *" required>
+                    <Select
                       name="feeCategory"
                       required
                       value={selectedCategory}
                       onChange={(e) => handleCategoryChange(e.target.value)}
-                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                      className="rounded px-2 py-1.5 text-sm"
                     >
                       <option value="monthly">Monthly Tuition ({formatCurrency(monthlyFees)}{siblingDiscount > 0 ? " - 30% off" : ""})</option>
                       <option value="registration">Registration Fee ({formatCurrency(registrationFees)})</option>
@@ -614,75 +580,62 @@ export function StudentDetailsModal({
                         <option value="transport">Transport Fee ({formatCurrency(transportFees)})</option>
                       )}
                       <option value="other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">Amount (₹) *</label>
-                    <input
+                    </Select>
+                  </FormField>
+                  <FormField label="Amount (₹) *" required helperText="Amount auto-fills based on category">
+                    <Input
                       ref={amountInputRef}
                       name="amount"
                       type="number"
                       required
                       min={1}
                       defaultValue={monthlyFees > 0 ? monthlyFees : ""}
-                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                      className="rounded px-2 py-1.5 text-sm"
                     />
-                    <p className="mt-0.5 text-xs text-slate-500">Amount auto-fills based on category</p>
-                  </div>
+                  </FormField>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">Date *</label>
-                    <input
+                  <FormField label="Date *" required>
+                    <Input
                       name="date"
                       type="date"
                       required
                       defaultValue={new Date().toISOString().slice(0, 10)}
-                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                      className="rounded px-2 py-1.5 text-sm"
                     />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">For Month</label>
-                    <select
+                  </FormField>
+                  <FormField
+                    label="For Month"
+                    helperText={selectedCategory === "monthly" || selectedCategory === "transport"
+                      ? "Defaults to next unpaid month"
+                      : "Leave empty for one-time fees"}
+                  >
+                    <Select
                       name="month"
                       value={paymentMonth}
                       onChange={(e) => setPaymentMonth(e.target.value)}
-                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                      className="rounded px-2 py-1.5 text-sm"
                     >
                       {monthOptions.map((m) => (
                         <option key={m} value={m}>
                           {formatMonthYear(m)}
                         </option>
                       ))}
-                    </select>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      {selectedCategory === "monthly" || selectedCategory === "transport"
-                        ? "Defaults to next unpaid month"
-                        : "Leave empty for one-time fees"}
-                    </p>
-                  </div>
+                    </Select>
+                  </FormField>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">Method</label>
-                    <select
-                      name="method"
-                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
-                    >
+                  <FormField label="Method">
+                    <Select name="method" className="rounded px-2 py-1.5 text-sm">
                       <option value="Cash">Cash</option>
                       <option value="Online">Online</option>
                       <option value="Cheque">Cheque</option>
                       <option value="Bank Transfer">Bank Transfer</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-600">Receipt #</label>
-                    <input
-                      name="receiptNumber"
-                      type="text"
-                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
-                    />
-                  </div>
+                    </Select>
+                  </FormField>
+                  <FormField label="Receipt #">
+                    <Input name="receiptNumber" type="text" className="rounded px-2 py-1.5 text-sm" />
+                  </FormField>
                 </div>
                 
                 {/* Receipt Photo Upload */}

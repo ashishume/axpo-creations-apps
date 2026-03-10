@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
+import { Textarea } from "../ui/Textarea";
 import { Check, X, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import type { StudentClass, Staff, StaffRole, PaymentMethod, ExpenseCategory, FeeType } from "../../types";
 import type { IntentType } from "../../lib/axpoAssistantParser";
@@ -99,29 +102,29 @@ export function InlineFormCard({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Name</label>
-          <input
+          <Input
             type="text"
             value={(row.name as string) || ""}
             onChange={(e) => upd("name", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Student ID</label>
-          <input
+          <Input
             type="text"
             value={(row.studentId as string) || ""}
             onChange={(e) => upd("studentId", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Class</label>
-          <select
+          <Select
             value={(row.classId as string) || ""}
             onChange={(e) => {
               const classId = e.target.value;
@@ -138,7 +141,7 @@ export function InlineFormCard({
               }
             }}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           >
             <option value="">Select class...</option>
             {sessionClasses.map((c) => (
@@ -146,22 +149,22 @@ export function InlineFormCard({
                 {c.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Fee Type</label>
-          <select
+          <Select
             value={(row.feeType as string) || "Regular"}
             onChange={(e) => upd("feeType", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           >
             {FEE_TYPES.map((ft) => (
               <option key={ft} value={ft}>
                 {ft}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 
@@ -179,7 +182,7 @@ export function InlineFormCard({
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-600">Father's Name</label>
-              <input
+              <Input
                 type="text"
                 value={(row.personalDetails as Record<string, string>)?.fatherName || ""}
                 onChange={(e) =>
@@ -189,12 +192,12 @@ export function InlineFormCard({
                   })
                 }
                 disabled={isDelete}
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+                className="text-sm"
               />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-600">Mother's Name</label>
-              <input
+              <Input
                 type="text"
                 value={(row.personalDetails as Record<string, string>)?.motherName || ""}
                 onChange={(e) =>
@@ -204,13 +207,13 @@ export function InlineFormCard({
                   })
                 }
                 disabled={isDelete}
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+                className="text-sm"
               />
             </div>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">Guardian Phone</label>
-            <input
+            <Input
               type="text"
               value={(row.personalDetails as Record<string, string>)?.guardianPhone || ""}
               onChange={(e) =>
@@ -220,7 +223,7 @@ export function InlineFormCard({
                 })
               }
               disabled={isDelete}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+              className="text-sm"
             />
           </div>
         </div>
@@ -237,102 +240,102 @@ export function InlineFormCard({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Class name *</label>
-          <input
+          <Input
             type="text"
             value={(row.name as string) || ""}
             onChange={(e) => upd("name", e.target.value)}
             disabled={isDelete}
             placeholder="e.g. Class 1, Nursery"
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Due day (1–28)</label>
-          <input
+          <Input
             type="number"
             min={1}
             max={28}
             value={Number(row.dueDayOfMonth) || 10}
             onChange={(e) => upd("dueDayOfMonth", e.target.value === "" ? 10 : Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Registration (₹)</label>
-          <input
+          <Input
             type="number"
             min={0}
             value={Number(row.registrationFees) || ""}
             onChange={(e) => upd("registrationFees", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Admission (₹)</label>
-          <input
+          <Input
             type="number"
             min={0}
             value={Number(row.admissionFees) || ""}
             onChange={(e) => upd("admissionFees", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Annual Fund (₹)</label>
-          <input
+          <Input
             type="number"
             min={0}
             value={Number(row.annualFund) || ""}
             onChange={(e) => upd("annualFund", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Monthly Fee (₹)</label>
-          <input
+          <Input
             type="number"
             min={0}
             value={Number(row.monthlyFees) || ""}
             onChange={(e) => upd("monthlyFees", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Late fee amount (₹)</label>
-          <input
+          <Input
             type="number"
             min={0}
             value={Number(row.lateFeeAmount) || ""}
             onChange={(e) => upd("lateFeeAmount", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Late fee frequency</label>
-          <select
+          <Select
             value={(row.lateFeeFrequency as string) || "weekly"}
             onChange={(e) => upd("lateFeeFrequency", e.target.value as "daily" | "weekly")}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           >
             <option value="weekly">Per week</option>
             <option value="daily">Per day</option>
-          </select>
+          </Select>
         </div>
       </div>
     </div>
@@ -347,60 +350,60 @@ export function InlineFormCard({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Name</label>
-          <input
+          <Input
             type="text"
             value={(row.name as string) || ""}
             onChange={(e) => upd("name", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Employee ID</label>
-          <input
+          <Input
             type="text"
             value={(row.employeeId as string) || ""}
             onChange={(e) => upd("employeeId", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Role</label>
-          <select
+          <Select
             value={(row.role as string) || "Teacher"}
             onChange={(e) => upd("role", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           >
             {STAFF_ROLES.map((role) => (
               <option key={role} value={role}>
                 {role}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Monthly Salary</label>
-          <input
+          <Input
             type="number"
             value={(row.monthlySalary as number) || ""}
             onChange={(e) => upd("monthlySalary", Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
       </div>
       <div>
         <label className="mb-1 block text-xs font-medium text-slate-600">Subject/Grade (for teachers)</label>
-        <input
+        <Input
           type="text"
           value={(row.subjectOrGrade as string) || ""}
           onChange={(e) => upd("subjectOrGrade", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+          className="text-sm"
         />
       </div>
     </div>
@@ -415,7 +418,7 @@ export function InlineFormCard({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Staff Member</label>
-          <select
+          <Select
             value={(row.staffId as string) || ""}
             onChange={(e) => {
               const staffId = e.target.value;
@@ -434,11 +437,11 @@ export function InlineFormCard({
                 {s.name} - ₹{s.monthlySalary.toLocaleString()}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Month</label>
-          <input
+          <Input
             type="month"
             value={(row.month as string) || ""}
             onChange={(e) => upd("month", e.target.value)}
@@ -449,7 +452,7 @@ export function InlineFormCard({
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Amount</label>
-          <input
+          <Input
             type="number"
             value={(row.amount as number) || ""}
             onChange={(e) => upd("amount", Number(e.target.value))}
@@ -458,7 +461,7 @@ export function InlineFormCard({
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Status</label>
-          <select
+          <Select
             value={(row.status as string) || "Paid"}
             onChange={(e) => upd("status", e.target.value)}
             className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -468,11 +471,11 @@ export function InlineFormCard({
                 {status}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Payment Method</label>
-          <select
+          <Select
             value={(row.method as string) || "Cash"}
             onChange={(e) => upd("method", e.target.value)}
             className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -482,12 +485,12 @@ export function InlineFormCard({
                 {method}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
       <div>
         <label className="mb-1 block text-xs font-medium text-slate-600">Payment Date</label>
-        <input
+        <Input
           type="date"
           value={(row.paymentDate as string) || ""}
           onChange={(e) => upd("paymentDate", e.target.value)}
@@ -506,75 +509,75 @@ export function InlineFormCard({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Amount</label>
-          <input
+          <Input
             type="number"
             value={(row.amount as number) || ""}
             onChange={(e) => upd("amount", Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Date</label>
-          <input
+          <Input
             type="date"
             value={(row.date as string) || ""}
             onChange={(e) => upd("date", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
       </div>
       <div>
         <label className="mb-1 block text-xs font-medium text-slate-600">Description</label>
-        <input
+        <Input
           type="text"
           value={(row.description as string) || ""}
           onChange={(e) => upd("description", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+          className="text-sm"
         />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Category</label>
-          <select
+          <Select
             value={(row.category as string) || "Miscellaneous"}
             onChange={(e) => upd("category", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           >
             {EXPENSE_CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Payment Method</label>
-          <select
+          <Select
             value={(row.paymentMethod as string) || "Cash"}
             onChange={(e) => upd("paymentMethod", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           >
             {PAYMENT_METHODS.map((method) => (
               <option key={method} value={method}>
                 {method}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
       <div>
         <label className="mb-1 block text-xs font-medium text-slate-600">Vendor/Payee</label>
-        <input
+        <Input
           type="text"
           value={(row.vendorPayee as string) || ""}
           onChange={(e) => upd("vendorPayee", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+          className="text-sm"
         />
       </div>
     </div>
@@ -589,43 +592,43 @@ export function InlineFormCard({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Publisher Name</label>
-          <input
+          <Input
             type="text"
             value={(row.publisherName as string) || ""}
             onChange={(e) => upd("publisherName", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Credit Amount</label>
-          <input
+          <Input
             type="number"
             value={(row.totalCreditAmount as number) || ""}
             onChange={(e) => upd("totalCreditAmount", Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
       </div>
       <div>
         <label className="mb-1 block text-xs font-medium text-slate-600">Description</label>
-        <input
+        <Input
           type="text"
           value={(row.description as string) || ""}
           onChange={(e) => upd("description", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+          className="text-sm"
         />
       </div>
       <div>
         <label className="mb-1 block text-xs font-medium text-slate-600">Purchase Date</label>
-        <input
+        <Input
           type="date"
           value={(row.purchaseDate as string) || ""}
           onChange={(e) => upd("purchaseDate", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+          className="text-sm"
         />
       </div>
     </div>
@@ -640,44 +643,44 @@ export function InlineFormCard({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Name</label>
-          <input
+          <Input
             type="text"
             value={(row.name as string) || ""}
             onChange={(e) => upd("name", e.target.value)}
             disabled={isDelete}
             placeholder="e.g., Rent, Internet"
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Monthly Amount</label>
-          <input
+          <Input
             type="number"
             value={(row.amount as number) || ""}
             onChange={(e) => upd("amount", Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">Category</label>
-          <select
+          <Select
             value={(row.category as string) || "Miscellaneous"}
             onChange={(e) => upd("category", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+            className="text-sm"
           >
             {EXPENSE_CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div className="flex items-center gap-2 pt-6">
-          <input
+          <Input
             type="checkbox"
             id={`isActive-${itemIndex}`}
             checked={(row.isActive as boolean) !== false}

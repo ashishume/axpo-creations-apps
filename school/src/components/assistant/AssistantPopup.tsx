@@ -7,6 +7,7 @@ import { useExpensesBySession } from "../../hooks/useExpenses";
 import { useStocksBySession } from "../../hooks/useStocks";
 import { useFixedCostsBySession } from "../../hooks/useFixedCosts";
 import { Button } from "../ui/Button";
+import { Textarea } from "../ui/Textarea";
 import { ChatMessage, type ChatMessageData } from "./ChatMessage";
 import { InlineFormCard } from "./InlineFormCard";
 import { type AnalyticsData } from "./AnalyticsCard";
@@ -1257,7 +1258,7 @@ export function AssistantPopup() {
           <div className="border-t border-slate-100 p-3">
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <div className="min-w-0 flex-1">
-                <textarea
+                <Textarea
                   ref={inputRef}
                   value={input}
                   onChange={handleInputChange}
@@ -1265,7 +1266,7 @@ export function AssistantPopup() {
                   disabled={isProcessing || !!pendingAction}
                   placeholder="Type a message..."
                   rows={1}
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:opacity-60"
+                  className="min-h-0 resize-none rounded-xl border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 pr-4 max-h-[120px] focus:bg-white dark:focus:bg-slate-800 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 disabled:opacity-60"
                   style={{ minHeight: "42px", maxHeight: "120px" }}
                 />
               </div>

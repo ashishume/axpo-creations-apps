@@ -12,12 +12,17 @@ import type { Staff as StaffType, StaffRole, SalaryPayment } from "../types";
 import { formatCurrency, formatDate, formatMonthYear, cn } from "../lib/utils";
 import { SearchInput } from "../components/ui/SearchInput";
 import { FilterChips } from "../components/ui/FilterChips";
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
+import { FormField } from "../components/ui/FormField";
+import { Badge } from "../components/ui/Badge";
+import { EmptyState } from "../components/ui/EmptyState";
 
-const roleColors: Record<StaffType["role"], string> = {
-  Teacher: "bg-blue-100 text-blue-800",
-  Administrative: "bg-purple-100 text-purple-800",
-  "Bus Driver": "bg-amber-100 text-amber-800",
-  "Support Staff": "bg-slate-100 text-slate-700",
+const roleBadgeVariant: Record<StaffType["role"], "info" | "neutral" | "warning"> = {
+  Teacher: "info",
+  Administrative: "info",
+  "Bus Driver": "warning",
+  "Support Staff": "neutral",
 };
 
 // Helper to calculate late days for a salary payment (uses payment.dueDate if set, else dueDay of month)
@@ -298,9 +303,9 @@ export function StaffPage() {
               />
             </div>
             {list.length === 0 ? (
-              <p className="text-sm text-slate-500">No staff in this session.</p>
+              <EmptyState message="No staff in this session." />
             ) : filteredList.length === 0 ? (
-              <p className="text-sm text-slate-500">No staff match your search or filter.</p>
+              <EmptyState message="No staff match your search or filter." />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -327,10 +332,10 @@ export function StaffPage() {
                           <td className="py-3 pr-4 font-medium text-slate-900">{s.name}</td>
                           <td className="py-3 pr-4 text-slate-600">{s.employeeId}</td>
                           <td className="py-3 pr-4">
-                            <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", roleColors[s.role])}>
+                            <Badge variant={roleBadgeVariant[s.role]}>
                               {s.role}
                               {s.subjectOrGrade && ` (${s.subjectOrGrade})`}
-                            </span>
+                            </Badge>
                           </td>
                           <td className="py-3 pr-4">{formatCurrency(s.monthlySalary)}</td>
                           <td className="py-3 pr-4">
@@ -438,58 +443,32 @@ export function StaffPage() {
         title={staffModal.staff ? "Edit staff" : "Add staff"}
       >
         <form onSubmit={handleSaveStaff} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name *</label>
-            <input
-              name="name"
-              type="text"
-              required
-              defaultValue={staffModal.staff?.name}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Employee ID</label>
-            <input
-              name="employeeId"
-              type="text"
-              defaultValue={staffModal.staff?.employeeId}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
-            <select
-              name="role"
-              defaultValue={staffModal.staff?.role ?? "Teacher"}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-            >
+          <FormField label="Name *" required>
+            <Input name="name" type="text" required defaultValue={staffModal.staff?.name} />
+          </FormField>
+          <FormField label="Employee ID">
+            <Input name="employeeId" type="text" defaultValue={staffModal.staff?.employeeId} />
+          </FormField>
+          <FormField label="Role">
+            <Select name="role" defaultValue={staffModal.staff?.role ?? "Teacher"}>
               <option value="Teacher">Teacher</option>
               <option value="Administrative">Administrative</option>
               <option value="Bus Driver">Bus Driver</option>
               <option value="Support Staff">Support Staff</option>
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Subject / Grade (for teachers)</label>
-            <input
-              name="subjectOrGrade"
-              type="text"
-              defaultValue={staffModal.staff?.subjectOrGrade}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Monthly salary (₹) *</label>
-            <input
+            </Select>
+          </FormField>
+          <FormField label="Subject / Grade (for teachers)">
+            <Input name="subjectOrGrade" type="text" defaultValue={staffModal.staff?.subjectOrGrade} />
+          </FormField>
+          <FormField label="Monthly salary (₹) *" required>
+            <Input
               name="monthlySalary"
               type="number"
               required
               min={1}
               defaultValue={staffModal.staff?.monthlySalary}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             />
-          </div>
+          </FormField>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setStaffModal({ open: false })}>
               Cancel
@@ -511,14 +490,12 @@ export function StaffPage() {
                 Monthly Salary: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(salaryModal.monthlySalary)}</strong>
               </p>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Select Month</label>
-              <select
-                name="month"
-                required
-                defaultValue={currentMonth}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-              >
+            <FormField
+              label="Select Month"
+              required
+              helperText="You can pay for the current month or advance salary for up to 6 future months. Multiple payments per month are allowed."
+            >
+              <Select name="month" required defaultValue={currentMonth}>
                 {payableMonths.map((month) => {
                   const paymentsForMonth = salaryModal.salaryPayments.filter(p => p.month === month);
                   const paidCount = paymentsForMonth.filter(p => p.status === "Paid").length;
@@ -531,56 +508,30 @@ export function StaffPage() {
                     </option>
                   );
                 })}
-              </select>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                You can pay for the current month or advance salary for up to 6 future months. Multiple payments per month are allowed.
-              </p>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
-              <select
-                name="status"
-                defaultValue="Paid"
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-              >
+              </Select>
+            </FormField>
+            <FormField label="Status">
+              <Select name="status" defaultValue="Paid">
                 <option value="Paid">Paid</option>
                 <option value="Partially Paid">Partially Paid</option>
                 <option value="Pending">Pending</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Amount (₹)</label>
-              <input
-                name="amount"
-                type="number"
-                min={0}
-                defaultValue={salaryModal.monthlySalary}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Payment date</label>
-              <input
-                name="paymentDate"
-                type="date"
-                defaultValue={new Date().toISOString().slice(0, 10)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Method</label>
-              <select
-                name="method"
-                defaultValue="Bank Transfer"
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-              >
+              </Select>
+            </FormField>
+            <FormField label="Amount (₹)">
+              <Input name="amount" type="number" min={0} defaultValue={salaryModal.monthlySalary} />
+            </FormField>
+            <FormField label="Payment date">
+              <Input name="paymentDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+            </FormField>
+            <FormField label="Method">
+              <Select name="method" defaultValue="Bank Transfer">
                 <option value="">—</option>
                 <option value="Cash">Cash</option>
                 <option value="Cheque">Cheque</option>
                 <option value="Online">Online</option>
                 <option value="Bank Transfer">Bank Transfer</option>
-              </select>
-            </div>
+              </Select>
+            </FormField>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => setSalaryModal(null)}>
                 Cancel

@@ -6,6 +6,12 @@ import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
+import { FormField } from "../components/ui/FormField";
+import { Checkbox } from "../components/ui/Checkbox";
+import { EmptyState } from "../components/ui/EmptyState";
+import { Badge } from "../components/ui/Badge";
 import { FilterChips } from "../components/ui/FilterChips";
 import { SearchInput } from "../components/ui/SearchInput";
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
@@ -181,18 +187,18 @@ export function ExpensesPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <label className="text-sm text-slate-500 dark:text-slate-400">From</label>
-            <input
+            <Input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+              className="w-auto"
             />
             <label className="text-sm text-slate-500 dark:text-slate-400">To</label>
-            <input
+            <Input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+              className="w-auto"
             />
           </div>
         </div>
@@ -233,7 +239,7 @@ export function ExpensesPage() {
           </CardHeader>
           <CardContent>
             {list.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No expenses in this session.</p>
+              <EmptyState message="No expenses in this session." />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -320,7 +326,7 @@ export function ExpensesPage() {
           </CardHeader>
           <CardContent>
             {sessionFixedCosts.length === 0 ? (
-              <p className="text-sm text-slate-500">No fixed monthly costs configured. Add one to track recurring expenses.</p>
+              <EmptyState message="No fixed monthly costs configured. Add one to track recurring expenses." />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -340,9 +346,9 @@ export function ExpensesPage() {
                         <td className="py-3 pr-4 text-slate-600">{fc.category}</td>
                         <td className="py-3 pr-4 font-medium">{formatCurrency(fc.amount)}</td>
                         <td className="py-3 pr-4">
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${fc.isActive ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'}`}>
+                          <Badge variant={fc.isActive ? "success" : "neutral"}>
                             {fc.isActive ? "Active" : "Inactive"}
-                          </span>
+                          </Badge>
                         </td>
                         <td className="py-3">
                           <div className="flex gap-1">
@@ -381,71 +387,59 @@ export function ExpensesPage() {
         title={expenseModal.expense ? "Edit expense" : "Add expense"}
       >
         <form onSubmit={handleSaveExpense} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Date *</label>
-            <input
+          <FormField label="Date *" required>
+            <Input
               name="date"
               type="date"
               required
               defaultValue={expenseModal.expense?.date ?? new Date().toISOString().slice(0, 10)}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Amount (₹) *</label>
-            <input
+          </FormField>
+          <FormField label="Amount (₹) *" required>
+            <Input
               name="amount"
               type="number"
               required
               min={0.01}
               step={0.01}
               defaultValue={expenseModal.expense?.amount}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Category</label>
-            <select
+          </FormField>
+          <FormField label="Category">
+            <Select
               name="category"
               defaultValue={expenseModal.expense?.category ?? "Miscellaneous"}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             >
               {categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Description</label>
-            <input
+            </Select>
+          </FormField>
+          <FormField label="Description">
+            <Input
               name="description"
               type="text"
               defaultValue={expenseModal.expense?.description}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Vendor / Payee</label>
-            <input
+          </FormField>
+          <FormField label="Vendor / Payee">
+            <Input
               name="vendorPayee"
               type="text"
               defaultValue={expenseModal.expense?.vendorPayee}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Payment method</label>
-            <select
+          </FormField>
+          <FormField label="Payment method">
+            <Select
               name="paymentMethod"
               defaultValue={expenseModal.expense?.paymentMethod ?? "Bank Transfer"}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             >
               <option value="Cash">Cash</option>
               <option value="Cheque">Cheque</option>
               <option value="Online">Online</option>
               <option value="Bank Transfer">Bank Transfer</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setExpenseModal({ open: false })}>
               Cancel
@@ -462,50 +456,40 @@ export function ExpensesPage() {
         title={fixedCostModal.cost ? "Edit fixed cost" : "Add fixed cost"}
       >
         <form onSubmit={handleSaveFixedCost} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name *</label>
-            <input
+          <FormField label="Name *" required>
+            <Input
               name="name"
               type="text"
               required
               placeholder="e.g., Rent, Internet, Electricity"
               defaultValue={fixedCostModal.cost?.name}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Monthly Amount (₹) *</label>
-            <input
+          </FormField>
+          <FormField label="Monthly Amount (₹) *" required>
+            <Input
               name="amount"
               type="number"
               required
               min={1}
               step={1}
               defaultValue={fixedCostModal.cost?.amount}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
-            <select
+          </FormField>
+          <FormField label="Category">
+            <Select
               name="category"
               defaultValue={fixedCostModal.cost?.category ?? "Utilities"}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             >
               {fixedCostCategories.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              name="isActive"
-              type="checkbox"
-              defaultChecked={fixedCostModal.cost?.isActive ?? true}
-              className="h-4 w-4 rounded border-slate-300 dark:border-slate-500"
-            />
-            <label className="text-sm text-slate-700 dark:text-slate-300">Active (will be counted in monthly expenses)</label>
-          </div>
+            </Select>
+          </FormField>
+          <Checkbox
+            name="isActive"
+            defaultChecked={fixedCostModal.cost?.isActive ?? true}
+            label="Active (will be counted in monthly expenses)"
+          />
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setFixedCostModal({ open: false })}>
               Cancel

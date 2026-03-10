@@ -5,6 +5,10 @@ import { useStudents } from "../hooks/useStudents";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
+import { FormField } from "../components/ui/FormField";
+import { Alert } from "../components/ui/Alert";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { PermissionGate } from "../components/auth/PermissionGate";
 import { Plus, Pencil, Trash2, Calendar, ArrowUpCircle, CheckCircle2, Lock, Unlock } from "lucide-react";
@@ -111,11 +115,11 @@ export function SchoolsPage() {
             <label htmlFor="schools-org-filter" className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
               Organization
             </label>
-            <select
+            <Select
               id="schools-org-filter"
               value={orgFilterId ?? ""}
               onChange={(e) => setOrgFilterId(e.target.value || null)}
-              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-auto min-w-[180px]"
             >
               <option value="">All organizations</option>
               {organizations.map((org) => (
@@ -123,7 +127,7 @@ export function SchoolsPage() {
                   {org.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         )}
       </div>
@@ -312,54 +316,29 @@ export function SchoolsPage() {
       >
         <form onSubmit={handleSaveSchool} className="space-y-4">
           {!schoolModal.school && isSuperAdmin && organizations.length > 0 && (
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Organization</label>
-              <select
-                name="organizationId"
-                required
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-              >
+            <FormField label="Organization" required helperText="Create an organization first under Organizations if the list is empty.">
+              <Select name="organizationId" required>
                 <option value="">Select organization</option>
                 {organizations.map((org) => (
                   <option key={org.id} value={org.id}>
                     {org.name}
                   </option>
                 ))}
-              </select>
-              <p className="mt-1 text-xs text-slate-500">Create an organization first under Organizations if the list is empty.</p>
-            </div>
+              </Select>
+            </FormField>
           )}
           {!schoolModal.school && isSuperAdmin && organizations.length === 0 && (
-            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Create at least one organization first (Organizations in the sidebar).</p>
+            <Alert variant="warning">Create at least one organization first (Organizations in the sidebar).</Alert>
           )}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Name</label>
-            <input
-              name="name"
-              type="text"
-              required
-              defaultValue={schoolModal.school?.name}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Address</label>
-            <input
-              name="address"
-              type="text"
-              defaultValue={schoolModal.school?.address}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Contact</label>
-            <input
-              name="contact"
-              type="text"
-              defaultValue={schoolModal.school?.contact}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-            />
-          </div>
+          <FormField label="Name" required>
+            <Input name="name" type="text" required defaultValue={schoolModal.school?.name} />
+          </FormField>
+          <FormField label="Address">
+            <Input name="address" type="text" defaultValue={schoolModal.school?.address} />
+          </FormField>
+          <FormField label="Contact">
+            <Input name="contact" type="text" defaultValue={schoolModal.school?.contact} />
+          </FormField>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setSchoolModal({ open: false })}>
               Cancel
@@ -375,13 +354,11 @@ export function SchoolsPage() {
         title={sessionModal.session ? "Edit session" : "Add session"}
       >
         <form onSubmit={handleSaveSession} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">School</label>
-            <select
+          <FormField label="School" required>
+            <Select
               name="schoolId"
               required
               defaultValue={sessionModal.session?.schoolId ?? sessionModal.schoolId ?? displaySchools[0]?.id}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             >
               {displaySchools.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -389,54 +366,48 @@ export function SchoolsPage() {
                   {isSuperAdmin && s.organizationId ? ` (${organizations.find((o) => o.id === s.organizationId)?.name ?? "—"})` : ""}
                 </option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Year (e.g. 2024-2025)</label>
-            <input
+            </Select>
+          </FormField>
+          <FormField label="Year (e.g. 2024-2025)" required>
+            <Input
               name="year"
               type="text"
               required
               placeholder="2024-2025"
               defaultValue={sessionModal.session?.year}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
-          </div>
+          </FormField>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Start date</label>
-              <input
+            <FormField label="Start date" required>
+              <Input
                 name="startDate"
                 type="date"
                 required
                 defaultValue={sessionModal.session?.startDate}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">End date</label>
-              <input
+            </FormField>
+            <FormField label="End date" required>
+              <Input
                 name="endDate"
                 type="date"
                 required
                 defaultValue={sessionModal.session?.endDate}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               />
-            </div>
+            </FormField>
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Salary due day (1–28)</label>
-            <input
+          <FormField
+            label="Salary due day (1–28)"
+            helperText="Day of month when staff salary is due. Payments after this day are marked late."
+          >
+            <Input
               name="salaryDueDay"
               type="number"
               min={1}
               max={28}
               placeholder="5"
               defaultValue={sessionModal.session?.salaryDueDay ?? 5}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
-            <p className="mt-1 text-xs text-slate-500">Day of month when staff salary is due. Payments after this day are marked late.</p>
-          </div>
+          </FormField>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setSessionModal({ open: false })}>
               Cancel
@@ -506,14 +477,10 @@ export function SchoolsPage() {
               </p>
             </div>
             
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Promote to Session *
-              </label>
-              <select
+            <FormField label="Promote to Session *" required>
+              <Select
                 name="toSession"
                 required
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               >
                 <option value="">Select target session</option>
                 {getSessionsForSchool(promoteModal.fromSession.schoolId)
@@ -523,8 +490,8 @@ export function SchoolsPage() {
                       {s.year} ({getStudentCount(s.id)} students)
                     </option>
                   ))}
-              </select>
-            </div>
+              </Select>
+            </FormField>
             
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="secondary" onClick={() => setPromoteModal(null)}>

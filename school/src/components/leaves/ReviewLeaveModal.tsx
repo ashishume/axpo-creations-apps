@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
+import { Textarea } from "../ui/Textarea";
+import { FormField } from "../ui/FormField";
 import { formatDate } from "../../lib/utils";
 import type { LeaveRequest } from "../../types";
 
@@ -80,16 +82,14 @@ export function ReviewLeaveModal({
           </div>
         )}
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Remarks (optional for approve, required for reject)</label>
-          <textarea
+        <FormField label="Remarks (optional for approve, required for reject)">
+          <Textarea
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="Add remarks..."
           />
-        </div>
+        </FormField>
 
         <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
           <Button type="button" variant="secondary" onClick={onClose}>

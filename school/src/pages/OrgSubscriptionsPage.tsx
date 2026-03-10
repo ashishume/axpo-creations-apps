@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
+import { FormField } from "../components/ui/FormField";
 import { Modal } from "../components/ui/Modal";
 import { SkeletonList } from "../components/ui/Skeleton";
 import { adminSubscriptionsApi, type OrgWithSubscription } from "../lib/db/api/adminSubscriptions";
@@ -219,45 +222,39 @@ export function OrgSubscriptionsPage() {
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Grant manual subscription to <strong>{grantModal.org.name}</strong> (no Razorpay).
             </p>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Plan</label>
-              <select
+            <FormField label="Plan">
+              <Select
                 value={grantPlan}
                 onChange={(e) => setGrantPlan(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100"
               >
                 {SUBSCRIPTION_PLANS.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
                 ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Interval</label>
-              <select
+              </Select>
+            </FormField>
+            <FormField label="Interval">
+              <Select
                 value={grantInterval}
                 onChange={(e) => setGrantInterval(e.target.value as BillingInterval)}
-                className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100"
               >
                 {BILLING_INTERVALS.map((i) => (
                   <option key={i} value={i}>
                     {i.charAt(0).toUpperCase() + i.slice(1)}
                   </option>
                 ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Duration (days)</label>
-              <input
+              </Select>
+            </FormField>
+            <FormField label="Duration (days)">
+              <Input
                 type="number"
                 min={1}
                 max={3650}
                 value={grantDays}
                 onChange={(e) => setGrantDays(Number(e.target.value) || 30)}
-                className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100"
               />
-            </div>
+            </FormField>
             <div className="flex justify-end gap-2">
               <Button variant="secondary" onClick={() => setGrantModal(null)}>
                 Cancel

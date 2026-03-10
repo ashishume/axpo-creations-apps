@@ -4,6 +4,11 @@ import { useRoles } from '../hooks/useRoles';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Pagination, usePagination } from '../components/ui/Pagination';
+import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
+import { FormField } from '../components/ui/FormField';
+import { Checkbox } from '../components/ui/Checkbox';
+import { Alert } from '../components/ui/Alert';
 import { PermissionGate } from '../components/auth/PermissionGate';
 import { SkeletonTable } from '../components/ui/Skeleton';
 import { useAuth } from '../context/AuthContext';
@@ -153,9 +158,9 @@ export function UsersPage() {
 
   if (error) {
     return (
-      <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 text-red-600 dark:text-red-400">
+      <Alert variant="error">
         Failed to load users: {error instanceof Error ? error.message : 'Unknown error'}
-      </div>
+      </Alert>
     );
   }
 
@@ -174,14 +179,14 @@ export function UsersPage() {
               <label htmlFor="user-org-filter" className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
                 Organization
               </label>
-              <select
+              <Select
                 id="user-org-filter"
                 value={orgFilterId ?? ''}
                 onChange={(e) => {
                   setOrgFilterId(e.target.value || null);
                   setPage(1);
                 }}
-                className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-auto min-w-[180px]"
               >
                 <option value="">All organizations</option>
                 {organizations.map((org) => (
@@ -189,7 +194,7 @@ export function UsersPage() {
                     {org.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           )}
           <PermissionGate permission="users:create">
@@ -366,45 +371,37 @@ export function UsersPage() {
         title="Create New User"
       >
         <form onSubmit={handleCreateUser} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
-            <input
+          <FormField label="Name" required>
+            <Input
               type="text"
               value={createForm.name}
               onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="Full name"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Username</label>
-            <input
+          </FormField>
+          <FormField label="Username" required>
+            <Input
               type="text"
               value={createForm.username}
               onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="Username for login"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Email (optional)</label>
-            <input
+          </FormField>
+          <FormField label="Email (optional)">
+            <Input
               type="email"
               value={createForm.email}
               onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="user@example.com"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
-            <select
+          </FormField>
+          <FormField label="Role" required>
+            <Select
               value={createForm.roleId}
               onChange={(e) => setCreateForm({ ...createForm, roleId: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             >
               <option value="">Select a role</option>
               {rolesForSelect.map((role) => (
@@ -412,18 +409,17 @@ export function UsersPage() {
                   {role.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
           {isSuperAdmin && (
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Organization</label>
+            <FormField label="Organization" required={organizations.length > 0}>
               {organizations.length === 0 ? (
-                <p className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+                <Alert variant="warning">
                   Create at least one organization first: go to <strong>Organizations</strong> in the sidebar, then add an organization. After that, you can assign new users to an org here.
-                </p>
+                </Alert>
               ) : (
                 <>
-                  <select
+                  <Select
                     value={createForm.organizationId ?? ''}
                     onChange={(e) =>
                       setCreateForm({
@@ -433,7 +429,6 @@ export function UsersPage() {
                       })
                     }
                     required
-                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   >
                     <option value="">Select organization</option>
                     {organizations.map((org) => (
@@ -441,21 +436,20 @@ export function UsersPage() {
                         {org.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     User will see only schools and data under this org.
                   </p>
                 </>
               )}
-            </div>
+            </FormField>
           )}
           {isSuperAdmin && (createForm.organizationId || editingUser?.organizationId) && staffOptionsForCurrentOrg.length > 0 && (
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Link to staff (optional)</label>
-              <select
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Link to staff (optional)</label>
+              <Select
                 value={createForm.staffId ?? ''}
                 onChange={(e) => setCreateForm({ ...createForm, staffId: e.target.value || undefined })}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               >
                 <option value="">No link (org-level: sees all schools in org)</option>
                 {staffOptionsForCurrentOrg.map((s) => (
@@ -463,27 +457,26 @@ export function UsersPage() {
                     {s.label}
                   </option>
                 ))}
-              </select>
-              <p className="mt-1 text-xs text-slate-500">
+              </Select>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 If set, user is school-scoped (Manager): they see only that staff member’s school.
               </p>
             </div>
           )}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Default Password</label>
-            <input
+          <FormField
+            label="Default Password"
+            required
+            helperText="User will be required to change this on first login"
+          >
+            <Input
               type="password"
               value={createForm.password}
               onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
               required
               minLength={6}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="Minimum 6 characters"
             />
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              User will be required to change this on first login
-            </p>
-          </div>
+          </FormField>
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="ghost" onClick={() => setShowCreateModal(false)}>
               Cancel
@@ -503,54 +496,45 @@ export function UsersPage() {
       >
         {editingUser && (
           <form onSubmit={handleUpdateUser} className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
-              <input
+            <FormField label="Name" required>
+              <Input
                 type="text"
                 value={editingUser.name}
                 onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
                 required
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Username</label>
-              <input
+            </FormField>
+            <FormField label="Username" helperText="Username cannot be changed">
+              <Input
                 type="text"
                 value={editingUser.username}
                 disabled
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-sm text-slate-500 dark:text-slate-400"
+                className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400"
               />
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Username cannot be changed</p>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-              <input
+            </FormField>
+            <FormField label="Email">
+              <Input
                 type="email"
                 value={editingUser.email || ''}
                 onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
-              <select
+            </FormField>
+            <FormField label="Role" required>
+              <Select
                 value={editingUser.roleId}
                 onChange={(e) => setEditingUser({ ...editingUser, roleId: e.target.value })}
                 required
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               >
                 {rolesForSelect.map((role) => (
                   <option key={role.id} value={role.id}>
                     {role.name}
                   </option>
                 ))}
-              </select>
-            </div>
+              </Select>
+            </FormField>
             {isSuperAdmin && organizations.length > 0 && (
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Organization</label>
-                <select
+              <FormField label="Organization">
+                <Select
                   value={editingUser.organizationId ?? ''}
                   onChange={(e) => {
                     const orgId = e.target.value || null;
@@ -560,7 +544,6 @@ export function UsersPage() {
                       staffId: orgId !== editingUser.organizationId ? undefined : editingUser.staffId,
                     });
                   }}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="">—</option>
                   {organizations.map((org) => (
@@ -568,16 +551,15 @@ export function UsersPage() {
                       {org.name}
                     </option>
                   ))}
-                </select>
-              </div>
+                </Select>
+              </FormField>
             )}
             {isSuperAdmin && (editingUser.organizationId || createForm.organizationId) && staffOptionsForCurrentOrg.length > 0 && (
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Link to staff (optional)</label>
-                <select
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Link to staff (optional)</label>
+                <Select
                   value={editingUser.staffId ?? ''}
                   onChange={(e) => setEditingUser({ ...editingUser, staffId: e.target.value || undefined })}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="">No link (org-level: sees all schools in org)</option>
                   {staffOptionsForCurrentOrg.map((s) => (
@@ -585,24 +567,18 @@ export function UsersPage() {
                       {s.label}
                     </option>
                   ))}
-                </select>
+                </Select>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   If set, user is school-scoped: they see only that staff member’s school.
                 </p>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={editingUser.isActive}
-                onChange={(e) => setEditingUser({ ...editingUser, isActive: e.target.checked })}
-                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              <label htmlFor="isActive" className="text-sm text-slate-700">
-                Account is active
-              </label>
-            </div>
+            <Checkbox
+              id="isActive"
+              checked={editingUser.isActive}
+              onChange={(e) => setEditingUser({ ...editingUser, isActive: e.target.checked })}
+              label="Account is active"
+            />
             <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="ghost" onClick={() => setEditingUser(null)}>
                 Cancel
@@ -658,23 +634,16 @@ export function UsersPage() {
             <p className="text-slate-600 dark:text-slate-400">
               Reset password for <span className="font-semibold text-slate-900 dark:text-slate-100">{resetPasswordUser.name}</span>
             </p>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                New Password
-              </label>
-              <input
+            <FormField label="New Password" required helperText="User will be required to change this on their next login">
+              <Input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 placeholder="Minimum 6 characters"
               />
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                User will be required to change this on their next login
-              </p>
-            </div>
+            </FormField>
             <div className="flex justify-end gap-3 pt-2">
               <Button
                 type="button"

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Button } from './Button';
+import { Select } from './Select';
 
 interface PaginationProps {
   currentPage: number;
@@ -74,20 +75,20 @@ export function Pagination({
         {showPageSizeSelector && onPageSizeChange && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-600 dark:text-slate-400">Show:</span>
-            <select
-              value={pageSize}
+            <Select
+              value={String(pageSize)}
               onChange={(e) => {
                 onPageSizeChange(Number(e.target.value));
                 onPageChange(1); // Reset to first page when changing page size
               }}
-              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-100 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-auto min-w-[4rem] px-2 py-1 text-sm"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>
                   {size}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         )}
       </div>

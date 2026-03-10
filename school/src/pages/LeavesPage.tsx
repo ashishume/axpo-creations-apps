@@ -23,6 +23,8 @@ import { ReviewLeaveModal } from "../components/leaves/ReviewLeaveModal";
 import { LeaveTypeModal } from "../components/leaves/LeaveTypeModal";
 import { Plus, CalendarOff, CheckCircle, XCircle, Clock, UserCog, User } from "lucide-react";
 import { formatDate } from "../lib/utils";
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
 import { SearchInput } from "../components/ui/SearchInput";
 import { FilterChips } from "../components/ui/FilterChips";
 import { PermissionGate } from "../components/auth/PermissionGate";
@@ -382,10 +384,10 @@ export function LeavesPage() {
           <CardContent className="space-y-4">
             {hasPermission("leaves:manage") && (
               <div className="flex flex-wrap items-center gap-3">
-                <select
+                <Select
                   value={balancesStaffId}
                   onChange={(e) => setBalancesStaffId(e.target.value)}
-                  className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
+                  className="w-auto min-w-[160px]"
                 >
                   <option value="">Select staff</option>
                   {sessionStaff.map((s) => (
@@ -393,13 +395,13 @@ export function LeavesPage() {
                       {s.name} ({s.employeeId})
                     </option>
                   ))}
-                </select>
-                <input
+                </Select>
+                <Input
                   type="text"
                   value={balancesYear}
                   onChange={(e) => setBalancesYear(e.target.value)}
                   placeholder="Year e.g. 2024-2025"
-                  className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 w-32"
+                  className="w-32"
                 />
                 <Button
                   size="sm"

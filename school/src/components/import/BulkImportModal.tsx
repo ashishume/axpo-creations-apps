@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
+import { Textarea } from "../ui/Textarea";
+import { FormField } from "../ui/FormField";
 import { parseCSV, getColumn } from "../../lib/csv";
 import type { FeeType } from "../../types";
 import type { StaffRole } from "../../types";
@@ -340,9 +342,8 @@ export function BulkImportModal({
             Download sample CSV
           </a>
         </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Or paste CSV below</label>
-          <textarea
+        <FormField label="Or paste CSV below">
+          <Textarea
             value={rawCsv}
             onChange={(e) => {
               setRawCsv(e.target.value);
@@ -351,9 +352,9 @@ export function BulkImportModal({
             onBlur={processCSV}
             placeholder="Paste CSV content here..."
             rows={6}
-            className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 font-mono text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+            className="font-mono text-sm"
           />
-        </div>
+        </FormField>
         <div className="flex justify-end">
           <Button variant="secondary" size="sm" onClick={processCSV}>
             <FileText className="mr-1 h-4 w-4" />

@@ -26,11 +26,16 @@ import {
 import { cn } from "../lib/utils";
 import { SearchInput } from "../components/ui/SearchInput";
 import { FilterChips } from "../components/ui/FilterChips";
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
+import { FormField } from "../components/ui/FormField";
+import { Badge } from "../components/ui/Badge";
+import { EmptyState } from "../components/ui/EmptyState";
 
-const statusColors: Record<PaymentStatus, string> = {
-  "Fully Paid": "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300",
-  "Partially Paid": "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300",
-  "Not Paid": "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300",
+const statusBadgeVariant: Record<PaymentStatus, "success" | "warning" | "danger"> = {
+  "Fully Paid": "success",
+  "Partially Paid": "warning",
+  "Not Paid": "danger",
 };
 
 export function StudentsPage() {
@@ -389,10 +394,10 @@ export function StudentsPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Class:</span>
-                  <select
+                  <Select
                     value={classFilter}
                     onChange={(e) => setClassFilter(e.target.value)}
-                    className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                    className="w-auto min-w-[140px]"
                   >
                     <option value="">All Classes</option>
                     {sessionClasses.map((c) => (
@@ -400,27 +405,27 @@ export function StudentsPage() {
                         {c.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Fee Type:</span>
-                  <select
+                  <Select
                     value={feeTypeFilter}
                     onChange={(e) => setFeeTypeFilter(e.target.value)}
-                    className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                    className="w-auto min-w-[160px]"
                   >
                     <option value="">All Fee Types</option>
                     <option value="Regular">Regular</option>
                     <option value="Boarding">Boarding</option>
                     <option value="Day Scholar + Meals">Day Scholar + Meals</option>
                     <option value="Boarding + Meals">Boarding + Meals</option>
-                  </select>
+                  </Select>
                 </div>
               </div>
               {list.length === 0 ? (
-                <p className="text-sm text-slate-500 dark:text-slate-400">No students in this session. Add one to get started.</p>
+                <EmptyState message="No students in this session. Add one to get started." />
               ) : filteredList.length === 0 ? (
-                <p className="text-sm text-slate-500 dark:text-slate-400">No students match your search or filter.</p>
+                <EmptyState message="No students match your search or filter." />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -466,9 +471,9 @@ export function StudentsPage() {
                               {fine > 0 ? formatCurrency(totalDue) : formatCurrency(remaining)}
                             </td>
                             <td className="py-3 pr-4">
-                              <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", statusColors[status])}>
+                              <Badge variant={statusBadgeVariant[status]}>
                                 {status}
-                              </span>
+                              </Badge>
                               <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
                                 <div
                                   className={cn(
@@ -636,36 +641,30 @@ export function StudentsPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Name *</label>
-                <input
+              <FormField label="Name *" required>
+                <Input
                   name="name"
                   type="text"
                   required
                   defaultValue={studentModal.student?.name}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Student ID</label>
-                <input
+              </FormField>
+              <FormField label="Student ID">
+                <Input
                   name="studentId"
                   type="text"
                   defaultValue={studentModal.student?.studentId}
                   placeholder="Auto-generated if empty"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
-              </div>
+              </FormField>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Class *</label>
-                <select
+              <FormField label="Class *" required>
+                <Select
                   name="classId"
                   required
                   defaultValue={studentModal.student?.classId ?? ""}
                   onChange={(e) => handleClassSelectChange(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 >
                   <option value="">— Select class —</option>
                   {sessionClasses.map((c) => (
@@ -673,30 +672,26 @@ export function StudentsPage() {
                       {c.name} (₹{c.monthlyFees.toLocaleString()}/month)
                     </option>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Fee type</label>
-                <select
+                </Select>
+              </FormField>
+              <FormField label="Fee type">
+                <Select
                   name="feeType"
                   defaultValue={studentModal.student?.feeType ?? "Regular"}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 >
                   <option value="Regular">Regular</option>
                   <option value="Boarding">Boarding</option>
                   <option value="Day Scholar + Meals">Day Scholar + Meals</option>
                   <option value="Boarding + Meals">Boarding + Meals</option>
-                </select>
-              </div>
+                </Select>
+              </FormField>
             </div>
 
             {/* Sibling Selection */}
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Sibling (30% monthly fee discount)</label>
-              <select
+            <FormField label="Sibling (30% monthly fee discount)" helperText="Both siblings will get 30% discount on monthly fees">
+              <Select
                 name="siblingId"
                 defaultValue={studentModal.student?.siblingId ?? ""}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               >
                 <option value="">— No sibling —</option>
                 {list
@@ -706,9 +701,8 @@ export function StudentsPage() {
                       {s.name} ({s.studentId}) - {sessionClasses.find(c => c.id === s.classId)?.name ?? "No class"}
                     </option>
                   ))}
-              </select>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Both siblings will get 30% discount on monthly fees</p>
-            </div>
+              </Select>
+            </FormField>
           </div>
 
           {/* Fee Structure */}
@@ -716,63 +710,53 @@ export function StudentsPage() {
             <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-1">Fee Structure</h4>
             <p className="text-xs text-slate-500 dark:text-slate-400">Selecting a class auto-fills these. You can override if needed.</p>
             <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Registration (one-time)</label>
-                <input
+              <FormField label="Registration (one-time)">
+                <Input
                   name="registrationFees"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.registrationFees ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.registrationFees ?? ""}
                   placeholder="₹"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Admission (one-time)</label>
-                <input
+              </FormField>
+              <FormField label="Admission (one-time)">
+                <Input
                   name="admissionFees"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.admissionFees ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.admissionFees ?? ""}
                   placeholder="₹"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Annual Fund (one-time)</label>
-                <input
+              </FormField>
+              <FormField label="Annual Fund (one-time)">
+                <Input
                   name="annualFund"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.annualFund ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.annualFund ?? ""}
                   placeholder="₹"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
-              </div>
+              </FormField>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Monthly Tuition (₹/month)</label>
-                <input
+              <FormField label="Monthly Tuition (₹/month)">
+                <Input
                   name="monthlyFees"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.monthlyFees ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.monthlyFees ?? ""}
                   placeholder="₹"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Transport (₹/month, optional)</label>
-                <input
+              </FormField>
+              <FormField label="Transport (₹/month, optional)">
+                <Input
                   name="transportFees"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.transportFees ?? ""}
                   placeholder="Based on distance"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
-              </div>
+              </FormField>
             </div>
           </div>
 
@@ -780,38 +764,32 @@ export function StudentsPage() {
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-1">Late Fee Configuration</h4>
             <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Due day (1–28)</label>
-                <input
+              <FormField label="Due day (1–28)">
+                <Input
                   name="dueDay"
                   type="number"
                   min={1}
                   max={28}
                   defaultValue={studentModal.student?.dueDayOfMonth ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.dueDayOfMonth ?? 10}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Late fee (₹)</label>
-                <input
+              </FormField>
+              <FormField label="Late fee (₹)">
+                <Input
                   name="lateFeeAmount"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.lateFeeAmount ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.lateFeeAmount ?? 50}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Frequency</label>
-                <select
+              </FormField>
+              <FormField label="Frequency">
+                <Select
                   name="lateFeeFrequency"
                   defaultValue={studentModal.student?.lateFeeFrequency ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.lateFeeFrequency ?? "weekly"}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 >
                   <option value="weekly">Per week</option>
                   <option value="daily">Per day</option>
-                </select>
-              </div>
+                </Select>
+              </FormField>
             </div>
           </div>
 
@@ -834,47 +812,34 @@ export function StudentsPage() {
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Remaining: {formatCurrency(getRemaining(paymentModal.student))}
             </p>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Date *</label>
-              <input
+            <FormField label="Date *" required>
+              <Input
                 name="date"
                 type="date"
                 required
                 defaultValue={new Date().toISOString().slice(0, 10)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Amount (₹) *</label>
-              <input
+            </FormField>
+            <FormField label="Amount (₹) *" required>
+              <Input
                 name="amount"
                 type="number"
                 required
                 min={0.01}
                 step={0.01}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Method</label>
-              <select
-                name="method"
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-              >
+            </FormField>
+            <FormField label="Method">
+              <Select name="method">
                 <option value="Cash">Cash</option>
                 <option value="Cheque">Cheque</option>
                 <option value="Online">Online</option>
                 <option value="Bank Transfer">Bank Transfer</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Receipt number</label>
-              <input
-                name="receiptNumber"
-                type="text"
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-              />
-            </div>
+              </Select>
+            </FormField>
+            <FormField label="Receipt number">
+              <Input name="receiptNumber" type="text" />
+            </FormField>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => setPaymentModal(null)}>
                 Cancel
@@ -957,98 +922,90 @@ export function StudentsPage() {
           </p>
           <form key={editingClass?.id ?? "new"} onSubmit={handleSaveClass} className="space-y-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Class name *</label>
-                <input
+              <FormField label="Class name *" required>
+                <Input
                   name="className"
                   type="text"
                   required
                   defaultValue={editingClass?.name}
                   placeholder="e.g. Class 1"
-                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                  className="rounded px-2 py-1.5 text-sm"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Due day (1-28)</label>
-                <input
+              </FormField>
+              <FormField label="Due day (1-28)">
+                <Input
                   name="dueDayOfMonth"
                   type="number"
                   min={1}
                   max={28}
                   defaultValue={editingClass?.dueDayOfMonth ?? 10}
-                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                  className="rounded px-2 py-1.5 text-sm"
                 />
-              </div>
+              </FormField>
             </div>
             <div className="grid grid-cols-4 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Registration</label>
-                <input
+              <FormField label="Registration">
+                <Input
                   name="registrationFees"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.registrationFees ?? 500}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                  className="rounded px-2 py-1.5 text-sm"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Admission</label>
-                <input
+              </FormField>
+              <FormField label="Admission">
+                <Input
                   name="admissionFees"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.admissionFees ?? 2500}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                  className="rounded px-2 py-1.5 text-sm"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Annual Fund</label>
-                <input
+              </FormField>
+              <FormField label="Annual Fund">
+                <Input
                   name="annualFund"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.annualFund ?? 1500}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                  className="rounded px-2 py-1.5 text-sm"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Monthly Fee</label>
-                <input
+              </FormField>
+              <FormField label="Monthly Fee">
+                <Input
                   name="monthlyFees"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.monthlyFees ?? 3000}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                  className="rounded px-2 py-1.5 text-sm"
                 />
-              </div>
+              </FormField>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Late fee amount</label>
-                <input
+              <FormField label="Late fee amount">
+                <Input
                   name="lateFeeAmount"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.lateFeeAmount ?? 50}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                  className="rounded px-2 py-1.5 text-sm"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Late fee frequency</label>
-                <select
+              </FormField>
+              <FormField label="Late fee frequency">
+                <Select
                   name="lateFeeFrequency"
                   defaultValue={editingClass?.lateFeeFrequency ?? "weekly"}
-                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
+                  className="rounded px-2 py-1.5 text-sm"
                 >
                   <option value="weekly">Per week</option>
                   <option value="daily">Per day</option>
-                </select>
-              </div>
+                </Select>
+              </FormField>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               {editingClass && (

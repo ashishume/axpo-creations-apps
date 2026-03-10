@@ -27,6 +27,7 @@ import { Fragment } from "react";
 import { NavLink, useSearchParams } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/Button";
+import { Select } from "../ui/Select";
 import { PermissionGate } from "../auth/PermissionGate";
 import { useAuth } from "../../context/AuthContext";
 import { useApp } from "../../context/AppContext";
@@ -165,10 +166,10 @@ export function Sidebar({
             <Building2 className="h-3.5 w-3.5" />
             School
           </label>
-          <select
+          <Select
             value={selectedSchoolId ?? ""}
             onChange={(e) => setSelectedSchool(e.target.value || null)}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            className="w-full px-2.5 py-1.5 text-xs"
           >
             <option value="">Select school</option>
             {schools.map((s) => (
@@ -176,18 +177,18 @@ export function Sidebar({
                 {s.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
             <Calendar className="h-3.5 w-3.5" />
             Session
           </label>
-          <select
+          <Select
             value={selectedSessionId ?? ""}
             onChange={(e) => setSelectedSession(e.target.value || null)}
             disabled={!selectedSchoolId}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400"
+            className="w-full px-2.5 py-1.5 text-xs"
           >
             <option value="">Select session</option>
             {sessionList.map((s) => (
@@ -195,7 +196,7 @@ export function Sidebar({
                 {s.year}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 

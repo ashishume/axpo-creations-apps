@@ -1,6 +1,10 @@
 import { useState, useMemo } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
+import { Textarea } from "../ui/Textarea";
+import { FormField } from "../ui/FormField";
 import { useApplyLeave, useLeaveBalances } from "../../hooks/useLeaves";
 import type { LeaveType, LeaveBalance, Staff, Student } from "../../types";
 import type { User } from "../../types/auth";
@@ -136,9 +140,8 @@ export function ApplyLeaveModal({
   return (
     <Modal open={open} onClose={onClose} title="Apply for leave">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Applicant type</label>
-          <select
+        <FormField label="Applicant type">
+          <Select
             value={applicantType}
             onChange={(e) => {
               setApplicantType(e.target.value as "staff" | "student");
@@ -146,20 +149,17 @@ export function ApplyLeaveModal({
               setStudentId("");
               setLeaveTypeId("");
             }}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
           >
             <option value="staff">Staff</option>
             <option value="student">Student</option>
-          </select>
-        </div>
+          </Select>
+        </FormField>
 
         {applicantType === "staff" && (
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Staff member</label>
-            <select
+          <FormField label="Staff member" required>
+            <Select
               value={staffId || preselectedStaffId}
               onChange={(e) => setStaffId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               required
             >
               <option value="">Select staff</option>
@@ -168,16 +168,14 @@ export function ApplyLeaveModal({
                   {s.name} ({s.employeeId})
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
         )}
         {applicantType === "student" && (
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Student</label>
-            <select
+          <FormField label="Student" required>
+            <Select
               value={studentId || preselectedStudentId}
               onChange={(e) => setStudentId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               required
             >
               <option value="">Select student</option>
@@ -186,16 +184,14 @@ export function ApplyLeaveModal({
                   {s.name} ({s.studentId})
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
         )}
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Leave type</label>
-          <select
+        <FormField label="Leave type" required>
+          <Select
             value={leaveTypeId}
             onChange={(e) => setLeaveTypeId(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             required
           >
             <option value="">Select leave type</option>
@@ -205,7 +201,7 @@ export function ApplyLeaveModal({
                 {lt.maxDaysPerYear != null ? ` — max ${lt.maxDaysPerYear} days/year` : ""}
               </option>
             ))}
-          </select>
+          </Select>
           {applicantType === "staff" && effectiveStaffId && leaveTypeId && (
             <div className="mt-2 text-sm">
               {selectedLeaveBalance ? (
@@ -219,56 +215,48 @@ export function ApplyLeaveModal({
               )}
             </div>
           )}
-        </div>
+        </FormField>
 
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">From date</label>
-            <input
+          <FormField label="From date" required>
+            <Input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               required
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">To date</label>
-            <input
+          </FormField>
+          <FormField label="To date" required>
+            <Input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               required
             />
-          </div>
+          </FormField>
         </div>
         {fromDate && toDate && daysCount > 0 && (
           <p className="text-sm text-slate-500 dark:text-slate-400">Total days: {daysCount}</p>
         )}
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Reason</label>
-          <textarea
+        <FormField label="Reason" required>
+          <Textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="Reason for leave"
             required
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Document URL (optional)</label>
-          <input
+        <FormField label="Document URL (optional)">
+          <Input
             type="url"
             value={documentUrl}
             onChange={(e) => setDocumentUrl(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="https://..."
           />
-        </div>
+        </FormField>
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="secondary" onClick={onClose}>

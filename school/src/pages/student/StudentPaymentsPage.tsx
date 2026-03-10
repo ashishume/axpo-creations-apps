@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useStudent } from '../../hooks/useStudents';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { Select } from '../../components/ui/Select';
 import { Pagination, usePagination } from '../../components/ui/Pagination';
 import { formatCurrency, formatDate, formatMonthYear } from '../../lib/utils';
 import { Skeleton, SkeletonStats, SkeletonTable } from '../../components/ui/Skeleton';
@@ -166,13 +167,13 @@ Thank you for your payment!
             <CardTitle>All Payments</CardTitle>
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-slate-400" />
-              <select
+              <Select
                 value={categoryFilter}
                 onChange={(e) => {
                   setCategoryFilter(e.target.value);
                   setPage(1);
                 }}
-                className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
+                className="w-auto min-w-[140px]"
               >
                 <option value="">All Categories</option>
                 <option value="registration">Registration</option>
@@ -181,7 +182,7 @@ Thank you for your payment!
                 <option value="monthly">Monthly Fee</option>
                 <option value="transport">Transport</option>
                 <option value="other">Other</option>
-              </select>
+              </Select>
             </div>
           </div>
         </CardHeader>

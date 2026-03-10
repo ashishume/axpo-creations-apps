@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
+import { Input } from "../components/ui/Input";
+import { FormField } from "../components/ui/FormField";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { PermissionGate } from "../components/auth/PermissionGate";
 import { SkeletonList } from "../components/ui/Skeleton";
@@ -138,40 +140,34 @@ export function OrganizationsPage() {
         title={modal.org ? "Edit organization" : "Add organization"}
       >
         <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label htmlFor="org-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
-            <input
+          <FormField label="Name" htmlFor="org-name" required>
+            <Input
               id="org-name"
               name="name"
               type="text"
               required
               defaultValue={modal.org?.name}
-              className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               placeholder="e.g. Acme Education"
             />
-          </div>
-          <div>
-            <label htmlFor="org-slug" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Slug (optional)</label>
-            <input
+          </FormField>
+          <FormField label="Slug (optional)" htmlFor="org-slug">
+            <Input
               id="org-slug"
               name="slug"
               type="text"
               defaultValue={modal.org?.slug}
-              className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               placeholder="e.g. acme-edu"
             />
-          </div>
-          <div>
-            <label htmlFor="org-billingEmail" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Billing email (optional)</label>
-            <input
+          </FormField>
+          <FormField label="Billing email (optional)" htmlFor="org-billingEmail">
+            <Input
               id="org-billingEmail"
               name="billingEmail"
               type="email"
               defaultValue={modal.org?.billingEmail}
-              className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               placeholder="billing@example.com"
             />
-          </div>
+          </FormField>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setModal({ open: false })}>
               Cancel

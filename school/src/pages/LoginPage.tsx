@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { FormField } from '../components/ui/FormField';
+import { Alert } from '../components/ui/Alert';
 import { Eye, EyeOff, LogIn, Lock } from 'lucide-react';
 
 export function LoginPage() {
@@ -73,53 +76,42 @@ export function LoginPage() {
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Current Password
-                </label>
-                <input
+              <FormField label="Current Password" required>
+                <Input
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="Enter current password"
+                  className="px-4 py-3"
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  New Password
-                </label>
-                <input
+              <FormField label="New Password" required>
+                <Input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="Enter new password (min 6 characters)"
+                  className="px-4 py-3"
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Confirm New Password
-                </label>
-                <input
+              <FormField label="Confirm New Password" required>
+                <Input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="Confirm new password"
+                  className="px-4 py-3"
                 />
-              </div>
+              </FormField>
 
               {changePasswordError && (
-                <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-600 dark:text-red-400">
-                  {changePasswordError}
-                </div>
+                <Alert variant="error">{changePasswordError}</Alert>
               )}
 
               <Button
@@ -151,34 +143,28 @@ export function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Username
-              </label>
-              <input
+            <FormField label="Username" required>
+              <Input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 autoComplete="username"
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 placeholder="Enter your username"
+                className="px-4 py-3"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Password
-              </label>
+            <FormField label="Password" required>
               <div className="relative">
-                <input
+                <Input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 pr-12 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="Enter your password"
+                  className="px-4 py-3 pr-12"
                 />
                 <button
                   type="button"
@@ -188,12 +174,10 @@ export function LoginPage() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-            </div>
+            </FormField>
 
             {(loginError || error) && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-600 dark:text-red-400">
-                {loginError || error}
-              </div>
+              <Alert variant="error">{loginError || error}</Alert>
             )}
 
             <Button
