@@ -146,14 +146,21 @@ export function StudentsPage() {
     const cls = sessionClasses.find((c) => c.id === classId);
     if (!cls) return;
     const form = studentFormRef.current;
-    // Fill fees from class
-    (form.elements.namedItem("registrationFees") as HTMLInputElement).value = String(cls.registrationFees);
-    (form.elements.namedItem("admissionFees") as HTMLInputElement).value = String(cls.admissionFees);
-    (form.elements.namedItem("annualFund") as HTMLInputElement).value = String(cls.annualFund);
-    (form.elements.namedItem("monthlyFees") as HTMLInputElement).value = String(cls.monthlyFees);
-    (form.elements.namedItem("dueDay") as HTMLInputElement).value = String(cls.dueDayOfMonth);
-    (form.elements.namedItem("lateFeeAmount") as HTMLInputElement).value = String(cls.lateFeeAmount);
-    (form.elements.namedItem("lateFeeFrequency") as HTMLSelectElement).value = cls.lateFeeFrequency;
+    // Fill fees from class only when class value is non-zero; otherwise keep existing user input
+    const setIfNonZero = (name: string, classValue: number) => {
+      if (classValue != null && Number(classValue) !== 0) {
+        (form.elements.namedItem(name) as HTMLInputElement).value = String(classValue);
+      }
+    };
+    setIfNonZero("registrationFees", cls.registrationFees);
+    setIfNonZero("admissionFees", cls.admissionFees);
+    setIfNonZero("annualFund", cls.annualFund);
+    setIfNonZero("monthlyFees", cls.monthlyFees);
+    setIfNonZero("dueDay", cls.dueDayOfMonth);
+    setIfNonZero("lateFeeAmount", cls.lateFeeAmount);
+    if (cls.lateFeeFrequency) {
+      (form.elements.namedItem("lateFeeFrequency") as HTMLSelectElement).value = cls.lateFeeFrequency;
+    }
   };
 
   // Handle student photo selection with size validation

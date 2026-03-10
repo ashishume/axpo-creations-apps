@@ -131,13 +131,14 @@ export function InlineFormCard({
               upd("classId", classId);
               const selectedClass = sessionClasses.find((c) => c.id === classId);
               if (selectedClass) {
-                upd("registrationFees", selectedClass.registrationFees);
-                upd("admissionFees", selectedClass.admissionFees);
-                upd("annualFund", selectedClass.annualFund);
-                upd("monthlyFees", selectedClass.monthlyFees);
-                upd("dueDayOfMonth", selectedClass.dueDayOfMonth);
-                upd("lateFeeAmount", selectedClass.lateFeeAmount);
-                upd("lateFeeFrequency", selectedClass.lateFeeFrequency);
+                // Only apply class values when non-zero; otherwise keep existing row values
+                if (selectedClass.registrationFees != null && Number(selectedClass.registrationFees) !== 0) upd("registrationFees", selectedClass.registrationFees);
+                if (selectedClass.admissionFees != null && Number(selectedClass.admissionFees) !== 0) upd("admissionFees", selectedClass.admissionFees);
+                if (selectedClass.annualFund != null && Number(selectedClass.annualFund) !== 0) upd("annualFund", selectedClass.annualFund);
+                if (selectedClass.monthlyFees != null && Number(selectedClass.monthlyFees) !== 0) upd("monthlyFees", selectedClass.monthlyFees);
+                if (selectedClass.dueDayOfMonth != null && Number(selectedClass.dueDayOfMonth) !== 0) upd("dueDayOfMonth", selectedClass.dueDayOfMonth);
+                if (selectedClass.lateFeeAmount != null && Number(selectedClass.lateFeeAmount) !== 0) upd("lateFeeAmount", selectedClass.lateFeeAmount);
+                if (selectedClass.lateFeeFrequency) upd("lateFeeFrequency", selectedClass.lateFeeFrequency);
               }
             }}
             disabled={isDelete}
