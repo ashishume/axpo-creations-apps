@@ -69,15 +69,24 @@ export function StudentsPage() {
   const deleteClassMut = useDeleteClass();
 
   const addStudentAsync = (data: Omit<StudentType, "id" | "payments">) => createStudent.mutateAsync(data);
-  const updateStudent = (id: string, data: Partial<StudentType>) => updateStudentMut.mutate({ id, updates: data });
-  const updateStudentAsync = (id: string, data: Partial<StudentType>) => updateStudentMut.mutateAsync({ id, updates: data });
-  const deleteStudent = (id: string) => deleteStudentMut.mutate(id);
+  const updateStudent = (id: string, data: Partial<StudentType>) =>
+    updateStudentMut.mutate({ id, updates: data, sessionId: selectedSessionId ?? undefined });
+  const updateStudentAsync = (id: string, data: Partial<StudentType>) =>
+    updateStudentMut.mutateAsync({ id, updates: data, sessionId: selectedSessionId ?? undefined });
+  const deleteStudent = (id: string) =>
+    deleteStudentMut.mutate(selectedSessionId ? { id, sessionId: selectedSessionId } : id);
   const addFeePayment = async (
     studentId: string,
     payment: Omit<import("../types").FeePayment, "id" | "enrollmentId">,
-    enrollmentId?: string
+    enrollmentId?: string,
+    sessionId?: string
   ) => {
-    return addPaymentMut.mutateAsync({ studentId, payment, enrollmentId });
+    return addPaymentMut.mutateAsync({
+      studentId,
+      payment,
+      enrollmentId,
+      sessionId: sessionId ?? selectedSessionId ?? undefined,
+    });
   };
   const addClass = (data: Omit<StudentClass, "id">) => createClass.mutate(data);
   const updateClass = (id: string, data: Partial<StudentClass>) => updateClassMut.mutate({ id, updates: data });
@@ -345,13 +354,18 @@ export function StudentsPage() {
     const receiptNumber = (form.elements.namedItem("receiptNumber") as HTMLInputElement).value.trim();
     if (!date || amount <= 0) return;
     const remainingBefore = getRemaining(paymentModal.student);
-    addFeePayment(paymentModal.student.id, {
-      date,
-      amount,
-      method,
-      receiptNumber: receiptNumber || "-",
-      feeCategory: "monthly" // Default to monthly fee payment
-    });
+    addFeePayment(
+      paymentModal.student.id,
+      {
+        date,
+        amount,
+        method,
+        receiptNumber: receiptNumber || "-",
+        feeCategory: "monthly" // Default to monthly fee payment
+      },
+      (paymentModal.student as { enrollmentId?: string }).enrollmentId,
+      (paymentModal.student as { sessionId?: string }).sessionId
+    );
     toast("Fees captured");
     setPaymentModal(null);
     setReceiptData({
@@ -1262,7 +1276,8 @@ export function StudentsPage() {
             }
 
             const enrollmentId = (detailsStudent.student as { enrollmentId?: string }).enrollmentId;
-            const createdPayment = await addFeePayment(detailsStudent.student.id, payment, enrollmentId);
+            const sessionId = (detailsStudent.student as { sessionId?: string }).sessionId;
+            const createdPayment = await addFeePayment(detailsStudent.student.id, payment, enrollmentId, sessionId);
             toast("Fees captured");
             // Keep new row visible: optimistically merge created payment (refetch state may not be updated yet)
             if (createdPayment) {

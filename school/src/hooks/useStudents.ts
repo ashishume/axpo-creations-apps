@@ -1,9 +1,20 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
 import { studentsRepository, enrollmentsRepository } from '../lib/db/repositories';
 import type { Student, StudentEnrollment, FeePayment } from '../types';
 
 const QUERY_KEY = 'students';
 const ENROLLMENTS_QUERY_KEY = 'enrollments';
+
+/** Invalidate session-scoped student list with minimal refetches: bySession once, infinite reset to page 1 then refetch once. */
+function invalidateSessionStudentList(queryClient: QueryClient, sessionId?: string | null) {
+  if (sessionId) {
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEY, 'bySession', sessionId] });
+    queryClient.resetQueries({ queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false });
+  } else {
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+  }
+}
 
 const DEFAULT_PAGE_SIZE = 10;
 const FILTERED_PAGE_SIZE = 50;
@@ -85,9 +96,10 @@ export function useCreateStudent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (student: Omit<Student, 'id' | 'payments'>) => studentsRepository.create(student),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    mutationFn: (payload: Omit<Student, 'id' | 'payments'> & { sessionId?: string }) =>
+      studentsRepository.create(payload as Omit<Student, 'id' | 'payments'>),
+    onSuccess: (_, payload) => {
+      invalidateSessionStudentList(queryClient, payload.sessionId);
     },
   });
 }
@@ -96,9 +108,10 @@ export function useCreateStudentsBulk() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (students: Omit<Student, 'id' | 'payments'>[]) => studentsRepository.createMany(students),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    mutationFn: (students: (Omit<Student, 'id' | 'payments'> & { sessionId?: string })[]) =>
+      studentsRepository.createMany(students as Omit<Student, 'id' | 'payments'>[]).then(() => students[0]?.sessionId),
+    onSuccess: (sessionId) => {
+      invalidateSessionStudentList(queryClient, sessionId);
     },
   });
 }
@@ -107,10 +120,17 @@ export function useUpdateStudent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Omit<Student, 'id' | 'payments'>> }) =>
-      studentsRepository.update(id, updates),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    mutationFn: ({
+      id,
+      updates,
+      sessionId,
+    }: {
+      id: string;
+      updates: Partial<Omit<Student, 'id' | 'payments'>>;
+      sessionId?: string;
+    }) => studentsRepository.update(id, updates),
+    onSuccess: (_, { id, sessionId }) => {
+      invalidateSessionStudentList(queryClient, sessionId);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, id] });
     },
   });
@@ -120,9 +140,13 @@ export function useDeleteStudent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => studentsRepository.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    mutationFn: (payload: string | { id: string; sessionId?: string }) => {
+      const id = typeof payload === 'string' ? payload : payload.id;
+      return studentsRepository.delete(id);
+    },
+    onSuccess: (_, payload) => {
+      const sessionId = typeof payload === 'string' ? undefined : payload.sessionId;
+      invalidateSessionStudentList(queryClient, sessionId);
     },
   });
 }
@@ -147,13 +171,15 @@ export function useAddStudentPayment() {
       studentId,
       payment,
       enrollmentId,
+      sessionId,
     }: {
       studentId: string;
       payment: Omit<FeePayment, 'id' | 'enrollmentId'>;
       enrollmentId?: string;
+      sessionId?: string;
     }) => studentsRepository.addPayment(studentId, payment, enrollmentId),
-    onSuccess: (_, { studentId }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    onSuccess: (_, { studentId, sessionId }) => {
+      invalidateSessionStudentList(queryClient, sessionId);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, studentId] });
     },
   });
@@ -167,13 +193,15 @@ export function useDeleteStudentPayment() {
       studentId,
       paymentId,
       enrollmentId,
+      sessionId,
     }: {
       studentId: string;
       paymentId: string;
       enrollmentId?: string;
+      sessionId?: string;
     }) => studentsRepository.deletePayment(studentId, paymentId, enrollmentId),
-    onSuccess: (_, { studentId }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    onSuccess: (_, { studentId, sessionId }) => {
+      invalidateSessionStudentList(queryClient, sessionId);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, studentId] });
     },
   });

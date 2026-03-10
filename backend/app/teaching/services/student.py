@@ -1,10 +1,11 @@
 """Student and Enrollment services: business logic; uses repositories for DB."""
 from uuid import UUID
 
-from sqlalchemy import update
+from sqlalchemy import delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
+from app.teaching.models.leave import LeaveRequest
 from app.teaching.models.student import Student, StudentEnrollment, FeePayment
 from app.teaching.models.user import User
 from app.teaching.schemas.student import (
@@ -60,7 +61,14 @@ class StudentService:
 
     async def delete(self, db: AsyncSession, id: UUID) -> None:
         student = await self.get_or_404(db, id)
-        # Clear references that could cause FK constraint violation on delete
+        # Delete dependents explicitly so delete works regardless of DB CASCADE
+        enrollments = await enrollment_repository.list_by_student(db, id)
+        enrollment_ids = [e.id for e in enrollments]
+        if enrollment_ids:
+            await db.execute(delete(FeePayment).where(FeePayment.enrollment_id.in_(enrollment_ids)))
+        for enrollment in enrollments:
+            await enrollment_repository.delete(db, enrollment)
+        await db.execute(delete(LeaveRequest).where(LeaveRequest.student_id == id))
         await db.execute(update(User).where(User.student_id == id).values(student_id=None))
         await db.execute(update(Student).where(Student.sibling_id == id).values(sibling_id=None))
         await db.flush()
