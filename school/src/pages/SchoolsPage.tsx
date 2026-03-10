@@ -33,15 +33,24 @@ export function SchoolsPage() {
   const [sessionModal, setSessionModal] = useState<{ open: boolean; session?: Session; schoolId?: string }>({ open: false });
   const [confirmDelete, setConfirmDelete] = useState<{ type: "school" | "session"; id: string; name: string } | null>(null);
   const [promoteModal, setPromoteModal] = useState<{ open: boolean; fromSession?: Session } | null>(null);
+  const [orgFilterId, setOrgFilterId] = useState<string | null>(null);
 
   const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
-  
-  // Get sessions grouped by school for the promote modal
-  const getSessionsForSchool = (schoolId: string) => 
-    sessions.filter((s) => s.schoolId === schoolId).sort((a, b) => b.year.localeCompare(a.year));
-  
+
+  // Super Admin: filter schools (and their sessions) by selected org. Others: show all they have access to.
+  const displaySchools = isSuperAdmin && orgFilterId
+    ? schools.filter((s) => s.organizationId === orgFilterId)
+    : schools;
+  const displaySessions = isSuperAdmin && orgFilterId
+    ? sessions.filter((s) => displaySchools.some((sc) => sc.id === s.schoolId))
+    : sessions;
+
+  // Get sessions grouped by school (use displaySessions so promote modal sees filtered list)
+  const getSessionsForSchool = (schoolId: string) =>
+    displaySessions.filter((s) => s.schoolId === schoolId).sort((a, b) => b.year.localeCompare(a.year));
+
   // Get student count for a session
-  const getStudentCount = (sessionId: string) => 
+  const getStudentCount = (sessionId: string) =>
     students.filter((s) => s.sessionId === sessionId).length;
 
   const handleSaveSchool = (e: React.FormEvent<HTMLFormElement>) => {
@@ -93,8 +102,30 @@ export function SchoolsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Schools & Sessions</h2>
-          <p className="text-slate-600 dark:text-slate-400">Manage schools and academic sessions</p>
+          <p className="text-slate-600 dark:text-slate-400">
+            {isSuperAdmin ? "Manage schools and sessions across organizations" : "Manage schools and academic sessions"}
+          </p>
         </div>
+        {isSuperAdmin && organizations.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label htmlFor="schools-org-filter" className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+              Organization
+            </label>
+            <select
+              id="schools-org-filter"
+              value={orgFilterId ?? ""}
+              onChange={(e) => setOrgFilterId(e.target.value || null)}
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            >
+              <option value="">All organizations</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -109,18 +140,27 @@ export function SchoolsPage() {
             </PermissionGate>
           </CardHeader>
           <CardContent>
-            {schools.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No schools yet. Add one to get started.</p>
+            {displaySchools.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {isSuperAdmin && orgFilterId ? "No schools in this organization." : "No schools yet. Add one to get started."}
+              </p>
             ) : (
               <ul className="space-y-2">
-                {schools.map((s) => (
+                {displaySchools.map((s) => (
                   <li
                     key={s.id}
                     className="flex items-center justify-between rounded-lg border border-slate-100 dark:border-slate-700 p-3"
                   >
                     <div>
                       <p className="font-medium text-slate-900 dark:text-slate-100">{s.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{s.address}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {s.address}
+                        {isSuperAdmin && s.organizationId && (
+                          <span className="ml-1">
+                            · {organizations.find((o) => o.id === s.organizationId)?.name ?? "—"}
+                          </span>
+                        )}
+                      </p>
                     </div>
                     <div className="flex items-center gap-1">
                       {s.isLocked ? (
@@ -181,12 +221,14 @@ export function SchoolsPage() {
             </PermissionGate>
           </CardHeader>
           <CardContent>
-            {sessions.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No sessions. Add a session for a school.</p>
+            {displaySessions.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {isSuperAdmin && orgFilterId ? "No sessions in this organization." : "No sessions. Add a session for a school."}
+              </p>
             ) : (
               <ul className="space-y-2">
-                {sessions.map((s) => {
-                  const school = schools.find((sc) => sc.id === s.schoolId);
+                {displaySessions.map((s) => {
+                  const school = displaySchools.find((sc) => sc.id === s.schoolId);
                   const studentCount = getStudentCount(s.id);
                   const completed = isSessionCompleted(s.endDate);
                   const schoolSessions = getSessionsForSchool(s.schoolId);
@@ -210,7 +252,12 @@ export function SchoolsPage() {
                             )}
                           </div>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {school?.name} · {studentCount} student{studentCount !== 1 ? "s" : ""}
+                            {school?.name}
+                            {isSuperAdmin && school?.organizationId && (
+                              <> · {organizations.find((o) => o.id === school.organizationId)?.name ?? "—"}</>
+                            )}
+                            {" · "}
+                            {studentCount} student{studentCount !== 1 ? "s" : ""}
                           </p>
                         </div>
                       </div>
@@ -333,12 +380,13 @@ export function SchoolsPage() {
             <select
               name="schoolId"
               required
-              defaultValue={sessionModal.session?.schoolId ?? sessionModal.schoolId ?? schools[0]?.id}
+              defaultValue={sessionModal.session?.schoolId ?? sessionModal.schoolId ?? displaySchools[0]?.id}
               className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             >
-              {schools.map((s) => (
+              {displaySchools.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
+                  {isSuperAdmin && s.organizationId ? ` (${organizations.find((o) => o.id === s.organizationId)?.name ?? "—"})` : ""}
                 </option>
               ))}
             </select>
