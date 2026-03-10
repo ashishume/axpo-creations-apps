@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card"
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
-import { Plus, Pencil, Trash2, DollarSign, Upload, BookOpen, Eye, Camera, X, User } from "lucide-react";
+import { Plus, Pencil, Trash2, DollarSign, Upload, BookOpen, Eye, Camera, X, User, Calendar } from "lucide-react";
 import { BulkImportModal } from "../components/import/BulkImportModal";
 import { PaymentReceiptModal } from "../components/receipt/PaymentReceiptModal";
 import { StudentDetailsModal } from "../components/students/StudentDetailsModal";
@@ -28,6 +28,7 @@ import { SearchInput } from "../components/ui/SearchInput";
 import { FilterChips } from "../components/ui/FilterChips";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
+import { SearchableSelect } from "../components/ui/SearchableSelect";
 import { FormField } from "../components/ui/FormField";
 import { Badge } from "../components/ui/Badge";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -79,6 +80,7 @@ export function StudentsPage() {
   const studentPhotoInputRef = useRef<HTMLInputElement>(null);
   const [studentModal, setStudentModal] = useState<{ open: boolean; student?: StudentType }>({ open: false });
   const [studentPhotoPreview, setStudentPhotoPreview] = useState<string | null>(null);
+  const [selectedSiblingId, setSelectedSiblingId] = useState<string>("");
   const [paymentModal, setPaymentModal] = useState<{ open: boolean; student: StudentType } | null>(null);
   const [historyStudent, setHistoryStudent] = useState<StudentType | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
@@ -89,7 +91,7 @@ export function StudentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [classFilter, setClassFilter] = useState<string>("");
   const [feeTypeFilter, setFeeTypeFilter] = useState<string>("");
-  const [detailsStudent, setDetailsStudent] = useState<{ student: StudentType; initialTab?: "overview" | "fees" | "personal" | "payments" } | null>(null);
+  const [detailsStudent, setDetailsStudent] = useState<{ student: StudentType; initialTab?: "overview" | "fees" | "personal" | "payments" | "feeHistory" } | null>(null);
   const [receiptData, setReceiptData] = useState<{
     student: StudentType;
     payment: { date: string; amount: number; method: PaymentMethod; receiptNumber: string };
@@ -118,6 +120,13 @@ export function StudentsPage() {
     const fresh = students.find((s) => s.id === detailsStudent.student.id);
     if (fresh) setDetailsStudent((prev) => prev ? { ...prev, student: fresh } : null);
   }, [students]);
+
+  // Initialize sibling selection when student modal opens
+  useEffect(() => {
+    if (studentModal.open) {
+      setSelectedSiblingId(studentModal.student?.siblingId ?? "");
+    }
+  }, [studentModal.open, studentModal.student?.siblingId]);
 
   const filteredList = useMemo(() => {
     let out = list;
@@ -193,19 +202,25 @@ export function StudentsPage() {
     const feeType = (form.elements.namedItem("feeType") as HTMLSelectElement).value as FeeType;
     const classId = (form.elements.namedItem("classId") as HTMLSelectElement).value || undefined;
 
-    // Fee fields
-    const registrationFees = Number((form.elements.namedItem("registrationFees") as HTMLInputElement).value) || undefined;
-    const annualFund = Number((form.elements.namedItem("annualFund") as HTMLInputElement).value) || undefined;
-    const monthlyFees = Number((form.elements.namedItem("monthlyFees") as HTMLInputElement).value) || undefined;
-    const transportFees = Number((form.elements.namedItem("transportFees") as HTMLInputElement).value) || undefined;
+    // Fee fields - use parseFloat to preserve 0 values
+    const registrationFeesVal = (form.elements.namedItem("registrationFees") as HTMLInputElement).value;
+    const annualFundVal = (form.elements.namedItem("annualFund") as HTMLInputElement).value;
+    const monthlyFeesVal = (form.elements.namedItem("monthlyFees") as HTMLInputElement).value;
+    const transportFeesVal = (form.elements.namedItem("transportFees") as HTMLInputElement).value;
+    
+    const registrationFees = registrationFeesVal !== "" ? Number(registrationFeesVal) : undefined;
+    const annualFund = annualFundVal !== "" ? Number(annualFundVal) : undefined;
+    const monthlyFees = monthlyFeesVal !== "" ? Number(monthlyFeesVal) : undefined;
+    const transportFees = transportFeesVal !== "" ? Number(transportFeesVal) : undefined;
 
     // Due date & late fee
     const dueDay = (form.elements.namedItem("dueDay") as HTMLInputElement).value;
-    const lateFeeAmount = Number((form.elements.namedItem("lateFeeAmount") as HTMLInputElement).value) || undefined;
+    const lateFeeAmountVal = (form.elements.namedItem("lateFeeAmount") as HTMLInputElement).value;
+    const lateFeeAmount = lateFeeAmountVal !== "" ? Number(lateFeeAmountVal) : undefined;
     const lateFeeFrequency = (form.elements.namedItem("lateFeeFrequency") as HTMLSelectElement).value as "daily" | "weekly" | "";
 
-    // Sibling
-    const siblingId = (form.elements.namedItem("siblingId") as HTMLSelectElement).value || undefined;
+    // Sibling - uses controlled state from SearchableSelect
+    const siblingId = selectedSiblingId || undefined;
 
     if (!selectedSessionId || !name) return;
 
@@ -255,6 +270,7 @@ export function StudentsPage() {
     }
     setStudentModal({ open: false });
     setStudentPhotoPreview(null);
+    setSelectedSiblingId("");
   };
 
   const handleSaveClass = (e: React.FormEvent<HTMLFormElement>) => {
@@ -509,6 +525,14 @@ export function StudentsPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  onClick={() => setDetailsStudent({ student: s, initialTab: "feeHistory" })}
+                                  title="View fee history"
+                                >
+                                  <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   onClick={() => setDetailsStudent({ student: s, initialTab: "payments" })}
                                   title="Record payment"
                                 >
@@ -591,6 +615,7 @@ export function StudentsPage() {
         onClose={() => {
           setStudentModal({ open: false });
           setStudentPhotoPreview(null);
+          setSelectedSiblingId("");
         }}
         title={studentModal.student ? "Edit student" : "Add student"}
       >
@@ -701,19 +726,20 @@ export function StudentsPage() {
 
             {/* Sibling Selection */}
             <FormField label="Sibling (30% monthly fee discount)" helperText="Both siblings will get 30% discount on monthly fees">
-              <Select
+              <SearchableSelect
                 name="siblingId"
-                defaultValue={studentModal.student?.siblingId ?? ""}
-              >
-                <option value="">— No sibling —</option>
-                {list
+                value={selectedSiblingId}
+                onChange={setSelectedSiblingId}
+                placeholder="Search by name or ID..."
+                emptyOption="— No sibling —"
+                options={list
                   .filter((s) => s.id !== studentModal.student?.id)
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.studentId}) - {sessionClasses.find(c => c.id === s.classId)?.name ?? "No class"}
-                    </option>
-                  ))}
-              </Select>
+                  .map((s) => ({
+                    value: s.id,
+                    label: `${s.name} (${s.studentId || "—"}) - ${sessionClasses.find(c => c.id === s.classId)?.name ?? "No class"}`,
+                    searchText: `${s.name} ${s.studentId || ""}`,
+                  }))}
+              />
             </FormField>
           </div>
 
@@ -1138,6 +1164,7 @@ export function StudentsPage() {
           onClose={() => setDetailsStudent(null)}
           student={detailsStudent.student}
           studentClass={sessionClasses.find((c) => c.id === detailsStudent.student.classId)}
+          session={sessions.find((s) => s.id === selectedSessionId)}
           initialTab={detailsStudent.initialTab}
           onAddPayment={async (payment) => {
             const student = detailsStudent.student;
@@ -1187,9 +1214,12 @@ export function StudentsPage() {
                   ...detailsStudent.student,
                   payments: [...detailsStudent.student.payments, createdPayment],
                 },
-                initialTab: "payments",
+                initialTab: "feeHistory",
               });
             }
+          }}
+          onPaymentSuccess={() => {
+            setDetailsStudent((prev) => prev ? { ...prev, initialTab: "feeHistory" } : null);
           }}
           onUpdateStudent={(data) => {
             updateStudent(detailsStudent.student.id, data);

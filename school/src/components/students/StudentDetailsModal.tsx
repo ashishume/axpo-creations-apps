@@ -18,16 +18,22 @@ import {
   getDiscountedMonthlyFees,
   getSiblingDiscount,
   getNextUnpaidMonth,
+  getFeeHistoryMonths,
+  getMonthlyPaymentStatus,
+  getOneTimeFeePayments,
+  getOtherPayments,
 } from "../../lib/studentUtils";
 import { cn } from "../../lib/utils";
-import { User, Phone, MapPin, Heart, AlertTriangle, DollarSign, Camera, X, Image } from "lucide-react";
+import { User, Phone, MapPin, Heart, AlertTriangle, DollarSign, Camera, X, Image, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import type { Session } from "../../types";
 
 interface StudentDetailsModalProps {
   open: boolean;
   onClose: () => void;
   student: Student;
   studentClass?: StudentClass;
-  initialTab?: "overview" | "fees" | "personal" | "payments";
+  session?: Session;
+  initialTab?: "overview" | "fees" | "personal" | "payments" | "feeHistory";
   onAddPayment?: (payment: { 
     date: string; 
     amount: number; 
@@ -38,6 +44,7 @@ interface StudentDetailsModalProps {
     receiptPhotoUrl?: string;
   }) => void | Promise<void>;
   onUpdateStudent?: (data: Partial<Student>) => void;
+  onPaymentSuccess?: () => void;
 }
 
 const statusColors = {
@@ -53,11 +60,13 @@ export function StudentDetailsModal({
   onClose, 
   student, 
   studentClass,
+  session,
   initialTab = "overview",
   onAddPayment,
-  onUpdateStudent
+  onUpdateStudent,
+  onPaymentSuccess
 }: StudentDetailsModalProps) {
-  const [activeTab, setActiveTab] = useState<"overview" | "fees" | "personal" | "payments">(initialTab);
+  const [activeTab, setActiveTab] = useState<"overview" | "fees" | "personal" | "payments" | "feeHistory">(initialTab);
   const [showPaymentForm, setShowPaymentForm] = useState(initialTab === "payments");
   const [editingPersonal, setEditingPersonal] = useState(false);
   const [receiptPhotoPreview, setReceiptPhotoPreview] = useState<string | null>(null);
@@ -71,27 +80,74 @@ export function StudentDetailsModal({
     setShowPaymentForm(initialTab === "payments");
   }, [student.id, student.payments.length, initialTab]);
 
-  // When form is shown or category changes, set "For Month" to next unpaid month for that category
+  // Get session months for dropdown (only unpaid months)
+  const sessionMonthOptions = useMemo(() => {
+    if (!session) return [];
+    const months = getFeeHistoryMonths(session.startDate, session.endDate);
+    return months;
+  }, [session]);
+
+  // Get paid months for filtering
+  const paidMonthlyMonths = useMemo(() => {
+    return new Set(student.payments.filter(p => p.feeCategory === "monthly" && p.month).map(p => p.month!));
+  }, [student.payments]);
+  
+  const paidTransportMonths = useMemo(() => {
+    return new Set(student.payments.filter(p => p.feeCategory === "transport" && p.month).map(p => p.month!));
+  }, [student.payments]);
+
+  // Filter months based on category - only show unpaid months
+  const availableMonthOptions = useMemo(() => {
+    const paidMonths = selectedCategory === "transport" ? paidTransportMonths : paidMonthlyMonths;
+    return sessionMonthOptions.filter(m => !paidMonths.has(m));
+  }, [sessionMonthOptions, selectedCategory, paidMonthlyMonths, paidTransportMonths]);
+
+  // When form is shown or category changes, set "For Month" to first available unpaid month
   const nextUnpaidMonth = getNextUnpaidMonth(student, "monthly");
   const nextUnpaidMonthTransport = getNextUnpaidMonth(student, "transport");
-  // Months for "For Month" dropdown: 12 back to 12 ahead (readable labels)
-  const monthOptions = useMemo(() => {
-    const out: string[] = [];
-    const now = new Date();
-    for (let i = -12; i <= 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-    }
-    return out;
-  }, []);
+  
   useEffect(() => {
     if (!showPaymentForm) return;
-    setPaymentMonth(selectedCategory === "transport" ? nextUnpaidMonthTransport : nextUnpaidMonth);
-  }, [showPaymentForm, selectedCategory, nextUnpaidMonth, nextUnpaidMonthTransport]);
+    const targetMonth = selectedCategory === "transport" ? nextUnpaidMonthTransport : nextUnpaidMonth;
+    if (availableMonthOptions.includes(targetMonth)) {
+      setPaymentMonth(targetMonth);
+    } else if (availableMonthOptions.length > 0) {
+      setPaymentMonth(availableMonthOptions[0]);
+    }
+  }, [showPaymentForm, selectedCategory, nextUnpaidMonth, nextUnpaidMonthTransport, availableMonthOptions]);
+  
   // Reset month when student changes (e.g. after recording a payment we update the student in parent)
   useEffect(() => {
-    setPaymentMonth(getNextUnpaidMonth(student, selectedCategory === "transport" ? "transport" : "monthly"));
-  }, [student.id, student.payments.length, selectedCategory]);
+    const targetMonth = getNextUnpaidMonth(student, selectedCategory === "transport" ? "transport" : "monthly");
+    if (availableMonthOptions.includes(targetMonth)) {
+      setPaymentMonth(targetMonth);
+    } else if (availableMonthOptions.length > 0) {
+      setPaymentMonth(availableMonthOptions[0]);
+    }
+  }, [student.id, student.payments.length, selectedCategory, availableMonthOptions]);
+
+  // Navigate to payments with prefilled category and month
+  const goToPaymentWithPrefill = (category: string, month?: string) => {
+    setSelectedCategory(category);
+    if (month) {
+      setPaymentMonth(month);
+    }
+    setActiveTab("payments");
+    
+    // Prefill amount after state update
+    setTimeout(() => {
+      if (amountInputRef.current) {
+        let amount = 0;
+        switch (category) {
+          case "registration": amount = student.registrationFees ?? studentClass?.registrationFees ?? 0; break;
+          case "annualFund": amount = student.annualFund ?? studentClass?.annualFund ?? 0; break;
+          case "monthly": amount = getDiscountedMonthlyFees(student, studentClass); break;
+          case "transport": amount = student.transportFees ?? 0; break;
+        }
+        if (amount > 0) amountInputRef.current.value = String(amount);
+      }
+    }, 50);
+  };
 
   const target = getTargetAmount(student, studentClass);
   const paid = getTotalPaid(student);
@@ -188,6 +244,10 @@ export function StudentDetailsModal({
     });
     setShowPaymentForm(false);
     setReceiptPhotoPreview(null);
+    
+    if (onPaymentSuccess) {
+      onPaymentSuccess();
+    }
     setSelectedCategory("monthly");
   };
 
@@ -213,6 +273,7 @@ export function StudentDetailsModal({
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "fees", label: "Fee Structure" },
+    { id: "feeHistory", label: "Fee History" },
     { id: "personal", label: "Personal Info" },
     { id: "payments", label: "Payments" },
   ] as const;
@@ -252,10 +313,10 @@ export function StudentDetailsModal({
                 <img 
                   src={student.photoUrl} 
                   alt={student.name} 
-                  className="h-20 w-20 rounded-full object-cover border-2 border-slate-200 flex-shrink-0"
+                  className="h-20 w-20 rounded-full object-cover border-2 border-slate-200 shrink-0"
                 />
               ) : (
-                <div className="h-20 w-20 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center flex-shrink-0">
+                <div className="h-20 w-20 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center shrink-0">
                   <User className="h-10 w-10 text-slate-400" />
                 </div>
               )}
@@ -533,21 +594,288 @@ export function StudentDetailsModal({
           </div>
         )}
 
+        {/* Fee History Tab */}
+        {activeTab === "feeHistory" && (() => {
+          const monthsToShow = session
+            ? getFeeHistoryMonths(session.startDate, session.endDate)
+            : [];
+          
+          const oneTimeFees = getOneTimeFeePayments(student);
+          const otherPayments = getOtherPayments(student);
+          
+          const registrationPaid = oneTimeFees.registration.reduce((sum, p) => sum + p.amount, 0);
+          const annualFundPaid = oneTimeFees.annualFund.reduce((sum, p) => sum + p.amount, 0);
+          const isRegistrationFullyPaid = registrationPaid >= registrationFees && registrationFees > 0;
+          const isAnnualFundFullyPaid = annualFundPaid >= annualFund && annualFund > 0;
+          
+          return (
+            <div className="space-y-4">
+              {/* Header: Fee Structure Summary */}
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                      <strong>{student.name}</strong> ({student.studentId})
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Class: {studentClass?.name ?? "—"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                      Monthly: <strong>{formatCurrency(monthlyFees)}</strong>
+                      {student.siblingId && <span className="text-xs text-green-600 ml-1">(30% off)</span>}
+                    </p>
+                    {transportFees > 0 && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Transport: {formatCurrency(transportFees)}/month
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Fees Table */}
+              <div className="max-h-72 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-white dark:bg-slate-900">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-400">
+                      <th className="pb-2 pr-4 font-medium">Month</th>
+                      <th className="pb-2 pr-4 font-medium">Monthly</th>
+                      {transportFees > 0 && <th className="pb-2 pr-4 font-medium">Transport</th>}
+                      <th className="pb-2 pr-4 font-medium">Amount</th>
+                      <th className="pb-2 pr-4 font-medium">Paid On</th>
+                      <th className="pb-2 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthsToShow.map((month) => {
+                      const monthlyStatus = getMonthlyPaymentStatus(student, month, "monthly", monthlyFees);
+                      const transportStatus = transportFees > 0 
+                        ? getMonthlyPaymentStatus(student, month, "transport", transportFees)
+                        : null;
+                      
+                      const totalForMonth = monthlyStatus.paidAmount + (transportStatus?.paidAmount ?? 0);
+                      const latestPayment = [...monthlyStatus.payments, ...(transportStatus?.payments ?? [])]
+                        .sort((a, b) => b.date.localeCompare(a.date))[0];
+                      
+                      const isMonthFullyPaid = monthlyStatus.status === "Paid" && 
+                        (transportFees === 0 || transportStatus?.status === "Paid");
+                      
+                      return (
+                        <tr key={month} className="border-b border-slate-100 dark:border-slate-700 group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="py-2 pr-4 font-medium text-slate-900 dark:text-slate-100">
+                            {formatMonthYear(month)}
+                          </td>
+                          <td className="py-2 pr-4">
+                            <span className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium w-fit",
+                              monthlyStatus.status === "Paid" 
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                : monthlyStatus.status === "Partially Paid"
+                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                                  : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                            )}>
+                              {monthlyStatus.status === "Paid" && <CheckCircle className="h-3 w-3" />}
+                              {monthlyStatus.status === "Partially Paid" && <AlertCircle className="h-3 w-3" />}
+                              {monthlyStatus.status === "Not Paid" && <XCircle className="h-3 w-3" />}
+                              {monthlyStatus.status}
+                            </span>
+                          </td>
+                          {transportFees > 0 && (
+                            <td className="py-2 pr-4">
+                              {transportStatus && (
+                                <span className={cn(
+                                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium w-fit",
+                                  transportStatus.status === "Paid" 
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                    : transportStatus.status === "Partially Paid"
+                                      ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                                      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                )}>
+                                  {transportStatus.status === "Paid" && <CheckCircle className="h-3 w-3" />}
+                                  {transportStatus.status === "Partially Paid" && <AlertCircle className="h-3 w-3" />}
+                                  {transportStatus.status === "Not Paid" && <XCircle className="h-3 w-3" />}
+                                  {transportStatus.status}
+                                </span>
+                              )}
+                            </td>
+                          )}
+                          <td className="py-2 pr-4 text-slate-900 dark:text-slate-100">
+                            {totalForMonth > 0 ? formatCurrency(totalForMonth) : "—"}
+                          </td>
+                          <td className="py-2 pr-4 text-slate-600 dark:text-slate-400">
+                            {latestPayment ? formatDate(latestPayment.date) : "—"}
+                          </td>
+                          <td className="py-2">
+                            {monthlyStatus.status !== "Paid" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => goToPaymentWithPrefill("monthly", month)}
+                                title="Pay monthly fee"
+                              >
+                                <DollarSign className="h-4 w-4 mr-1" />
+                                Pay
+                              </Button>
+                            )}
+                            {transportFees > 0 && transportStatus?.status !== "Paid" && monthlyStatus.status === "Paid" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => goToPaymentWithPrefill("transport", month)}
+                                title="Pay transport fee"
+                              >
+                                <DollarSign className="h-4 w-4 mr-1" />
+                                Transport
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* One-time & Other Fees Section */}
+              <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-3">
+                <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100">One-time & Other Fees</h4>
+                
+                <div className="space-y-2 text-sm">
+                  {/* Registration/Admission */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 dark:text-slate-400">Registration/Admission</span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                        isRegistrationFullyPaid
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                          : registrationPaid > 0
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+                      )}>
+                        {isRegistrationFullyPaid ? (
+                          <><CheckCircle className="h-3 w-3" /> Paid</>
+                        ) : registrationPaid > 0 ? (
+                          <>{formatCurrency(registrationPaid)} / {formatCurrency(registrationFees)}</>
+                        ) : registrationFees > 0 ? (
+                          <><XCircle className="h-3 w-3" /> {formatCurrency(registrationFees)}</>
+                        ) : (
+                          "N/A"
+                        )}
+                      </span>
+                      {registrationFees > 0 && !isRegistrationFullyPaid && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2"
+                          onClick={() => goToPaymentWithPrefill("registration")}
+                          title="Pay registration fees"
+                        >
+                          <DollarSign className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Annual Fund */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 dark:text-slate-400">Annual Fund</span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                        isAnnualFundFullyPaid
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                          : annualFundPaid > 0
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+                      )}>
+                        {isAnnualFundFullyPaid ? (
+                          <><CheckCircle className="h-3 w-3" /> Paid</>
+                        ) : annualFundPaid > 0 ? (
+                          <>{formatCurrency(annualFundPaid)} / {formatCurrency(annualFund)}</>
+                        ) : annualFund > 0 ? (
+                          <><XCircle className="h-3 w-3" /> {formatCurrency(annualFund)}</>
+                        ) : (
+                          "N/A"
+                        )}
+                      </span>
+                      {annualFund > 0 && !isAnnualFundFullyPaid && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2"
+                          onClick={() => goToPaymentWithPrefill("annualFund")}
+                          title="Pay annual fund"
+                        >
+                          <DollarSign className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Other Payments */}
+                {otherPayments.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Other Payments</p>
+                    <div className="space-y-1 max-h-24 overflow-y-auto">
+                      {otherPayments.map((p) => (
+                        <div key={p.id} className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                          <span>{formatDate(p.date)}</span>
+                          <span className="font-medium text-slate-900 dark:text-slate-100">{formatCurrency(p.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer: Totals */}
+              <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-700 pt-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Total Paid: <strong className="text-green-600">{formatCurrency(paid)}</strong>
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Remaining: <strong className={remaining > 0 ? "text-red-600" : "text-green-600"}>
+                      {formatCurrency(remaining)}
+                    </strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Payments Tab */}
         {activeTab === "payments" && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h4 className="font-medium text-slate-900">Payment History</h4>
-              {onAddPayment && (
-                <Button size="sm" onClick={() => setShowPaymentForm(true)}>
-                  <DollarSign className="mr-1 h-4 w-4" /> Add Payment
-                </Button>
-              )}
+              <h4 className="font-medium text-slate-900">Record Payment</h4>
             </div>
             
-            {showPaymentForm && (
+            {onAddPayment && (() => {
+                const isRegistrationPaid = paidByCategory.registration >= registrationFees && registrationFees > 0;
+                const isAnnualFundPaid = paidByCategory.annualFund >= annualFund && annualFund > 0;
+                
+                // Get the amount for current category
+                const getCurrentAmount = () => {
+                  switch (selectedCategory) {
+                    case "registration": return registrationFees;
+                    case "annualFund": return annualFund;
+                    case "monthly": return monthlyFees;
+                    case "transport": return transportFees;
+                    default: return "";
+                  }
+                };
+                
+                return (
               <form
-                key={`payment-form-${paymentMonth}`}
+                key={`payment-form-${paymentMonth}-${selectedCategory}`}
                 onSubmit={handlePaymentSubmit}
                 className="rounded-lg border border-slate-200 p-4 space-y-3"
               >
@@ -560,10 +888,16 @@ export function StudentDetailsModal({
                       onChange={(e) => handleCategoryChange(e.target.value)}
                       className="rounded px-2 py-1.5 text-sm"
                     >
-                      <option value="monthly">Monthly Tuition ({formatCurrency(monthlyFees)}{siblingDiscount > 0 ? " - 30% off" : ""})</option>
-                      <option value="registration">Registration/Admission fees ({formatCurrency(registrationFees)})</option>
-                      <option value="annualFund">Annual Fund ({formatCurrency(annualFund)})</option>
-                      {transportFees > 0 && (
+                      {availableMonthOptions.length > 0 && (
+                        <option value="monthly">Monthly Tuition ({formatCurrency(monthlyFees)}{siblingDiscount > 0 ? " - 30% off" : ""})</option>
+                      )}
+                      {!isRegistrationPaid && registrationFees > 0 && (
+                        <option value="registration">Registration/Admission fees ({formatCurrency(registrationFees)})</option>
+                      )}
+                      {!isAnnualFundPaid && annualFund > 0 && (
+                        <option value="annualFund">Annual Fund ({formatCurrency(annualFund)})</option>
+                      )}
+                      {transportFees > 0 && availableMonthOptions.length > 0 && (
                         <option value="transport">Transport Fee ({formatCurrency(transportFees)})</option>
                       )}
                       <option value="other">Other</option>
@@ -576,7 +910,7 @@ export function StudentDetailsModal({
                       type="number"
                       required
                       min={1}
-                      defaultValue={monthlyFees > 0 ? monthlyFees : ""}
+                      defaultValue={getCurrentAmount()}
                       className="rounded px-2 py-1.5 text-sm"
                     />
                   </FormField>
@@ -591,11 +925,10 @@ export function StudentDetailsModal({
                       className="rounded px-2 py-1.5 text-sm"
                     />
                   </FormField>
+                  {(selectedCategory === "monthly" || selectedCategory === "transport") && (
                   <FormField
                     label="For Month"
-                    helperText={selectedCategory === "monthly" || selectedCategory === "transport"
-                      ? "Defaults to next unpaid month"
-                      : "Leave empty for one-time fees"}
+                    helperText="Only unpaid months shown"
                   >
                     <Select
                       name="month"
@@ -603,13 +936,14 @@ export function StudentDetailsModal({
                       onChange={(e) => setPaymentMonth(e.target.value)}
                       className="rounded px-2 py-1.5 text-sm"
                     >
-                      {monthOptions.map((m) => (
+                      {availableMonthOptions.map((m) => (
                         <option key={m} value={m}>
                           {formatMonthYear(m)}
                         </option>
                       ))}
                     </Select>
                   </FormField>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <FormField label="Method">
@@ -677,7 +1011,8 @@ export function StudentDetailsModal({
                   <Button type="submit" size="sm">Record Payment</Button>
                 </div>
               </form>
-            )}
+                );
+            })()}
 
             {student.payments.length === 0 ? (
               <p className="text-sm text-slate-500">No payments yet.</p>
@@ -688,6 +1023,7 @@ export function StudentDetailsModal({
                     <tr className="border-b text-left text-slate-600">
                       <th className="pb-2 pr-2 font-medium">Date</th>
                       <th className="pb-2 pr-2 font-medium">Category</th>
+                      <th className="pb-2 pr-2 font-medium">For Month</th>
                       <th className="pb-2 pr-2 font-medium">Amount</th>
                       <th className="pb-2 pr-2 font-medium">Method</th>
                       <th className="pb-2 pr-2 font-medium">Receipt</th>
@@ -700,6 +1036,7 @@ export function StudentDetailsModal({
                       <tr key={payment.id} className="border-b border-slate-100">
                         <td className="py-1.5 pr-2">{formatDate(payment.date)}</td>
                         <td className="py-1.5 pr-2 capitalize">{payment.feeCategory ?? "—"}</td>
+                        <td className="py-1.5 pr-2">{payment.month ? formatMonthYear(payment.month) : "—"}</td>
                         <td className="py-1.5 pr-2 text-green-600">{formatCurrency(payment.amount)}</td>
                         <td className="py-1.5 pr-2">{payment.method}</td>
                         <td className="py-1.5 pr-2">{payment.receiptNumber}</td>

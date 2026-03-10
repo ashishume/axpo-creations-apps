@@ -4,7 +4,7 @@ import { differenceInDays, differenceInWeeks, isAfter } from "date-fns";
 // Calculate sibling discount (30% on monthly fees when siblingId is set)
 export function getSiblingDiscount(student: Student, studentClass?: StudentClass): number {
   if (!student.siblingId) return 0;
-  
+
   const monthlyFee = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
   // 30% discount on monthly fees for 12 months
   return monthlyFee * 12 * 0.3;
@@ -24,11 +24,11 @@ export function getTotalAnnualFees(student: Student, studentClass?: StudentClass
   const annualFund = student.annualFund ?? studentClass?.annualFund ?? 0;
   const monthlyFee = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
   const transportFee = student.transportFees ?? 0;
-  
+
   // Apply sibling discount (30% off monthly fees if sibling exists)
   const siblingDiscount = student.siblingId ? 0.3 : 0;
   const discountedMonthlyFee = monthlyFee * (1 - siblingDiscount);
-  
+
   // Annual total: one-time fees + 12 months of discounted monthly + transport
   return registration + annualFund + (discountedMonthlyFee * 12) + (transportFee * 12);
 }
@@ -72,12 +72,12 @@ export function getFineForMonth(
   const dueDay = student.dueDayOfMonth ?? studentClass?.dueDayOfMonth;
   const lateFeeAmount = student.lateFeeAmount ?? studentClass?.lateFeeAmount ?? student.finePerDay ?? 0;
   const lateFeeFrequency = student.lateFeeFrequency ?? studentClass?.lateFeeFrequency ?? "daily";
-  
+
   if (!lateFeeAmount || !dueDay) return 0;
-  
+
   const dueDate = new Date(year, month - 1, Math.min(dueDay, 28));
   if (!isAfter(asOfDate, dueDate)) return 0;
-  
+
   if (lateFeeFrequency === "weekly") {
     const weeks = differenceInWeeks(asOfDate, dueDate);
     return weeks * lateFeeAmount;
@@ -91,15 +91,15 @@ export function getFineForMonth(
 export function getTotalFine(student: Student, studentClass?: StudentClass): number {
   const dueDay = student.dueDayOfMonth ?? studentClass?.dueDayOfMonth;
   const lateFeeAmount = student.lateFeeAmount ?? studentClass?.lateFeeAmount ?? student.finePerDay ?? 0;
-  
+
   if (!lateFeeAmount || !dueDay) return 0;
-  
+
   const today = new Date();
   let total = 0;
   const freq = student.dueFrequency;
   const step = freq === "quarterly" ? 3 : 1;
   const start = freq === "quarterly" ? 3 : 1;
-  
+
   for (let m = start; m <= today.getMonth() + 1; m += step) {
     total += getFineForMonth(student, studentClass, today.getFullYear(), m, today);
   }
@@ -128,12 +128,12 @@ export function getPaymentsByCategory(student: Student) {
     transport: 0,
     other: 0,
   };
-  
+
   for (const p of student.payments) {
     const cat = p.feeCategory ?? "other";
     categories[cat] = (categories[cat] || 0) + p.amount;
   }
-  
+
   return categories;
 }
 
@@ -168,4 +168,67 @@ export function getNextUnpaidMonth(
     }
   }
   return `${y}-${String(m).padStart(2, "0")}`;
+}
+
+/** Build months to show in fee history: from session start to end date. Sorted oldest first (session start at top). */
+export function getFeeHistoryMonths(sessionStartDate: string, sessionEndDate: string): string[] {
+  const months: string[] = [];
+  const start = new Date(sessionStartDate);
+  const end = new Date(sessionEndDate);
+
+  let current = new Date(start.getFullYear(), start.getMonth(), 1);
+  const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+
+  while (current <= endMonth) {
+    months.push(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}`);
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  return months;
+}
+
+export type MonthlyFeeStatus = "Paid" | "Partially Paid" | "Not Paid";
+
+/** Get payment status for a specific month and category */
+export function getMonthlyPaymentStatus(
+  student: Student,
+  month: string,
+  category: "monthly" | "transport",
+  expectedAmount: number
+): { status: MonthlyFeeStatus; paidAmount: number; payments: typeof student.payments } {
+  const payments = student.payments.filter(
+    (p) => p.month === month && p.feeCategory === category
+  );
+  const paidAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+
+  let status: MonthlyFeeStatus;
+  if (paidAmount >= expectedAmount) {
+    status = "Paid";
+  } else if (paidAmount > 0) {
+    status = "Partially Paid";
+  } else {
+    status = "Not Paid";
+  }
+
+  return { status, paidAmount, payments };
+}
+
+/** Get all payments for a specific month (all categories) */
+export function getPaymentsForMonth(student: Student, month: string) {
+  return student.payments.filter((p) => p.month === month);
+}
+
+/** Get one-time fee payments (registration, annualFund) */
+export function getOneTimeFeePayments(student: Student) {
+  return {
+    registration: student.payments.filter(
+      (p) => p.feeCategory === "registration" || p.feeCategory === "admission"
+    ),
+    annualFund: student.payments.filter((p) => p.feeCategory === "annualFund"),
+  };
+}
+
+/** Get "other" category payments */
+export function getOtherPayments(student: Student) {
+  return student.payments.filter((p) => p.feeCategory === "other");
 }
