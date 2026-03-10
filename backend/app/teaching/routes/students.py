@@ -16,6 +16,8 @@ from app.teaching.schemas.student import (
     StudentResponse,
     FeePaymentCreate,
     FeePaymentResponse,
+    TransferStudentsRequest,
+    TransferStudentsResponse,
 )
 from app.teaching.services.student import student_service
 from app.teaching.models.user import User
@@ -84,6 +86,19 @@ async def create_students_bulk(
         await enforce_session_access(db, user, sid)
     students = await student_service.create_many(db, data)
     return [StudentResponse.model_validate(s) for s in students]
+
+
+@router.post("/transfer", response_model=TransferStudentsResponse)
+async def transfer_students_to_session(
+    data: TransferStudentsRequest,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    await enforce_session_access(db, user, data.new_session_id)
+    count = await student_service.transfer_to_session(
+        db, data.student_ids, data.new_session_id
+    )
+    return TransferStudentsResponse(transferred=count)
 
 
 @router.get("/{id}", response_model=StudentResponse)

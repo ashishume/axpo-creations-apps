@@ -57,6 +57,15 @@ class StudentCreate(StudentBase):
     pass
 
 
+class TransferStudentsRequest(BaseModel):
+    student_ids: list[UUID]
+    new_session_id: UUID
+
+
+class TransferStudentsResponse(BaseModel):
+    transferred: int
+
+
 class StudentUpdate(BaseModel):
     class_id: UUID | None = None
     name: str | None = None

@@ -143,6 +143,15 @@ export const studentsRepositoryApi = {
     await teachingFetch(`/students/${id}`, { method: 'DELETE' });
   },
 
+  async transferToSession(studentIds: string[], newSessionId: string): Promise<number> {
+    if (studentIds.length === 0) return 0;
+    const res = await teachingFetchJson<{ transferred: number }>('/students/transfer', {
+      method: 'POST',
+      body: JSON.stringify({ student_ids: studentIds, new_session_id: newSessionId }),
+    });
+    return res?.transferred ?? 0;
+  },
+
   async addFeePayment(studentId: string, payment: { date: string; amount: number; method: string; receiptNumber: string; feeCategory: string; month?: string; receiptPhotoUrl?: string }): Promise<void> {
     await this.addPayment(studentId, payment);
   },

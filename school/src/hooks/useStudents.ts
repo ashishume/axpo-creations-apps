@@ -126,6 +126,18 @@ export function useDeleteStudent() {
   });
 }
 
+export function useTransferStudentsToSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ studentIds, newSessionId }: { studentIds: string[]; newSessionId: string }) =>
+      studentsRepository.transferToSession(studentIds, newSessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
 export function useAddStudentPayment() {
   const queryClient = useQueryClient();
 

@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.teaching.models.student import Student, FeePayment
@@ -99,6 +99,20 @@ class StudentRepository:
     async def delete(self, db: AsyncSession, student: Student) -> None:
         await db.delete(student)
         await db.flush()
+
+    async def transfer_to_session(
+        self, db: AsyncSession, student_ids: list[UUID], new_session_id: UUID
+    ) -> int:
+        if not student_ids:
+            return 0
+        stmt = (
+            update(Student)
+            .where(Student.id.in_(student_ids))
+            .values(session_id=new_session_id, class_id=None)
+        )
+        result = await db.execute(stmt)
+        await db.flush()
+        return result.rowcount or 0
 
     async def add_payment(
         self,

@@ -276,7 +276,7 @@ export const studentsRepository = {
     const supabase = getSupabase();
       const dbUpdates: Record<string, unknown> = {};
       if (updates.sessionId !== undefined) dbUpdates.session_id = updates.sessionId;
-      if (updates.classId !== undefined) dbUpdates.class_id = updates.classId;
+      if ('classId' in updates) dbUpdates.class_id = updates.classId ?? null;
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.studentId !== undefined) dbUpdates.student_id = updates.studentId;
       if (updates.feeType !== undefined) dbUpdates.fee_type = updates.feeType;
@@ -335,6 +335,19 @@ export const studentsRepository = {
       .eq('id', id);
 
     if (error) throw new Error('Failed to delete student');
+  },
+
+  /** Bulk transfer students to a new session (single API call). Clears classId. Returns count updated. */
+  async transferToSession(studentIds: string[], newSessionId: string): Promise<number> {
+    if (studentIds.length === 0) return 0;
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('school_xx_students')
+      .update({ session_id: newSessionId, class_id: null })
+      .in('id', studentIds)
+      .select('id');
+    if (error) throw new Error('Failed to transfer students');
+    return data?.length ?? 0;
   },
 
   async addPayment(studentId: string, payment: Omit<FeePayment, 'id'>): Promise<FeePayment> {

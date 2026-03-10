@@ -1,13 +1,13 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import { useStudentsBySessionInfinite, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useAddStudentPayment } from "../hooks/useStudents";
+import { useStudentsBySessionInfinite, useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useAddStudentPayment, useTransferStudentsToSession } from "../hooks/useStudents";
 import { useClassesBySession, useCreateClass, useUpdateClass, useDeleteClass } from "../hooks/useClasses";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
-import { Plus, Pencil, Trash2, DollarSign, Upload, BookOpen, Eye, Camera, X, User, Calendar } from "lucide-react";
+import { Plus, Pencil, Trash2, DollarSign, Upload, BookOpen, Camera, X, User, Calendar, MoreVertical, ArrowRightLeft } from "lucide-react";
 import { BulkImportModal } from "../components/import/BulkImportModal";
 import { PaymentReceiptModal } from "../components/receipt/PaymentReceiptModal";
 import { StudentDetailsModal } from "../components/students/StudentDetailsModal";
@@ -63,12 +63,14 @@ export function StudentsPage() {
   const updateStudentMut = useUpdateStudent();
   const deleteStudentMut = useDeleteStudent();
   const addPaymentMut = useAddStudentPayment();
+  const transferStudentsMut = useTransferStudentsToSession();
   const createClass = useCreateClass();
   const updateClassMut = useUpdateClass();
   const deleteClassMut = useDeleteClass();
 
-  const addStudent = (data: Omit<StudentType, "id" | "payments">) => createStudent.mutate(data);
+  const addStudentAsync = (data: Omit<StudentType, "id" | "payments">) => createStudent.mutateAsync(data);
   const updateStudent = (id: string, data: Partial<StudentType>) => updateStudentMut.mutate({ id, updates: data });
+  const updateStudentAsync = (id: string, data: Partial<StudentType>) => updateStudentMut.mutateAsync({ id, updates: data });
   const deleteStudent = (id: string) => deleteStudentMut.mutate(id);
   const addFeePayment = async (studentId: string, payment: Omit<import("../types").FeePayment, "id">) => {
     return addPaymentMut.mutateAsync({ studentId, payment });
@@ -100,6 +102,12 @@ export function StudentsPage() {
   const [verifyAddModalOpen, setVerifyAddModalOpen] = useState(false);
   const [pendingAddStudents, setPendingAddStudents] = useState<PendingStudent[]>([]);
   const [isAddingStudents, setIsAddingStudents] = useState(false);
+  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [transferStep, setTransferStep] = useState<"select" | "preview">("select");
+  const [transferTargetSessionId, setTransferTargetSessionId] = useState<string | null>(null);
+  const [transferSelectedIds, setTransferSelectedIds] = useState<Set<string>>(new Set());
+  const [transferSubmitting, setTransferSubmitting] = useState(false);
 
   const hasFilters = !!(statusFilter || classFilter || feeTypeFilter || searchQuery.trim());
   const {
@@ -109,10 +117,16 @@ export function StudentsPage() {
     isFetchingNextPage,
     isLoading: studentsLoading,
   } = useStudentsBySessionInfinite(selectedSessionId ?? "", { hasFilters });
+  const { data: allSessionStudents = [], isLoading: allStudentsLoading } = useStudentsBySession(selectedSessionId ?? "");
   const { data: sessionClasses = [], isLoading: classesLoading } = useClassesBySession(selectedSessionId ?? "");
   const isAppLoading = studentsLoading || classesLoading;
 
   const list = students;
+
+  const currentSession = sessions.find((s) => s.id === selectedSessionId);
+  const targetSessions = sessions.filter(
+    (s) => s.schoolId === currentSession?.schoolId && s.id !== selectedSessionId
+  );
 
   // Keep details modal in sync with context (e.g. after recording a payment)
   useEffect(() => {
@@ -194,7 +208,7 @@ export function StudentsPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSaveStudent = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveStudent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
@@ -259,13 +273,17 @@ export function StudentsPage() {
 
       toast("Student updated");
     } else {
-      addStudent({
+      const newStudent = await addStudentAsync({
         sessionId: selectedSessionId,
         ...studentData,
         studentId: studentData.studentId || `STU-${Date.now()}`,
       });
-      // Note: For new students, we can't easily update sibling since we don't have the new ID yet
-      // This would require a callback from addStudent
+      
+      // If sibling is assigned, update the sibling to point back to the new student
+      if (siblingId && newStudent) {
+        await updateStudentAsync(siblingId, { siblingId: newStudent.id });
+      }
+      
       toast("Student added");
     }
     setStudentModal({ open: false });
@@ -367,6 +385,20 @@ export function StudentsPage() {
           >
             <Plus className="mr-1 h-4 w-4" />
             Add student
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!selectedSessionId}
+            onClick={() => {
+              setTransferModalOpen(true);
+              setTransferStep("select");
+              setTransferTargetSessionId(null);
+              setTransferSelectedIds(new Set());
+            }}
+          >
+            <ArrowRightLeft className="mr-1 h-4 w-4" />
+            Transfer to new session
           </Button>
         </div>
       </div>
@@ -513,15 +545,7 @@ export function StudentsPage() {
                               </div>
                             </td>
                             <td className="py-3">
-                              <div className="flex gap-1 [&_button]:min-h-[44px] [&_button]:min-w-[44px] [&_button]:touch-manipulation md:[&_button]:min-h-0 md:[&_button]:min-w-0">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setDetailsStudent({ student: s, initialTab: "overview" })}
-                                  title="View student details"
-                                >
-                                  <Eye className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                                </Button>
+                              <div className="flex gap-1 items-center [&_button]:min-h-[44px] [&_button]:min-w-[44px] [&_button]:touch-manipulation md:[&_button]:min-h-0 md:[&_button]:min-w-0">
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -538,23 +562,46 @@ export function StudentsPage() {
                                 >
                                   <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setStudentModal({ open: true, student: s })}
-                                  title="Edit student"
-                                >
-                                  <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
-                                  onClick={() => setConfirmDelete({ id: s.id, name: s.name })}
-                                  title="Delete student"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <div className="relative">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setActionMenuOpen(actionMenuOpen === s.id ? null : s.id)}
+                                    title="More actions"
+                                  >
+                                    <MoreVertical className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                                  </Button>
+                                  {actionMenuOpen === s.id && (
+                                    <>
+                                      <div 
+                                        className="fixed inset-0 z-40" 
+                                        onClick={() => setActionMenuOpen(null)}
+                                      />
+                                      <div className="absolute right-0 top-full mt-1 z-50 w-36 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg py-1">
+                                        <button
+                                          className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
+                                          onClick={() => {
+                                            setStudentModal({ open: true, student: s });
+                                            setActionMenuOpen(null);
+                                          }}
+                                        >
+                                          <Pencil className="h-4 w-4" />
+                                          Edit
+                                        </button>
+                                        <button
+                                          className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
+                                          onClick={() => {
+                                            setConfirmDelete({ id: s.id, name: s.name });
+                                            setActionMenuOpen(null);
+                                          }}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                          Delete
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </td>
                           </tr>
@@ -592,7 +639,7 @@ export function StudentsPage() {
               try {
                 for (let i = 0; i < toAdd.length; i++) {
                   const s = toAdd[i];
-                  await addStudent({
+                  await addStudentAsync({
                     ...s,
                     studentId: s.studentId?.trim() || `STU-${Date.now()}-${i}`,
                   });
@@ -1228,6 +1275,166 @@ export function StudentsPage() {
           }}
         />
       )}
+
+      {/* Transfer to new session modal */}
+      <Modal
+        open={transferModalOpen}
+        onClose={() => {
+          setTransferModalOpen(false);
+          setTransferStep("select");
+          setTransferTargetSessionId(null);
+          setTransferSelectedIds(new Set());
+        }}
+        title={transferStep === "select" ? "Transfer students to new session" : "Preview – Select students to transfer"}
+      >
+        <div className="space-y-4">
+          {transferStep === "select" && (
+            <>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                This session has ended. Select the target session to move students to. You can remove any student from the transfer in the next step.
+              </p>
+              <FormField label="Target session" required>
+                <Select
+                  value={transferTargetSessionId ?? ""}
+                  onChange={(e) => setTransferTargetSessionId(e.target.value || null)}
+                >
+                  <option value="">Select session</option>
+                  {targetSessions.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.year} ({s.startDate} – {s.endDate})
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+              {targetSessions.length === 0 && (
+                <p className="text-sm text-amber-600 dark:text-amber-400">
+                  No other session found for this school. Create a new session first.
+                </p>
+              )}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setTransferModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  disabled={!transferTargetSessionId}
+                  onClick={() => {
+                    setTransferStep("preview");
+                    setTransferSelectedIds(new Set(allSessionStudents.map((s) => s.id)));
+                  }}
+                >
+                  Next – Preview
+                </Button>
+              </div>
+            </>
+          )}
+
+          {transferStep === "preview" && (
+            <>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Uncheck any student you do not want to transfer. Class assignment will be cleared in the new session; you can reassign after transfer.
+              </p>
+              {allStudentsLoading ? (
+                <p className="text-sm text-slate-500">Loading students…</p>
+              ) : allSessionStudents.length === 0 ? (
+                <p className="text-sm text-slate-500">No students in this session.</p>
+              ) : (
+                <div className="max-h-80 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-slate-50 dark:bg-slate-800">
+                      <tr className="border-b border-slate-200 dark:border-slate-700 text-left">
+                        <th className="w-10 px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={transferSelectedIds.size === allSessionStudents.length}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTransferSelectedIds(new Set(allSessionStudents.map((s) => s.id)));
+                              } else {
+                                setTransferSelectedIds(new Set());
+                              }
+                            }}
+                          />
+                        </th>
+                        <th className="px-3 py-2 font-medium">Name</th>
+                        <th className="px-3 py-2 font-medium">ID</th>
+                        <th className="px-3 py-2 font-medium">Class</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allSessionStudents.map((s) => (
+                        <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="w-10 px-3 py-2">
+                            <input
+                              type="checkbox"
+                              checked={transferSelectedIds.has(s.id)}
+                              onChange={(e) => {
+                                setTransferSelectedIds((prev) => {
+                                  const next = new Set(prev);
+                                  if (e.target.checked) next.add(s.id);
+                                  else next.delete(s.id);
+                                  return next;
+                                });
+                              }}
+                            />
+                          </td>
+                          <td className="px-3 py-2">{s.name}</td>
+                          <td className="px-3 py-2">{s.studentId ?? "—"}</td>
+                          <td className="px-3 py-2">{sessionClasses.find((c) => c.id === s.classId)?.name ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-700 pt-4">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  {transferSelectedIds.size} of {allSessionStudents.length} selected
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setTransferStep("select")}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={transferSelectedIds.size === 0 || transferSubmitting}
+                    onClick={async () => {
+                      if (!transferTargetSessionId) return;
+                      setTransferSubmitting(true);
+                      try {
+                        const studentIds = Array.from(transferSelectedIds);
+                        const count = await transferStudentsMut.mutateAsync({
+                          studentIds,
+                          newSessionId: transferTargetSessionId,
+                        });
+                        toast(`${count} student(s) transferred`);
+                        setTransferModalOpen(false);
+                        setTransferStep("select");
+                        setTransferTargetSessionId(null);
+                        setTransferSelectedIds(new Set());
+                      } catch (e) {
+                        toast(e instanceof Error ? e.message : "Transfer failed", "error");
+                      } finally {
+                        setTransferSubmitting(false);
+                      }
+                    }}
+                  >
+                    {transferSubmitting ? "Transferring…" : `Transfer ${transferSelectedIds.size} student(s)`}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

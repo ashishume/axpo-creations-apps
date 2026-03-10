@@ -77,6 +77,13 @@ class StudentService:
         student = await self.get_or_404(db, id)
         await student_repository.delete(db, student)
 
+    async def transfer_to_session(
+        self, db: AsyncSession, student_ids: list[UUID], new_session_id: UUID
+    ) -> int:
+        return await student_repository.transfer_to_session(
+            db, student_ids, new_session_id
+        )
+
     async def add_payment(
         self, db: AsyncSession, student_id: UUID, data: FeePaymentCreate
     ) -> FeePayment:
