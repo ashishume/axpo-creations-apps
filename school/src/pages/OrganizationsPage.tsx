@@ -67,7 +67,7 @@ export function OrganizationsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Organizations</h2>
-          <p className="text-slate-600">Create and manage organizations (tenants). Each org can have multiple schools.</p>
+          <p className="text-slate-600 dark:text-slate-400">Create and manage organizations (tenants). Each org can have multiple schools.</p>
         </div>
       </div>
 
@@ -85,13 +85,13 @@ export function OrganizationsPage() {
           {loading ? (
             <SkeletonList items={5} />
           ) : organizations.length === 0 ? (
-            <p className="text-sm text-slate-500">No organizations yet. Add one to create schools under it.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">No organizations yet. Add one to create schools under it.</p>
           ) : (
             <ul className="space-y-2">
               {organizations.map((org) => (
                 <li
                   key={org.id}
-                  className="flex items-center justify-between rounded-lg border border-slate-100 p-3"
+                  className="flex items-center justify-between rounded-lg border border-slate-100 dark:border-slate-700 p-3"
                 >
                   <div className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-slate-400" />
@@ -119,9 +119,9 @@ export function OrganizationsPage() {
                         size="sm"
                         onClick={() => setConfirmDelete({ id: org.id, name: org.name })}
                         aria-label="Delete organization"
-                        className="text-red-600 hover:bg-red-50"
+                        className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
                       >
-                        <Trash2 className="h-4 w-4 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </PermissionGate>
                   </div>
@@ -139,36 +139,36 @@ export function OrganizationsPage() {
       >
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label htmlFor="org-name" className="block text-sm font-medium text-slate-700">Name</label>
+            <label htmlFor="org-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
             <input
               id="org-name"
               name="name"
               type="text"
               required
               defaultValue={modal.org?.name}
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900"
+              className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               placeholder="e.g. Acme Education"
             />
           </div>
           <div>
-            <label htmlFor="org-slug" className="block text-sm font-medium text-slate-700">Slug (optional)</label>
+            <label htmlFor="org-slug" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Slug (optional)</label>
             <input
               id="org-slug"
               name="slug"
               type="text"
               defaultValue={modal.org?.slug}
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900"
+              className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               placeholder="e.g. acme-edu"
             />
           </div>
           <div>
-            <label htmlFor="org-billingEmail" className="block text-sm font-medium text-slate-700">Billing email (optional)</label>
+            <label htmlFor="org-billingEmail" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Billing email (optional)</label>
             <input
               id="org-billingEmail"
               name="billingEmail"
               type="email"
               defaultValue={modal.org?.billingEmail}
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900"
+              className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               placeholder="billing@example.com"
             />
           </div>

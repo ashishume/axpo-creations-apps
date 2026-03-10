@@ -172,7 +172,7 @@ Thank you for your payment!
                   setCategoryFilter(e.target.value);
                   setPage(1);
                 }}
-                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
               >
                 <option value="">All Categories</option>
                 <option value="registration">Registration</option>

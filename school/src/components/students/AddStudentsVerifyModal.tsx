@@ -132,7 +132,7 @@ export function AddStudentsVerifyModal({
                       onChange={(e) =>
                         updateStudent(index, { name: e.target.value })
                       }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     />
                   </div>
                   <div>
@@ -148,7 +148,7 @@ export function AddStudentsVerifyModal({
                         })
                       }
                       placeholder="Auto-generated if empty"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     />
                   </div>
                 </div>
@@ -164,7 +164,7 @@ export function AddStudentsVerifyModal({
                           classId: e.target.value || undefined,
                         })
                       }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     >
                       <option value="">— No class —</option>
                       {sessionClasses.map((c) => (
@@ -185,7 +185,7 @@ export function AddStudentsVerifyModal({
                           feeType: e.target.value as FeeType,
                         })
                       }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     >
                       {FEE_TYPES.map((ft) => (
                         <option key={ft} value={ft}>
@@ -221,7 +221,7 @@ export function AddStudentsVerifyModal({
                       onChange={(e) =>
                         updatePersonal(index, { fatherName: e.target.value || undefined })
                       }
-                      className="rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     />
                     <input
                       type="text"
@@ -230,7 +230,7 @@ export function AddStudentsVerifyModal({
                       onChange={(e) =>
                         updatePersonal(index, { motherName: e.target.value || undefined })
                       }
-                      className="rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     />
                     <input
                       type="text"
@@ -241,7 +241,7 @@ export function AddStudentsVerifyModal({
                           guardianPhone: e.target.value || undefined,
                         })
                       }
-                      className="rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     />
                     <select
                       value={s.personalDetails?.bloodGroup ?? ""}
@@ -252,7 +252,7 @@ export function AddStudentsVerifyModal({
                             | undefined,
                         })
                       }
-                      className="rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     >
                       <option value="">Blood group</option>
                       {BLOOD_GROUPS.map((bg) => (
@@ -271,7 +271,7 @@ export function AddStudentsVerifyModal({
                         currentAddress: e.target.value || undefined,
                       })
                     }
-                    className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                   />
                   <input
                     type="text"
@@ -282,7 +282,7 @@ export function AddStudentsVerifyModal({
                         healthIssues: e.target.value || undefined,
                       })
                     }
-                    className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                   />
                 </div>
                 {students.length > 1 && (

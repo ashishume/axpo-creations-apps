@@ -104,7 +104,7 @@ export function InlineFormCard({
             value={(row.name as string) || ""}
             onChange={(e) => upd("name", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -114,7 +114,7 @@ export function InlineFormCard({
             value={(row.studentId as string) || ""}
             onChange={(e) => upd("studentId", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
       </div>
@@ -138,7 +138,7 @@ export function InlineFormCard({
               }
             }}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           >
             <option value="">Select class...</option>
             {sessionClasses.map((c) => (
@@ -154,7 +154,7 @@ export function InlineFormCard({
             value={(row.feeType as string) || "Regular"}
             onChange={(e) => upd("feeType", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           >
             {FEE_TYPES.map((ft) => (
               <option key={ft} value={ft}>
@@ -189,7 +189,7 @@ export function InlineFormCard({
                   })
                 }
                 disabled={isDelete}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
               />
             </div>
             <div>
@@ -204,7 +204,7 @@ export function InlineFormCard({
                   })
                 }
                 disabled={isDelete}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
               />
             </div>
           </div>
@@ -220,7 +220,7 @@ export function InlineFormCard({
                 })
               }
               disabled={isDelete}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
             />
           </div>
         </div>
@@ -243,7 +243,7 @@ export function InlineFormCard({
             onChange={(e) => upd("name", e.target.value)}
             disabled={isDelete}
             placeholder="e.g. Class 1, Nursery"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -255,7 +255,7 @@ export function InlineFormCard({
             value={Number(row.dueDayOfMonth) || 10}
             onChange={(e) => upd("dueDayOfMonth", e.target.value === "" ? 10 : Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
       </div>
@@ -269,7 +269,7 @@ export function InlineFormCard({
             onChange={(e) => upd("registrationFees", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -281,7 +281,7 @@ export function InlineFormCard({
             onChange={(e) => upd("admissionFees", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -293,7 +293,7 @@ export function InlineFormCard({
             onChange={(e) => upd("annualFund", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -305,7 +305,7 @@ export function InlineFormCard({
             onChange={(e) => upd("monthlyFees", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
       </div>
@@ -319,7 +319,7 @@ export function InlineFormCard({
             onChange={(e) => upd("lateFeeAmount", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -328,7 +328,7 @@ export function InlineFormCard({
             value={(row.lateFeeFrequency as string) || "weekly"}
             onChange={(e) => upd("lateFeeFrequency", e.target.value as "daily" | "weekly")}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           >
             <option value="weekly">Per week</option>
             <option value="daily">Per day</option>
@@ -352,7 +352,7 @@ export function InlineFormCard({
             value={(row.name as string) || ""}
             onChange={(e) => upd("name", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -362,7 +362,7 @@ export function InlineFormCard({
             value={(row.employeeId as string) || ""}
             onChange={(e) => upd("employeeId", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
       </div>
@@ -373,7 +373,7 @@ export function InlineFormCard({
             value={(row.role as string) || "Teacher"}
             onChange={(e) => upd("role", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           >
             {STAFF_ROLES.map((role) => (
               <option key={role} value={role}>
@@ -389,7 +389,7 @@ export function InlineFormCard({
             value={(row.monthlySalary as number) || ""}
             onChange={(e) => upd("monthlySalary", Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
       </div>
@@ -400,7 +400,7 @@ export function InlineFormCard({
           value={(row.subjectOrGrade as string) || ""}
           onChange={(e) => upd("subjectOrGrade", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
         />
       </div>
     </div>
@@ -426,7 +426,7 @@ export function InlineFormCard({
                 upd("amount", selectedStaff.monthlySalary);
               }
             }}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
           >
             <option value="">Select staff...</option>
             {sessionStaff.map((s) => (
@@ -442,7 +442,7 @@ export function InlineFormCard({
             type="month"
             value={(row.month as string) || ""}
             onChange={(e) => upd("month", e.target.value)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
           />
         </div>
       </div>
@@ -453,7 +453,7 @@ export function InlineFormCard({
             type="number"
             value={(row.amount as number) || ""}
             onChange={(e) => upd("amount", Number(e.target.value))}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
           />
         </div>
         <div>
@@ -461,7 +461,7 @@ export function InlineFormCard({
           <select
             value={(row.status as string) || "Paid"}
             onChange={(e) => upd("status", e.target.value)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
           >
             {SALARY_STATUSES.map((status) => (
               <option key={status} value={status}>
@@ -475,7 +475,7 @@ export function InlineFormCard({
           <select
             value={(row.method as string) || "Cash"}
             onChange={(e) => upd("method", e.target.value)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
           >
             {PAYMENT_METHODS.map((method) => (
               <option key={method} value={method}>
@@ -491,7 +491,7 @@ export function InlineFormCard({
           type="date"
           value={(row.paymentDate as string) || ""}
           onChange={(e) => upd("paymentDate", e.target.value)}
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
         />
       </div>
     </div>
@@ -511,7 +511,7 @@ export function InlineFormCard({
             value={(row.amount as number) || ""}
             onChange={(e) => upd("amount", Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -521,7 +521,7 @@ export function InlineFormCard({
             value={(row.date as string) || ""}
             onChange={(e) => upd("date", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
       </div>
@@ -532,7 +532,7 @@ export function InlineFormCard({
           value={(row.description as string) || ""}
           onChange={(e) => upd("description", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
         />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -542,7 +542,7 @@ export function InlineFormCard({
             value={(row.category as string) || "Miscellaneous"}
             onChange={(e) => upd("category", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           >
             {EXPENSE_CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
@@ -557,7 +557,7 @@ export function InlineFormCard({
             value={(row.paymentMethod as string) || "Cash"}
             onChange={(e) => upd("paymentMethod", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           >
             {PAYMENT_METHODS.map((method) => (
               <option key={method} value={method}>
@@ -574,7 +574,7 @@ export function InlineFormCard({
           value={(row.vendorPayee as string) || ""}
           onChange={(e) => upd("vendorPayee", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
         />
       </div>
     </div>
@@ -594,7 +594,7 @@ export function InlineFormCard({
             value={(row.publisherName as string) || ""}
             onChange={(e) => upd("publisherName", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -604,7 +604,7 @@ export function InlineFormCard({
             value={(row.totalCreditAmount as number) || ""}
             onChange={(e) => upd("totalCreditAmount", Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
       </div>
@@ -615,7 +615,7 @@ export function InlineFormCard({
           value={(row.description as string) || ""}
           onChange={(e) => upd("description", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
         />
       </div>
       <div>
@@ -625,7 +625,7 @@ export function InlineFormCard({
           value={(row.purchaseDate as string) || ""}
           onChange={(e) => upd("purchaseDate", e.target.value)}
           disabled={isDelete}
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
         />
       </div>
     </div>
@@ -646,7 +646,7 @@ export function InlineFormCard({
             onChange={(e) => upd("name", e.target.value)}
             disabled={isDelete}
             placeholder="e.g., Rent, Internet"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
         <div>
@@ -656,7 +656,7 @@ export function InlineFormCard({
             value={(row.amount as number) || ""}
             onChange={(e) => upd("amount", Number(e.target.value))}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           />
         </div>
       </div>
@@ -667,7 +667,7 @@ export function InlineFormCard({
             value={(row.category as string) || "Miscellaneous"}
             onChange={(e) => upd("category", e.target.value)}
             disabled={isDelete}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800"
           >
             {EXPENSE_CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>

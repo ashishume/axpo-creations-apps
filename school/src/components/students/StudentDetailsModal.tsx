@@ -442,7 +442,7 @@ export function StudentDetailsModal({
                       name="fatherName"
                       type="text"
                       defaultValue={student.personalDetails?.fatherName}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     />
                   </div>
                   <div>
@@ -451,7 +451,7 @@ export function StudentDetailsModal({
                       name="motherName"
                       type="text"
                       defaultValue={student.personalDetails?.motherName}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     />
                   </div>
                 </div>
@@ -462,7 +462,7 @@ export function StudentDetailsModal({
                       name="guardianPhone"
                       type="tel"
                       defaultValue={student.personalDetails?.guardianPhone}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     />
                   </div>
                   <div>
@@ -470,7 +470,7 @@ export function StudentDetailsModal({
                     <select
                       name="bloodGroup"
                       defaultValue={student.personalDetails?.bloodGroup ?? ""}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                     >
                       <option value="">Select</option>
                       {bloodGroups.map(bg => <option key={bg} value={bg}>{bg}</option>)}
@@ -483,7 +483,7 @@ export function StudentDetailsModal({
                     name="currentAddress"
                     rows={2}
                     defaultValue={student.personalDetails?.currentAddress}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                   />
                 </div>
                 <div>
@@ -492,7 +492,7 @@ export function StudentDetailsModal({
                     name="permanentAddress"
                     rows={2}
                     defaultValue={student.personalDetails?.permanentAddress}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                   />
                 </div>
                 <div>
@@ -502,7 +502,7 @@ export function StudentDetailsModal({
                     rows={2}
                     defaultValue={student.personalDetails?.healthIssues}
                     placeholder="Any allergies, medical conditions, etc."
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                   />
                 </div>
                 <div className="flex justify-end gap-2">
@@ -604,7 +604,7 @@ export function StudentDetailsModal({
                       required
                       value={selectedCategory}
                       onChange={(e) => handleCategoryChange(e.target.value)}
-                      className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     >
                       <option value="monthly">Monthly Tuition ({formatCurrency(monthlyFees)}{siblingDiscount > 0 ? " - 30% off" : ""})</option>
                       <option value="registration">Registration Fee ({formatCurrency(registrationFees)})</option>
@@ -625,7 +625,7 @@ export function StudentDetailsModal({
                       required
                       min={1}
                       defaultValue={monthlyFees > 0 ? monthlyFees : ""}
-                      className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     />
                     <p className="mt-0.5 text-xs text-slate-500">Amount auto-fills based on category</p>
                   </div>
@@ -638,7 +638,7 @@ export function StudentDetailsModal({
                       type="date"
                       required
                       defaultValue={new Date().toISOString().slice(0, 10)}
-                      className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     />
                   </div>
                   <div>
@@ -647,7 +647,7 @@ export function StudentDetailsModal({
                       name="month"
                       value={paymentMonth}
                       onChange={(e) => setPaymentMonth(e.target.value)}
-                      className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     >
                       {monthOptions.map((m) => (
                         <option key={m} value={m}>
@@ -667,7 +667,7 @@ export function StudentDetailsModal({
                     <label className="mb-1 block text-xs font-medium text-slate-600">Method</label>
                     <select
                       name="method"
-                      className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     >
                       <option value="Cash">Cash</option>
                       <option value="Online">Online</option>
@@ -680,7 +680,7 @@ export function StudentDetailsModal({
                     <input
                       name="receiptNumber"
                       type="text"
-                      className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                      className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                     />
                   </div>
                 </div>

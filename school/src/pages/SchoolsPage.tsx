@@ -268,7 +268,7 @@ export function SchoolsPage() {
               <select
                 name="organizationId"
                 required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               >
                 <option value="">Select organization</option>
                 {organizations.map((org) => (
@@ -290,7 +290,7 @@ export function SchoolsPage() {
               type="text"
               required
               defaultValue={schoolModal.school?.name}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div>
@@ -299,7 +299,7 @@ export function SchoolsPage() {
               name="address"
               type="text"
               defaultValue={schoolModal.school?.address}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div>
@@ -308,7 +308,7 @@ export function SchoolsPage() {
               name="contact"
               type="text"
               defaultValue={schoolModal.school?.contact}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -332,7 +332,7 @@ export function SchoolsPage() {
               name="schoolId"
               required
               defaultValue={sessionModal.session?.schoolId ?? sessionModal.schoolId ?? schools[0]?.id}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             >
               {schools.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -349,7 +349,7 @@ export function SchoolsPage() {
               required
               placeholder="2024-2025"
               defaultValue={sessionModal.session?.year}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -360,7 +360,7 @@ export function SchoolsPage() {
                 type="date"
                 required
                 defaultValue={sessionModal.session?.startDate}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               />
             </div>
             <div>
@@ -370,7 +370,7 @@ export function SchoolsPage() {
                 type="date"
                 required
                 defaultValue={sessionModal.session?.endDate}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -383,7 +383,7 @@ export function SchoolsPage() {
               max={28}
               placeholder="5"
               defaultValue={sessionModal.session?.salaryDueDay ?? 5}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
             <p className="mt-1 text-xs text-slate-500">Day of month when staff salary is due. Payments after this day are marked late.</p>
           </div>
@@ -463,7 +463,7 @@ export function SchoolsPage() {
               <select
                 name="toSession"
                 required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               >
                 <option value="">Select target session</option>
                 {getSessionsForSchool(promoteModal.fromSession.schoolId)

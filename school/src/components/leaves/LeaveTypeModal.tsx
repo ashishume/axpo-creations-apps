@@ -92,33 +92,33 @@ export function LeaveTypeModal({
     <Modal open={open} onClose={onClose} title={leaveType ? "Edit leave type" : "Add leave type"}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Name</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="e.g. Sick Leave"
             required
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Code</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Code</label>
           <input
             type="text"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="e.g. SL"
             required
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Applicable to</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Applicable to</label>
           <select
             value={applicableTo}
             onChange={(e) => setApplicableTo(e.target.value as "staff" | "student" | "both")}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
           >
             <option value="staff">Staff</option>
             <option value="student">Student</option>
@@ -126,13 +126,13 @@ export function LeaveTypeModal({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Max days per year (optional)</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Max days per year (optional)</label>
           <input
             type="number"
             min={0}
             value={maxDaysPerYear}
             onChange={(e) => setMaxDaysPerYear(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="Leave empty for unlimited"
           />
         </div>
@@ -142,9 +142,9 @@ export function LeaveTypeModal({
             id="requiresDocument"
             checked={requiresDocument}
             onChange={(e) => setRequiresDocument(e.target.checked)}
-            className="rounded border-slate-300"
+            className="rounded border-slate-300 dark:border-slate-500"
           />
-          <label htmlFor="requiresDocument" className="text-sm text-slate-700">
+          <label htmlFor="requiresDocument" className="text-sm text-slate-700 dark:text-slate-300">
             Requires document
           </label>
         </div>
@@ -154,9 +154,9 @@ export function LeaveTypeModal({
             id="isActive"
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
-            className="rounded border-slate-300"
+            className="rounded border-slate-300 dark:border-slate-500"
           />
-          <label htmlFor="isActive" className="text-sm text-slate-700">
+          <label htmlFor="isActive" className="text-sm text-slate-700 dark:text-slate-300">
             Active
           </label>
         </div>

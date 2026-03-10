@@ -388,7 +388,7 @@ export function ExpensesPage() {
               type="date"
               required
               defaultValue={expenseModal.expense?.date ?? new Date().toISOString().slice(0, 10)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div>
@@ -400,7 +400,7 @@ export function ExpensesPage() {
               min={0.01}
               step={0.01}
               defaultValue={expenseModal.expense?.amount}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div>
@@ -408,7 +408,7 @@ export function ExpensesPage() {
             <select
               name="category"
               defaultValue={expenseModal.expense?.category ?? "Miscellaneous"}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             >
               {categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -421,7 +421,7 @@ export function ExpensesPage() {
               name="description"
               type="text"
               defaultValue={expenseModal.expense?.description}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div>
@@ -430,7 +430,7 @@ export function ExpensesPage() {
               name="vendorPayee"
               type="text"
               defaultValue={expenseModal.expense?.vendorPayee}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div>
@@ -438,7 +438,7 @@ export function ExpensesPage() {
             <select
               name="paymentMethod"
               defaultValue={expenseModal.expense?.paymentMethod ?? "Bank Transfer"}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             >
               <option value="Cash">Cash</option>
               <option value="Cheque">Cheque</option>
