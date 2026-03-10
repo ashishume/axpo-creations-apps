@@ -20,8 +20,7 @@ export function getDiscountedMonthlyFees(student: Student, studentClass?: Studen
 
 // Calculate total annual fees for a student
 export function getTotalAnnualFees(student: Student, studentClass?: StudentClass): number {
-  const registration = student.registrationFees ?? studentClass?.registrationFees ?? 0;
-  const admission = student.admissionFees ?? studentClass?.admissionFees ?? 0;
+  const registration = student.registrationFees ?? studentClass?.registrationFees ?? 0;  // Registration/Admission fees
   const annualFund = student.annualFund ?? studentClass?.annualFund ?? 0;
   const monthlyFee = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
   const transportFee = student.transportFees ?? 0;
@@ -31,7 +30,7 @@ export function getTotalAnnualFees(student: Student, studentClass?: StudentClass
   const discountedMonthlyFee = monthlyFee * (1 - siblingDiscount);
   
   // Annual total: one-time fees + 12 months of discounted monthly + transport
-  return registration + admission + annualFund + (discountedMonthlyFee * 12) + (transportFee * 12);
+  return registration + annualFund + (discountedMonthlyFee * 12) + (transportFee * 12);
 }
 
 // Get target amount (for backward compatibility or calculated)

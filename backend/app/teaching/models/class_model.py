@@ -20,8 +20,7 @@ class Class(TeachingBase):
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    registration_fees: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
-    admission_fees: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
+    registration_fees: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)  # Registration/Admission fees (one-time)
     annual_fund: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
     monthly_fees: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
     late_fee_amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)

@@ -25,7 +25,6 @@ export function StudentDashboardPage() {
 
   // Calculate fee summary
   const totalFees = (student.registrationFees || 0) + 
-                    (student.admissionFees || 0) + 
                     (student.annualFund || 0) +
                     ((student.monthlyFees || 0) * 12) +
                     ((student.transportFees || 0) * 12);
@@ -119,19 +118,10 @@ export function StudentDashboardPage() {
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-600">Registration Fees</span>
+                <span className="text-slate-600">Registration/Admission fees</span>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{formatCurrency(student.registrationFees || 0)}</span>
                   {student.registrationPaid && (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-600">Admission Fees</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{formatCurrency(student.admissionFees || 0)}</span>
-                  {student.admissionPaid && (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   )}
                 </div>

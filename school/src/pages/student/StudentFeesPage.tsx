@@ -62,16 +62,10 @@ export function StudentFeesPage() {
   // One-time fees status
   const oneTimeFees = [
     { 
-      name: 'Registration Fees', 
+      name: 'Registration/Admission fees', 
       amount: student.registrationFees || 0, 
       paid: student.registrationPaid,
       category: 'registration'
-    },
-    { 
-      name: 'Admission Fees', 
-      amount: student.admissionFees || 0, 
-      paid: student.admissionPaid,
-      category: 'admission'
     },
     { 
       name: 'Annual Fund', 

@@ -119,8 +119,7 @@ export interface ParsedStockTransactionData {
 // Parsed class data (for add_class: class name and fee structure)
 export interface ParsedClassData {
   name: string;
-  registrationFees?: number;
-  admissionFees?: number;
+  registrationFees?: number;  // Registration/Admission fees (one-time)
   annualFund?: number;
   monthlyFees?: number;
   lateFeeAmount?: number;
@@ -253,8 +252,7 @@ const SYSTEM_PROMPT = `You are Axpo Assistant, an AI for a school management app
 ### Class (add_class - for the current session)
 {
   "name": "string (required, e.g. Class 1, Nursery)",
-  "registrationFees": "number or null (one-time registration)",
-  "admissionFees": "number or null (one-time admission)",
+  "registrationFees": "number or null (Registration/Admission fees one-time)",
   "annualFund": "number or null (annual fund one-time)",
   "monthlyFees": "number or null (monthly tuition)",
   "lateFeeAmount": "number or null (late payment fine amount)",

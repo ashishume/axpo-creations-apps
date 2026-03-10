@@ -8,7 +8,6 @@ function mapRow(row: Record<string, unknown>): StudentClass {
     sessionId: row.session_id as string,
     name: row.name as string,
     registrationFees: Number(row.registration_fees) || 0,
-    admissionFees: Number(row.admission_fees) || 0,
     annualFund: Number(row.annual_fund) || 0,
     monthlyFees: Number(row.monthly_fees) || 0,
     lateFeeAmount: Number(row.late_fee_amount) || 0,
@@ -90,7 +89,6 @@ export const classesRepository = {
         session_id: studentClass.sessionId,
         name: studentClass.name,
         registration_fees: studentClass.registrationFees,
-        admission_fees: studentClass.admissionFees,
         annual_fund: studentClass.annualFund,
         monthly_fees: studentClass.monthlyFees,
         late_fee_amount: studentClass.lateFeeAmount,
@@ -112,7 +110,6 @@ export const classesRepository = {
       session_id: c.sessionId,
       name: c.name,
       registration_fees: c.registrationFees,
-      admission_fees: c.admissionFees,
       annual_fund: c.annualFund,
       monthly_fees: c.monthlyFees,
       late_fee_amount: c.lateFeeAmount,
@@ -130,7 +127,6 @@ export const classesRepository = {
     if (updates.sessionId !== undefined) dbUpdates.session_id = updates.sessionId;
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.registrationFees !== undefined) dbUpdates.registration_fees = updates.registrationFees;
-    if (updates.admissionFees !== undefined) dbUpdates.admission_fees = updates.admissionFees;
     if (updates.annualFund !== undefined) dbUpdates.annual_fund = updates.annualFund;
     if (updates.monthlyFees !== undefined) dbUpdates.monthly_fees = updates.monthlyFees;
     if (updates.lateFeeAmount !== undefined) dbUpdates.late_fee_amount = updates.lateFeeAmount;

@@ -94,8 +94,7 @@ CREATE TABLE IF NOT EXISTS school_xx_classes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL, -- e.g., "Class 1", "Nursery"
-  registration_fees DECIMAL(10,2) DEFAULT 0,
-  admission_fees DECIMAL(10,2) DEFAULT 0,
+  registration_fees DECIMAL(10,2) DEFAULT 0,  /* Registration/Admission fees (one-time) */
   annual_fund DECIMAL(10,2) DEFAULT 0,
   monthly_fees DECIMAL(10,2) DEFAULT 0,
   late_fee_amount DECIMAL(10,2) DEFAULT 0,
@@ -132,15 +131,13 @@ CREATE TABLE IF NOT EXISTS school_xx_students (
   health_issues TEXT,
   
   -- Fee Structure (can override class defaults)
-  registration_fees DECIMAL(10,2),
-  admission_fees DECIMAL(10,2),
+  registration_fees DECIMAL(10,2),  /* Registration/Admission fees (one-time) */
   annual_fund DECIMAL(10,2),
   monthly_fees DECIMAL(10,2),
   transport_fees DECIMAL(10,2),
   
   -- Fee Payment Status
   registration_paid BOOLEAN DEFAULT FALSE,
-  admission_paid BOOLEAN DEFAULT FALSE,
   annual_fund_paid BOOLEAN DEFAULT FALSE,
   
   -- Due Date Config (can override class)
@@ -166,7 +163,7 @@ CREATE TABLE IF NOT EXISTS school_xx_fee_payments (
   amount DECIMAL(10,2) NOT NULL,
   method VARCHAR(50) NOT NULL, -- Cash, Cheque, Online, Bank Transfer
   receipt_number VARCHAR(100),
-  fee_category VARCHAR(50) NOT NULL, -- registration, admission, annualFund, monthly, transport, other
+  fee_category VARCHAR(50) NOT NULL, -- registration, annualFund, monthly, transport, other
   month VARCHAR(7), -- For monthly fees, e.g., "2024-04"
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),

@@ -376,7 +376,6 @@ export function AssistantPopup() {
               classId: studentData.classId,
               personalDetails: studentData.personalDetails,
               registrationFees: studentData.registrationFees,
-              admissionFees: studentData.admissionFees,
               annualFund: studentData.annualFund,
               monthlyFees: studentData.monthlyFees,
               dueDayOfMonth: studentData.dueDayOfMonth,
@@ -547,7 +546,7 @@ export function AssistantPopup() {
           }
 
           case "add_class": {
-            const classPayload = (items as { name: string; registrationFees?: number; admissionFees?: number; annualFund?: number; monthlyFees?: number; lateFeeAmount?: number; lateFeeFrequency?: "daily" | "weekly"; dueDayOfMonth?: number }[])
+            const classPayload = (items as { name: string; registrationFees?: number; annualFund?: number; monthlyFees?: number; lateFeeAmount?: number; lateFeeFrequency?: "daily" | "weekly"; dueDayOfMonth?: number }[])
               .map((classData) => {
                 const name = (classData.name || "").trim();
                 if (!name) return null;
@@ -555,7 +554,6 @@ export function AssistantPopup() {
                   sessionId: selectedSessionId!,
                   name,
                   registrationFees: Number(classData.registrationFees) || 0,
-                  admissionFees: Number(classData.admissionFees) || 0,
                   annualFund: Number(classData.annualFund) || 0,
                   monthlyFees: Number(classData.monthlyFees) || 0,
                   lateFeeAmount: Number(classData.lateFeeAmount) || 0,
@@ -702,7 +700,6 @@ export function AssistantPopup() {
                   guardianPhone: firstStudent.phone,
                 },
                 registrationFees: resolved.registrationFees,
-                admissionFees: resolved.admissionFees,
                 annualFund: resolved.annualFund,
                 monthlyFees: resolved.monthlyFees,
                 dueDayOfMonth: resolved.dueDayOfMonth,
@@ -767,7 +764,7 @@ export function AssistantPopup() {
               resolvedData: {
                 name: firstClass.name,
                 registrationFees: firstClass.registrationFees ?? 500,
-                admissionFees: firstClass.admissionFees ?? 2500,
+                registrationFees: firstClass.registrationFees ?? 3000,
                 annualFund: firstClass.annualFund ?? 1500,
                 monthlyFees: firstClass.monthlyFees ?? 3000,
                 lateFeeAmount: firstClass.lateFeeAmount ?? 50,
@@ -852,7 +849,7 @@ export function AssistantPopup() {
               resolvedData: {
                 name: classLabel.replace(/^class\s*/i, "").trim() || classLabel,
                 registrationFees: 500,
-                admissionFees: 2500,
+                registrationFees: 3000,
                 annualFund: 1500,
                 monthlyFees: 3000,
                 lateFeeAmount: 50,
@@ -910,7 +907,6 @@ export function AssistantPopup() {
             studentId: studentData?.studentId || (list.length > 1 ? `${baseId}-${i + 1}` : baseId),
             personalDetails: studentData?.personalDetails,
             registrationFees: resolved.registrationFees,
-            admissionFees: resolved.admissionFees,
             annualFund: resolved.annualFund,
             monthlyFees: resolved.monthlyFees,
             dueDayOfMonth: resolved.dueDayOfMonth,
@@ -1053,7 +1049,7 @@ export function AssistantPopup() {
         return list.slice(0, MAX_BATCH_SIZE).map((classData) => ({
           name: classData?.name || "",
           registrationFees: classData?.registrationFees ?? 500,
-          admissionFees: classData?.admissionFees ?? 2500,
+          registrationFees: classData?.registrationFees ?? 3000,
           annualFund: classData?.annualFund ?? 1500,
           monthlyFees: classData?.monthlyFees ?? 3000,
           lateFeeAmount: classData?.lateFeeAmount ?? 50,

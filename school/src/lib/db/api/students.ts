@@ -37,12 +37,10 @@ function mapStudent(r: Record<string, unknown>): Student {
       healthIssues: r.health_issues != null ? String(r.health_issues) : undefined,
     },
     registrationFees: r.registration_fees != null ? Number(r.registration_fees) : undefined,
-    admissionFees: r.admission_fees != null ? Number(r.admission_fees) : undefined,
     annualFund: r.annual_fund != null ? Number(r.annual_fund) : undefined,
     monthlyFees: r.monthly_fees != null ? Number(r.monthly_fees) : undefined,
     transportFees: r.transport_fees != null ? Number(r.transport_fees) : undefined,
     registrationPaid: r.registration_paid as boolean | undefined,
-    admissionPaid: r.admission_paid as boolean | undefined,
     annualFundPaid: r.annual_fund_paid as boolean | undefined,
     dueDayOfMonth: r.due_day_of_month != null ? Number(r.due_day_of_month) : undefined,
     lateFeeAmount: r.late_fee_amount != null ? Number(r.late_fee_amount) : undefined,
@@ -100,12 +98,10 @@ export const studentsRepositoryApi = {
       blood_group: data.personalDetails?.bloodGroup ?? null,
       health_issues: data.personalDetails?.healthIssues ?? null,
       registration_fees: data.registrationFees ?? null,
-      admission_fees: data.admissionFees ?? null,
       annual_fund: data.annualFund ?? null,
       monthly_fees: data.monthlyFees ?? null,
       transport_fees: data.transportFees ?? null,
       registration_paid: data.registrationPaid ?? false,
-      admission_paid: data.admissionPaid ?? false,
       annual_fund_paid: data.annualFundPaid ?? false,
       due_day_of_month: data.dueDayOfMonth ?? null,
       late_fee_amount: data.lateFeeAmount ?? null,
@@ -131,12 +127,10 @@ export const studentsRepositoryApi = {
       body.health_issues = updates.personalDetails.healthIssues;
     }
     if (updates.registrationFees !== undefined) body.registration_fees = updates.registrationFees;
-    if (updates.admissionFees !== undefined) body.admission_fees = updates.admissionFees;
     if (updates.annualFund !== undefined) body.annual_fund = updates.annualFund;
     if (updates.monthlyFees !== undefined) body.monthly_fees = updates.monthlyFees;
     if (updates.transportFees !== undefined) body.transport_fees = updates.transportFees;
     if (updates.registrationPaid !== undefined) body.registration_paid = updates.registrationPaid;
-    if (updates.admissionPaid !== undefined) body.admission_paid = updates.admissionPaid;
     if (updates.annualFundPaid !== undefined) body.annual_fund_paid = updates.annualFundPaid;
     if (updates.dueDayOfMonth !== undefined) body.due_day_of_month = updates.dueDayOfMonth;
     if (updates.lateFeeAmount !== undefined) body.late_fee_amount = updates.lateFeeAmount;
@@ -169,12 +163,10 @@ export const studentsRepositoryApi = {
       blood_group: data.personalDetails?.bloodGroup ?? null,
       health_issues: data.personalDetails?.healthIssues ?? null,
       registration_fees: data.registrationFees ?? null,
-      admission_fees: data.admissionFees ?? null,
       annual_fund: data.annualFund ?? null,
       monthly_fees: data.monthlyFees ?? null,
       transport_fees: data.transportFees ?? null,
       registration_paid: data.registrationPaid ?? false,
-      admission_paid: data.admissionPaid ?? false,
       annual_fund_paid: data.annualFundPaid ?? false,
       due_day_of_month: data.dueDayOfMonth ?? null,
       late_fee_amount: data.lateFeeAmount ?? null,

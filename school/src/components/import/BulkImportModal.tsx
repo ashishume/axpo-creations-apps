@@ -84,8 +84,8 @@ function validateStudentRow(
   const className = getColumn(row, ["class", "Class", "className", "class_name", "Class Name"]).trim();
   const feeType = getColumn(row, ["feeType", "fee_type", "Fee Type", "FeeType"]).trim();
   
-  // Fee structure
-  const registrationFeesStr = getColumn(row, ["registrationFees", "registration_fees", "Registration Fees", "Registration"]).trim();
+  // Fee structure (admission column merged into registration for backward compat with old CSVs)
+  const registrationFeesStr = getColumn(row, ["registrationFees", "registration_fees", "Registration Fees", "Registration", "Registration/Admission fees"]).trim();
   const admissionFeesStr = getColumn(row, ["admissionFees", "admission_fees", "Admission Fees", "Admission"]).trim();
   const annualFundStr = getColumn(row, ["annualFund", "annual_fund", "Annual Fund"]).trim();
   const monthlyFeesStr = getColumn(row, ["monthlyFees", "monthly_fees", "Monthly Fees", "Monthly"]).trim();
@@ -113,7 +113,6 @@ function validateStudentRow(
   if (!name) return { valid: false, error: "Name is required" };
   
   // At least one fee field or targetAmount or className should be provided
-  // (if className is provided, fees can come from the class)
   const hasNewFees = registrationFeesStr || admissionFeesStr || annualFundStr || monthlyFeesStr;
   const targetAmount = targetAmountStr ? Number(targetAmountStr) : undefined;
   
@@ -143,9 +142,13 @@ function validateStudentRow(
       studentId: studentId || undefined,
       className: className || undefined,
       feeType: feeTypeNorm ?? "Regular",
-      // Fee structure
-      registrationFees: registrationFeesStr ? Number(registrationFeesStr) : undefined,
-      admissionFees: admissionFeesStr ? Number(admissionFeesStr) : undefined,
+      // Fee structure (registration + admission columns merged into registrationFees for import)
+      registrationFees: (() => {
+        const reg = registrationFeesStr ? Number(registrationFeesStr) : 0;
+        const adm = admissionFeesStr ? Number(admissionFeesStr) : 0;
+        const total = reg + adm;
+        return total > 0 ? total : undefined;
+      })(),
       annualFund: annualFundStr ? Number(annualFundStr) : undefined,
       monthlyFees: monthlyFeesStr ? Number(monthlyFeesStr) : undefined,
       transportFees: transportFeesStr ? Number(transportFeesStr) : undefined,
@@ -200,11 +203,11 @@ function validateStaffRow(
 
 export function getStudentSampleCSV(): string {
   return [
-    "name,studentId,class,feeType,registrationFees,admissionFees,annualFund,monthlyFees,transportFees,dueDayOfMonth,lateFeeAmount,lateFeeFrequency,fatherName,motherName,guardianPhone,bloodGroup,currentAddress,permanentAddress,healthIssues",
-    "Aarav Sharma,STU-001,Class 1,Regular,500,2500,1500,3000,500,10,50,weekly,Ramesh Sharma,Sunita Sharma,9876543210,A+,\"123 Main St, City\",\"Same as current\",",
-    "Priya Patel,STU-002,Class 2,Regular,500,2500,1500,3500,,10,50,weekly,Mukesh Patel,Rani Patel,9876543211,B+,\"45 Park Ave\",,",
-    "Rahul Kumar,STU-003,Class 5,Boarding,500,3000,2000,5000,1000,10,100,weekly,,,9876543212,,,,\"Asthma - carry inhaler\"",
-    "Ananya Singh,STU-004,Nursery,Regular,,,,,400,10,50,weekly,Raj Singh,Meera Singh,9876543213,O+,\"78 Hill Road\",,",
+    "name,studentId,class,feeType,registrationFees,annualFund,monthlyFees,transportFees,dueDayOfMonth,lateFeeAmount,lateFeeFrequency,fatherName,motherName,guardianPhone,bloodGroup,currentAddress,permanentAddress,healthIssues",
+    "Aarav Sharma,STU-001,Class 1,Regular,3000,1500,3000,500,10,50,weekly,Ramesh Sharma,Sunita Sharma,9876543210,A+,\"123 Main St, City\",\"Same as current\",",
+    "Priya Patel,STU-002,Class 2,Regular,3000,1500,3500,,10,50,weekly,Mukesh Patel,Rani Patel,9876543211,B+,\"45 Park Ave\",,",
+    "Rahul Kumar,STU-003,Class 5,Boarding,3500,2000,5000,1000,10,100,weekly,,,9876543212,,,,\"Asthma - carry inhaler\"",
+    "Ananya Singh,STU-004,Nursery,Regular,,,,400,10,50,weekly,Raj Singh,Meera Singh,9876543213,O+,\"78 Hill Road\",,",
   ].join("\n");
 }
 
@@ -319,7 +322,7 @@ export function BulkImportModal({
       <div className="space-y-4">
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {type === "students"
-            ? "Upload a CSV with columns: name, studentId, class, feeType, registrationFees, admissionFees, annualFund, monthlyFees, transportFees, dueDayOfMonth, lateFeeAmount, lateFeeFrequency, fatherName, motherName, guardianPhone, bloodGroup, currentAddress, permanentAddress, healthIssues. If class is provided, fees are auto-filled from class defaults. Download sample for full format."
+            ? "Upload a CSV with columns: name, studentId, class, feeType, registrationFees (Registration/Admission one-time), annualFund, monthlyFees, transportFees, dueDayOfMonth, lateFeeAmount, lateFeeFrequency, fatherName, motherName, guardianPhone, bloodGroup, currentAddress, permanentAddress, healthIssues. If class is provided, fees are auto-filled from class defaults. Download sample for full format."
             : "Upload a CSV with columns: name, employeeId, role, monthlySalary, subjectOrGrade (optional)."}
         </p>
         <div className="flex flex-wrap gap-2">

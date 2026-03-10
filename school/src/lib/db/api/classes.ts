@@ -8,7 +8,6 @@ function mapClass(r: Record<string, unknown>): StudentClass {
     sessionId: String(r.session_id ?? ''),
     name: String(r.name ?? ''),
     registrationFees: Number(r.registration_fees ?? 0),
-    admissionFees: Number(r.admission_fees ?? 0),
     annualFund: Number(r.annual_fund ?? 0),
     monthlyFees: Number(r.monthly_fees ?? 0),
     lateFeeAmount: Number(r.late_fee_amount ?? 0),
@@ -42,7 +41,6 @@ export const classesRepositoryApi = {
       session_id: data.sessionId,
       name: data.name,
       registration_fees: data.registrationFees,
-      admission_fees: data.admissionFees,
       annual_fund: data.annualFund,
       monthly_fees: data.monthlyFees,
       late_fee_amount: data.lateFeeAmount,
@@ -57,7 +55,6 @@ export const classesRepositoryApi = {
     const body: Record<string, unknown> = {};
     if (updates.name !== undefined) body.name = updates.name;
     if (updates.registrationFees !== undefined) body.registration_fees = updates.registrationFees;
-    if (updates.admissionFees !== undefined) body.admission_fees = updates.admissionFees;
     if (updates.annualFund !== undefined) body.annual_fund = updates.annualFund;
     if (updates.monthlyFees !== undefined) body.monthly_fees = updates.monthlyFees;
     if (updates.lateFeeAmount !== undefined) body.late_fee_amount = updates.lateFeeAmount;
@@ -77,7 +74,6 @@ export const classesRepositoryApi = {
       session_id: data.sessionId,
       name: data.name,
       registration_fees: data.registrationFees,
-      admission_fees: data.admissionFees,
       annual_fund: data.annualFund,
       monthly_fees: data.monthlyFees,
       late_fee_amount: data.lateFeeAmount,

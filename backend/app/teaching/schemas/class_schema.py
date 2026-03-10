@@ -9,8 +9,7 @@ from pydantic import BaseModel
 class ClassBase(BaseModel):
     session_id: UUID
     name: str
-    registration_fees: Decimal = 0
-    admission_fees: Decimal = 0
+    registration_fees: Decimal = 0  # Registration/Admission fees (one-time)
     annual_fund: Decimal = 0
     monthly_fees: Decimal = 0
     late_fee_amount: Decimal = 0
@@ -25,7 +24,6 @@ class ClassCreate(ClassBase):
 class ClassUpdate(BaseModel):
     name: str | None = None
     registration_fees: Decimal | None = None
-    admission_fees: Decimal | None = None
     annual_fund: Decimal | None = None
     monthly_fees: Decimal | None = None
     late_fee_amount: Decimal | None = None

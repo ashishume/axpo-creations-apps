@@ -133,7 +133,6 @@ export function InlineFormCard({
               if (selectedClass) {
                 // Only apply class values when non-zero; otherwise keep existing row values
                 if (selectedClass.registrationFees != null && Number(selectedClass.registrationFees) !== 0) upd("registrationFees", selectedClass.registrationFees);
-                if (selectedClass.admissionFees != null && Number(selectedClass.admissionFees) !== 0) upd("admissionFees", selectedClass.admissionFees);
                 if (selectedClass.annualFund != null && Number(selectedClass.annualFund) !== 0) upd("annualFund", selectedClass.annualFund);
                 if (selectedClass.monthlyFees != null && Number(selectedClass.monthlyFees) !== 0) upd("monthlyFees", selectedClass.monthlyFees);
                 if (selectedClass.dueDayOfMonth != null && Number(selectedClass.dueDayOfMonth) !== 0) upd("dueDayOfMonth", selectedClass.dueDayOfMonth);
@@ -265,24 +264,12 @@ export function InlineFormCard({
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Registration (₹)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">Registration/Admission (₹)</label>
           <Input
             type="number"
             min={0}
             value={Number(row.registrationFees) || ""}
             onChange={(e) => upd("registrationFees", e.target.value ? Number(e.target.value) : 0)}
-            disabled={isDelete}
-            placeholder="₹"
-            className="text-sm"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Admission (₹)</label>
-          <Input
-            type="number"
-            min={0}
-            value={Number(row.admissionFees) || ""}
-            onChange={(e) => upd("admissionFees", e.target.value ? Number(e.target.value) : 0)}
             disabled={isDelete}
             placeholder="₹"
             className="text-sm"

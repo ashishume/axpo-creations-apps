@@ -26,21 +26,21 @@ export function createSampleClasses(): StudentClass[] {
   const sessions = ["sess1", "sess2", "sess3", "sess4", "sess5"];
   // Default classes: Nursery, LKG, UKG, Class 1-12
   const classTemplates = [
-    { name: "Nursery", registrationFees: 500, admissionFees: 2000, annualFund: 1000, monthlyFees: 2000, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "LKG", registrationFees: 500, admissionFees: 2000, annualFund: 1000, monthlyFees: 2200, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "UKG", registrationFees: 500, admissionFees: 2000, annualFund: 1000, monthlyFees: 2400, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 1", registrationFees: 500, admissionFees: 2500, annualFund: 1500, monthlyFees: 3000, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 2", registrationFees: 500, admissionFees: 2500, annualFund: 1500, monthlyFees: 3200, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 3", registrationFees: 500, admissionFees: 2500, annualFund: 1500, monthlyFees: 3400, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 4", registrationFees: 500, admissionFees: 2500, annualFund: 1500, monthlyFees: 3600, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 5", registrationFees: 500, admissionFees: 3000, annualFund: 2000, monthlyFees: 4000, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 6", registrationFees: 500, admissionFees: 3000, annualFund: 2000, monthlyFees: 4200, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 7", registrationFees: 500, admissionFees: 3000, annualFund: 2000, monthlyFees: 4400, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 8", registrationFees: 500, admissionFees: 3000, annualFund: 2000, monthlyFees: 4600, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 9", registrationFees: 500, admissionFees: 3500, annualFund: 2500, monthlyFees: 5000, lateFeeAmount: 100, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 10", registrationFees: 500, admissionFees: 3500, annualFund: 2500, monthlyFees: 5200, lateFeeAmount: 100, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 11", registrationFees: 500, admissionFees: 4000, annualFund: 3000, monthlyFees: 5500, lateFeeAmount: 100, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
-    { name: "Class 12", registrationFees: 500, admissionFees: 4000, annualFund: 3000, monthlyFees: 5800, lateFeeAmount: 100, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Nursery", registrationFees: 2500, annualFund: 1000, monthlyFees: 2000, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "LKG", registrationFees: 2500, annualFund: 1000, monthlyFees: 2200, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "UKG", registrationFees: 2500, annualFund: 1000, monthlyFees: 2400, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 1", registrationFees: 3000, annualFund: 1500, monthlyFees: 3000, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 2", registrationFees: 3000, annualFund: 1500, monthlyFees: 3200, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 3", registrationFees: 3000, annualFund: 1500, monthlyFees: 3400, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 4", registrationFees: 3000, annualFund: 1500, monthlyFees: 3600, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 5", registrationFees: 3500, annualFund: 2000, monthlyFees: 4000, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 6", registrationFees: 3500, annualFund: 2000, monthlyFees: 4200, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 7", registrationFees: 3500, annualFund: 2000, monthlyFees: 4400, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 8", registrationFees: 3500, annualFund: 2000, monthlyFees: 4600, lateFeeAmount: 50, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 9", registrationFees: 4000, annualFund: 2500, monthlyFees: 5000, lateFeeAmount: 100, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 10", registrationFees: 4000, annualFund: 2500, monthlyFees: 5200, lateFeeAmount: 100, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 11", registrationFees: 4500, annualFund: 3000, monthlyFees: 5500, lateFeeAmount: 100, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
+    { name: "Class 12", registrationFees: 4500, annualFund: 3000, monthlyFees: 5800, lateFeeAmount: 100, lateFeeFrequency: "weekly" as const, dueDayOfMonth: 10 },
   ];
   const classes: StudentClass[] = [];
   sessions.forEach((sessionId) => {
@@ -53,7 +53,6 @@ export function createSampleClasses(): StudentClass[] {
         sessionId,
         name: t.name,
         registrationFees: t.registrationFees,
-        admissionFees: t.admissionFees,
         annualFund: t.annualFund,
         monthlyFees: t.monthlyFees,
         lateFeeAmount: t.lateFeeAmount,
@@ -75,73 +74,73 @@ export function createSampleStudents(): Student[] {
   const base = [
     { 
       name: "Aarav Sharma", className: "Class 1", feeType: "Regular" as const, 
-      registrationFees: 500, admissionFees: 2500, annualFund: 1500, monthlyFees: 3000, transportFees: 500,
+      registrationFees: 3000, annualFund: 1500, monthlyFees: 3000, transportFees: 500,
       dueDay: 10, lateFeeAmt: 50, lateFeeFreq: "weekly" as const, paid: 45000,
       personal: { fatherName: "Ramesh Sharma", motherName: "Sunita Sharma", guardianPhone: "9876543210", bloodGroup: "A+" as const, currentAddress: "123 Main St, Delhi" }
     },
     { 
       name: "Priya Patel", className: "Class 2", feeType: "Regular" as const, 
-      registrationFees: 500, admissionFees: 2500, annualFund: 1500, monthlyFees: 3500, transportFees: 0,
+      registrationFees: 3000, annualFund: 1500, monthlyFees: 3500, transportFees: 0,
       dueDay: 10, lateFeeAmt: 50, lateFeeFreq: "weekly" as const, paid: 52000,
       personal: { fatherName: "Mukesh Patel", motherName: "Rani Patel", guardianPhone: "9876543211", bloodGroup: "B+" as const, currentAddress: "45 Park Avenue, Mumbai" }
     },
     { 
       name: "Rahul Kumar", className: "Nursery", feeType: "Regular" as const, 
-      registrationFees: 500, admissionFees: 2000, annualFund: 1000, monthlyFees: 2000, transportFees: 800,
+      registrationFees: 2500, annualFund: 1000, monthlyFees: 2000, transportFees: 800,
       dueDay: 10, lateFeeAmt: 50, lateFeeFreq: "weekly" as const, paid: 18000,
       personal: { fatherName: "Sunil Kumar", motherName: "Meena Kumar", guardianPhone: "9876543212", bloodGroup: "O+" as const, currentAddress: "78 Lake Road, Bangalore" }
     },
     { 
       name: "Ananya Singh", className: "Class 9", feeType: "Boarding + Meals" as const, 
-      registrationFees: 500, admissionFees: 3500, annualFund: 2500, monthlyFees: 8000, transportFees: 0,
+      registrationFees: 4000, annualFund: 2500, monthlyFees: 8000, transportFees: 0,
       dueDay: 10, lateFeeAmt: 100, lateFeeFreq: "weekly" as const, paid: 65000,
       personal: { fatherName: "Rajiv Singh", motherName: "Kavita Singh", guardianPhone: "9876543213", bloodGroup: "AB+" as const, currentAddress: "Hostel Block A", healthIssues: "Mild asthma" }
     },
     { 
       name: "Vikram Reddy", className: "Class 5", feeType: "Day Scholar + Meals" as const, 
-      registrationFees: 500, admissionFees: 3000, annualFund: 2000, monthlyFees: 4500, transportFees: 600,
+      registrationFees: 3500, annualFund: 2000, monthlyFees: 4500, transportFees: 600,
       dueDay: 10, lateFeeAmt: 50, lateFeeFreq: "weekly" as const, paid: 58000,
       personal: { fatherName: "Krishna Reddy", motherName: "Lakshmi Reddy", guardianPhone: "9876543214", bloodGroup: "A-" as const, currentAddress: "56 Garden Street, Hyderabad" }
     },
     { 
       name: "Sneha Nair", className: "LKG", feeType: "Regular" as const, 
-      registrationFees: 500, admissionFees: 2000, annualFund: 1000, monthlyFees: 2200, transportFees: 400,
+      registrationFees: 2500, annualFund: 1000, monthlyFees: 2200, transportFees: 400,
       dueDay: 10, lateFeeAmt: 50, lateFeeFreq: "weekly" as const, paid: 0,
       personal: { fatherName: "Gopinath Nair", motherName: "Sarita Nair", guardianPhone: "9876543215", bloodGroup: "B-" as const, currentAddress: "12 Temple Road, Kochi" }
     },
     { 
       name: "Arjun Mehta", className: "Class 10", feeType: "Boarding" as const, 
-      registrationFees: 500, admissionFees: 3500, annualFund: 2500, monthlyFees: 6000, transportFees: 0,
+      registrationFees: 4000, annualFund: 2500, monthlyFees: 6000, transportFees: 0,
       dueDay: 10, lateFeeAmt: 100, lateFeeFreq: "weekly" as const, paid: 60000,
       personal: { fatherName: "Prakash Mehta", motherName: "Nisha Mehta", guardianPhone: "9876543216", bloodGroup: "O-" as const, currentAddress: "Hostel Block B" }
     },
     { 
       name: "Kavya Iyer", className: "Class 3", feeType: "Regular" as const, 
-      registrationFees: 500, admissionFees: 2500, annualFund: 1500, monthlyFees: 3400, transportFees: 700,
+      registrationFees: 3000, annualFund: 1500, monthlyFees: 3400, transportFees: 700,
       dueDay: 10, lateFeeAmt: 50, lateFeeFreq: "weekly" as const, paid: 30000,
       personal: { fatherName: "Venkat Iyer", motherName: "Padma Iyer", guardianPhone: "9876543217", bloodGroup: "A+" as const, currentAddress: "89 Station Road, Chennai" }
     },
     { 
       name: "Rohan Desai", className: "Class 11", feeType: "Boarding + Meals" as const, 
-      registrationFees: 500, admissionFees: 4000, annualFund: 3000, monthlyFees: 8500, transportFees: 0,
+      registrationFees: 4500, annualFund: 3000, monthlyFees: 8500, transportFees: 0,
       dueDay: 10, lateFeeAmt: 100, lateFeeFreq: "weekly" as const, paid: 95000,
       personal: { fatherName: "Hitesh Desai", motherName: "Priya Desai", guardianPhone: "9876543218", bloodGroup: "AB-" as const, currentAddress: "Hostel Block A" }
     },
     { 
       name: "Isha Gupta", className: "UKG", feeType: "Regular" as const, 
-      registrationFees: 500, admissionFees: 2000, annualFund: 1000, monthlyFees: 2400, transportFees: 500,
+      registrationFees: 2500, annualFund: 1000, monthlyFees: 2400, transportFees: 500,
       dueDay: 10, lateFeeAmt: 50, lateFeeFreq: "weekly" as const, paid: 27000,
       personal: { fatherName: "Amit Gupta", motherName: "Reena Gupta", guardianPhone: "9876543219", bloodGroup: "B+" as const, currentAddress: "34 Market Street, Pune", healthIssues: "Peanut allergy" }
     },
     { 
       name: "Aditya Verma", className: "Class 12", feeType: "Regular" as const, 
-      registrationFees: 500, admissionFees: 4000, annualFund: 3000, monthlyFees: 5800, transportFees: 600,
+      registrationFees: 4500, annualFund: 3000, monthlyFees: 5800, transportFees: 600,
       dueDay: 10, lateFeeAmt: 100, lateFeeFreq: "weekly" as const, paid: 72000,
       personal: { fatherName: "Suresh Verma", motherName: "Anita Verma", guardianPhone: "9876543220", bloodGroup: "O+" as const, currentAddress: "56 College Road, Jaipur" }
     },
     { 
       name: "Meera Krishnan", className: "Class 7", feeType: "Day Scholar + Meals" as const, 
-      registrationFees: 500, admissionFees: 3000, annualFund: 2000, monthlyFees: 4400, transportFees: 0,
+      registrationFees: 3500, annualFund: 2000, monthlyFees: 4400, transportFees: 0,
       dueDay: 10, lateFeeAmt: 50, lateFeeFreq: "weekly" as const, paid: 38000,
       personal: { fatherName: "Krishnan R", motherName: "Lakshmi K", guardianPhone: "9876543221", bloodGroup: "A+" as const, currentAddress: "23 Temple Street, Trivandrum" }
     },
@@ -157,11 +156,11 @@ export function createSampleStudents(): Student[] {
       const classId = getClassId(sessionId, b.className);
       
       // Calculate total annual fees
-      const annualTotal = b.registrationFees + b.admissionFees + b.annualFund + (b.monthlyFees * 12) + (b.transportFees * 12);
+      const annualTotal = b.registrationFees + b.annualFund + (b.monthlyFees * 12) + (b.transportFees * 12);
       
       if (b.paid > 0) {
         let remaining = b.paid;
-        const amts = [b.registrationFees + b.admissionFees + b.annualFund, b.monthlyFees * 3, b.monthlyFees * 3, b.monthlyFees * 3];
+        const amts = [b.registrationFees + b.annualFund, b.monthlyFees * 3, b.monthlyFees * 3, b.monthlyFees * 3];
         let d = new Date(2023 + (si >= 2 ? 1 : 0), 3 + (i % 3), 5 + (i % 10));
         let catIdx = 0;
         
@@ -196,7 +195,6 @@ export function createSampleStudents(): Student[] {
         feeType: b.feeType,
         // Fee structure
         registrationFees: b.registrationFees,
-        admissionFees: b.admissionFees,
         annualFund: b.annualFund,
         monthlyFees: b.monthlyFees,
         transportFees: b.transportFees || undefined,

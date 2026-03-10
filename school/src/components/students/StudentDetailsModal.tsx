@@ -102,8 +102,7 @@ export function StudentDetailsModal({
   const balances = getRunningBalances(student, studentClass);
 
   // Fee structure (from student or class)
-  const registrationFees = student.registrationFees ?? studentClass?.registrationFees ?? 0;
-  const admissionFees = student.admissionFees ?? studentClass?.admissionFees ?? 0;
+  const registrationFees = student.registrationFees ?? studentClass?.registrationFees ?? 0;  // Registration/Admission fees (one-time)
   const annualFund = student.annualFund ?? studentClass?.annualFund ?? 0;
   const baseMonthlyFees = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
   const monthlyFees = getDiscountedMonthlyFees(student, studentClass); // Apply sibling discount if applicable
@@ -118,10 +117,7 @@ export function StudentDetailsModal({
     let prefillAmount = 0;
     switch (category) {
       case "registration":
-        prefillAmount = registrationFees;
-        break;
-      case "admission":
-        prefillAmount = admissionFees;
+        prefillAmount = registrationFees;  // Registration/Admission fees
         break;
       case "annualFund":
         prefillAmount = annualFund;
@@ -229,7 +225,7 @@ export function StudentDetailsModal({
     >
       <div className="space-y-4">
         {/* Tab Navigation */}
-        <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
+        <div className="flex gap-1 border-b border-slate-200">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -359,19 +355,11 @@ export function StudentDetailsModal({
                 </thead>
                 <tbody>
                   <tr className="border-t border-slate-200">
-                    <td className="py-2">Registration Fee (one-time)</td>
+                    <td className="py-2">Registration/Admission fees (one-time)</td>
                     <td className="py-2 text-right">{formatCurrency(registrationFees)}</td>
-                    <td className="py-2 text-right text-green-600">{formatCurrency(paidByCategory.registration)}</td>
+                    <td className="py-2 text-right text-green-600">{formatCurrency(paidByCategory.registration + (paidByCategory.admission ?? 0))}</td>
                     <td className="py-2 text-right">
-                      {student.registrationPaid || paidByCategory.registration >= registrationFees ? "✓" : "—"}
-                    </td>
-                  </tr>
-                  <tr className="border-t border-slate-200">
-                    <td className="py-2">Admission Fee (one-time)</td>
-                    <td className="py-2 text-right">{formatCurrency(admissionFees)}</td>
-                    <td className="py-2 text-right text-green-600">{formatCurrency(paidByCategory.admission)}</td>
-                    <td className="py-2 text-right">
-                      {student.admissionPaid || paidByCategory.admission >= admissionFees ? "✓" : "—"}
+                      {student.registrationPaid || (paidByCategory.registration + (paidByCategory.admission ?? 0)) >= registrationFees ? "✓" : "—"}
                     </td>
                   </tr>
                   <tr className="border-t border-slate-200">
@@ -573,8 +561,7 @@ export function StudentDetailsModal({
                       className="rounded px-2 py-1.5 text-sm"
                     >
                       <option value="monthly">Monthly Tuition ({formatCurrency(monthlyFees)}{siblingDiscount > 0 ? " - 30% off" : ""})</option>
-                      <option value="registration">Registration Fee ({formatCurrency(registrationFees)})</option>
-                      <option value="admission">Admission Fee ({formatCurrency(admissionFees)})</option>
+                      <option value="registration">Registration/Admission fees ({formatCurrency(registrationFees)})</option>
                       <option value="annualFund">Annual Fund ({formatCurrency(annualFund)})</option>
                       {transportFees > 0 && (
                         <option value="transport">Transport Fee ({formatCurrency(transportFees)})</option>

@@ -42,7 +42,6 @@ const statusBadgeVariant: Record<PaymentStatus, "success" | "warning" | "danger"
 const CLASS_FEE_DEFAULTS = {
   dueDayOfMonth: 8,
   registrationFees: 0,
-  admissionFees: 0,
   annualFund: 0,
   monthlyFees: 0,
   lateFeeAmount: 50,
@@ -153,7 +152,6 @@ export function StudentsPage() {
       }
     };
     setIfNonZero("registrationFees", cls.registrationFees);
-    setIfNonZero("admissionFees", cls.admissionFees);
     setIfNonZero("annualFund", cls.annualFund);
     setIfNonZero("monthlyFees", cls.monthlyFees);
     setIfNonZero("dueDay", cls.dueDayOfMonth);
@@ -197,7 +195,6 @@ export function StudentsPage() {
 
     // Fee fields
     const registrationFees = Number((form.elements.namedItem("registrationFees") as HTMLInputElement).value) || undefined;
-    const admissionFees = Number((form.elements.namedItem("admissionFees") as HTMLInputElement).value) || undefined;
     const annualFund = Number((form.elements.namedItem("annualFund") as HTMLInputElement).value) || undefined;
     const monthlyFees = Number((form.elements.namedItem("monthlyFees") as HTMLInputElement).value) || undefined;
     const transportFees = Number((form.elements.namedItem("transportFees") as HTMLInputElement).value) || undefined;
@@ -221,7 +218,6 @@ export function StudentsPage() {
       feeType,
       classId: classId || undefined,
       registrationFees,
-      admissionFees,
       annualFund,
       monthlyFees,
       transportFees,
@@ -267,7 +263,6 @@ export function StudentsPage() {
     const form = e.currentTarget;
     const name = (form.elements.namedItem("className") as HTMLInputElement).value.trim();
     const registrationFees = Number((form.elements.namedItem("registrationFees") as HTMLInputElement).value) || 0;
-    const admissionFees = Number((form.elements.namedItem("admissionFees") as HTMLInputElement).value) || 0;
     const annualFund = Number((form.elements.namedItem("annualFund") as HTMLInputElement).value) || 0;
     const monthlyFees = Number((form.elements.namedItem("monthlyFees") as HTMLInputElement).value) || 0;
     const lateFeeAmount = Number((form.elements.namedItem("lateFeeAmount") as HTMLInputElement).value) || 0;
@@ -279,7 +274,6 @@ export function StudentsPage() {
     const classData = {
       name,
       registrationFees,
-      admissionFees,
       annualFund,
       monthlyFees,
       lateFeeAmount,
@@ -727,22 +721,13 @@ export function StudentsPage() {
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-1">Fee Structure</h4>
             <p className="text-xs text-slate-500 dark:text-slate-400">Selecting a class auto-fills these. You can override if needed.</p>
-            <div className="grid grid-cols-3 gap-3">
-              <FormField label="Registration (one-time)">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <FormField label="Registration/Admission fees (one-time)">
                 <Input
                   name="registrationFees"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.registrationFees ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.registrationFees ?? ""}
-                  placeholder="₹"
-                />
-              </FormField>
-              <FormField label="Admission (one-time)">
-                <Input
-                  name="admissionFees"
-                  type="number"
-                  min={0}
-                  defaultValue={studentModal.student?.admissionFees ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.admissionFees ?? ""}
                   placeholder="₹"
                 />
               </FormField>
@@ -756,7 +741,7 @@ export function StudentsPage() {
                 />
               </FormField>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <FormField label="Monthly Tuition (₹/month)">
                 <Input
                   name="monthlyFees"
@@ -962,22 +947,12 @@ export function StudentsPage() {
               </FormField>
             </div>
             <div className="grid grid-cols-4 gap-3">
-              <FormField label="Registration">
+              <FormField label="Registration/Admission fees">
                 <Input
                   name="registrationFees"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.registrationFees ?? CLASS_FEE_DEFAULTS.registrationFees}
-                  placeholder="₹"
-                  className="rounded px-2 py-1.5 text-sm"
-                />
-              </FormField>
-              <FormField label="Admission">
-                <Input
-                  name="admissionFees"
-                  type="number"
-                  min={0}
-                  defaultValue={editingClass?.admissionFees ?? CLASS_FEE_DEFAULTS.admissionFees}
                   placeholder="₹"
                   className="rounded px-2 py-1.5 text-sm"
                 />
@@ -1056,7 +1031,7 @@ export function StudentsPage() {
                       <td className="py-2 pr-2 font-medium text-slate-900 dark:text-slate-100">{c.name}</td>
                       <td className="py-2 pr-2 text-slate-900 dark:text-slate-100">{formatCurrency(c.monthlyFees)}/mo</td>
                       <td className="py-2 pr-2 text-xs text-slate-600 dark:text-slate-300">
-                        Reg: ₹{c.registrationFees} + Adm: ₹{c.admissionFees} + AF: ₹{c.annualFund}
+                        Reg/Adm: ₹{c.registrationFees} + AF: ₹{c.annualFund}
                       </td>
                       <td className="py-2 pr-2 text-slate-900 dark:text-slate-100">₹{c.lateFeeAmount}/{c.lateFeeFrequency === "weekly" ? "wk" : "day"}</td>
                       <td className="py-2">
@@ -1130,7 +1105,6 @@ export function StudentsPage() {
               classId,
               feeType: r.feeType,
               registrationFees: r.registrationFees ?? matchedClass?.registrationFees,
-              admissionFees: r.admissionFees ?? matchedClass?.admissionFees,
               annualFund: r.annualFund ?? matchedClass?.annualFund,
               monthlyFees: r.monthlyFees ?? matchedClass?.monthlyFees,
               transportFees: r.transportFees,
@@ -1170,16 +1144,11 @@ export function StudentsPage() {
             const studentClass = sessionClasses.find((c) => c.id === student.classId);
             const paidByCategory = getPaymentsByCategory(student);
             const regFees = student.registrationFees ?? studentClass?.registrationFees ?? 0;
-            const admFees = student.admissionFees ?? studentClass?.admissionFees ?? 0;
             const annFees = student.annualFund ?? studentClass?.annualFund ?? 0;
 
-            // Prevent double payment: one-time fees
+            // Prevent double payment: one-time fees (registration = Registration/Admission fees)
             if (payment.feeCategory === "registration" && regFees > 0 && paidByCategory.registration >= regFees) {
-              toast("Registration fee already paid for this session.", "error");
-              return;
-            }
-            if (payment.feeCategory === "admission" && admFees > 0 && paidByCategory.admission >= admFees) {
-              toast("Admission fee already paid for this session.", "error");
+              toast("Registration/Admission fee already paid for this session.", "error");
               return;
             }
             if (payment.feeCategory === "annualFund" && annFees > 0 && paidByCategory.annualFund >= annFees) {

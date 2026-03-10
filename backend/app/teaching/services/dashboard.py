@@ -32,14 +32,13 @@ def _f(v: Decimal | float) -> float:
 
 def _calc_total_annual_fees(student: Student, class_map: dict[UUID, Class]) -> float:
     cls = class_map.get(student.class_id) if student.class_id else None
-    reg = float(student.registration_fees or (cls.registration_fees if cls else _ZERO))
-    adm = float(student.admission_fees or (cls.admission_fees if cls else _ZERO))
+    reg = float(student.registration_fees or (cls.registration_fees if cls else _ZERO))  # Registration/Admission fees
     ann = float(student.annual_fund or (cls.annual_fund if cls else _ZERO))
     monthly = float(student.monthly_fees or (cls.monthly_fees if cls else _ZERO))
     transport = float(student.transport_fees or _ZERO)
     sibling_disc = 0.3 if getattr(student, "sibling_id", None) else 0
     discounted = monthly * (1 - sibling_disc)
-    return reg + adm + ann + (discounted * 12) + (transport * 12)
+    return reg + ann + (discounted * 12) + (transport * 12)
 
 
 def _get_target(student: Student, class_map: dict[UUID, Class]) -> float:

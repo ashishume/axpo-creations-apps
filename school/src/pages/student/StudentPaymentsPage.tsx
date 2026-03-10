@@ -10,8 +10,8 @@ import { Skeleton, SkeletonStats, SkeletonTable } from '../../components/ui/Skel
 import { Download, Receipt, CreditCard, AlertCircle, Filter } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  registration: 'Registration',
-  admission: 'Admission',
+  registration: 'Registration/Admission',
+  admission: 'Registration/Admission',  // historical
   annualFund: 'Annual Fund',
   monthly: 'Monthly Fee',
   transport: 'Transport',
@@ -176,8 +176,8 @@ Thank you for your payment!
                 className="w-auto min-w-[140px]"
               >
                 <option value="">All Categories</option>
-                <option value="registration">Registration</option>
-                <option value="admission">Admission</option>
+                <option value="registration">Registration/Admission</option>
+                <option value="admission">Registration/Admission (historical)</option>
                 <option value="annualFund">Annual Fund</option>
                 <option value="monthly">Monthly Fee</option>
                 <option value="transport">Transport</option>

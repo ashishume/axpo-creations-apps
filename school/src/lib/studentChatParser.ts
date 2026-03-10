@@ -390,8 +390,8 @@ export function parseAddStudentsInput(input: string): ParseResult {
  */
 export function resolveClassLabel(
   classLabel: string | undefined,
-  sessionClasses: { id: string; name: string; registrationFees: number; admissionFees: number; annualFund: number; monthlyFees: number; lateFeeAmount: number; lateFeeFrequency: "daily" | "weekly"; dueDayOfMonth: number }[]
-): { classId?: string; registrationFees?: number; admissionFees?: number; annualFund?: number; monthlyFees?: number; lateFeeAmount?: number; lateFeeFrequency?: "daily" | "weekly"; dueDayOfMonth?: number } {
+  sessionClasses: { id: string; name: string; registrationFees: number; annualFund: number; monthlyFees: number; lateFeeAmount: number; lateFeeFrequency: "daily" | "weekly"; dueDayOfMonth: number }[]
+): { classId?: string; registrationFees?: number; annualFund?: number; monthlyFees?: number; lateFeeAmount?: number; lateFeeFrequency?: "daily" | "weekly"; dueDayOfMonth?: number } {
   if (!classLabel || sessionClasses.length === 0) {
     return {};
   }
@@ -404,7 +404,6 @@ export function resolveClassLabel(
     return {
       classId: byName.id,
       registrationFees: byName.registrationFees,
-      admissionFees: byName.admissionFees,
       annualFund: byName.annualFund,
       monthlyFees: byName.monthlyFees,
       lateFeeAmount: byName.lateFeeAmount,
@@ -420,7 +419,6 @@ export function resolveClassLabel(
     return {
       classId: byNumber.id,
       registrationFees: byNumber.registrationFees,
-      admissionFees: byNumber.admissionFees,
       annualFund: byNumber.annualFund,
       monthlyFees: byNumber.monthlyFees,
       lateFeeAmount: byNumber.lateFeeAmount,

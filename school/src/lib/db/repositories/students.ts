@@ -21,12 +21,10 @@ function dbRowToStudent(row: Record<string, unknown>, payments: FeePayment[] = [
       healthIssues: row.health_issues as string | undefined,
     },
     registrationFees: row.registration_fees != null ? Number(row.registration_fees) : undefined,
-    admissionFees: row.admission_fees != null ? Number(row.admission_fees) : undefined,
     annualFund: row.annual_fund != null ? Number(row.annual_fund) : undefined,
     monthlyFees: row.monthly_fees != null ? Number(row.monthly_fees) : undefined,
     transportFees: row.transport_fees != null ? Number(row.transport_fees) : undefined,
     registrationPaid: row.registration_paid as boolean | undefined,
-    admissionPaid: row.admission_paid as boolean | undefined,
     annualFundPaid: row.annual_fund_paid as boolean | undefined,
     dueDayOfMonth: row.due_day_of_month as number | undefined,
     lateFeeAmount: row.late_fee_amount != null ? Number(row.late_fee_amount) : undefined,
@@ -215,12 +213,10 @@ export const studentsRepository = {
           blood_group: student.personalDetails?.bloodGroup,
           health_issues: student.personalDetails?.healthIssues,
           registration_fees: student.registrationFees,
-          admission_fees: student.admissionFees,
           annual_fund: student.annualFund,
           monthly_fees: student.monthlyFees,
           transport_fees: student.transportFees,
           registration_paid: student.registrationPaid,
-          admission_paid: student.admissionPaid,
           annual_fund_paid: student.annualFundPaid,
           due_day_of_month: student.dueDayOfMonth,
           late_fee_amount: student.lateFeeAmount,
@@ -257,12 +253,10 @@ export const studentsRepository = {
       blood_group: s.personalDetails?.bloodGroup,
       health_issues: s.personalDetails?.healthIssues,
       registration_fees: s.registrationFees,
-      admission_fees: s.admissionFees,
       annual_fund: s.annualFund,
       monthly_fees: s.monthlyFees,
       transport_fees: s.transportFees,
       registration_paid: s.registrationPaid,
-      admission_paid: s.admissionPaid,
       annual_fund_paid: s.annualFundPaid,
       due_day_of_month: s.dueDayOfMonth,
       late_fee_amount: s.lateFeeAmount,
@@ -294,12 +288,10 @@ export const studentsRepository = {
       if (updates.personalDetails?.bloodGroup !== undefined) dbUpdates.blood_group = updates.personalDetails.bloodGroup;
       if (updates.personalDetails?.healthIssues !== undefined) dbUpdates.health_issues = updates.personalDetails.healthIssues;
       if (updates.registrationFees !== undefined) dbUpdates.registration_fees = updates.registrationFees;
-      if (updates.admissionFees !== undefined) dbUpdates.admission_fees = updates.admissionFees;
       if (updates.annualFund !== undefined) dbUpdates.annual_fund = updates.annualFund;
       if (updates.monthlyFees !== undefined) dbUpdates.monthly_fees = updates.monthlyFees;
       if (updates.transportFees !== undefined) dbUpdates.transport_fees = updates.transportFees;
       if (updates.registrationPaid !== undefined) dbUpdates.registration_paid = updates.registrationPaid;
-      if (updates.admissionPaid !== undefined) dbUpdates.admission_paid = updates.admissionPaid;
       if (updates.annualFundPaid !== undefined) dbUpdates.annual_fund_paid = updates.annualFundPaid;
       if (updates.dueDayOfMonth !== undefined) dbUpdates.due_day_of_month = updates.dueDayOfMonth;
       if (updates.lateFeeAmount !== undefined) dbUpdates.late_fee_amount = updates.lateFeeAmount;

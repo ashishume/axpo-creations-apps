@@ -42,13 +42,11 @@ class StudentBase(BaseModel):
     permanent_address: str | None = None
     blood_group: str | None = None
     health_issues: str | None = None
-    registration_fees: Decimal | None = None
-    admission_fees: Decimal | None = None
+    registration_fees: Decimal | None = None  # Registration/Admission fees (one-time)
     annual_fund: Decimal | None = None
     monthly_fees: Decimal | None = None
     transport_fees: Decimal | None = None
     registration_paid: bool = False
-    admission_paid: bool = False
     annual_fund_paid: bool = False
     due_day_of_month: int | None = None
     late_fee_amount: Decimal | None = None
@@ -72,12 +70,10 @@ class StudentUpdate(BaseModel):
     blood_group: str | None = None
     health_issues: str | None = None
     registration_fees: Decimal | None = None
-    admission_fees: Decimal | None = None
     annual_fund: Decimal | None = None
     monthly_fees: Decimal | None = None
     transport_fees: Decimal | None = None
     registration_paid: bool | None = None
-    admission_paid: bool | None = None
     annual_fund_paid: bool | None = None
     due_day_of_month: int | None = None
     late_fee_amount: Decimal | None = None

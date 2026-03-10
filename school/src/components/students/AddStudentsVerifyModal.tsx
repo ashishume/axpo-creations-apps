@@ -184,12 +184,8 @@ export function AddStudentsVerifyModal({
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs text-slate-600">
                   <div>
-                    <span className="font-medium">Reg:</span>{" "}
+                    <span className="font-medium">Reg/Adm:</span>{" "}
                     {formatCurrency(s.registrationFees ?? 0)}
-                  </div>
-                  <div>
-                    <span className="font-medium">Adm:</span>{" "}
-                    {formatCurrency(s.admissionFees ?? 0)}
                   </div>
                   <div>
                     <span className="font-medium">Monthly:</span>{" "}

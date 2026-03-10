@@ -50,8 +50,7 @@ export interface StudentClass {
   sessionId: string;
   name: string; // e.g. "Class 1", "Nursery"
   // One-time fees per session
-  registrationFees: number;
-  admissionFees: number;
+  registrationFees: number;  // Registration/Admission fees (one-time)
   annualFund: number;
   // Monthly tuition fee
   monthlyFees: number;
@@ -96,7 +95,7 @@ export interface FeePayment {
   amount: number;
   method: PaymentMethod;
   receiptNumber: string;
-  feeCategory: "registration" | "admission" | "annualFund" | "monthly" | "transport" | "other";
+  feeCategory: "registration" | "admission" | "annualFund" | "monthly" | "transport" | "other";  // "admission" kept for historical payments
   month?: string; // For monthly fees, e.g. "2024-04"
   receiptPhotoUrl?: string; // Photo of receipt (max 2MB)
 }
@@ -116,15 +115,13 @@ export interface Student {
   personalDetails?: StudentPersonalDetails;
   
   // Fee structure (per student, can override class defaults)
-  registrationFees?: number; // One-time per session
-  admissionFees?: number; // One-time per session
+  registrationFees?: number; // Registration/Admission fees (one-time per session)
   annualFund?: number; // One-time per session
   monthlyFees?: number; // Monthly tuition (overrides class if set)
   transportFees?: number; // Optional, per month (varies by distance)
   
   // Fee payment status flags
   registrationPaid?: boolean;
-  admissionPaid?: boolean;
   annualFundPaid?: boolean;
   
   // Due date config (can override class)

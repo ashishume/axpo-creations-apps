@@ -186,13 +186,12 @@ export function parseStaffCSV(text: string): CSVParseResult<ParsedStaffCSV> {
 
 /**
  * Parse classes from CSV
- * Expected columns: name, monthlyFees (optional), admissionFees (optional), etc.
+ * Expected columns: name, monthlyFees (optional), registrationFees (optional), etc.
  */
 export interface ParsedClassCSV {
   name: string;
   monthlyFees?: number;
-  admissionFees?: number;
-  registrationFees?: number;
+  registrationFees?: number;  // Registration/Admission fees (one-time)
   annualFund?: number;
   lateFeeAmount?: number;
   dueDayOfMonth?: number;
@@ -207,8 +206,8 @@ export function parseClassesCSV(text: string): CSVParseResult<ParsedClassCSV> {
   const header = rows[0].map((h) => h.toLowerCase().trim());
   const nameIndex = header.findIndex((h) => h.includes("name") || h.includes("class"));
   const monthlyIndex = header.findIndex((h) => h.includes("monthly"));
-  const admissionIndex = header.findIndex((h) => h.includes("admission"));
   const registrationIndex = header.findIndex((h) => h.includes("registration"));
+  const admissionIndex = header.findIndex((h) => h.includes("admission"));
   const annualIndex = header.findIndex((h) => h.includes("annual"));
   const lateFeeIndex = header.findIndex((h) => h.includes("late"));
   const dueDayIndex = header.findIndex((h) => h.includes("due") && h.includes("day"));
@@ -234,11 +233,12 @@ export function parseClassesCSV(text: string): CSVParseResult<ParsedClassCSV> {
       continue;
     }
 
+    const reg = registrationIndex >= 0 ? parseNum(row[registrationIndex]) : undefined;
+    const adm = admissionIndex >= 0 ? parseNum(row[admissionIndex]) : undefined;
     classes.push({
       name,
       monthlyFees: monthlyIndex >= 0 ? parseNum(row[monthlyIndex]) : undefined,
-      admissionFees: admissionIndex >= 0 ? parseNum(row[admissionIndex]) : undefined,
-      registrationFees: registrationIndex >= 0 ? parseNum(row[registrationIndex]) : undefined,
+      registrationFees: ((reg ?? 0) + (adm ?? 0)) || undefined,
       annualFund: annualIndex >= 0 ? parseNum(row[annualIndex]) : undefined,
       lateFeeAmount: lateFeeIndex >= 0 ? parseNum(row[lateFeeIndex]) : undefined,
       dueDayOfMonth: dueDayIndex >= 0 ? parseNum(row[dueDayIndex]) : undefined,

@@ -28,14 +28,12 @@ CREATE TABLE school_xx_students (
   blood_group VARCHAR(5),
   health_issues TEXT,
 
-  registration_fees DECIMAL(10,2),
-  admission_fees DECIMAL(10,2),
+  registration_fees DECIMAL(10,2),  /* Registration/Admission fees (one-time) */
   annual_fund DECIMAL(10,2),
   monthly_fees DECIMAL(10,2),
   transport_fees DECIMAL(10,2),
 
   registration_paid BOOLEAN DEFAULT FALSE,
-  admission_paid BOOLEAN DEFAULT FALSE,
   annual_fund_paid BOOLEAN DEFAULT FALSE,
 
   due_day_of_month INTEGER CHECK (due_day_of_month >= 1 AND due_day_of_month <= 28),
