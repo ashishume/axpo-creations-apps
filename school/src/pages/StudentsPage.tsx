@@ -38,6 +38,17 @@ const statusBadgeVariant: Record<PaymentStatus, "success" | "warning" | "danger"
   "Not Paid": "danger",
 };
 
+/** Default values for class fee structure (Add/Edit class form and fallbacks when class is not set). */
+const CLASS_FEE_DEFAULTS = {
+  dueDayOfMonth: 8,
+  registrationFees: 0,
+  admissionFees: 0,
+  annualFund: 0,
+  monthlyFees: 0,
+  lateFeeAmount: 50,
+  lateFeeFrequency: "weekly" as const,
+};
+
 export function StudentsPage() {
   const {
     schools,
@@ -254,7 +265,7 @@ export function StudentsPage() {
     const monthlyFees = Number((form.elements.namedItem("monthlyFees") as HTMLInputElement).value) || 0;
     const lateFeeAmount = Number((form.elements.namedItem("lateFeeAmount") as HTMLInputElement).value) || 0;
     const lateFeeFrequency = (form.elements.namedItem("lateFeeFrequency") as HTMLSelectElement).value as "daily" | "weekly";
-    const dueDayOfMonth = Number((form.elements.namedItem("dueDayOfMonth") as HTMLInputElement).value) || 10;
+    const dueDayOfMonth = Number((form.elements.namedItem("dueDayOfMonth") as HTMLInputElement).value) || CLASS_FEE_DEFAULTS.dueDayOfMonth;
 
     if (!name) return;
 
@@ -770,7 +781,7 @@ export function StudentsPage() {
                   type="number"
                   min={1}
                   max={28}
-                  defaultValue={studentModal.student?.dueDayOfMonth ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.dueDayOfMonth ?? 10}
+                  defaultValue={studentModal.student?.dueDayOfMonth ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.dueDayOfMonth ?? CLASS_FEE_DEFAULTS.dueDayOfMonth}
                 />
               </FormField>
               <FormField label="Late fee (₹)">
@@ -778,13 +789,13 @@ export function StudentsPage() {
                   name="lateFeeAmount"
                   type="number"
                   min={0}
-                  defaultValue={studentModal.student?.lateFeeAmount ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.lateFeeAmount ?? 50}
+                  defaultValue={studentModal.student?.lateFeeAmount ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.lateFeeAmount ?? CLASS_FEE_DEFAULTS.lateFeeAmount}
                 />
               </FormField>
               <FormField label="Frequency">
                 <Select
                   name="lateFeeFrequency"
-                  defaultValue={studentModal.student?.lateFeeFrequency ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.lateFeeFrequency ?? "weekly"}
+                  defaultValue={studentModal.student?.lateFeeFrequency ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.lateFeeFrequency ?? CLASS_FEE_DEFAULTS.lateFeeFrequency}
                 >
                   <option value="weekly">Per week</option>
                   <option value="daily">Per day</option>
@@ -938,7 +949,7 @@ export function StudentsPage() {
                   type="number"
                   min={1}
                   max={28}
-                  defaultValue={editingClass?.dueDayOfMonth ?? 10}
+                  defaultValue={editingClass?.dueDayOfMonth ?? CLASS_FEE_DEFAULTS.dueDayOfMonth}
                   className="rounded px-2 py-1.5 text-sm"
                 />
               </FormField>
@@ -949,7 +960,7 @@ export function StudentsPage() {
                   name="registrationFees"
                   type="number"
                   min={0}
-                  defaultValue={editingClass?.registrationFees ?? 500}
+                  defaultValue={editingClass?.registrationFees ?? CLASS_FEE_DEFAULTS.registrationFees}
                   placeholder="₹"
                   className="rounded px-2 py-1.5 text-sm"
                 />
@@ -959,7 +970,7 @@ export function StudentsPage() {
                   name="admissionFees"
                   type="number"
                   min={0}
-                  defaultValue={editingClass?.admissionFees ?? 2500}
+                  defaultValue={editingClass?.admissionFees ?? CLASS_FEE_DEFAULTS.admissionFees}
                   placeholder="₹"
                   className="rounded px-2 py-1.5 text-sm"
                 />
@@ -969,7 +980,7 @@ export function StudentsPage() {
                   name="annualFund"
                   type="number"
                   min={0}
-                  defaultValue={editingClass?.annualFund ?? 1500}
+                  defaultValue={editingClass?.annualFund ?? CLASS_FEE_DEFAULTS.annualFund}
                   placeholder="₹"
                   className="rounded px-2 py-1.5 text-sm"
                 />
@@ -979,7 +990,7 @@ export function StudentsPage() {
                   name="monthlyFees"
                   type="number"
                   min={0}
-                  defaultValue={editingClass?.monthlyFees ?? 3000}
+                  defaultValue={editingClass?.monthlyFees ?? CLASS_FEE_DEFAULTS.monthlyFees}
                   placeholder="₹"
                   className="rounded px-2 py-1.5 text-sm"
                 />
@@ -991,7 +1002,7 @@ export function StudentsPage() {
                   name="lateFeeAmount"
                   type="number"
                   min={0}
-                  defaultValue={editingClass?.lateFeeAmount ?? 50}
+                  defaultValue={editingClass?.lateFeeAmount ?? CLASS_FEE_DEFAULTS.lateFeeAmount}
                   placeholder="₹"
                   className="rounded px-2 py-1.5 text-sm"
                 />
@@ -999,7 +1010,7 @@ export function StudentsPage() {
               <FormField label="Late fee frequency">
                 <Select
                   name="lateFeeFrequency"
-                  defaultValue={editingClass?.lateFeeFrequency ?? "weekly"}
+                  defaultValue={editingClass?.lateFeeFrequency ?? CLASS_FEE_DEFAULTS.lateFeeFrequency}
                   className="rounded px-2 py-1.5 text-sm"
                 >
                   <option value="weekly">Per week</option>
