@@ -71,9 +71,11 @@ export const authRepositoryApi = {
     }
   },
 
-  async getUsers(page: number = 1, pageSize: number = 10): Promise<{ users: User[]; total: number }> {
+  async getUsers(page: number = 1, pageSize: number = 10, organizationId?: string | null): Promise<{ users: User[]; total: number }> {
+    const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+    if (organizationId) params.set('organization_id', organizationId);
     const data = await teachingFetchJson<{ users: Record<string, unknown>[]; total: number }>(
-      `/users?page=${page}&page_size=${pageSize}`
+      `/users?${params.toString()}`
     );
     const users = (data.users ?? []).map((r) => mapUser(r, []));
     return { users, total: data.total ?? 0 };

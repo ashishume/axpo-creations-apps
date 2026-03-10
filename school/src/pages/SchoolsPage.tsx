@@ -165,18 +165,20 @@ export function SchoolsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Sessions</CardTitle>
-            <Button
-              size="sm"
-              onClick={() =>
-                setSessionModal({
-                  open: true,
-                  schoolId: selectedSchoolId ?? undefined,
-                })
-              }
-            >
-              <Plus className="mr-1 h-4 w-4" />
-              Add session
-            </Button>
+            <PermissionGate permission="sessions:create">
+              <Button
+                size="sm"
+                onClick={() =>
+                  setSessionModal({
+                    open: true,
+                    schoolId: selectedSchoolId ?? undefined,
+                  })
+                }
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Add session
+              </Button>
+            </PermissionGate>
           </CardHeader>
           <CardContent>
             {sessions.length === 0 ? (

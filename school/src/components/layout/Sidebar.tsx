@@ -67,11 +67,23 @@ export const PAGE_PATHS: Record<PageId, string> = {
   leaves: "/leaves",
 };
 
-const nav: { id: PageId; label: string; icon: React.ElementType; permission?: Permission }[] = [
+type NavItem = {
+  id: PageId;
+  label: string;
+  icon: React.ElementType;
+  permission?: Permission;
+  superAdminOnly?: boolean;
+  /** Shown in top super-admin block when super admin; otherwise in main list */
+  showInSuperAdminBlock?: boolean;
+};
+
+const nav: NavItem[] = [
+  { id: "organizations", label: "Organizations", icon: Building2, permission: "schools:create", superAdminOnly: true },
+  { id: "orgSubscriptions", label: "Org subscriptions", icon: Wallet, permission: "schools:create", superAdminOnly: true },
+  { id: "subscription", label: "Subscription & Plan", icon: CreditCard, permission: "schools:view", showInSuperAdminBlock: true },
+  { id: "roles", label: "Roles & Permissions", icon: Shield, permission: "roles:manage", showInSuperAdminBlock: true },
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:view" },
   { id: "assistant", label: "Axpo Assistant", icon: Bot, permission: "assistant:use" },
-  { id: "organizations", label: "Organizations", icon: Building2, permission: "schools:create" },
-  { id: "orgSubscriptions", label: "Org subscriptions", icon: Wallet, permission: "schools:create" },
   { id: "schools", label: "Schools & Sessions", icon: School, permission: "schools:view" },
   { id: "students", label: "Students & Fees", icon: Users, permission: "students:view" },
   { id: "staff", label: "Staff & Salary", icon: UserCog, permission: "staff:view" },
@@ -79,9 +91,7 @@ const nav: { id: PageId; label: string; icon: React.ElementType; permission?: Pe
   { id: "stocks", label: "Stock & Publishers", icon: Package, permission: "stocks:view" },
   { id: "leaves", label: "Leave Management", icon: CalendarOff, permission: "leaves:view" },
   { id: "report", label: "Year-End Report", icon: FileText, permission: "reports:view" },
-  { id: "subscription", label: "Subscription & Plan", icon: CreditCard, permission: "schools:view" },
   { id: "users", label: "User Management", icon: UserPlus, permission: "users:view" },
-  { id: "roles", label: "Roles & Permissions", icon: Shield, permission: "roles:manage" },
 ];
 
 interface SidebarProps {
@@ -215,49 +225,89 @@ export function Sidebar({
           ref={navRef}
           className="h-full space-y-0.5 overflow-y-auto p-2"
         >
-          {nav.map(({ id, label, icon: Icon, permission }) => {
-            if (id === "organizations" && !isSuperAdmin) return null;
-            if (id === "orgSubscriptions" && !isSuperAdmin) return null;
-            if (id === "assistant" && !canAccessAssistant) return null;
-            const isAssistant = id === "assistant";
-            const link = (
-              <NavLink
-                key={id}
-                to={search ? `${PAGE_PATHS[id]}?${search}` : PAGE_PATHS[id]}
-                end={id === "dashboard"}
-                onClick={onNavClick}
-                className={({ isActive }) =>
-                  cn(
-                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors min-h-[44px]",
-                    isActive ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200" : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  )
-                }
-              >
-                <Icon className="h-5 w-5 shrink-0" />
-                <span className="flex-1 truncate">{label}</span>
-                {isAssistant && (
-                  <span
-                    className={cn(
-                      "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                      hasAssistantPlan ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
-                    )}
-                  >
-                    {hasAssistantPlan ? "Pro" : "Premium"}
-                  </span>
-                )}
-              </NavLink>
-            );
+          {/* Super Admin section – top, only when super admin */}
+          {isSuperAdmin && (
+            <>
+              {nav
+                .filter((item) => item.superAdminOnly || (item.showInSuperAdminBlock === true))
+                .map(({ id, label, icon: Icon, permission }) => {
+                  const link = (
+                    <NavLink
+                      key={id}
+                      to={search ? `${PAGE_PATHS[id]}?${search}` : PAGE_PATHS[id]}
+                      end={id === "dashboard"}
+                      onClick={onNavClick}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors min-h-[44px]",
+                          isActive ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200" : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        )
+                      }
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span className="flex-1 truncate">{label}</span>
+                    </NavLink>
+                  );
+                  return permission ? (
+                    <PermissionGate key={id} permission={permission}>
+                      {link}
+                    </PermissionGate>
+                  ) : (
+                    <Fragment key={id}>{link}</Fragment>
+                  );
+                })}
+              <div
+                className="my-2 border-t border-slate-200 dark:border-slate-700"
+                role="separator"
+                aria-label="Super Admin section end"
+              />
+            </>
+          )}
 
-            if (permission && id !== "assistant") {
-              return (
-                <PermissionGate key={id} permission={permission}>
-                  {link}
-                </PermissionGate>
+          {/* Rest of navigation */}
+          {nav
+            .filter((item) => !item.superAdminOnly && !(item.showInSuperAdminBlock && isSuperAdmin))
+            .map(({ id, label, icon: Icon, permission }) => {
+              if (id === "assistant" && !canAccessAssistant) return null;
+              const isAssistant = id === "assistant";
+              const link = (
+                <NavLink
+                  key={id}
+                  to={search ? `${PAGE_PATHS[id]}?${search}` : PAGE_PATHS[id]}
+                  end={id === "dashboard"}
+                  onClick={onNavClick}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors min-h-[44px]",
+                      isActive ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200" : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    )
+                  }
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className="flex-1 truncate">{label}</span>
+                  {isAssistant && (
+                    <span
+                      className={cn(
+                        "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                        hasAssistantPlan ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                      )}
+                    >
+                      {hasAssistantPlan ? "Pro" : "Premium"}
+                    </span>
+                  )}
+                </NavLink>
               );
-            }
 
-            return <Fragment key={id}>{link}</Fragment>;
-          })}
+              if (permission && id !== "assistant") {
+                return (
+                  <PermissionGate key={id} permission={permission}>
+                    {link}
+                  </PermissionGate>
+                );
+              }
+
+              return <Fragment key={id}>{link}</Fragment>;
+            })}
         </nav>
         {/* Bottom gradient when more items below */}
         {showBottomGradient && (

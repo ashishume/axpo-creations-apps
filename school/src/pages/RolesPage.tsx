@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRoles, useCreateRole, useUpdateRole, useDeleteRole } from '../hooks/useRoles';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -67,6 +67,7 @@ export function RolesPage() {
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formPermissions, setFormPermissions] = useState<Permission[]>([]);
+  const permissionsScrollRef = useRef<HTMLDivElement>(null);
 
   const openCreateModal = () => {
     setFormName('');
@@ -130,14 +131,19 @@ export function RolesPage() {
   };
 
   const togglePermission = (permission: Permission) => {
+    const scrollTop = permissionsScrollRef.current?.scrollTop ?? 0;
     if (formPermissions.includes(permission)) {
       setFormPermissions(formPermissions.filter(p => p !== permission));
     } else {
       setFormPermissions([...formPermissions, permission]);
     }
+    setTimeout(() => {
+      permissionsScrollRef.current && (permissionsScrollRef.current.scrollTop = scrollTop);
+    }, 0);
   };
 
   const toggleModulePermissions = (moduleKey: string) => {
+    const scrollTop = permissionsScrollRef.current?.scrollTop ?? 0;
     const modulePerms = PERMISSION_MODULES[moduleKey as keyof typeof PERMISSION_MODULES] as readonly Permission[];
     const allSelected = modulePerms.every(p => formPermissions.includes(p as Permission));
     
@@ -147,6 +153,9 @@ export function RolesPage() {
       const newPerms = new Set([...formPermissions, ...modulePerms]);
       setFormPermissions(Array.from(newPerms) as Permission[]);
     }
+    setTimeout(() => {
+      permissionsScrollRef.current && (permissionsScrollRef.current.scrollTop = scrollTop);
+    }, 0);
   };
 
   const selectAllPermissions = () => {
@@ -181,7 +190,10 @@ export function RolesPage() {
         )}
       </div>
       
-      <div className="max-h-96 space-y-4 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4">
+      <div
+        ref={permissionsScrollRef}
+        className="max-h-96 space-y-4 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4"
+      >
         {Object.entries(PERMISSION_MODULES).map(([moduleKey, modulePerms]) => {
           const allSelected = modulePerms.every(p => formPermissions.includes(p as Permission));
           const someSelected = modulePerms.some(p => formPermissions.includes(p as Permission));
@@ -190,7 +202,10 @@ export function RolesPage() {
             <div key={moduleKey} className="space-y-2">
               <button
                 type="button"
-                onClick={() => !disabled && toggleModulePermissions(moduleKey)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!disabled) toggleModulePermissions(moduleKey);
+                }}
                 disabled={disabled}
                 className={`flex items-center gap-2 text-sm font-medium ${disabled ? 'cursor-not-allowed text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400'}`}
               >
@@ -211,7 +226,10 @@ export function RolesPage() {
                     <button
                       key={perm}
                       type="button"
-                      onClick={() => !disabled && togglePermission(perm as Permission)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (!disabled) togglePermission(perm as Permission);
+                      }}
                       disabled={disabled}
                       className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                         disabled

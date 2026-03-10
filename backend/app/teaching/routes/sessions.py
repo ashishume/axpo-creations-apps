@@ -7,6 +7,7 @@ from app.teaching.dependencies import (
     get_teaching_db_session,
     get_current_teaching_user,
     require_active_org_subscription,
+    require_teaching_permission,
 )
 from app.teaching.schemas.session import SessionCreate, SessionUpdate, SessionResponse
 from app.teaching.services.session import session_service
@@ -26,7 +27,7 @@ router = APIRouter(
 async def create_session(
     data: SessionCreate,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
+    user: User = Depends(require_teaching_permission("sessions:create")),
 ):
     await enforce_school_access(db, user, data.school_id)
     session = await session_service.create(db, data)

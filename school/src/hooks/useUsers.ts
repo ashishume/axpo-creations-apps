@@ -4,10 +4,10 @@ import type { CreateUserRequest, UpdateUserRequest } from '../types/auth';
 
 const QUERY_KEY = 'users';
 
-export function useUsers(page: number = 1, pageSize: number = 10) {
+export function useUsers(page: number = 1, pageSize: number = 10, organizationId?: string | null) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, pageSize],
-    queryFn: () => authRepository.getUsers(page, pageSize),
+    queryKey: [QUERY_KEY, page, pageSize, organizationId ?? ''],
+    queryFn: () => authRepository.getUsers(page, pageSize, organizationId),
   });
 }
 

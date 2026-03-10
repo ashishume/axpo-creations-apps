@@ -7,6 +7,7 @@ from app.teaching.dependencies import (
     get_teaching_db_session,
     get_current_teaching_user,
     require_active_org_subscription,
+    require_teaching_permission,
 )
 from app.teaching.schemas.school import SchoolCreate, SchoolUpdate, SchoolResponse
 from app.teaching.services.school import school_service
@@ -26,7 +27,7 @@ router = APIRouter(
 async def create_school(
     data: SchoolCreate,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
+    user: User = Depends(require_teaching_permission("schools:create")),
 ):
     if user.organization_id:
         data = data.model_copy(update={"organization_id": user.organization_id})

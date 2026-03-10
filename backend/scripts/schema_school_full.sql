@@ -380,6 +380,7 @@ INSERT INTO school_xx_permissions (id, module, action, description) VALUES
   ('schools:create', 'schools', 'create', 'Create schools (Super Admin only)'),
   ('schools:edit', 'schools', 'edit', 'Edit schools'),
   ('schools:delete', 'schools', 'delete', 'Delete schools'),
+  ('sessions:create', 'sessions', 'create', 'Create sessions (school admins)'),
   ('app:lock', 'app', 'lock', 'Lock/unlock school'),
   ('plans:manage', 'plans', 'manage', 'Change subscription plan'),
   ('assistant:use', 'assistant', 'use', 'Use Axpo Assistant (AI chat)')

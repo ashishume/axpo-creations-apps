@@ -58,12 +58,15 @@ async def _user_to_response(db: AsyncSession, user: User) -> UserResponse:
 async def list_users(
     page: int = 1,
     page_size: int = 10,
+    organization_id: UUID | None = None,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(require_teaching_permission("users:view")),
 ):
+    # Admin: only their org. Super Admin: optional filter by org.
+    effective_org = user.organization_id if user.organization_id is not None else organization_id
     users, total = await user_service.list_paginated(
         db, page=page, page_size=page_size,
-        organization_id=user.organization_id,
+        organization_id=effective_org,
     )
     return UserListResponse(
         users=[await _user_to_response(db, u) for u in users],

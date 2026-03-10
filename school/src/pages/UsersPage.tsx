@@ -23,16 +23,20 @@ import { formatDate } from '../lib/utils';
 
 export function UsersPage() {
   const { page, pageSize, setPage, setPageSize } = usePagination(10);
-  const { data, isLoading, error } = useUsers(page, pageSize);
+  const { user: currentUser } = useAuth();
+  const currentUserRoleName = currentUser?.role?.name ?? '';
+  const isSuperAdmin = currentUserRoleName === SUPER_ADMIN_ROLE_NAME;
+  const [orgFilterId, setOrgFilterId] = useState<string | null>(null);
+
+  // Admin: backend scopes to their org. Super Admin: optional filter by org.
+  const listOrgId = isSuperAdmin ? (orgFilterId || undefined) : undefined;
+  const { data, isLoading, error } = useUsers(page, pageSize, listOrgId);
   const { data: roles } = useRoles();
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
   const resetPassword = useResetPassword();
-  const { user: currentUser } = useAuth();
   const { organizations, schools, sessions, staff } = useApp();
-  const currentUserRoleName = currentUser?.role?.name ?? '';
-  const isSuperAdmin = currentUserRoleName === SUPER_ADMIN_ROLE_NAME;
   const displayUsers = useMemo(() => {
     if (!data?.users) return [];
     if (isSuperAdmin) return data.users;
@@ -160,14 +164,41 @@ export function UsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Users</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">Manage user accounts and access</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            {isSuperAdmin ? 'Manage user accounts across all organizations' : 'Manage user accounts in your organization'}
+          </p>
         </div>
-        <PermissionGate permission="users:create">
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add User
-          </Button>
-        </PermissionGate>
+        <div className="flex flex-wrap items-center gap-3">
+          {isSuperAdmin && organizations.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="user-org-filter" className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                Organization
+              </label>
+              <select
+                id="user-org-filter"
+                value={orgFilterId ?? ''}
+                onChange={(e) => {
+                  setOrgFilterId(e.target.value || null);
+                  setPage(1);
+                }}
+                className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              >
+                <option value="">All organizations</option>
+                {organizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <PermissionGate permission="users:create">
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </PermissionGate>
+        </div>
       </div>
 
       {isLoading ? (

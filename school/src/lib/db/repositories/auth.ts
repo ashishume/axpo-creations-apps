@@ -236,15 +236,18 @@ export const authRepository = {
     };
   },
 
-  async getUsers(page: number = 1, pageSize: number = 10): Promise<{ users: User[]; total: number }> {
+  async getUsers(page: number = 1, pageSize: number = 10, organizationId?: string | null): Promise<{ users: User[]; total: number }> {
     const supabase = getSupabase();
     const offset = (page - 1) * pageSize;
 
-    const { data, error, count } = await supabase
+    let query = supabase
       .from('school_xx_users')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(offset, offset + pageSize - 1);
+      .order('created_at', { ascending: false });
+    if (organizationId) {
+      query = query.eq('organization_id', organizationId);
+    }
+    const { data, error, count } = await query.range(offset, offset + pageSize - 1);
 
     if (error) {
       throw new Error('Failed to fetch users');

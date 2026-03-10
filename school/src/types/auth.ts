@@ -29,6 +29,7 @@ export type Permission =
   | 'schools:create'
   | 'schools:edit'
   | 'schools:delete'
+  | 'sessions:create'
   | 'app:lock'
   | 'plans:manage'
   | 'assistant:use'
@@ -57,6 +58,7 @@ export const PERMISSION_MODULES = {
   users: ['users:view', 'users:create', 'users:edit', 'users:delete'],
   roles: ['roles:manage'],
   schools: ['schools:view', 'schools:create', 'schools:edit', 'schools:delete'],
+  sessions: ['sessions:create'],
   app: ['app:lock'],
   plans: ['plans:manage'],
   assistant: ['assistant:use'],
