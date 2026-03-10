@@ -58,6 +58,11 @@ export interface StaffImportRow {
   role: StaffRole;
   monthlySalary: number;
   subjectOrGrade?: string;
+  // Leave & salary configuration
+  allowedLeavesPerMonth?: number;
+  perDaySalary?: number;
+  // Classes & subjects (comma-separated format: "Class1:Math,Science;Class2:English")
+  classesSubjectsRaw?: string;
 }
 
 interface ParsedRow {
@@ -180,6 +185,13 @@ function validateStaffRow(
   const role = getColumn(row, ["role", "Role", "Designation"]).trim();
   const salaryStr = getColumn(row, ["monthlySalary", "monthly_salary", "Monthly Salary", "Salary"]).trim();
   const subjectOrGrade = getColumn(row, ["subjectOrGrade", "subject_or_grade", "Subject/Grade", "Subject"]).trim();
+  
+  // Leave & salary configuration
+  const allowedLeavesStr = getColumn(row, ["allowedLeavesPerMonth", "allowed_leaves_per_month", "Allowed Leaves", "Allowed Leaves/Month"]).trim();
+  const perDaySalaryStr = getColumn(row, ["perDaySalary", "per_day_salary", "Per Day Salary"]).trim();
+  
+  // Classes & subjects (format: "Class1:Math,Science;Class2:English")
+  const classesSubjectsRaw = getColumn(row, ["classesSubjects", "classes_subjects", "Classes & Subjects", "Classes"]).trim();
 
   if (!name) return { valid: false, error: "Name is required" };
   const roleNorm = STAFF_ROLES.find((r) => r.toLowerCase() === role.toLowerCase());
@@ -188,6 +200,14 @@ function validateStaffRow(
   const monthlySalary = salaryStr ? Number(salaryStr) : NaN;
   if (!salaryStr || isNaN(monthlySalary) || monthlySalary <= 0)
     return { valid: false, error: "Monthly salary must be a positive number" };
+  
+  const allowedLeavesPerMonth = allowedLeavesStr ? parseInt(allowedLeavesStr, 10) : undefined;
+  if (allowedLeavesStr && (isNaN(allowedLeavesPerMonth!) || allowedLeavesPerMonth! < 0 || allowedLeavesPerMonth! > 30))
+    return { valid: false, error: "Allowed leaves must be 0-30" };
+  
+  const perDaySalary = perDaySalaryStr ? Number(perDaySalaryStr) : undefined;
+  if (perDaySalaryStr && (isNaN(perDaySalary!) || perDaySalary! < 0))
+    return { valid: false, error: "Per day salary must be a positive number" };
 
   return {
     valid: true,
@@ -197,6 +217,9 @@ function validateStaffRow(
       role: roleNorm ?? "Support Staff",
       monthlySalary,
       subjectOrGrade: subjectOrGrade || undefined,
+      allowedLeavesPerMonth,
+      perDaySalary,
+      classesSubjectsRaw: classesSubjectsRaw || undefined,
     },
   };
 }
@@ -213,12 +236,65 @@ export function getStudentSampleCSV(): string {
 
 export function getStaffSampleCSV(): string {
   return [
-    "name,employeeId,role,monthlySalary,subjectOrGrade",
-    "Suresh Kumar,EMP-001,Teacher,45000,Mathematics",
-    "Lakshmi Nair,EMP-002,Teacher,42000,Science",
-    "Geeta Sharma,EMP-003,Administrative,35000,",
-    "Rajesh Driver,EMP-004,Bus Driver,28000,",
+    "name,employeeId,role,monthlySalary,subjectOrGrade,allowedLeavesPerMonth,perDaySalary,classesSubjects",
+    "Suresh Kumar,EMP-001,Teacher,45000,Mathematics,2,,\"Class 5:Math,Algebra;Class 6:Math\"",
+    "Lakshmi Nair,EMP-002,Teacher,42000,Science,2,,\"Class 7:Science,Biology;Class 8:Physics\"",
+    "Geeta Sharma,EMP-003,Administrative,35000,,3,1200,",
+    "Rajesh Driver,EMP-004,Bus Driver,28000,,2,,",
   ].join("\n");
+}
+
+// Helper to escape CSV values
+function escapeCSV(value: string | number | undefined | null): string {
+  if (value === undefined || value === null) return "";
+  const str = String(value);
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+// Export staff data to CSV format
+export function exportStaffToCSV(staffList: Array<{
+  name: string;
+  employeeId?: string;
+  role: string;
+  monthlySalary: number;
+  subjectOrGrade?: string;
+  allowedLeavesPerMonth?: number;
+  perDaySalary?: number;
+  classesSubjects?: Array<{ className: string; subjects: string[] }>;
+}>): string {
+  const headers = [
+    "name",
+    "employeeId",
+    "role",
+    "monthlySalary",
+    "subjectOrGrade",
+    "allowedLeavesPerMonth",
+    "perDaySalary",
+    "classesSubjects",
+  ];
+  
+  const rows = staffList.map((s) => {
+    // Convert classesSubjects to string format: "Class1:Math,Science;Class2:English"
+    const classesSubjectsStr = s.classesSubjects
+      ?.map((cs) => `${cs.className}:${cs.subjects.join(",")}`)
+      .join(";") ?? "";
+    
+    return [
+      escapeCSV(s.name),
+      escapeCSV(s.employeeId),
+      escapeCSV(s.role),
+      escapeCSV(s.monthlySalary),
+      escapeCSV(s.subjectOrGrade),
+      escapeCSV(s.allowedLeavesPerMonth ?? 2),
+      escapeCSV(s.perDaySalary),
+      escapeCSV(classesSubjectsStr),
+    ].join(",");
+  });
+  
+  return [headers.join(","), ...rows].join("\n");
 }
 
 export function BulkImportModal({
@@ -323,7 +399,7 @@ export function BulkImportModal({
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {type === "students"
             ? "Upload a CSV with columns: name, studentId, class, feeType, registrationFees (Registration/Admission one-time), annualFund, monthlyFees, transportFees, dueDayOfMonth, lateFeeAmount, lateFeeFrequency, fatherName, motherName, guardianPhone, bloodGroup, currentAddress, permanentAddress, healthIssues. If class is provided, fees are auto-filled from class defaults. Download sample for full format."
-            : "Upload a CSV with columns: name, employeeId, role, monthlySalary, subjectOrGrade (optional)."}
+            : "Upload a CSV with columns: name, employeeId, role, monthlySalary, subjectOrGrade, allowedLeavesPerMonth, perDaySalary, classesSubjects. Classes format: \"Class1:Subject1,Subject2;Class2:Subject3\". Download sample for full format."}
         </p>
         <div className="flex flex-wrap gap-2">
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700">

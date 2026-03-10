@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { staffRepository, type ExtendedSalaryPayment } from '../lib/db/repositories';
-import type { Staff } from '../types';
+import { staffRepositoryApi } from '../lib/db/api/staff';
+import type { Staff, LeaveSummary } from '../types';
 
 const QUERY_KEY = 'staff';
 
@@ -186,6 +187,14 @@ export function useStaffSalaryStatus(staffId: string, month: string) {
   return useQuery({
     queryKey: [QUERY_KEY, staffId, 'salary', month],
     queryFn: () => staffRepository.getSalaryStatus(staffId, month),
+    enabled: !!staffId && !!month,
+  });
+}
+
+export function useLeaveSummary(staffId: string, month: string) {
+  return useQuery<LeaveSummary>({
+    queryKey: [QUERY_KEY, staffId, 'leaveSummary', month],
+    queryFn: () => staffRepositoryApi.getLeaveSummary(staffId, month),
     enabled: !!staffId && !!month,
   });
 }

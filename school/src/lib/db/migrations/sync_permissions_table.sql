@@ -16,6 +16,7 @@ INSERT INTO school_xx_permissions (id, module, action, description) VALUES
   ('staff:create', 'staff', 'create', 'Create staff'),
   ('staff:edit', 'staff', 'edit', 'Edit staff'),
   ('staff:delete', 'staff', 'delete', 'Delete staff'),
+  ('salary:manage', 'salary', 'manage', 'Manage salary payments, leaves, and attendance data'),
   ('expenses:view', 'expenses', 'view', 'View expenses'),
   ('expenses:create', 'expenses', 'create', 'Create expenses'),
   ('expenses:edit', 'expenses', 'edit', 'Edit expenses'),

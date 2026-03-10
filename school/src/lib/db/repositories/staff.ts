@@ -1,13 +1,20 @@
 import { getSupabase } from '../supabase';
-import type { Staff, SalaryPayment, PaymentMethod } from '../../../types';
+import type { Staff, SalaryPayment, PaymentMethod, ClassSubject } from '../../../types';
 import type { PaginatedResult } from './schools';
 
 type SalaryStatus = SalaryPayment['status'];
 
 export interface ExtendedSalaryPayment extends SalaryPayment {
   expectedAmount?: number;
-  dueDate?: string;
   lateDays?: number;
+}
+
+function mapClassesSubjects(raw: unknown): ClassSubject[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  return raw.map((item: Record<string, unknown>) => ({
+    className: String(item.class_name ?? item.className ?? ''),
+    subjects: Array.isArray(item.subjects) ? item.subjects.map(String) : [],
+  }));
 }
 
 function dbRowToStaff(row: Record<string, unknown>, salaryPayments: ExtendedSalaryPayment[] = []): Staff {
@@ -19,7 +26,39 @@ function dbRowToStaff(row: Record<string, unknown>, salaryPayments: ExtendedSala
     role: row.role as Staff['role'],
     monthlySalary: Number(row.monthly_salary) || 0,
     subjectOrGrade: row.subject_or_grade as string | undefined,
+    // Leave & salary deduction configuration
+    allowedLeavesPerMonth: Number(row.allowed_leaves_per_month) || 2,
+    perDaySalary: row.per_day_salary != null ? Number(row.per_day_salary) : undefined,
+    // Classes & subjects
+    classesSubjects: mapClassesSubjects(row.classes_subjects),
     salaryPayments,
+  };
+}
+
+function mapSalaryPaymentFromDb(p: Record<string, unknown>): ExtendedSalaryPayment {
+  return {
+    id: p.id as string,
+    month: p.month as string,
+    amount: Number(p.paid_amount) || 0,
+    status: (p.status as string) as SalaryStatus,
+    paymentDate: p.payment_date as string | undefined,
+    method: (p.method as string | undefined) as PaymentMethod | undefined,
+    expectedAmount: Number(p.expected_amount),
+    dueDate: p.due_date as string | undefined,
+    lateDays: p.late_days as number | undefined,
+    // Leave tracking fields
+    daysWorked: Number(p.days_worked) || 30,
+    leavesTaken: Number(p.leaves_taken) || 0,
+    allowedLeaves: Number(p.allowed_leaves) || 2,
+    excessLeaves: Number(p.excess_leaves) || 0,
+    leaveDeduction: Number(p.leave_deduction) || 0,
+    // Extra allowance/deduction
+    extraAllowance: Number(p.extra_allowance) || 0,
+    allowanceNote: p.allowance_note as string | undefined,
+    extraDeduction: Number(p.extra_deduction) || 0,
+    deductionNote: p.deduction_note as string | undefined,
+    // Calculated salary
+    calculatedSalary: Number(p.calculated_salary) || Number(p.paid_amount) || 0,
   };
 }
 
@@ -43,17 +82,7 @@ export const staffRepository = {
     (salaryData || []).forEach((p: Record<string, unknown>) => {
       const sid = p.staff_id as string;
       if (!salaryByStaff[sid]) salaryByStaff[sid] = [];
-      salaryByStaff[sid].push({
-        id: p.id as string,
-        month: p.month as string,
-        amount: Number(p.paid_amount) || 0,
-        status: (p.status as string) as SalaryStatus,
-        paymentDate: p.payment_date as string | undefined,
-        method: (p.method as string | undefined) as PaymentMethod | undefined,
-        expectedAmount: Number(p.expected_amount),
-        dueDate: p.due_date as string | undefined,
-        lateDays: p.late_days as number | undefined,
-      });
+      salaryByStaff[sid].push(mapSalaryPaymentFromDb(p));
     });
 
     return (data || []).map((row: Record<string, unknown>) => dbRowToStaff(row, salaryByStaff[row.id as string] || []));
@@ -78,17 +107,7 @@ export const staffRepository = {
     (salaryData || []).forEach((p: Record<string, unknown>) => {
       const sid = p.staff_id as string;
       if (!salaryByStaff[sid]) salaryByStaff[sid] = [];
-      salaryByStaff[sid].push({
-        id: p.id as string,
-        month: p.month as string,
-        amount: Number(p.paid_amount) || 0,
-        status: (p.status as string) as SalaryStatus,
-        paymentDate: p.payment_date as string | undefined,
-        method: (p.method as string | undefined) as PaymentMethod | undefined,
-        expectedAmount: Number(p.expected_amount),
-        dueDate: p.due_date as string | undefined,
-        lateDays: p.late_days as number | undefined,
-      });
+      salaryByStaff[sid].push(mapSalaryPaymentFromDb(p));
     });
 
     return (data || []).map((row: Record<string, unknown>) => dbRowToStaff(row, salaryByStaff[row.id as string] || []));
@@ -124,17 +143,7 @@ export const staffRepository = {
     (salaryData || []).forEach((p: Record<string, unknown>) => {
       const sid = p.staff_id as string;
       if (!salaryByStaff[sid]) salaryByStaff[sid] = [];
-      salaryByStaff[sid].push({
-        id: p.id as string,
-        month: p.month as string,
-        amount: Number(p.paid_amount) || 0,
-        status: (p.status as string) as SalaryStatus,
-        paymentDate: p.payment_date as string | undefined,
-        method: (p.method as string | undefined) as PaymentMethod | undefined,
-        expectedAmount: Number(p.expected_amount),
-        dueDate: p.due_date as string | undefined,
-        lateDays: p.late_days as number | undefined,
-      });
+      salaryByStaff[sid].push(mapSalaryPaymentFromDb(p));
     });
 
     const staff = (data || []).map((row: Record<string, unknown>) => dbRowToStaff(row, salaryByStaff[row.id as string] || []));
@@ -163,17 +172,7 @@ export const staffRepository = {
       .select('*')
       .eq('staff_id', id);
 
-    const salaryPayments: ExtendedSalaryPayment[] = (salaryData || []).map((p: Record<string, unknown>) => ({
-      id: p.id as string,
-      month: p.month as string,
-      amount: Number(p.paid_amount) || 0,
-      status: (p.status as string) as SalaryStatus,
-      paymentDate: p.payment_date as string | undefined,
-      method: (p.method as string | undefined) as PaymentMethod | undefined,
-      expectedAmount: Number(p.expected_amount),
-      dueDate: p.due_date as string | undefined,
-      lateDays: p.late_days as number | undefined,
-    }));
+    const salaryPayments: ExtendedSalaryPayment[] = (salaryData || []).map(mapSalaryPaymentFromDb);
 
     return dbRowToStaff(data, salaryPayments);
   },
@@ -241,17 +240,7 @@ export const staffRepository = {
       .select('*')
       .eq('staff_id', id);
 
-    const salaryPayments: ExtendedSalaryPayment[] = (salaryData || []).map((p: Record<string, unknown>) => ({
-      id: p.id as string,
-      month: p.month as string,
-      amount: Number(p.paid_amount) || 0,
-      status: (p.status as string) as SalaryStatus,
-      paymentDate: p.payment_date as string | undefined,
-      method: (p.method as string | undefined) as PaymentMethod | undefined,
-      expectedAmount: Number(p.expected_amount),
-      dueDate: p.due_date as string | undefined,
-      lateDays: p.late_days as number | undefined,
-    }));
+    const salaryPayments: ExtendedSalaryPayment[] = (salaryData || []).map(mapSalaryPaymentFromDb);
 
     return dbRowToStaff(data, salaryPayments);
   },

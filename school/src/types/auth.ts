@@ -9,6 +9,7 @@ export type Permission =
   | 'staff:create'
   | 'staff:edit'
   | 'staff:delete'
+  | 'salary:manage'
   | 'expenses:view'
   | 'expenses:create'
   | 'expenses:edit'
@@ -51,6 +52,7 @@ export const PERMISSION_MODULES = {
   dashboard: ['dashboard:view'],
   students: ['students:view', 'students:create', 'students:edit', 'students:delete'],
   staff: ['staff:view', 'staff:create', 'staff:edit', 'staff:delete'],
+  salary: ['salary:manage'],
   expenses: ['expenses:view', 'expenses:create', 'expenses:edit', 'expenses:delete'],
   stocks: ['stocks:view', 'stocks:create', 'stocks:edit', 'stocks:delete'],
   reports: ['reports:view'],

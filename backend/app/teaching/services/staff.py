@@ -1,12 +1,49 @@
 """Staff service: business logic; uses repository for DB."""
+import calendar
+from datetime import date
+from decimal import Decimal
 from uuid import UUID
 
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.teaching.models.staff import Staff, SalaryPayment
-from app.teaching.schemas.staff import StaffCreate, StaffUpdate, SalaryPaymentCreate, SalaryPaymentUpdate, BulkSalaryPaymentItem
+from app.teaching.models.leave import LeaveRequest
+from app.teaching.schemas.staff import (
+    StaffCreate,
+    StaffUpdate,
+    SalaryPaymentCreate,
+    SalaryPaymentUpdate,
+    BulkSalaryPaymentItem,
+    LeaveSummaryResponse,
+)
 from app.teaching.repositories.staff import staff_repository
+
+
+def _get_days_in_month(year: int, month: int) -> int:
+    """Return number of days in a given month."""
+    return calendar.monthrange(year, month)[1]
+
+
+def _calculate_salary_breakdown(
+    monthly_salary: Decimal,
+    per_day_salary: Decimal | None,
+    allowed_leaves: int,
+    leaves_taken: int,
+    days_worked: int,
+    extra_allowance: Decimal,
+    extra_deduction: Decimal,
+) -> tuple[Decimal, Decimal, int, Decimal]:
+    """
+    Calculate salary breakdown.
+    Returns: (per_day_rate, leave_deduction, excess_leaves, calculated_salary)
+    """
+    per_day = per_day_salary if per_day_salary else (monthly_salary / Decimal("30"))
+    excess_leaves = max(0, leaves_taken - allowed_leaves)
+    leave_deduction = Decimal(str(excess_leaves)) * per_day
+    calculated_salary = monthly_salary - leave_deduction - extra_deduction + extra_allowance
+    return per_day, leave_deduction, excess_leaves, calculated_salary
 
 
 class StaffService:
@@ -77,10 +114,80 @@ class StaffService:
         staff = await self.get_or_404(db, id)
         await staff_repository.delete(db, staff)
 
+    async def get_leave_summary(
+        self, db: AsyncSession, staff_id: UUID, month: str
+    ) -> LeaveSummaryResponse:
+        """
+        Get leave summary for a staff member for a specific month.
+        Returns leaves taken (approved), days in month, calculated days worked, etc.
+        """
+        staff = await self.get_or_404(db, staff_id)
+        
+        # Parse month (YYYY-MM)
+        year, month_num = map(int, month.split("-"))
+        days_in_month = _get_days_in_month(year, month_num)
+        
+        # Get first and last day of the month
+        first_day = date(year, month_num, 1)
+        last_day = date(year, month_num, days_in_month)
+        
+        # Query approved leave requests for this staff in this month
+        result = await db.execute(
+            select(LeaveRequest).where(
+                and_(
+                    LeaveRequest.staff_id == staff_id,
+                    LeaveRequest.status == "approved",
+                    LeaveRequest.from_date <= last_day,
+                    LeaveRequest.to_date >= first_day,
+                )
+            )
+        )
+        leave_requests = list(result.scalars().all())
+        
+        # Calculate total leave days in this month
+        leaves_taken = 0
+        for req in leave_requests:
+            # Calculate overlapping days with this month
+            overlap_start = max(req.from_date, first_day)
+            overlap_end = min(req.to_date, last_day)
+            if overlap_end >= overlap_start:
+                leaves_taken += (overlap_end - overlap_start).days + 1
+        
+        allowed_leaves = staff.allowed_leaves_per_month
+        excess_leaves = max(0, leaves_taken - allowed_leaves)
+        days_worked = days_in_month - leaves_taken
+        
+        per_day = staff.per_day_salary if staff.per_day_salary else (staff.monthly_salary / Decimal("30"))
+        leave_deduction = Decimal(str(excess_leaves)) * per_day
+        
+        return LeaveSummaryResponse(
+            staff_id=staff_id,
+            month=month,
+            leaves_taken=leaves_taken,
+            days_in_month=days_in_month,
+            days_worked=days_worked,
+            allowed_leaves=allowed_leaves,
+            excess_leaves=excess_leaves,
+            per_day_salary=per_day,
+            leave_deduction=leave_deduction,
+        )
+
     async def add_salary_payment(
         self, db: AsyncSession, staff_id: UUID, data: SalaryPaymentCreate
     ) -> SalaryPayment:
-        await self.get_or_404(db, staff_id)
+        staff = await self.get_or_404(db, staff_id)
+        
+        # Calculate salary breakdown
+        per_day, leave_deduction, excess_leaves, calculated_salary = _calculate_salary_breakdown(
+            monthly_salary=staff.monthly_salary,
+            per_day_salary=staff.per_day_salary,
+            allowed_leaves=staff.allowed_leaves_per_month,
+            leaves_taken=data.leaves_taken,
+            days_worked=data.days_worked,
+            extra_allowance=data.extra_allowance,
+            extra_deduction=data.extra_deduction,
+        )
+        
         return await staff_repository.add_salary_payment(
             db,
             staff_id,
@@ -90,6 +197,19 @@ class StaffService:
             payment_date=data.payment_date,
             method=data.method,
             due_date=data.due_date,
+            # Leave tracking
+            days_worked=data.days_worked,
+            leaves_taken=data.leaves_taken,
+            allowed_leaves=staff.allowed_leaves_per_month,
+            excess_leaves=excess_leaves,
+            leave_deduction=leave_deduction,
+            # Extra allowance/deduction
+            extra_allowance=data.extra_allowance,
+            allowance_note=data.allowance_note,
+            extra_deduction=data.extra_deduction,
+            deduction_note=data.deduction_note,
+            # Calculated salary
+            calculated_salary=calculated_salary,
         )
 
     async def update_salary_payment(
@@ -104,16 +224,38 @@ class StaffService:
             status=data.status,
             payment_date=data.payment_date,
             method=data.method,
+            days_worked=data.days_worked,
+            leaves_taken=data.leaves_taken,
+            extra_allowance=data.extra_allowance,
+            allowance_note=data.allowance_note,
+            extra_deduction=data.extra_deduction,
+            deduction_note=data.deduction_note,
         )
 
     async def add_salary_payments_bulk(
         self, db: AsyncSession, items: list[BulkSalaryPaymentItem]
     ) -> list[SalaryPayment]:
-        staff_ids = {item.staff_id for item in items}
-        for sid in staff_ids:
-            await self.get_or_404(db, sid)
+        # Pre-fetch all staff members
+        staff_map: dict[UUID, Staff] = {}
+        for sid in {item.staff_id for item in items}:
+            staff = await self.get_or_404(db, sid)
+            staff_map[sid] = staff
+        
         out = []
         for item in items:
+            staff = staff_map[item.staff_id]
+            
+            # Calculate salary breakdown
+            per_day, leave_deduction, excess_leaves, calculated_salary = _calculate_salary_breakdown(
+                monthly_salary=staff.monthly_salary,
+                per_day_salary=staff.per_day_salary,
+                allowed_leaves=staff.allowed_leaves_per_month,
+                leaves_taken=item.leaves_taken,
+                days_worked=item.days_worked,
+                extra_allowance=item.extra_allowance,
+                extra_deduction=item.extra_deduction,
+            )
+            
             payment = await staff_repository.add_salary_payment(
                 db,
                 item.staff_id,
@@ -123,6 +265,19 @@ class StaffService:
                 payment_date=item.payment_date,
                 method=item.method,
                 due_date=item.due_date,
+                # Leave tracking
+                days_worked=item.days_worked,
+                leaves_taken=item.leaves_taken,
+                allowed_leaves=staff.allowed_leaves_per_month,
+                excess_leaves=excess_leaves,
+                leave_deduction=leave_deduction,
+                # Extra allowance/deduction
+                extra_allowance=item.extra_allowance,
+                allowance_note=item.allowance_note,
+                extra_deduction=item.extra_deduction,
+                deduction_note=item.deduction_note,
+                # Calculated salary
+                calculated_salary=calculated_salary,
             )
             out.append(payment)
         return out

@@ -2,9 +2,10 @@
 import uuid
 from datetime import date, datetime, timezone
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import TeachingBase
@@ -33,6 +34,14 @@ class Staff(TeachingBase):
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
     salary_due_day: Mapped[int] = mapped_column(Integer, default=5)
+
+    # Leave & Salary Deduction Configuration (per teacher)
+    allowed_leaves_per_month: Mapped[int] = mapped_column(Integer, default=2)
+    per_day_salary: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+
+    # Classes & Subjects (dynamic array) - [{className: string, subjects: string[]}]
+    classes_subjects: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
@@ -65,6 +74,23 @@ class SalaryPayment(TeachingBase):
     late_days: Mapped[int] = mapped_column(Integer, default=0)
     method: Mapped[str | None] = mapped_column(String(50), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Leave tracking fields
+    days_worked: Mapped[int] = mapped_column(Integer, default=30)
+    leaves_taken: Mapped[int] = mapped_column(Integer, default=0)
+    allowed_leaves: Mapped[int] = mapped_column(Integer, default=2)
+    excess_leaves: Mapped[int] = mapped_column(Integer, default=0)
+    leave_deduction: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
+
+    # Extra allowance/deduction fields
+    extra_allowance: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
+    allowance_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extra_deduction: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
+    deduction_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Final calculated salary
+    calculated_salary: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 

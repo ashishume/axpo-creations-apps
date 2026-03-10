@@ -110,6 +110,19 @@ class StaffRepository:
         payment_date: date | None = None,
         method: str | None = None,
         due_date: str | None = None,
+        # Leave tracking fields
+        days_worked: int = 30,
+        leaves_taken: int = 0,
+        allowed_leaves: int = 2,
+        excess_leaves: int = 0,
+        leave_deduction=0,
+        # Extra allowance/deduction
+        extra_allowance=0,
+        allowance_note: str | None = None,
+        extra_deduction=0,
+        deduction_note: str | None = None,
+        # Calculated salary
+        calculated_salary=None,
     ) -> SalaryPayment:
         from decimal import Decimal
         due = due_date or f"{month}-05"
@@ -117,15 +130,32 @@ class StaffRepository:
             due_parsed = date.fromisoformat(due) if isinstance(due, str) else due
         except (TypeError, ValueError):
             due_parsed = date.fromisoformat(f"{month}-05")
+        
+        paid_amount = Decimal(str(amount))
+        calc_salary = Decimal(str(calculated_salary)) if calculated_salary is not None else paid_amount
+        
         payment = SalaryPayment(
             staff_id=staff_id,
             month=month,
-            expected_amount=Decimal(str(amount)),
-            paid_amount=Decimal(str(amount)),
+            expected_amount=paid_amount,
+            paid_amount=paid_amount,
             status=status,
             due_date=due_parsed,
             payment_date=payment_date,
             method=method,
+            # Leave tracking fields
+            days_worked=days_worked,
+            leaves_taken=leaves_taken,
+            allowed_leaves=allowed_leaves,
+            excess_leaves=excess_leaves,
+            leave_deduction=Decimal(str(leave_deduction)),
+            # Extra allowance/deduction
+            extra_allowance=Decimal(str(extra_allowance)),
+            allowance_note=allowance_note,
+            extra_deduction=Decimal(str(extra_deduction)),
+            deduction_note=deduction_note,
+            # Calculated salary
+            calculated_salary=calc_salary,
         )
         db.add(payment)
         await db.flush()
@@ -142,7 +172,16 @@ class StaffRepository:
         status: str | None = None,
         payment_date=None,
         method: str | None = None,
+        # Leave tracking fields
+        days_worked: int | None = None,
+        leaves_taken: int | None = None,
+        # Extra allowance/deduction
+        extra_allowance=None,
+        allowance_note: str | None = None,
+        extra_deduction=None,
+        deduction_note: str | None = None,
     ) -> SalaryPayment | None:
+        from decimal import Decimal
         result = await db.execute(
             select(SalaryPayment).where(
                 SalaryPayment.id == payment_id,
@@ -160,6 +199,18 @@ class StaffRepository:
             payment.payment_date = payment_date
         if method is not None:
             payment.method = method
+        if days_worked is not None:
+            payment.days_worked = days_worked
+        if leaves_taken is not None:
+            payment.leaves_taken = leaves_taken
+        if extra_allowance is not None:
+            payment.extra_allowance = Decimal(str(extra_allowance))
+        if allowance_note is not None:
+            payment.allowance_note = allowance_note
+        if extra_deduction is not None:
+            payment.extra_deduction = Decimal(str(extra_deduction))
+        if deduction_note is not None:
+            payment.deduction_note = deduction_note
         await db.flush()
         await db.refresh(payment)
         return payment

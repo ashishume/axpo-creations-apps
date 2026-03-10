@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { useStaffBySessionInfinite, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useAddSalaryPayment } from "../hooks/useStaff";
+import { useStaffBySessionInfinite, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useAddSalaryPayment, useLeaveSummary } from "../hooks/useStaff";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
-import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle } from "lucide-react";
-import { BulkImportModal } from "../components/import/BulkImportModal";
-import type { Staff as StaffType, StaffRole, SalaryPayment } from "../types";
+import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle, X, AlertTriangle, Banknote, Download } from "lucide-react";
+import { BulkImportModal, exportStaffToCSV } from "../components/import/BulkImportModal";
+import type { Staff as StaffType, StaffRole, SalaryPayment, ClassSubject } from "../types";
 import { formatCurrency, formatDate, formatMonthYear, cn } from "../lib/utils";
 import { SearchInput } from "../components/ui/SearchInput";
 import { FilterChips } from "../components/ui/FilterChips";
@@ -17,6 +17,7 @@ import { Select } from "../components/ui/Select";
 import { FormField } from "../components/ui/FormField";
 import { Badge } from "../components/ui/Badge";
 import { EmptyState } from "../components/ui/EmptyState";
+import { PermissionGate } from "../components/auth/PermissionGate";
 
 const roleBadgeVariant: Record<StaffType["role"], "info" | "neutral" | "warning"> = {
   Teacher: "info",
@@ -28,18 +29,18 @@ const roleBadgeVariant: Record<StaffType["role"], "info" | "neutral" | "warning"
 // Helper to calculate late days for a salary payment (uses payment.dueDate if set, else dueDay of month)
 function calculateLateDays(payment: SalaryPayment, dueDay: number = 5): number {
   if (!payment.paymentDate || payment.status !== "Paid") return 0;
-  
+
   const paidDate = new Date(payment.paymentDate);
   const dueDate = payment.dueDate
     ? new Date(payment.dueDate)
     : (() => {
-        const [year, month] = payment.month.split("-").map(Number);
-        return new Date(year, month - 1, dueDay);
-      })();
-  
+      const [year, month] = payment.month.split("-").map(Number);
+      return new Date(year, month - 1, dueDay);
+    })();
+
   const diffTime = paidDate.getTime() - dueDate.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   return Math.max(0, diffDays);
 }
 
@@ -48,11 +49,11 @@ function getLastPaidInfo(salaryPayments: SalaryPayment[], dueDay: number = 5): {
   const paidPayments = salaryPayments
     .filter(p => p.status === "Paid" && p.paymentDate)
     .sort((a, b) => new Date(b.paymentDate!).getTime() - new Date(a.paymentDate!).getTime());
-  
+
   if (paidPayments.length === 0) {
     return { date: null, lateDays: 0, month: null };
   }
-  
+
   const lastPayment = paidPayments[0];
   return {
     date: lastPayment.paymentDate!,
@@ -96,6 +97,226 @@ function getPayableMonths(): string[] {
   return months;
 }
 
+// Salary Payment Modal Component with leave calculations
+function SalaryPaymentModalContent({
+  staff,
+  month,
+  salaryDueDay,
+  onClose,
+  onSubmit,
+}: {
+  staff: StaffType;
+  month: string;
+  salaryDueDay: number;
+  onClose: () => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  const { data: leaveSummary, isLoading: leaveSummaryLoading } = useLeaveSummary(staff.id, month);
+
+  // Local state for form values
+  const [daysWorked, setDaysWorked] = useState(30);
+  const [leavesTaken, setLeavesTaken] = useState(0);
+  const [extraAllowance, setExtraAllowance] = useState(0);
+  const [extraDeduction, setExtraDeduction] = useState(0);
+
+  // Update form values when leave summary loads
+  useEffect(() => {
+    if (leaveSummary) {
+      setDaysWorked(leaveSummary.daysWorked);
+      setLeavesTaken(leaveSummary.leavesTaken);
+    }
+  }, [leaveSummary]);
+
+  // Calculate salary breakdown
+  const perDay = staff.perDaySalary ?? staff.monthlySalary / 30;
+  const allowedLeaves = staff.allowedLeavesPerMonth ?? 2;
+  const excessLeaves = Math.max(0, leavesTaken - allowedLeaves);
+  const leaveDeduction = excessLeaves * perDay;
+  const calculatedSalary = staff.monthlySalary - leaveDeduction - extraDeduction + extraAllowance;
+
+  return (
+    <Modal
+      open={true}
+      onClose={onClose}
+      title={`Salary Payment – ${staff.name}`}
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        {/* Salary Info Header */}
+        <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Monthly Salary: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(staff.monthlySalary)}</strong>
+              </p>
+              <p className="text-xs text-slate-500">
+                Per Day: {formatCurrency(perDay)} | Allowed Leaves: {allowedLeaves}/month
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-slate-600">Month</p>
+              <p className="font-semibold text-slate-900 dark:text-slate-100">{formatMonthYear(month)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Leave Summary from System */}
+        {leaveSummaryLoading ? (
+          <div className="flex items-center gap-2 text-sm text-slate-500">
+            <Skeleton className="h-4 w-4" />
+            Loading leave data...
+          </div>
+        ) : leaveSummary && leaveSummary.leavesTaken > 0 ? (
+          <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-3 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
+            <div className="text-sm">
+              <p className="text-amber-800 dark:text-amber-200">
+                <strong>{leaveSummary.leavesTaken}</strong> approved leave(s) found for this month.
+              </p>
+              <p className="text-amber-600 dark:text-amber-300 text-xs mt-1">
+                Days in month: {leaveSummary.daysInMonth} | Days worked: {leaveSummary.daysWorked}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Days Worked & Leaves */}
+        <div className="grid grid-cols-2 gap-4">
+          <FormField label="Days Worked" helperText="Verify before paying">
+            <Input
+              name="daysWorked"
+              type="number"
+              min={0}
+              max={31}
+              value={daysWorked}
+              onChange={(e) => setDaysWorked(Number(e.target.value))}
+            />
+          </FormField>
+          <FormField label="Leaves Taken" helperText={`Allowed: ${allowedLeaves}`}>
+            <Input
+              name="leavesTaken"
+              type="number"
+              min={0}
+              max={31}
+              value={leavesTaken}
+              onChange={(e) => setLeavesTaken(Number(e.target.value))}
+            />
+          </FormField>
+        </div>
+
+        {/* Leave Deduction Display */}
+        {excessLeaves > 0 && (
+          <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3">
+            <p className="text-sm text-red-800 dark:text-red-200">
+              <strong>Excess Leaves:</strong> {excessLeaves} day(s) beyond allowed limit
+            </p>
+            <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+              <strong>Leave Deduction:</strong> {formatCurrency(leaveDeduction)}
+            </p>
+          </div>
+        )}
+
+        {/* Extra Allowance */}
+        <div className="border-t border-slate-200 pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Extra Allowance (₹)" helperText="Bonus, advance, etc.">
+              <Input
+                name="extraAllowance"
+                type="number"
+                min={0}
+                value={extraAllowance}
+                onChange={(e) => setExtraAllowance(Number(e.target.value))}
+              />
+            </FormField>
+            <FormField label="Allowance Note">
+              <Input
+                name="allowanceNote"
+                type="text"
+                placeholder="e.g., Bonus, Advance"
+              />
+            </FormField>
+          </div>
+        </div>
+
+        {/* Extra Deduction */}
+        <div className="grid grid-cols-2 gap-4">
+          <FormField label="Extra Deduction (₹)" helperText="Other deductions">
+            <Input
+              name="extraDeduction"
+              type="number"
+              min={0}
+              value={extraDeduction}
+              onChange={(e) => setExtraDeduction(Number(e.target.value))}
+            />
+          </FormField>
+          <FormField label="Deduction Note">
+            <Input
+              name="deductionNote"
+              type="text"
+              placeholder="e.g., Loan EMI"
+            />
+          </FormField>
+        </div>
+
+        {/* Calculated Salary */}
+        <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4 border border-green-200 dark:border-green-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Banknote className="h-5 w-5 text-green-600" />
+              <span className="font-medium text-green-800 dark:text-green-200">Final Salary</span>
+            </div>
+            <span className="text-2xl font-bold text-green-700 dark:text-green-300">
+              {formatCurrency(calculatedSalary)}
+            </span>
+          </div>
+          <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+            = {formatCurrency(staff.monthlySalary)}
+            {leaveDeduction > 0 && ` - ${formatCurrency(leaveDeduction)} (leave)`}
+            {extraDeduction > 0 && ` - ${formatCurrency(extraDeduction)} (deduction)`}
+            {extraAllowance > 0 && ` + ${formatCurrency(extraAllowance)} (allowance)`}
+          </p>
+        </div>
+
+        {/* Disclaimer */}
+        <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 p-2 rounded">
+          <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>Please verify the days worked and leaves before confirming payment.</span>
+        </div>
+
+        {/* Payment Details */}
+        <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4">
+          <FormField label="Payment Date">
+            <Input name="paymentDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+          </FormField>
+          <FormField label="Method">
+            <Select name="method" defaultValue="Bank Transfer">
+              <option value="">—</option>
+              <option value="Cash">Cash</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Online">Online</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </Select>
+          </FormField>
+        </div>
+
+        <FormField label="Status">
+          <Select name="status" defaultValue="Paid">
+            <option value="Paid">Paid</option>
+            <option value="Partially Paid">Partially Paid</option>
+            <option value="Pending">Pending</option>
+          </Select>
+        </FormField>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit">Pay Salary</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 export function StaffPage() {
   const {
     sessions,
@@ -121,14 +342,19 @@ export function StaffPage() {
   const salaryDueDay = selectedSession?.salaryDueDay ?? 5;
 
   const [staffModal, setStaffModal] = useState<{ open: boolean; staff?: StaffType }>({ open: false });
-  const [salaryModal, setSalaryModal] = useState<StaffType | null>(null);
+  const [salaryModal, setSalaryModal] = useState<{ staff: StaffType; month: string } | null>(null);
   const [salaryHistoryModal, setSalaryHistoryModal] = useState<StaffType | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
-  
-  const hasFilters = !!(roleFilter || searchQuery.trim());
+  const [classFilter, setClassFilter] = useState<string>("");
+  const [subjectFilter, setSubjectFilter] = useState<string>("");
+
+  // Staff form state for classes & subjects
+  const [classesSubjects, setClassesSubjects] = useState<ClassSubject[]>([]);
+
+  const hasFilters = !!(roleFilter || searchQuery.trim() || classFilter || subjectFilter);
   const {
     staffList,
     fetchNextPage,
@@ -145,6 +371,24 @@ export function StaffPage() {
 
   const list = staffList;
 
+  // Extract unique classes and subjects from all staff
+  const { uniqueClasses, uniqueSubjects } = useMemo(() => {
+    const classSet = new Set<string>();
+    const subjectSet = new Set<string>();
+    list.forEach((s) => {
+      if (s.classesSubjects) {
+        s.classesSubjects.forEach((cs) => {
+          if (cs.className) classSet.add(cs.className);
+          cs.subjects?.forEach((sub) => subjectSet.add(sub));
+        });
+      }
+    });
+    return {
+      uniqueClasses: Array.from(classSet).sort(),
+      uniqueSubjects: Array.from(subjectSet).sort(),
+    };
+  }, [list]);
+
   const filteredList = useMemo(() => {
     let out = list;
     const q = searchQuery.trim().toLowerCase();
@@ -158,8 +402,25 @@ export function StaffPage() {
     if (roleFilter) {
       out = out.filter((s) => s.role === roleFilter);
     }
+    if (classFilter) {
+      out = out.filter((s) =>
+        s.classesSubjects?.some((cs) => cs.className === classFilter)
+      );
+    }
+    if (subjectFilter) {
+      out = out.filter((s) =>
+        s.classesSubjects?.some((cs) => cs.subjects?.includes(subjectFilter))
+      );
+    }
     return out;
-  }, [list, searchQuery, roleFilter]);
+  }, [list, searchQuery, roleFilter, classFilter, subjectFilter]);
+
+  // Reset classes/subjects form state when opening modal
+  useEffect(() => {
+    if (staffModal.open) {
+      setClassesSubjects(staffModal.staff?.classesSubjects ?? []);
+    }
+  }, [staffModal.open, staffModal.staff]);
 
   const handleSaveStaff = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -169,7 +430,17 @@ export function StaffPage() {
     const role = (form.elements.namedItem("role") as HTMLSelectElement).value as StaffRole;
     const monthlySalary = Number((form.elements.namedItem("monthlySalary") as HTMLInputElement).value);
     const subjectOrGrade = (form.elements.namedItem("subjectOrGrade") as HTMLInputElement).value.trim();
+    const allowedLeavesPerMonth = Number((form.elements.namedItem("allowedLeavesPerMonth") as HTMLInputElement).value) || 2;
+    const perDaySalaryInput = (form.elements.namedItem("perDaySalary") as HTMLInputElement).value;
+    const perDaySalary = perDaySalaryInput ? Number(perDaySalaryInput) : undefined;
+
     if (!selectedSessionId || !name || monthlySalary <= 0) return;
+
+    // Filter out empty class/subject entries
+    const validClassesSubjects = classesSubjects.filter(
+      (cs) => cs.className.trim() && cs.subjects.length > 0
+    );
+
     if (staffModal.staff) {
       updateStaff(staffModal.staff.id, {
         name,
@@ -177,6 +448,9 @@ export function StaffPage() {
         role,
         monthlySalary,
         subjectOrGrade: subjectOrGrade || undefined,
+        allowedLeavesPerMonth,
+        perDaySalary,
+        classesSubjects: validClassesSubjects.length > 0 ? validClassesSubjects : undefined,
       });
       toast("Staff updated");
     } else {
@@ -187,30 +461,75 @@ export function StaffPage() {
         role,
         monthlySalary,
         subjectOrGrade: subjectOrGrade || undefined,
+        allowedLeavesPerMonth,
+        perDaySalary,
+        classesSubjects: validClassesSubjects.length > 0 ? validClassesSubjects : undefined,
       });
       toast("Staff added");
     }
     setStaffModal({ open: false });
   };
 
+  // Class/Subject management helpers
+  const addClassSubject = () => {
+    setClassesSubjects([...classesSubjects, { className: "", subjects: [] }]);
+  };
+
+  const removeClassSubject = (index: number) => {
+    setClassesSubjects(classesSubjects.filter((_, i) => i !== index));
+  };
+
+  const updateClassSubject = (index: number, field: "className" | "subjects", value: string | string[]) => {
+    const updated = [...classesSubjects];
+    if (field === "className") {
+      updated[index] = { ...updated[index], className: value as string };
+    } else {
+      updated[index] = { ...updated[index], subjects: value as string[] };
+    }
+    setClassesSubjects(updated);
+  };
+
   const handleSaveSalary = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!salaryModal) return;
     const form = e.currentTarget;
-    const month = (form.elements.namedItem("month") as HTMLSelectElement | HTMLInputElement).value;
+    const month = salaryModal.month;
     const status = (form.elements.namedItem("status") as HTMLSelectElement).value as "Paid" | "Pending" | "Partially Paid";
-    const amount = Number((form.elements.namedItem("amount") as HTMLInputElement).value);
+    const daysWorked = Number((form.elements.namedItem("daysWorked") as HTMLInputElement).value) || 30;
+    const leavesTaken = Number((form.elements.namedItem("leavesTaken") as HTMLInputElement).value) || 0;
+    const extraAllowance = Number((form.elements.namedItem("extraAllowance") as HTMLInputElement).value) || 0;
+    const allowanceNote = (form.elements.namedItem("allowanceNote") as HTMLInputElement).value.trim() || undefined;
+    const extraDeduction = Number((form.elements.namedItem("extraDeduction") as HTMLInputElement).value) || 0;
+    const deductionNote = (form.elements.namedItem("deductionNote") as HTMLInputElement).value.trim() || undefined;
     const paymentDate = (form.elements.namedItem("paymentDate") as HTMLInputElement).value || undefined;
     const method = (form.elements.namedItem("method") as HTMLSelectElement).value as "Cash" | "Cheque" | "Online" | "Bank Transfer" | "";
     const dueDate = `${month}-${String(salaryDueDay).padStart(2, "0")}`;
-    // Always add a new payment (allow multiple payments per month, e.g. bonus or second installment)
-    addSalaryPayment(salaryModal.id, {
+
+    // Calculate final amount based on deductions
+    const staff = salaryModal.staff;
+    const perDay = staff.perDaySalary ?? staff.monthlySalary / 30;
+    const allowedLeaves = staff.allowedLeavesPerMonth ?? 2;
+    const excessLeaves = Math.max(0, leavesTaken - allowedLeaves);
+    const leaveDeduction = excessLeaves * perDay;
+    const calculatedSalary = staff.monthlySalary - leaveDeduction - extraDeduction + extraAllowance;
+
+    addSalaryPayment(staff.id, {
       month,
-      amount,
+      amount: calculatedSalary,
       status,
       paymentDate: paymentDate || undefined,
       method: method || undefined,
       dueDate,
+      daysWorked,
+      leavesTaken,
+      allowedLeaves,
+      excessLeaves,
+      leaveDeduction,
+      extraAllowance,
+      allowanceNote,
+      extraDeduction,
+      deductionNote,
+      calculatedSalary,
     });
     toast("Salary payment recorded");
     setSalaryModal(null);
@@ -229,6 +548,26 @@ export function StaffPage() {
           <p className="text-slate-600">Manage staff and salary payments</p>
         </div>
         <div className="flex items-center gap-2">
+          {list.length > 0 && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                const csv = exportStaffToCSV(list);
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `staff_export_${new Date().toISOString().slice(0, 10)}.csv`;
+                link.click();
+                URL.revokeObjectURL(url);
+                toast("Staff exported to CSV");
+              }}
+            >
+              <Download className="mr-1 h-4 w-4" />
+              Export CSV
+            </Button>
+          )}
           <Button
             size="sm"
             variant="secondary"
@@ -292,7 +631,7 @@ export function StaffPage() {
               />
               <FilterChips
                 options={[
-                  { value: "", label: "All" },
+                  { value: "", label: "All Roles" },
                   { value: "Teacher", label: "Teacher" },
                   { value: "Administrative", label: "Administrative" },
                   { value: "Bus Driver", label: "Bus Driver" },
@@ -301,6 +640,34 @@ export function StaffPage() {
                 value={roleFilter}
                 onChange={setRoleFilter}
               />
+              {uniqueClasses.length > 0 && (
+                <Select
+                  value={classFilter}
+                  onChange={(e) => setClassFilter(e.target.value)}
+                  className="w-36"
+                >
+                  <option value="">All Classes</option>
+                  {uniqueClasses.map((cls) => (
+                    <option key={cls} value={cls}>
+                      {cls}
+                    </option>
+                  ))}
+                </Select>
+              )}
+              {uniqueSubjects.length > 0 && (
+                <Select
+                  value={subjectFilter}
+                  onChange={(e) => setSubjectFilter(e.target.value)}
+                  className="w-36"
+                >
+                  <option value="">All Subjects</option>
+                  {uniqueSubjects.map((sub) => (
+                    <option key={sub} value={sub}>
+                      {sub}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </div>
             {list.length === 0 ? (
               <EmptyState message="No staff in this session." />
@@ -326,7 +693,7 @@ export function StaffPage() {
                       const currentMonthPayments = s.salaryPayments.filter(p => p.month === currentMonth);
                       const currentMonthPayment = currentMonthPayments[0];
                       const currentMonthPaidCount = currentMonthPayments.filter(p => p.status === "Paid").length;
-                      
+
                       return (
                         <tr key={s.id} className="border-b border-slate-100">
                           <td className="py-3 pr-4 font-medium text-slate-900">{s.name}</td>
@@ -363,8 +730,8 @@ export function StaffPage() {
                               <span className={cn(
                                 "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
                                 currentMonthPaidCount > 0 ? "bg-green-100 text-green-800" :
-                                currentMonthPayment.status === "Partially Paid" ? "bg-amber-100 text-amber-800" :
-                                "bg-red-100 text-red-800"
+                                  currentMonthPayment.status === "Partially Paid" ? "bg-amber-100 text-amber-800" :
+                                    "bg-red-100 text-red-800"
                               )}>
                                 {currentMonthPaidCount > 0 && <CheckCircle className="h-3 w-3" />}
                                 {currentMonthPaidCount === 0 && currentMonthPayment.status === "Pending" && <XCircle className="h-3 w-3" />}
@@ -380,39 +747,37 @@ export function StaffPage() {
                           </td>
                           <td className="py-3">
                             <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSalaryModal(s)}
-                                title="Record salary payment"
-                              >
-                                Pay
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSalaryHistoryModal(s)}
-                                title="View salary history"
-                              >
-                                <Calendar className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setStaffModal({ open: true, staff: s })}
-                                title="Edit staff details"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-600 hover:bg-red-50"
-                                onClick={() => setConfirmDelete({ id: s.id, name: s.name })}
-                                title="Delete staff member"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <PermissionGate permission="salary:manage">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setSalaryHistoryModal(s)}
+                                  title="View salary history & pay"
+                                >
+                                  <Calendar className="h-4 w-4" />
+                                </Button>
+                              </PermissionGate>
+                              <PermissionGate permission="staff:edit">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setStaffModal({ open: true, staff: s })}
+                                  title="Edit staff details"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </PermissionGate>
+                              <PermissionGate permission="staff:delete">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-600 hover:bg-red-50"
+                                  onClick={() => setConfirmDelete({ id: s.id, name: s.name })}
+                                  title="Delete staff member"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </PermissionGate>
                             </div>
                           </td>
                         </tr>
@@ -442,8 +807,8 @@ export function StaffPage() {
         onClose={() => setStaffModal({ open: false })}
         title={staffModal.staff ? "Edit staff" : "Add staff"}
       >
-        <form onSubmit={handleSaveStaff} className="space-y-4">
-          <FormField label="Name *" required>
+        <form onSubmit={handleSaveStaff} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          <FormField label="Name" required>
             <Input name="name" type="text" required defaultValue={staffModal.staff?.name} />
           </FormField>
           <FormField label="Employee ID">
@@ -457,10 +822,10 @@ export function StaffPage() {
               <option value="Support Staff">Support Staff</option>
             </Select>
           </FormField>
-          <FormField label="Subject / Grade (for teachers)">
+          {/* <FormField label="Subject / Grade (legacy, for display)">
             <Input name="subjectOrGrade" type="text" defaultValue={staffModal.staff?.subjectOrGrade} />
-          </FormField>
-          <FormField label="Monthly salary (₹) *" required>
+          </FormField> */}
+          <FormField label="Monthly salary (₹)" required>
             <Input
               name="monthlySalary"
               type="number"
@@ -469,7 +834,84 @@ export function StaffPage() {
               defaultValue={staffModal.staff?.monthlySalary}
             />
           </FormField>
-          <div className="flex justify-end gap-2">
+
+          {/* Leave & Salary Configuration */}
+          <div className="border-t border-slate-200 pt-4 mt-4">
+            <h4 className="text-sm font-medium text-slate-700 mb-3">Leave & Salary Configuration</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Allowed Leaves/Month" helperText="Leaves without salary deduction">
+                <Input
+                  name="allowedLeavesPerMonth"
+                  type="number"
+                  min={0}
+                  max={30}
+                  defaultValue={staffModal.staff?.allowedLeavesPerMonth ?? 2}
+                />
+              </FormField>
+              <FormField label="Per Day Salary (₹)" helperText="Leave empty for monthly/30">
+                <Input
+                  name="perDaySalary"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  defaultValue={staffModal.staff?.perDaySalary ?? ""}
+                  placeholder="Auto-calculated"
+                />
+              </FormField>
+            </div>
+          </div>
+
+          {/* Classes & Subjects */}
+          <div className="border-t border-slate-200 pt-4 mt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium text-slate-700">Classes & Subjects</h4>
+              <Button type="button" variant="secondary" size="sm" onClick={addClassSubject}>
+                <Plus className="h-3 w-3 mr-1" />
+                Add Class
+              </Button>
+            </div>
+            {classesSubjects.length === 0 ? (
+              <p className="text-sm text-slate-500">No classes assigned. Click "Add Class" to assign classes and subjects.</p>
+            ) : (
+              <div className="space-y-3">
+                {classesSubjects.map((cs, index) => (
+                  <div key={index} className="flex gap-2 items-start p-3 bg-slate-50 rounded-lg">
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        type="text"
+                        placeholder="Class name (e.g., Class 5)"
+                        value={cs.className}
+                        onChange={(e) => updateClassSubject(index, "className", e.target.value)}
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Subjects (comma-separated, e.g., Math, Science)"
+                        value={cs.subjects.join(", ")}
+                        onChange={(e) =>
+                          updateClassSubject(
+                            index,
+                            "subjects",
+                            e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
+                          )
+                        }
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:bg-red-50"
+                      onClick={() => removeClassSubject(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
             <Button type="button" variant="secondary" onClick={() => setStaffModal({ open: false })}>
               Cancel
             </Button>
@@ -478,69 +920,13 @@ export function StaffPage() {
         </form>
       </Modal>
 
-      {salaryModal && (
-        <Modal
-          open={!!salaryModal}
-          onClose={() => setSalaryModal(null)}
-          title={`Salary Payment – ${salaryModal.name}`}
-        >
-          <form onSubmit={handleSaveSalary} className="space-y-4">
-            <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 mb-4">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Monthly Salary: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(salaryModal.monthlySalary)}</strong>
-              </p>
-            </div>
-            <FormField
-              label="Select Month"
-              required
-              helperText="You can pay for the current month or advance salary for up to 6 future months. Multiple payments per month are allowed."
-            >
-              <Select name="month" required defaultValue={currentMonth}>
-                {payableMonths.map((month) => {
-                  const paymentsForMonth = salaryModal.salaryPayments.filter(p => p.month === month);
-                  const paidCount = paymentsForMonth.filter(p => p.status === "Paid").length;
-                  const monthLabel = formatMonthYear(month);
-                  const currentLabel = month === currentMonth ? ` (Current)` : "";
-                  const suffix = paidCount > 0 ? ` – Paid (${paidCount} payment${paidCount > 1 ? "s" : ""})` : paymentsForMonth.length ? ` – ${paymentsForMonth[0].status}` : "";
-                  return (
-                    <option key={month} value={month}>
-                      {monthLabel}{currentLabel}{suffix}
-                    </option>
-                  );
-                })}
-              </Select>
-            </FormField>
-            <FormField label="Status">
-              <Select name="status" defaultValue="Paid">
-                <option value="Paid">Paid</option>
-                <option value="Partially Paid">Partially Paid</option>
-                <option value="Pending">Pending</option>
-              </Select>
-            </FormField>
-            <FormField label="Amount (₹)">
-              <Input name="amount" type="number" min={0} defaultValue={salaryModal.monthlySalary} />
-            </FormField>
-            <FormField label="Payment date">
-              <Input name="paymentDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
-            </FormField>
-            <FormField label="Method">
-              <Select name="method" defaultValue="Bank Transfer">
-                <option value="">—</option>
-                <option value="Cash">Cash</option>
-                <option value="Cheque">Cheque</option>
-                <option value="Online">Online</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-              </Select>
-            </FormField>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="secondary" onClick={() => setSalaryModal(null)}>
-                Cancel
-              </Button>
-              <Button type="submit">Pay Salary</Button>
-            </div>
-          </form>
-        </Modal>
-      )}
+      {salaryModal && <SalaryPaymentModalContent
+        staff={salaryModal.staff}
+        month={salaryModal.month}
+        salaryDueDay={salaryDueDay}
+        onClose={() => setSalaryModal(null)}
+        onSubmit={handleSaveSalary}
+      />}
 
       <ConfirmDialog
         open={!!confirmDelete}
@@ -562,17 +948,34 @@ export function StaffPage() {
         onClose={() => setImportModalOpen(false)}
         type="staff"
         sessionId={selectedSessionId}
-        onImportStudents={() => {}}
+        onImportStudents={() => { }}
         onImportStaff={async (rows) => {
           if (!selectedSessionId) return;
-          const staffToCreate = rows.map((r) => ({
-            sessionId: selectedSessionId,
-            name: r.name,
-            employeeId: r.employeeId ?? "",
-            role: r.role,
-            monthlySalary: r.monthlySalary,
-            subjectOrGrade: r.subjectOrGrade,
-          }));
+          const staffToCreate = rows.map((r) => {
+            // Parse classesSubjectsRaw: "Class1:Math,Science;Class2:English" format
+            let classesSubjects: ClassSubject[] | undefined;
+            if (r.classesSubjectsRaw) {
+              classesSubjects = r.classesSubjectsRaw.split(";").map((part) => {
+                const [className, subjectsStr] = part.split(":");
+                return {
+                  className: className?.trim() ?? "",
+                  subjects: subjectsStr?.split(",").map((s) => s.trim()).filter(Boolean) ?? [],
+                };
+              }).filter((cs) => cs.className && cs.subjects.length > 0);
+            }
+
+            return {
+              sessionId: selectedSessionId,
+              name: r.name,
+              employeeId: r.employeeId ?? "",
+              role: r.role,
+              monthlySalary: r.monthlySalary,
+              subjectOrGrade: r.subjectOrGrade,
+              allowedLeavesPerMonth: r.allowedLeavesPerMonth ?? 2,
+              perDaySalary: r.perDaySalary,
+              classesSubjects,
+            };
+          });
           await createStaffBulk.mutateAsync(staffToCreate);
           toast(`${rows.length} staff member(s) imported`);
         }}
@@ -586,104 +989,141 @@ export function StaffPage() {
           historyStaff.salaryPayments.map((p: SalaryPayment) => p.month)
         );
         return (
-        <Modal
-          open={!!salaryHistoryModal}
-          onClose={() => setSalaryHistoryModal(null)}
-          title={`Salary History – ${historyStaff.name}`}
-        >
-          <div className="space-y-4">
-            <div className="rounded-lg bg-slate-50 p-3">
-              <p className="text-sm text-slate-600">
-                Monthly Salary: <strong>{formatCurrency(historyStaff.monthlySalary)}</strong>
-              </p>
-            </div>
-            
-            <div className="max-h-96 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-white">
-                  <tr className="border-b border-slate-200 text-left text-slate-600">
-                    <th className="pb-2 pr-4 font-medium">Month</th>
-                    <th className="pb-2 pr-4 font-medium">Status</th>
-                    <th className="pb-2 pr-4 font-medium">Amount</th>
-                    <th className="pb-2 pr-4 font-medium">Paid On</th>
-                    <th className="pb-2 font-medium">Late</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthsToShow.map((month) => {
-                    const paymentsForMonth = historyStaff.salaryPayments.filter((p: SalaryPayment) => p.month === month);
-                    const totalAmount = paymentsForMonth.reduce((s: number, p: SalaryPayment) => s + p.amount, 0);
-                    const anyPaid = paymentsForMonth.some((p: SalaryPayment) => p.status === "Paid");
-                    const firstPayment = paymentsForMonth[0];
-                    const lateDays = firstPayment ? calculateLateDays(firstPayment, salaryDueDay) : 0;
-                    const statusLabel = paymentsForMonth.length > 1
-                      ? (anyPaid ? "Paid" : firstPayment?.status ?? "—") + ` (${paymentsForMonth.length} payments)`
-                      : firstPayment?.status ?? "—";
-                    
-                    return (
-                      <tr key={month} className="border-b border-slate-100">
-                        <td className="py-2 pr-4 font-medium text-slate-900">{formatMonthYear(month)}</td>
-                        <td className="py-2 pr-4">
-                          {firstPayment ? (
-                            <span className={cn(
-                              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                              anyPaid ? "bg-green-100 text-green-800" :
-                              firstPayment.status === "Partially Paid" ? "bg-amber-100 text-amber-800" :
-                              "bg-red-100 text-red-800"
-                            )}>
-                              {anyPaid && <CheckCircle className="h-3 w-3" />}
-                              {!anyPaid && firstPayment.status === "Pending" && <XCircle className="h-3 w-3" />}
-                              {!anyPaid && firstPayment.status === "Partially Paid" && <AlertCircle className="h-3 w-3" />}
-                              {statusLabel}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400">—</span>
-                          )}
-                        </td>
-                        <td className="py-2 pr-4">
-                          {totalAmount > 0 ? formatCurrency(totalAmount) : "—"}
-                        </td>
-                        <td className="py-2 pr-4">
-                          {firstPayment?.paymentDate 
-                            ? formatDate(firstPayment.paymentDate) 
-                            : "—"}
-                        </td>
-                        <td className="py-2">
-                          {anyPaid && lateDays > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-xs text-amber-600">
-                              <Clock className="h-3 w-3" />
-                              {lateDays}d
-                            </span>
-                          ) : anyPaid ? (
-                            <span className="text-xs text-green-600">On time</span>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="flex justify-between border-t border-slate-200 pt-4">
-              <div>
-                <p className="text-sm text-slate-600">
-                  Total Paid (Last 12 months):{" "}
-                  <strong>
-                    {formatCurrency(
-                      historyStaff.salaryPayments
-                        .filter((p: SalaryPayment) => last12Months.includes(p.month) && p.status === "Paid")
-                        .reduce((sum: number, p: SalaryPayment) => sum + p.amount, 0)
-                    )}
-                  </strong>
-                </p>
+          <Modal
+            open={!!salaryHistoryModal}
+            onClose={() => setSalaryHistoryModal(null)}
+            title={`Salary History – ${historyStaff.name}`}
+          >
+            <div className="space-y-4">
+              <div className="rounded-lg bg-slate-50 p-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-slate-600">
+                      Monthly Salary: <strong>{formatCurrency(historyStaff.monthlySalary)}</strong>
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Allowed Leaves: {historyStaff.allowedLeavesPerMonth ?? 2}/month
+                    </p>
+                  </div>
+                </div>
               </div>
-              <Button onClick={() => setSalaryHistoryModal(null)}>Close</Button>
+
+              <div className="max-h-96 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-white dark:bg-slate-900">
+                    <tr className="border-b border-slate-200 text-left text-slate-600">
+                      <th className="pb-2 pr-4 font-medium">Month</th>
+                      <th className="pb-2 pr-4 font-medium">Status</th>
+                      <th className="pb-2 pr-4 font-medium">Amount</th>
+                      <th className="pb-2 pr-4 font-medium">Paid On</th>
+                      <th className="pb-2 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthsToShow.map((month) => {
+                      const paymentsForMonth = historyStaff.salaryPayments.filter((p: SalaryPayment) => p.month === month);
+                      const totalAmount = paymentsForMonth.reduce((s: number, p: SalaryPayment) => s + p.amount, 0);
+                      const anyPaid = paymentsForMonth.some((p: SalaryPayment) => p.status === "Paid");
+                      const firstPayment = paymentsForMonth[0];
+                      const lateDays = firstPayment ? calculateLateDays(firstPayment, salaryDueDay) : 0;
+                      const statusLabel = paymentsForMonth.length > 1
+                        ? (anyPaid ? "Paid" : firstPayment?.status ?? "—") + ` (${paymentsForMonth.length} payments)`
+                        : firstPayment?.status ?? "—";
+
+                      return (
+                        <tr key={month} className="border-b border-slate-100 group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="py-2 pr-4 font-medium text-slate-900 dark:text-slate-100">{formatMonthYear(month)}</td>
+                          <td className="py-2 pr-4">
+                            {firstPayment ? (
+                              <div className="flex flex-col gap-1">
+                                <span className={cn(
+                                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium w-fit",
+                                  anyPaid ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
+                                    firstPayment.status === "Partially Paid" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" :
+                                      "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                )}>
+                                  {anyPaid && <CheckCircle className="h-3 w-3" />}
+                                  {!anyPaid && firstPayment.status === "Pending" && <XCircle className="h-3 w-3" />}
+                                  {!anyPaid && firstPayment.status === "Partially Paid" && <AlertCircle className="h-3 w-3" />}
+                                  {statusLabel}
+                                </span>
+                                {anyPaid && lateDays > 0 && (
+                                  <span className="inline-flex items-center gap-1 text-xs text-amber-600">
+                                    <Clock className="h-3 w-3" />
+                                    {lateDays}d late
+                                  </span>
+                                )}
+                                {firstPayment.leaveDeduction > 0 && (
+                                  <span className="text-xs text-red-600">
+                                    -{formatCurrency(firstPayment.leaveDeduction)} leave
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">
+                                <XCircle className="h-3 w-3" />
+                                Not Paid
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 pr-4">
+                            {totalAmount > 0 ? (
+                              <div className="flex flex-col">
+                                <span>{formatCurrency(totalAmount)}</span>
+                                {firstPayment?.calculatedSalary && firstPayment.calculatedSalary !== totalAmount && (
+                                  <span className="text-xs text-slate-500">
+                                    Calc: {formatCurrency(firstPayment.calculatedSalary)}
+                                  </span>
+                                )}
+                              </div>
+                            ) : "—"}
+                          </td>
+                          <td className="py-2 pr-4">
+                            {firstPayment?.paymentDate
+                              ? formatDate(firstPayment.paymentDate)
+                              : "—"}
+                          </td>
+                          <td className="py-2">
+                            <PermissionGate permission="salary:manage">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => {
+                                  setSalaryHistoryModal(null);
+                                  setSalaryModal({ staff: historyStaff, month });
+                                }}
+                                title="Pay salary for this month"
+                              >
+                                <Banknote className="h-4 w-4 mr-1" />
+                                Pay
+                              </Button>
+                            </PermissionGate>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-between border-t border-slate-200 pt-4">
+                <div>
+                  <p className="text-sm text-slate-600">
+                    Total Paid (Last 12 months):{" "}
+                    <strong>
+                      {formatCurrency(
+                        historyStaff.salaryPayments
+                          .filter((p: SalaryPayment) => last12Months.includes(p.month) && p.status === "Paid")
+                          .reduce((sum: number, p: SalaryPayment) => sum + p.amount, 0)
+                      )}
+                    </strong>
+                  </p>
+                </div>
+                <Button onClick={() => setSalaryHistoryModal(null)}>Close</Button>
+              </div>
             </div>
-          </div>
-        </Modal>
+          </Modal>
         );
       })()}
     </div>

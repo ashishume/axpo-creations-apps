@@ -151,6 +151,12 @@ export type StaffRole =
   | "Bus Driver"
   | "Support Staff";
 
+// Class and subjects mapping for a teacher
+export interface ClassSubject {
+  className: string;
+  subjects: string[];
+}
+
 export interface SalaryPayment {
   id: string;
   month: string; // YYYY-MM
@@ -160,6 +166,32 @@ export interface SalaryPayment {
   method?: PaymentMethod;
   /** Due date (YYYY-MM-DD) for this month; used for late payment calculation. Set from session salaryDueDay. */
   dueDate?: string;
+  // Leave tracking fields
+  daysWorked: number;
+  leavesTaken: number;
+  allowedLeaves: number;
+  excessLeaves: number;
+  leaveDeduction: number;
+  // Extra allowance/deduction
+  extraAllowance: number;
+  allowanceNote?: string;
+  extraDeduction: number;
+  deductionNote?: string;
+  // Calculated salary
+  calculatedSalary: number;
+}
+
+// Leave summary for a month (from API)
+export interface LeaveSummary {
+  staffId: string;
+  month: string;
+  leavesTaken: number;
+  daysInMonth: number;
+  daysWorked: number;
+  allowedLeaves: number;
+  excessLeaves: number;
+  perDaySalary: number;
+  leaveDeduction: number;
 }
 
 export interface Staff {
@@ -169,7 +201,12 @@ export interface Staff {
   employeeId: string;
   role: StaffRole;
   monthlySalary: number;
-  subjectOrGrade?: string; // for teachers
+  subjectOrGrade?: string; // for teachers (legacy, use classesSubjects for detailed)
+  // Leave & salary deduction configuration
+  allowedLeavesPerMonth: number;
+  perDaySalary?: number; // If not set, use monthlySalary/30
+  // Classes & subjects (dynamic array)
+  classesSubjects?: ClassSubject[];
   salaryPayments: SalaryPayment[];
 }
 
