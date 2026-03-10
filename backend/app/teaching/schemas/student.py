@@ -1,4 +1,4 @@
-"""Student schemas."""
+"""Student and Enrollment schemas."""
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -18,6 +18,7 @@ class FeePaymentCreate(BaseModel):
 
 class FeePaymentResponse(BaseModel):
     id: UUID
+    enrollment_id: UUID
     date: date
     amount: Decimal
     method: str
@@ -29,9 +30,11 @@ class FeePaymentResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ============================================
+# Student (Identity)
+# ============================================
 class StudentBase(BaseModel):
-    session_id: UUID
-    class_id: UUID | None = None
+    school_id: UUID
     name: str
     student_id: str
     fee_type: str = "Regular"
@@ -42,32 +45,15 @@ class StudentBase(BaseModel):
     permanent_address: str | None = None
     blood_group: str | None = None
     health_issues: str | None = None
-    registration_fees: Decimal | None = None  # Registration/Admission fees (one-time)
-    annual_fund: Decimal | None = None
-    monthly_fees: Decimal | None = None
-    transport_fees: Decimal | None = None
-    registration_paid: bool = False
-    annual_fund_paid: bool = False
-    due_day_of_month: int | None = None
-    late_fee_amount: Decimal | None = None
-    late_fee_frequency: str | None = None
+    photo_url: str | None = None
+    sibling_id: UUID | None = None
 
 
 class StudentCreate(StudentBase):
     pass
 
 
-class TransferStudentsRequest(BaseModel):
-    student_ids: list[UUID]
-    new_session_id: UUID
-
-
-class TransferStudentsResponse(BaseModel):
-    transferred: int
-
-
 class StudentUpdate(BaseModel):
-    class_id: UUID | None = None
     name: str | None = None
     student_id: str | None = None
     fee_type: str | None = None
@@ -78,6 +64,43 @@ class StudentUpdate(BaseModel):
     permanent_address: str | None = None
     blood_group: str | None = None
     health_issues: str | None = None
+    photo_url: str | None = None
+    sibling_id: UUID | None = None
+
+
+class StudentResponse(StudentBase):
+    id: UUID
+    user_id: UUID | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ============================================
+# Student Enrollment (Session-specific)
+# ============================================
+class EnrollmentBase(BaseModel):
+    student_id: UUID
+    session_id: UUID
+    class_id: UUID | None = None
+    registration_fees: Decimal | None = None
+    annual_fund: Decimal | None = None
+    monthly_fees: Decimal | None = None
+    transport_fees: Decimal | None = None
+    registration_paid: bool = False
+    annual_fund_paid: bool = False
+    due_day_of_month: int | None = None
+    late_fee_amount: Decimal | None = None
+    late_fee_frequency: str | None = None
+
+
+class EnrollmentCreate(EnrollmentBase):
+    pass
+
+
+class EnrollmentUpdate(BaseModel):
+    class_id: UUID | None = None
     registration_fees: Decimal | None = None
     annual_fund: Decimal | None = None
     monthly_fees: Decimal | None = None
@@ -89,11 +112,32 @@ class StudentUpdate(BaseModel):
     late_fee_frequency: str | None = None
 
 
-class StudentResponse(StudentBase):
+class EnrollmentResponse(EnrollmentBase):
     id: UUID
-    user_id: UUID | None
     created_at: datetime
     updated_at: datetime
+    student: StudentResponse | None = None
     payments: list[FeePaymentResponse] = []
 
     model_config = {"from_attributes": True}
+
+
+# ============================================
+# Bulk Enrollment
+# ============================================
+class BulkEnrollmentCreate(BaseModel):
+    student_ids: list[UUID]
+    session_id: UUID
+    class_id: UUID | None = None
+    registration_fees: Decimal | None = None
+    annual_fund: Decimal | None = None
+    monthly_fees: Decimal | None = None
+    transport_fees: Decimal | None = None
+    due_day_of_month: int | None = None
+    late_fee_amount: Decimal | None = None
+    late_fee_frequency: str | None = None
+
+
+class BulkEnrollmentResponse(BaseModel):
+    enrolled: int
+    enrollments: list[EnrollmentResponse] = []

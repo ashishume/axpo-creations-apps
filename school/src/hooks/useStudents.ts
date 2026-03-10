@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { studentsRepository } from '../lib/db/repositories';
-import type { Student, FeePayment } from '../types';
+import { studentsRepository, enrollmentsRepository } from '../lib/db/repositories';
+import type { Student, StudentEnrollment, FeePayment } from '../types';
 
 const QUERY_KEY = 'students';
+const ENROLLMENTS_QUERY_KEY = 'enrollments';
 
 const DEFAULT_PAGE_SIZE = 10;
 const FILTERED_PAGE_SIZE = 50;
@@ -160,6 +161,161 @@ export function useDeleteStudentPayment() {
     onSuccess: (_, { studentId }) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, studentId] });
+    },
+  });
+}
+
+// ============================================
+// Enrollment Hooks
+// ============================================
+
+interface EnrollmentFilters {
+  sessionId?: string;
+  studentId?: string;
+  classId?: string;
+  search?: string;
+}
+
+export function useEnrollmentsBySession(sessionId: string) {
+  return useQuery({
+    queryKey: [ENROLLMENTS_QUERY_KEY, 'bySession', sessionId],
+    queryFn: () => enrollmentsRepository.getBySession(sessionId),
+    enabled: !!sessionId,
+  });
+}
+
+export function useEnrollmentsByStudent(studentId: string) {
+  return useQuery({
+    queryKey: [ENROLLMENTS_QUERY_KEY, 'byStudent', studentId],
+    queryFn: () => enrollmentsRepository.getByStudent(studentId),
+    enabled: !!studentId,
+  });
+}
+
+export function useEnrollment(id: string) {
+  return useQuery({
+    queryKey: [ENROLLMENTS_QUERY_KEY, id],
+    queryFn: () => enrollmentsRepository.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useEnrollmentsBySessionInfinite(
+  sessionId: string,
+  options?: { hasFilters?: boolean }
+) {
+  const pageSize = options?.hasFilters ? FILTERED_PAGE_SIZE : DEFAULT_PAGE_SIZE;
+  const filters: EnrollmentFilters = { sessionId };
+
+  const q = useInfiniteQuery({
+    queryKey: [ENROLLMENTS_QUERY_KEY, 'infinite', sessionId, pageSize, filters],
+    queryFn: async ({ pageParam }) => {
+      const result = await enrollmentsRepository.getPaginated(pageParam, pageSize, filters);
+      return result;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    enabled: !!sessionId,
+  });
+
+  const enrollments = q.data?.pages.flatMap((p) => p.data) ?? [];
+  const total = q.data?.pages[0]?.total ?? 0;
+  return {
+    enrollments,
+    total,
+    fetchNextPage: q.fetchNextPage,
+    hasNextPage: q.hasNextPage,
+    isFetchingNextPage: q.isFetchingNextPage,
+    isLoading: q.isLoading,
+    isFetching: q.isFetching,
+  };
+}
+
+export function useCreateEnrollment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (enrollment: Omit<StudentEnrollment, 'id' | 'payments' | 'student'>) => 
+      enrollmentsRepository.create(enrollment),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function useCreateEnrollmentsBulk() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      studentIds: string[];
+      sessionId: string;
+      classId?: string;
+      registrationFees?: number;
+      annualFund?: number;
+      monthlyFees?: number;
+      transportFees?: number;
+      dueDayOfMonth?: number;
+      lateFeeAmount?: number;
+      lateFeeFrequency?: string;
+    }) => enrollmentsRepository.createBulk(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function useUpdateEnrollment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<StudentEnrollment> }) =>
+      enrollmentsRepository.update(id, updates),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY, id] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function useDeleteEnrollment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => enrollmentsRepository.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function useAddEnrollmentPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ enrollmentId, payment }: { enrollmentId: string; payment: Omit<FeePayment, 'id' | 'enrollmentId'> }) =>
+      enrollmentsRepository.addPayment(enrollmentId, payment),
+    onSuccess: (_, { enrollmentId }) => {
+      queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY, enrollmentId] });
+    },
+  });
+}
+
+export function useDeleteEnrollmentPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ enrollmentId, paymentId }: { enrollmentId: string; paymentId: string }) =>
+      enrollmentsRepository.deletePayment(enrollmentId, paymentId),
+    onSuccess: (_, { enrollmentId }) => {
+      queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [ENROLLMENTS_QUERY_KEY, enrollmentId] });
     },
   });
 }

@@ -1,25 +1,28 @@
-"""Student service: business logic; uses repository for DB."""
+"""Student and Enrollment services: business logic; uses repositories for DB."""
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
-from app.teaching.models.student import Student, FeePayment
-from app.teaching.schemas.student import StudentCreate, StudentUpdate, FeePaymentCreate
-from app.teaching.repositories.student import student_repository
+from app.teaching.models.student import Student, StudentEnrollment, FeePayment
+from app.teaching.schemas.student import (
+    StudentCreate,
+    StudentUpdate,
+    EnrollmentCreate,
+    EnrollmentUpdate,
+    FeePaymentCreate,
+    BulkEnrollmentCreate,
+)
+from app.teaching.repositories.student import student_repository, enrollment_repository
+from app.teaching.repositories.class_model import class_repository
 
 
 class StudentService:
+    """Service for Student (identity) operations."""
+    
     async def create(self, db: AsyncSession, data: StudentCreate) -> Student:
         student = Student(**data.model_dump())
         return await student_repository.add(db, student)
-
-    async def create_many(self, db: AsyncSession, items: list[StudentCreate]) -> list[Student]:
-        out = []
-        for d in items:
-            student = Student(**d.model_dump())
-            out.append(await student_repository.add(db, student))
-        return out
 
     async def get(self, db: AsyncSession, id: UUID) -> Student | None:
         return await student_repository.get(db, id)
@@ -30,42 +33,11 @@ class StudentService:
             raise NotFoundError("Student not found")
         return student
 
-    async def list_by_session(self, db: AsyncSession, session_id: UUID) -> list[Student]:
-        return await student_repository.list_by_session(db, session_id)
-
-    async def list_all(self, db: AsyncSession) -> list[Student]:
-        return await student_repository.list_all(db)
+    async def list_by_school(self, db: AsyncSession, school_id: UUID) -> list[Student]:
+        return await student_repository.list_by_school(db, school_id)
 
     async def list_by_organization(self, db: AsyncSession, organization_id: UUID) -> list[Student]:
         return await student_repository.list_by_organization(db, organization_id)
-
-    async def list_by_session_paginated(
-        self,
-        db: AsyncSession,
-        session_id: UUID,
-        *,
-        limit: int,
-        offset: int,
-    ) -> tuple[list[Student], int]:
-        total = await student_repository.count_by_session(db, session_id)
-        items = await student_repository.list_by_session_paginated(
-            db, session_id, limit=limit, offset=offset
-        )
-        return items, total
-
-    async def list_by_organization_paginated(
-        self,
-        db: AsyncSession,
-        organization_id: UUID,
-        *,
-        limit: int,
-        offset: int,
-    ) -> tuple[list[Student], int]:
-        total = await student_repository.count_by_organization(db, organization_id)
-        items = await student_repository.list_by_organization_paginated(
-            db, organization_id, limit=limit, offset=offset
-        )
-        return items, total
 
     async def update(self, db: AsyncSession, id: UUID, data: StudentUpdate) -> Student:
         student = await self.get_or_404(db, id)
@@ -77,20 +49,148 @@ class StudentService:
         student = await self.get_or_404(db, id)
         await student_repository.delete(db, student)
 
-    async def transfer_to_session(
-        self, db: AsyncSession, student_ids: list[UUID], new_session_id: UUID
-    ) -> int:
-        return await student_repository.transfer_to_session(
-            db, student_ids, new_session_id
+
+class EnrollmentService:
+    """Service for StudentEnrollment (session-specific) operations."""
+    
+    async def create(self, db: AsyncSession, data: EnrollmentCreate) -> StudentEnrollment:
+        """Create a new enrollment. Optionally inherit fees from class if not provided."""
+        enrollment_data = data.model_dump()
+        
+        # If class is specified and fees are not provided, inherit from class
+        if enrollment_data.get("class_id"):
+            class_obj = await class_repository.get(db, enrollment_data["class_id"])
+            if class_obj:
+                if enrollment_data.get("registration_fees") is None:
+                    enrollment_data["registration_fees"] = class_obj.registration_fees
+                if enrollment_data.get("annual_fund") is None:
+                    enrollment_data["annual_fund"] = class_obj.annual_fund
+                if enrollment_data.get("monthly_fees") is None:
+                    enrollment_data["monthly_fees"] = class_obj.monthly_fees
+                if enrollment_data.get("due_day_of_month") is None:
+                    enrollment_data["due_day_of_month"] = class_obj.due_day_of_month
+                if enrollment_data.get("late_fee_amount") is None:
+                    enrollment_data["late_fee_amount"] = class_obj.late_fee_amount
+                if enrollment_data.get("late_fee_frequency") is None:
+                    enrollment_data["late_fee_frequency"] = class_obj.late_fee_frequency
+        
+        enrollment = StudentEnrollment(**enrollment_data)
+        return await enrollment_repository.add(db, enrollment)
+
+    async def create_bulk(
+        self, db: AsyncSession, data: BulkEnrollmentCreate
+    ) -> list[StudentEnrollment]:
+        """Create multiple enrollments for students in a session."""
+        enrollments = []
+        
+        # Get class defaults if class_id is provided
+        class_defaults = {}
+        if data.class_id:
+            class_obj = await class_repository.get(db, data.class_id)
+            if class_obj:
+                class_defaults = {
+                    "registration_fees": data.registration_fees or class_obj.registration_fees,
+                    "annual_fund": data.annual_fund or class_obj.annual_fund,
+                    "monthly_fees": data.monthly_fees or class_obj.monthly_fees,
+                    "due_day_of_month": data.due_day_of_month or class_obj.due_day_of_month,
+                    "late_fee_amount": data.late_fee_amount or class_obj.late_fee_amount,
+                    "late_fee_frequency": data.late_fee_frequency or class_obj.late_fee_frequency,
+                }
+        else:
+            class_defaults = {
+                "registration_fees": data.registration_fees,
+                "annual_fund": data.annual_fund,
+                "monthly_fees": data.monthly_fees,
+                "due_day_of_month": data.due_day_of_month,
+                "late_fee_amount": data.late_fee_amount,
+                "late_fee_frequency": data.late_fee_frequency,
+            }
+        
+        for student_id in data.student_ids:
+            # Check if enrollment already exists
+            existing = await enrollment_repository.get_by_student_and_session(
+                db, student_id, data.session_id
+            )
+            if existing:
+                continue  # Skip if already enrolled
+            
+            enrollment = StudentEnrollment(
+                student_id=student_id,
+                session_id=data.session_id,
+                class_id=data.class_id,
+                registration_paid=False,
+                annual_fund_paid=False,
+                **class_defaults,
+            )
+            enrollments.append(enrollment)
+        
+        if enrollments:
+            return await enrollment_repository.add_bulk(db, enrollments)
+        return []
+
+    async def get(self, db: AsyncSession, id: UUID) -> StudentEnrollment | None:
+        return await enrollment_repository.get(db, id)
+
+    async def get_or_404(self, db: AsyncSession, id: UUID) -> StudentEnrollment:
+        enrollment = await enrollment_repository.get(db, id)
+        if not enrollment:
+            raise NotFoundError("Enrollment not found")
+        return enrollment
+
+    async def list_by_session(self, db: AsyncSession, session_id: UUID) -> list[StudentEnrollment]:
+        return await enrollment_repository.list_by_session(db, session_id)
+
+    async def list_by_student(self, db: AsyncSession, student_id: UUID) -> list[StudentEnrollment]:
+        return await enrollment_repository.list_by_student(db, student_id)
+
+    async def list_by_organization(self, db: AsyncSession, organization_id: UUID) -> list[StudentEnrollment]:
+        return await enrollment_repository.list_by_organization(db, organization_id)
+
+    async def list_by_session_paginated(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[StudentEnrollment], int]:
+        total = await enrollment_repository.count_by_session(db, session_id)
+        items = await enrollment_repository.list_by_session_paginated(
+            db, session_id, limit=limit, offset=offset
         )
+        return items, total
+
+    async def list_by_organization_paginated(
+        self,
+        db: AsyncSession,
+        organization_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[StudentEnrollment], int]:
+        total = await enrollment_repository.count_by_organization(db, organization_id)
+        items = await enrollment_repository.list_by_organization_paginated(
+            db, organization_id, limit=limit, offset=offset
+        )
+        return items, total
+
+    async def update(self, db: AsyncSession, id: UUID, data: EnrollmentUpdate) -> StudentEnrollment:
+        enrollment = await self.get_or_404(db, id)
+        for k, v in data.model_dump(exclude_unset=True).items():
+            setattr(enrollment, k, v)
+        return await enrollment_repository.update(db, enrollment)
+
+    async def delete(self, db: AsyncSession, id: UUID) -> None:
+        enrollment = await self.get_or_404(db, id)
+        await enrollment_repository.delete(db, enrollment)
 
     async def add_payment(
-        self, db: AsyncSession, student_id: UUID, data: FeePaymentCreate
+        self, db: AsyncSession, enrollment_id: UUID, data: FeePaymentCreate
     ) -> FeePayment:
-        await self.get_or_404(db, student_id)
-        return await student_repository.add_payment(
+        await self.get_or_404(db, enrollment_id)
+        return await enrollment_repository.add_payment(
             db,
-            student_id,
+            enrollment_id,
             payment_date=data.date,
             amount=data.amount,
             method=data.method,
@@ -101,10 +201,11 @@ class StudentService:
         )
 
     async def delete_payment(
-        self, db: AsyncSession, student_id: UUID, payment_id: UUID
+        self, db: AsyncSession, enrollment_id: UUID, payment_id: UUID
     ) -> bool:
-        await self.get_or_404(db, student_id)
-        return await student_repository.delete_payment(db, payment_id, student_id)
+        await self.get_or_404(db, enrollment_id)
+        return await enrollment_repository.delete_payment(db, payment_id, enrollment_id)
 
 
 student_service = StudentService()
+enrollment_service = EnrollmentService()

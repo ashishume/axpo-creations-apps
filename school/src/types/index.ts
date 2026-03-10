@@ -91,6 +91,7 @@ export interface StudentPersonalDetails {
 // Fee payment tracking for different fee types
 export interface FeePayment {
   id: string;
+  enrollmentId: string; // Link to StudentEnrollment
   date: string;
   amount: number;
   method: PaymentMethod;
@@ -100,21 +101,43 @@ export interface FeePayment {
   receiptPhotoUrl?: string; // Photo of receipt (max 2MB)
 }
 
-// Student - with all fee types and personal details
+// Student - identity that persists across sessions
 export interface Student {
   id: string;
-  sessionId: string;
-  classId?: string; // Link to StudentClass
+  schoolId: string;
   
   // Basic info
   name: string;
   studentId: string; // display ID
   feeType: FeeType;
   
-  // Personal details
-  personalDetails?: StudentPersonalDetails;
+  // Personal details (inline for backward compatibility)
+  fatherName?: string;
+  motherName?: string;
+  guardianPhone?: string;
+  currentAddress?: string;
+  permanentAddress?: string;
+  bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "";
+  healthIssues?: string;
   
-  // Fee structure (per student, can override class defaults)
+  // Profile photo
+  photoUrl?: string;
+  
+  // Sibling concession - link to sibling student for 30% monthly fee discount
+  siblingId?: string;
+  
+  // Enrollments (if populated)
+  enrollments?: StudentEnrollment[];
+}
+
+// Student Enrollment - session-specific with fee tracking
+export interface StudentEnrollment {
+  id: string;
+  studentId: string;
+  sessionId: string;
+  classId?: string; // Link to StudentClass
+  
+  // Fee structure (per enrollment/session)
   registrationFees?: number; // Registration/Admission fees (one-time per session)
   annualFund?: number; // One-time per session
   monthlyFees?: number; // Monthly tuition (overrides class if set)
@@ -129,14 +152,11 @@ export interface Student {
   lateFeeAmount?: number;
   lateFeeFrequency?: "daily" | "weekly";
   
-  // All payments
+  // All payments for this enrollment
   payments: FeePayment[];
   
-  // Profile photo
-  photoUrl?: string;
-  
-  // Sibling concession - link to sibling student for 30% monthly fee discount
-  siblingId?: string;
+  // Student info (if populated)
+  student?: Student;
   
   // Legacy fields for backward compatibility
   targetAmount?: number;

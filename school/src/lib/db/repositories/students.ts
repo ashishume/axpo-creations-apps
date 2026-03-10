@@ -393,3 +393,47 @@ export const studentsRepository = {
     if (error) throw new Error('Failed to delete payment');
   },
 };
+
+// Placeholder enrollmentsRepository - will be fully implemented after migration
+export const enrollmentsRepository = {
+  async getBySession(_sessionId: string) {
+    // TODO: Implement after migration
+    return [];
+  },
+  async getByStudent(_studentId: string) {
+    // TODO: Implement after migration
+    return [];
+  },
+  async getById(_id: string) {
+    // TODO: Implement after migration
+    return null;
+  },
+  async create(_data: unknown) {
+    // TODO: Implement after migration
+    throw new Error('Not implemented yet - run migration first');
+  },
+  async createBulk(_data: unknown) {
+    // TODO: Implement after migration
+    throw new Error('Not implemented yet - run migration first');
+  },
+  async update(_id: string, _updates: unknown) {
+    // TODO: Implement after migration
+    throw new Error('Not implemented yet - run migration first');
+  },
+  async delete(_id: string) {
+    // TODO: Implement after migration
+    throw new Error('Not implemented yet - run migration first');
+  },
+  async addPayment(_enrollmentId: string, _payment: unknown) {
+    // TODO: Implement after migration
+    throw new Error('Not implemented yet - run migration first');
+  },
+  async deletePayment(_enrollmentId: string, _paymentId: string) {
+    // TODO: Implement after migration
+    throw new Error('Not implemented yet - run migration first');
+  },
+  async getPaginated(_page: number, _pageSize: number, _filters?: unknown) {
+    // TODO: Implement after migration
+    return { data: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
+  },
+};
