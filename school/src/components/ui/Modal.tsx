@@ -34,18 +34,18 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       aria-labelledby="modal-title"
     >
       <div
-        className="absolute inset-0 bg-slate-900/50"
+        className="absolute inset-0 bg-slate-900/50 dark:bg-slate-950/70"
         onClick={onClose}
       />
       <div
         className={cn(
-          "relative z-10 w-full max-w-3xl max-h-[90vh] overflow-auto rounded-xl border border-slate-200 bg-white shadow-xl",
+          "relative z-10 w-full max-w-3xl max-h-[90vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl",
           className
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          <h2 id="modal-title" className="text-lg font-semibold text-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4">
+          <h2 id="modal-title" className="text-lg font-semibold text-slate-900 dark:text-slate-50">
             {title}
           </h2>
           <Button
@@ -55,7 +55,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
             aria-label="Close"
             className="rounded-full p-1"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 text-slate-600 dark:text-slate-300" />
           </Button>
         </div>
         <div className="p-6">{children}</div>

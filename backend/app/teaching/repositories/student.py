@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.teaching.models.student import Student, FeePayment
@@ -21,7 +21,7 @@ class StudentRepository:
 
     async def list_by_session(self, db: AsyncSession, session_id: UUID) -> list[Student]:
         result = await db.execute(
-            select(Student).where(Student.session_id == session_id).order_by(Student.student_id)
+            select(Student).where(Student.session_id == session_id).order_by(Student.created_at.desc())
         )
         return list(result.scalars().all())
 
@@ -31,7 +31,57 @@ class StudentRepository:
             .join(Session, Student.session_id == Session.id)
             .join(School, Session.school_id == School.id)
             .where(School.organization_id == organization_id)
-            .order_by(Student.student_id)
+            .order_by(Student.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def count_by_session(self, db: AsyncSession, session_id: UUID) -> int:
+        result = await db.execute(select(func.count()).select_from(Student).where(Student.session_id == session_id))
+        return result.scalar() or 0
+
+    async def list_by_session_paginated(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> list[Student]:
+        result = await db.execute(
+            select(Student)
+            .where(Student.session_id == session_id)
+            .order_by(Student.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(result.scalars().all())
+
+    async def count_by_organization(self, db: AsyncSession, organization_id: UUID) -> int:
+        result = await db.execute(
+            select(func.count())
+            .select_from(Student)
+            .join(Session, Student.session_id == Session.id)
+            .join(School, Session.school_id == School.id)
+            .where(School.organization_id == organization_id)
+        )
+        return result.scalar() or 0
+
+    async def list_by_organization_paginated(
+        self,
+        db: AsyncSession,
+        organization_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> list[Student]:
+        result = await db.execute(
+            select(Student)
+            .join(Session, Student.session_id == Session.id)
+            .join(School, Session.school_id == School.id)
+            .where(School.organization_id == organization_id)
+            .order_by(Student.created_at.desc())
+            .limit(limit)
+            .offset(offset)
         )
         return list(result.scalars().all())
 

@@ -8,6 +8,8 @@ from app.teaching.dependencies import (
     get_current_teaching_user,
     require_active_org_subscription,
 )
+from app.teaching.pagination import DEFAULT_PAGE_SIZE_EXPENSES, MAX_PAGE_SIZE
+from app.teaching.schemas.pagination import PaginatedResponse
 from app.teaching.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from app.teaching.services.expense import expense_service
 from app.teaching.models.user import User
@@ -33,20 +35,35 @@ async def create_expense(
     return ExpenseResponse.model_validate(expense)
 
 
-@router.get("", response_model=list[ExpenseResponse])
+@router.get("", response_model=PaginatedResponse[ExpenseResponse])
 async def list_expenses(
     session_id: UUID | None = None,
+    limit: int | None = None,
+    offset: int = 0,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    page_size = min(limit or DEFAULT_PAGE_SIZE_EXPENSES, MAX_PAGE_SIZE)
     if session_id:
         await enforce_session_access(db, user, session_id)
-        expenses = await expense_service.list_by_session(db, session_id)
+        items, total = await expense_service.list_by_session_paginated(
+            db, session_id, limit=page_size, offset=offset
+        )
     elif user.organization_id:
-        expenses = await expense_service.list_by_organization(db, user.organization_id)
+        items, total = await expense_service.list_by_organization_paginated(
+            db, user.organization_id, limit=page_size, offset=offset
+        )
     else:
         expenses = await expense_service.list_all(db)
-    return [ExpenseResponse.model_validate(e) for e in expenses]
+        total = len(expenses)
+        items = expenses[offset : offset + page_size]
+    return PaginatedResponse(
+        items=[ExpenseResponse.model_validate(e) for e in items],
+        total=total,
+        limit=page_size,
+        offset=offset,
+        has_more=offset + len(items) < total,
+    )
 
 
 @router.post("/bulk", response_model=list[ExpenseResponse])

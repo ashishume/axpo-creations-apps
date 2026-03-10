@@ -104,13 +104,39 @@ export const leavesRepositoryApi = {
     sessionId: string,
     filters?: { status?: string; applicantType?: string; staffId?: string; studentId?: string }
   ): Promise<LeaveRequest[]> {
-    let path = `/leaves/leave-requests?session_id=${sessionId}`;
-    if (filters?.status) path += `&status=${encodeURIComponent(filters.status)}`;
-    if (filters?.applicantType) path += `&applicant_type=${encodeURIComponent(filters.applicantType)}`;
-    if (filters?.staffId) path += `&staff_id=${filters.staffId}`;
-    if (filters?.studentId) path += `&student_id=${filters.studentId}`;
-    const list = await teachingFetchJson<Record<string, unknown>[]>(path);
+    const limit = 10000;
+    const params = new URLSearchParams({ session_id: sessionId, limit: String(limit), offset: '0' });
+    if (filters?.status) params.set('status', filters.status);
+    if (filters?.applicantType) params.set('applicant_type', filters.applicantType);
+    if (filters?.staffId) params.set('staff_id', filters.staffId);
+    if (filters?.studentId) params.set('student_id', filters.studentId);
+    const res = await teachingFetchJson<{ items: Record<string, unknown>[] }>(`/leaves/leave-requests?${params.toString()}`);
+    const list = res?.items ?? [];
     return Array.isArray(list) ? list.map(mapLeaveRequest) : [];
+  },
+
+  async getLeaveRequestsPaginated(
+    sessionId: string,
+    page: number = 1,
+    pageSize: number = 50,
+    filters?: { status?: string; applicantType?: string; staffId?: string; studentId?: string }
+  ): Promise<{ data: LeaveRequest[]; total: number; page: number; pageSize: number; totalPages: number }> {
+    const offset = (page - 1) * pageSize;
+    const params = new URLSearchParams({ session_id: sessionId, limit: String(pageSize), offset: String(offset) });
+    if (filters?.status) params.set('status', filters.status);
+    if (filters?.applicantType) params.set('applicant_type', filters.applicantType);
+    if (filters?.staffId) params.set('staff_id', filters.staffId);
+    if (filters?.studentId) params.set('student_id', filters.studentId);
+    const res = await teachingFetchJson<{ items: Record<string, unknown>[]; total: number }>(`/leaves/leave-requests?${params.toString()}`);
+    const items = res?.items ?? [];
+    const total = res?.total ?? 0;
+    return {
+      data: Array.isArray(items) ? items.map(mapLeaveRequest) : [],
+      total,
+      page,
+      pageSize,
+      totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+    };
   },
 
   async getLeaveRequest(id: string): Promise<LeaveRequest | null> {

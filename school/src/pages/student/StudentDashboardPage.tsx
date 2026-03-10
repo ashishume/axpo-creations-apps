@@ -52,7 +52,7 @@ export function StudentDashboardPage() {
           <GraduationCap className="h-8 w-8 text-indigo-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Welcome, {student.name}</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Welcome, {student.name}</h1>
           <p className="text-slate-600">Student ID: {student.studentId}</p>
         </div>
       </div>
@@ -63,7 +63,7 @@ export function StudentDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Total Fees</p>
-                <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalFees)}</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{formatCurrency(totalFees)}</p>
               </div>
               <CreditCard className="h-8 w-8 text-slate-300" />
             </div>

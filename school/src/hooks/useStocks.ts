@@ -1,8 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { stocksRepository } from '../lib/db/repositories';
 import type { Stock, StockTransaction } from '../types';
 
 const QUERY_KEY = 'stocks';
+
+const DEFAULT_PAGE_SIZE = 50;
 
 export function useStocks() {
   return useQuery({
@@ -27,13 +29,40 @@ interface StockFilters {
 
 export function useStocksPaginated(
   page: number = 1, 
-  pageSize: number = 10, 
+  pageSize: number = 50, 
   filters?: StockFilters
 ) {
   return useQuery({
     queryKey: [QUERY_KEY, 'paginated', page, pageSize, filters],
     queryFn: () => stocksRepository.getPaginated(page, pageSize, filters),
   });
+}
+
+/** Infinite list for Stocks list page: 50 per page. */
+export function useStocksBySessionInfinite(sessionId: string) {
+  const pageSize = DEFAULT_PAGE_SIZE;
+  const filters: StockFilters = { sessionId };
+
+  const q = useInfiniteQuery({
+    queryKey: [QUERY_KEY, 'infinite', sessionId, pageSize],
+    queryFn: async ({ pageParam }) => stocksRepository.getPaginated(pageParam, pageSize, filters),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    enabled: !!sessionId,
+  });
+
+  const stocks = q.data?.pages.flatMap((p) => p.data) ?? [];
+  const total = q.data?.pages[0]?.total ?? 0;
+  return {
+    stocks,
+    total,
+    fetchNextPage: q.fetchNextPage,
+    hasNextPage: q.hasNextPage,
+    isFetchingNextPage: q.isFetchingNextPage,
+    isLoading: q.isLoading,
+    isFetching: q.isFetching,
+  };
 }
 
 export function useStock(id: string) {

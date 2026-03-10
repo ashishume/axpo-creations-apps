@@ -131,7 +131,7 @@ export function SubscriptionPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Subscription & Plans</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Subscription & Plans</h2>
           <p className="text-slate-600">
             As Super Admin, manage all organizations and their subscriptions from the admin panel.
           </p>
@@ -155,7 +155,7 @@ export function SubscriptionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">Organization subscription</h2>
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Organization subscription</h2>
         <p className="text-slate-600">
           View and manage your organization's subscription plan.
         </p>
@@ -216,7 +216,7 @@ export function SubscriptionPage() {
                   )}
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
-                    <p className="text-2xl font-bold text-slate-900">
+                    <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                       ₹{price}
                       <span className="text-sm font-normal text-slate-500">
                         /{billingIntervalChoice === "monthly" ? "month" : billingIntervalChoice === "quarterly" ? "3 months" : "year"}

@@ -25,9 +25,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
           isUser
-            ? "bg-indigo-100 text-indigo-600"
+            ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300"
             : message.isError
-            ? "bg-red-100 text-red-600"
+            ? "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300"
             : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"
         )}
       >
@@ -46,10 +46,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
           className={cn(
             "rounded-2xl px-4 py-2.5 text-sm",
             isUser
-              ? "bg-indigo-600 text-white"
+              ? "bg-indigo-600 text-white dark:bg-indigo-500"
               : message.isError
-              ? "bg-red-50 text-red-800 border border-red-200"
-              : "bg-white text-slate-800 shadow-sm border border-slate-100"
+              ? "bg-red-50 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-200 dark:border-red-800"
+              : "bg-white text-slate-800 shadow-sm border border-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700"
           )}
         >
           {/* Render content with line breaks */}
@@ -64,7 +64,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         {message.analytics && <AnalyticsCard data={message.analytics} />}
 
         {/* Timestamp */}
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-slate-400 dark:text-slate-500">
           {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
       </div>

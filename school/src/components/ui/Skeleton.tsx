@@ -8,7 +8,7 @@ export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       className={cn(
-        'animate-pulse rounded-md bg-slate-200',
+        'animate-pulse rounded-md bg-slate-200 dark:bg-slate-700',
         className
       )}
     />
@@ -34,7 +34,7 @@ export function SkeletonText({ className, lines = 1 }: { className?: string; lin
 
 export function SkeletonCard({ className }: { className?: string }) {
   return (
-    <div className={cn('rounded-lg border border-slate-200 bg-white p-6', className)}>
+    <div className={cn('rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6', className)}>
       <div className="flex items-center gap-4">
         <Skeleton className="h-12 w-12 rounded-full" />
         <div className="flex-1 space-y-2">
@@ -48,9 +48,9 @@ export function SkeletonCard({ className }: { className?: string }) {
 
 export function SkeletonTable({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
       {/* Header */}
-      <div className="flex gap-4 border-b border-slate-200 bg-slate-50 p-4">
+      <div className="flex gap-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} className="h-4 flex-1" />
         ))}
@@ -59,7 +59,7 @@ export function SkeletonTable({ rows = 5, columns = 4 }: { rows?: number; column
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <div 
           key={rowIndex} 
-          className="flex gap-4 border-b border-slate-100 p-4 last:border-0"
+          className="flex gap-4 border-b border-slate-100 dark:border-slate-800 p-4 last:border-0"
         >
           {Array.from({ length: columns }).map((_, colIndex) => (
             <Skeleton 
@@ -86,7 +86,7 @@ export function SkeletonStats({ count = 4 }: { count?: number }) {
   return (
     <div className={cn('grid gap-4', gridClass)}>
       {Array.from({ length: n }).map((_, i) => (
-        <div key={i} className="rounded-lg border border-slate-200 bg-white p-6">
+        <div key={i} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6">
           <Skeleton className="mb-2 h-3 w-1/2" />
           <Skeleton className="h-8 w-2/3" />
         </div>
@@ -108,29 +108,29 @@ export function SkeletonDashboard() {
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="rounded-lg border border-slate-200 bg-white p-6">
+          <div key={i} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6">
             <Skeleton className="mb-2 h-3 w-1/2" />
             <Skeleton className="h-8 w-2/3" />
           </div>
         ))}
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6">
           <Skeleton className="mb-4 h-5 w-32" />
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex justify-between border-b border-slate-100 pb-2">
+              <div key={i} className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-4 w-16" />
               </div>
             ))}
           </div>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6">
           <Skeleton className="mb-4 h-5 w-40" />
           <div className="space-y-2">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg border border-slate-100 p-2">
+              <div key={i} className="flex items-center justify-between rounded-lg border border-slate-100 dark:border-slate-800 p-2">
                 <div className="space-y-1">
                   <Skeleton className="h-4 w-20" />
                   <Skeleton className="h-3 w-28" />
@@ -156,7 +156,7 @@ export function SkeletonFinancialDashboard() {
       {/* Key metrics - 4 cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-lg border border-slate-200 bg-white p-4 pt-4">
+          <div key={i} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 pt-4">
             <Skeleton className="mb-2 h-3 w-3/4" />
             <Skeleton className="h-8 w-28" />
             <Skeleton className="mt-1 h-3 w-1/2" />
@@ -165,7 +165,7 @@ export function SkeletonFinancialDashboard() {
       </div>
 
       {/* Expected income card (amber-style block) */}
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
+      <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-6">
         <Skeleton className="mb-4 h-5 w-72" />
         <div className="grid gap-4 sm:grid-cols-3">
           {[1, 2, 3].map((i) => (
@@ -181,7 +181,7 @@ export function SkeletonFinancialDashboard() {
       {/* Obligations - 3 cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="rounded-lg border border-slate-200 bg-white p-4 pt-4">
+          <div key={i} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 pt-4">
             <Skeleton className="mb-2 h-3 w-40" />
             <Skeleton className="h-6 w-28" />
             <Skeleton className="mt-1 h-3 w-32" />
@@ -191,11 +191,11 @@ export function SkeletonFinancialDashboard() {
 
       {/* Charts row - 2 cards */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6">
           <Skeleton className="mb-4 h-5 w-40" />
           <Skeleton className="h-64 w-full rounded-md" />
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6">
           <Skeleton className="mb-4 h-5 w-48" />
           <Skeleton className="h-64 w-full rounded-md" />
         </div>
@@ -208,7 +208,7 @@ export function SkeletonList({ items = 5 }: { items?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: items }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <div key={i} className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
           <Skeleton className="h-10 w-10 rounded-full" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-1/3" />
@@ -241,8 +241,8 @@ export function SkeletonForm({ fields = 4 }: { fields?: number }) {
 /** Full-page app shell skeleton for initial load (e.g. ProtectedRoute) */
 export function SkeletonPageShell() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <div className="border-b border-slate-200 bg-white px-6 py-4">
+    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900">
+      <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-4">
         <div className="flex items-center gap-3">
           <Skeleton className="h-8 w-8 rounded" />
           <Skeleton className="h-6 w-48" />
@@ -278,7 +278,7 @@ export function SkeletonChat({ messages = 3 }: { messages?: number }) {
           {i % 2 === 0 && <Skeleton className="h-8 w-8 shrink-0 rounded-full" />}
           <div className={cn(
             'space-y-2 rounded-xl p-3',
-            i % 2 === 0 ? 'bg-slate-100' : 'bg-indigo-50'
+            i % 2 === 0 ? 'bg-slate-100 dark:bg-slate-800' : 'bg-indigo-50 dark:bg-indigo-950/50'
           )} style={{ width: `${40 + Math.random() * 30}%` }}>
             <Skeleton className="h-3 w-full" />
             <Skeleton className="h-3 w-3/4" />

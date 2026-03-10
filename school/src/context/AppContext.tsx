@@ -4,9 +4,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useSearchParams } from "react-router-dom";
 import type {
   School,
   Session,
@@ -169,12 +171,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [fixedCosts, setFixedCosts] = useState<FixedMonthlyCost[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [selectedSchoolId, setSelectedSchoolIdState] = useState<string | null>(
-    () => storage.loadSelection().schoolId
-  );
-  const [selectedSessionId, setSelectedSessionIdState] = useState<string | null>(
-    () => storage.loadSelection().sessionId
-  );
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedSchoolId = searchParams.get("schoolId") ?? null;
+  const selectedSessionId = searchParams.get("sessionId") ?? null;
+  const urlMigratedRef = useRef(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isAppLoading, setIsAppLoading] = useState(true);
 
@@ -220,7 +220,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return organizations.filter((o) => o.id === user.organizationId);
   }, [user, organizations]);
 
-  // Validate selection against scoped data (use filtered lists so selection stays within allowed scope)
+  // Migrate from sessionStorage to URL once when URL has no params
+  useEffect(() => {
+    if (urlMigratedRef.current) return;
+    const fromUrl = searchParams.get("schoolId") ?? searchParams.get("sessionId");
+    if (fromUrl) {
+      urlMigratedRef.current = true;
+      return;
+    }
+    const stored = storage.loadSelection();
+    if (stored.schoolId || stored.sessionId) {
+      urlMigratedRef.current = true;
+      const next = new URLSearchParams(searchParams);
+      if (stored.schoolId) next.set("schoolId", stored.schoolId);
+      if (stored.sessionId) next.set("sessionId", stored.sessionId);
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  // Validate selection against scoped data; correct URL when selection is invalid
   useEffect(() => {
     const schoolExists = selectedSchoolId && filteredSchools.some((s) => s.id === selectedSchoolId);
     const sessionExists =
@@ -228,38 +246,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectedSessionId &&
       filteredSessions.some((s) => s.id === selectedSessionId && s.schoolId === selectedSchoolId);
     if (filteredSchools.length > 0 && !schoolExists) {
-      setSelectedSchoolIdState(filteredSchools[0].id);
+      const next = new URLSearchParams(searchParams);
+      next.set("schoolId", filteredSchools[0].id);
+      const firstSession = filteredSessions.find((s) => s.schoolId === filteredSchools[0].id);
+      if (firstSession) next.set("sessionId", firstSession.id);
+      else next.delete("sessionId");
+      setSearchParams(next, { replace: true });
       return;
     }
     if (selectedSchoolId && !sessionExists) {
       const first = filteredSessions.find((s) => s.schoolId === selectedSchoolId);
-      setSelectedSessionIdState(first?.id ?? null);
+      const next = new URLSearchParams(searchParams);
+      if (first) next.set("sessionId", first.id);
+      else next.delete("sessionId");
+      setSearchParams(next, { replace: true });
     }
-  }, [filteredSchools, filteredSessions, selectedSchoolId, selectedSessionId]);
+  }, [filteredSchools, filteredSessions, selectedSchoolId, selectedSessionId, searchParams, setSearchParams]);
 
   const setSelectedSchoolId = useCallback(
     (id: string | null) => {
-      setSelectedSchoolIdState(id);
+      const next = new URLSearchParams(searchParams);
       if (id) {
+        next.set("schoolId", id);
         const firstSession = filteredSessions.find((s) => s.schoolId === id);
-        setSelectedSessionIdState(firstSession?.id ?? null);
+        if (firstSession) next.set("sessionId", firstSession.id);
+        else next.delete("sessionId");
       } else {
-        setSelectedSessionIdState(null);
+        next.delete("schoolId");
+        next.delete("sessionId");
       }
+      setSearchParams(next, { replace: true });
     },
-    [filteredSessions]
+    [filteredSessions, searchParams, setSearchParams]
   );
 
-  const setSelectedSessionId = useCallback((id: string | null) => {
-    setSelectedSessionIdState(id);
-  }, []);
-
-  useEffect(() => {
-    storage.saveSelection({
-      schoolId: selectedSchoolId,
-      sessionId: selectedSessionId,
-    });
-  }, [selectedSchoolId, selectedSessionId]);
+  const setSelectedSessionId = useCallback(
+    (id: string | null) => {
+      const next = new URLSearchParams(searchParams);
+      if (id) next.set("sessionId", id);
+      else next.delete("sessionId");
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
 
   const toast = useCallback((message: string, type: "success" | "error" = "success") => {
     const id = generateId();
@@ -281,12 +310,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await refetchAll();
   }, [refetchAll]);
 
-  const deleteSchool = useCallback(async (id: string) => {
-    await schoolsRepository.delete(id);
-    if (selectedSchoolId === id) setSelectedSchoolIdState(null);
-    if (selectedSchoolId === id) setSelectedSessionIdState(null);
-    await refetchAll();
-  }, [refetchAll, selectedSchoolId]);
+  const deleteSchool = useCallback(
+    async (id: string) => {
+      await schoolsRepository.delete(id);
+      if (selectedSchoolId === id) {
+        const next = new URLSearchParams(searchParams);
+        next.delete("schoolId");
+        next.delete("sessionId");
+        setSearchParams(next, { replace: true });
+      }
+      await refetchAll();
+    },
+    [refetchAll, selectedSchoolId, searchParams, setSearchParams]
+  );
 
   const addSession = useCallback(async (data: Omit<Session, "id">) => {
     await sessionsRepository.create(data);
@@ -298,11 +334,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await refetchAll();
   }, [refetchAll]);
 
-  const deleteSession = useCallback(async (id: string) => {
-    await sessionsRepository.delete(id);
-    if (selectedSessionId === id) setSelectedSessionIdState(null);
-    await refetchAll();
-  }, [refetchAll, selectedSessionId]);
+  const deleteSession = useCallback(
+    async (id: string) => {
+      await sessionsRepository.delete(id);
+      if (selectedSessionId === id) {
+        const next = new URLSearchParams(searchParams);
+        next.delete("sessionId");
+        setSearchParams(next, { replace: true });
+      }
+      await refetchAll();
+    },
+    [refetchAll, selectedSessionId, searchParams, setSearchParams]
+  );
 
   const addClass = useCallback(async (data: Omit<StudentClass, "id">) => {
     await classesRepository.create(data);
@@ -764,12 +807,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await refetchAll();
       const firstSchoolId = schoolIdMap["s1"];
       const sess2Id = sessionIdMap["sess2"];
-      if (firstSchoolId) setSelectedSchoolIdState(firstSchoolId);
-      if (sess2Id) setSelectedSessionIdState(sess2Id);
+      if (firstSchoolId || sess2Id) {
+        const next = new URLSearchParams(searchParams);
+        if (firstSchoolId) next.set("schoolId", firstSchoolId);
+        if (sess2Id) next.set("sessionId", sess2Id);
+        setSearchParams(next, { replace: true });
+      }
     } catch (err) {
       toast(String(err), "error");
     }
-  }, [refetchAll, toast]);
+  }, [refetchAll, toast, searchParams, setSearchParams]);
 
   const clearAllData = useCallback(() => {
     setSchools([]);
@@ -780,10 +827,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setExpenses([]);
     setStocks([]);
     setFixedCosts([]);
-    setSelectedSchoolIdState(null);
-    setSelectedSessionIdState(null);
-    storage.saveSelection({ schoolId: null, sessionId: null });
-  }, []);
+    setSearchParams(new URLSearchParams(), { replace: true });
+  }, [setSearchParams]);
 
   const exportData = useCallback(async (): Promise<BackupData> => {
     const [allClasses, allStudents, allStaff, allExpenses, allStocks, allFixedCosts] = await Promise.all([
@@ -915,9 +960,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const firstSession = firstSchool
       ? data.sessions.find((s) => s.schoolId === firstSchool.id) ?? data.sessions[0]
       : null;
-    if (firstSchool?.id && schoolIdMap[firstSchool.id]) setSelectedSchoolIdState(schoolIdMap[firstSchool.id]);
-    if (firstSession?.id && sessionIdMap[firstSession.id]) setSelectedSessionIdState(sessionIdMap[firstSession.id]);
-  }, [refetchAll]);
+    const newSchoolId = firstSchool?.id ? schoolIdMap[firstSchool.id] : null;
+    const newSessionId = firstSession?.id ? sessionIdMap[firstSession.id] : null;
+    if (newSchoolId || newSessionId) {
+      const next = new URLSearchParams(searchParams);
+      if (newSchoolId) next.set("schoolId", newSchoolId);
+      if (newSessionId) next.set("sessionId", newSessionId);
+      setSearchParams(next, { replace: true });
+    }
+  }, [refetchAll, searchParams, setSearchParams]);
 
   const promoteStudentsToNewSession = useCallback(
     async (fromSessionId: string, toSessionId: string): Promise<{ promoted: number; graduated: number }> => {

@@ -20,14 +20,17 @@ import {
   CalendarOff,
   CreditCard,
   Wallet,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { Fragment } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useSearchParams } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/Button";
 import { PermissionGate } from "../auth/PermissionGate";
 import { useAuth } from "../../context/AuthContext";
 import { useApp } from "../../context/AppContext";
+import { useTheme } from "../../context/ThemeContext";
 import { planIncludesAssistant } from "../../lib/plans";
 import { SUPER_ADMIN_ROLE_NAME, type Permission } from "../../types/auth";
 
@@ -97,6 +100,9 @@ export function Sidebar({
   onNavClick,
 }: SidebarProps) {
   const { user, signOut, hasPermission } = useAuth();
+  const [searchParams] = useSearchParams();
+  const search = searchParams.toString();
+  const { theme, setTheme, isDark } = useTheme();
   const { schools, sessions, selectedSchoolId, selectedSessionId, setSelectedSchool, setSelectedSession } = useApp();
   const isSuperAdmin = user?.role?.name === SUPER_ADMIN_ROLE_NAME;
   const selectedSchool = selectedSchoolId ? schools.find((s) => s.id === selectedSchoolId) : null;
@@ -134,25 +140,25 @@ export function Sidebar({
   }, [checkScroll]);
 
   return (
-    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden border-r border-slate-200 bg-slate-50">
-      <div className="shrink-0 border-b border-slate-200 p-4">
-        <h1 className="text-lg font-bold text-indigo-700">
+    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+      <div className="shrink-0 border-b border-slate-200 dark:border-slate-700 p-4">
+        <h1 className="text-lg font-bold text-indigo-700 dark:text-indigo-400">
           Axpo Finance
         </h1>
-        <p className="text-xs text-slate-500">Manage income & expenses</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Manage income & expenses</p>
       </div>
 
       {/* School & Session selection */}
-      <div className="shrink-0 border-b border-slate-200 p-3 space-y-2 bg-white/50">
+      <div className="shrink-0 border-b border-slate-200 dark:border-slate-700 p-3 space-y-2 bg-white/50 dark:bg-slate-800/50">
         <div>
-          <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+          <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
             <Building2 className="h-3.5 w-3.5" />
             School
           </label>
           <select
             value={selectedSchoolId ?? ""}
             onChange={(e) => setSelectedSchool(e.target.value || null)}
-            className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
           >
             <option value="">Select school</option>
             {schools.map((s) => (
@@ -163,7 +169,7 @@ export function Sidebar({
           </select>
         </div>
         <div>
-          <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+          <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
             <Calendar className="h-3.5 w-3.5" />
             Session
           </label>
@@ -171,7 +177,7 @@ export function Sidebar({
             value={selectedSessionId ?? ""}
             onChange={(e) => setSelectedSession(e.target.value || null)}
             disabled={!selectedSchoolId}
-            className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 disabled:text-slate-400"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400"
           >
             <option value="">Select session</option>
             {sessionList.map((s) => (
@@ -185,11 +191,11 @@ export function Sidebar({
 
       {/* User info */}
       {user && (
-        <div className="shrink-0 border-b border-slate-200 px-4 py-3 bg-slate-100/50">
+        <div className="shrink-0 border-b border-slate-200 dark:border-slate-700 px-4 py-3 bg-slate-100/50 dark:bg-slate-800/50">
           <div className="flex items-center justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{user.name}</p>
-              <p className="text-xs text-slate-500 truncate">{user.role?.name || 'User'}</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{user.name}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.role?.name || 'User'}</p>
             </div>
             <Button
               variant="ghost"
@@ -198,7 +204,7 @@ export function Sidebar({
               title="Sign out"
               className="shrink-0"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-4 w-4 text-slate-600 dark:text-slate-300" />
             </Button>
           </div>
         </div>
@@ -217,13 +223,13 @@ export function Sidebar({
             const link = (
               <NavLink
                 key={id}
-                to={PAGE_PATHS[id]}
+                to={search ? `${PAGE_PATHS[id]}?${search}` : PAGE_PATHS[id]}
                 end={id === "dashboard"}
                 onClick={onNavClick}
                 className={({ isActive }) =>
                   cn(
                     "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors min-h-[44px]",
-                    isActive ? "bg-indigo-100 text-indigo-800" : "text-slate-700 hover:bg-slate-100"
+                    isActive ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200" : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   )
                 }
               >
@@ -233,7 +239,7 @@ export function Sidebar({
                   <span
                     className={cn(
                       "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                      hasAssistantPlan ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                      hasAssistantPlan ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
                     )}
                   >
                     {hasAssistantPlan ? "Pro" : "Premium"}
@@ -256,16 +262,16 @@ export function Sidebar({
         {/* Bottom gradient when more items below */}
         {showBottomGradient && (
           <div
-            className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-slate-50 to-transparent"
+            className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-slate-50 dark:from-slate-900 to-transparent"
             aria-hidden
           />
         )}
       </div>
-      <div className="shrink-0 border-t border-slate-200 p-2 space-y-1">
-        <Button
+      <div className="shrink-0 border-t border-slate-200 dark:border-slate-700 p-2 space-y-1">
+        {/* <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2 text-indigo-700 hover:bg-indigo-50 min-h-[44px] touch-manipulation md:min-h-0"
+          className="w-full justify-start gap-2 text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-900/50 min-h-[44px] touch-manipulation md:min-h-0"
           onClick={onBackup}
         >
           <Download className="h-4 w-4 shrink-0" />
@@ -274,7 +280,7 @@ export function Sidebar({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2 text-indigo-700 hover:bg-indigo-50 min-h-[44px] touch-manipulation md:min-h-0"
+          className="w-full justify-start gap-2 text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-900/50 min-h-[44px] touch-manipulation md:min-h-0"
           onClick={onRestore}
         >
           <Upload className="h-4 w-4 shrink-0" />
@@ -283,20 +289,30 @@ export function Sidebar({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2 text-amber-700 hover:bg-amber-50 min-h-[44px] touch-manipulation md:min-h-0"
+          className="w-full justify-start gap-2 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-900/50 min-h-[44px] touch-manipulation md:min-h-0"
           onClick={onLoadSample}
         >
           <Loader2 className="h-4 w-4 shrink-0" />
           Load sample data
-        </Button>
-        <Button
+        </Button> */}
+        {/* <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2 text-red-600 hover:bg-red-50 min-h-[44px] touch-manipulation md:min-h-0"
+          className="w-full justify-start gap-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50 min-h-[44px] touch-manipulation md:min-h-0"
           onClick={onClearData}
         >
           <Trash2 className="h-4 w-4 shrink-0" />
           Clear all data
+        </Button> */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px] touch-manipulation md:min-h-0"
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+        >
+          {isDark ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
+          {isDark ? "Light mode" : "Dark mode"}
         </Button>
       </div>
     </aside>

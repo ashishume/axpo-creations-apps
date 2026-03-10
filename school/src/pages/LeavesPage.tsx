@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card"
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
 import {
   useLeaveTypes,
-  useLeaveRequests,
+  useLeaveRequestsInfinite,
   useLeaveBalances,
   useApplyLeave,
   useApproveLeave,
@@ -65,10 +65,16 @@ export function LeavesPage() {
     selectedSessionId ?? "",
     undefined
   );
-  const { data: leaveRequests = [], isLoading: requestsLoading } = useLeaveRequests(
-    selectedSessionId ?? "",
-    { status: statusFilter || undefined, applicantType: applicantFilter || undefined }
-  );
+  const {
+    requests: leaveRequests,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: requestsLoading,
+  } = useLeaveRequestsInfinite(selectedSessionId ?? "", {
+    status: statusFilter || undefined,
+    applicantType: applicantFilter || undefined,
+  });
   const staffLeaveTypes = useMemo(
     () => leaveTypes.filter((t) => t.applicableTo === "staff" || t.applicableTo === "both"),
     [leaveTypes]
@@ -129,9 +135,9 @@ export function LeavesPage() {
   if (!selectedSessionId) {
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-slate-900">Leave Management</h2>
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Leave Management</h2>
         <Card>
-          <CardContent className="py-12 text-center text-slate-500">
+          <CardContent className="py-12 text-center text-slate-500 dark:text-slate-400">
             Select a school and session to manage leave.
           </CardContent>
         </Card>
@@ -143,8 +149,8 @@ export function LeavesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Leave Management</h2>
-          <p className="text-slate-600">Apply for leave, review requests, and manage leave types</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Leave Management</h2>
+          <p className="text-slate-600 dark:text-slate-400">Apply for leave, review requests, and manage leave types</p>
         </div>
         {activeTab === "requests" && hasPermission("leaves:create") && (
           <Button size="sm" onClick={() => setApplyModalOpen(true)}>
@@ -160,7 +166,7 @@ export function LeavesPage() {
         )}
       </div>
 
-      <div className="flex gap-2 border-b border-slate-200">
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -169,8 +175,8 @@ export function LeavesPage() {
             className={cn(
               "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
               activeTab === tab.id
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-slate-600 hover:text-slate-900"
+                ? "border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-300"
+                : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             )}
           >
             {tab.label}
@@ -215,7 +221,7 @@ export function LeavesPage() {
             {requestsLoading ? (
               <SkeletonTable rows={5} columns={7} />
             ) : filteredRequests.length === 0 ? (
-              <p className="text-sm text-slate-500">No leave requests match your filters.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No leave requests match your filters.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -243,7 +249,7 @@ export function LeavesPage() {
                             {getApplicantName(r)}
                           </span>
                         </td>
-                        <td className="py-3 pr-4 text-slate-600">{r.leaveType?.name ?? "—"}</td>
+                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{r.leaveType?.name ?? "—"}</td>
                         <td className="py-3 pr-4">{formatDate(r.fromDate)}</td>
                         <td className="py-3 pr-4">{formatDate(r.toDate)}</td>
                         <td className="py-3 pr-4">{r.daysCount}</td>
@@ -251,7 +257,7 @@ export function LeavesPage() {
                           <span
                             className={cn(
                               "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                              statusColors[r.status as LeaveRequestType["status"]] ?? "bg-slate-100 text-slate-600"
+                              statusColors[r.status as LeaveRequestType["status"]] ?? "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                             )}
                           >
                             {r.status === "pending" && <Clock className="h-3 w-3" />}
@@ -290,6 +296,17 @@ export function LeavesPage() {
                 </table>
               </div>
             )}
+            {hasNextPage && leaveRequests.length > 0 && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading…" : "Load more"}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -303,12 +320,12 @@ export function LeavesPage() {
             {typesLoading ? (
               <SkeletonTable rows={4} columns={5} />
             ) : leaveTypes.length === 0 ? (
-              <p className="text-sm text-slate-500">No leave types. Add one to get started.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No leave types. Add one to get started.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-slate-600">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                       <th className="pb-2 pr-4 font-medium">Name</th>
                       <th className="pb-2 pr-4 font-medium">Code</th>
                       <th className="pb-2 pr-4 font-medium">Applicable to</th>
@@ -318,11 +335,11 @@ export function LeavesPage() {
                   </thead>
                   <tbody>
                     {leaveTypes.map((lt) => (
-                      <tr key={lt.id} className="border-b border-slate-100">
-                        <td className="py-3 pr-4 font-medium text-slate-900">{lt.name}</td>
-                        <td className="py-3 pr-4 text-slate-600">{lt.code}</td>
-                        <td className="py-3 pr-4">{lt.applicableTo}</td>
-                        <td className="py-3 pr-4">{lt.maxDaysPerYear ?? "—"}</td>
+                      <tr key={lt.id} className="border-b border-slate-100 dark:border-slate-700">
+                        <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{lt.name}</td>
+                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{lt.code}</td>
+                        <td className="py-3 pr-4 text-slate-900 dark:text-slate-100">{lt.applicableTo}</td>
+                        <td className="py-3 pr-4 text-slate-900 dark:text-slate-100">{lt.maxDaysPerYear ?? "—"}</td>
                         <td className="py-3">
                           {hasPermission("leaves:manage") && (
                             <div className="flex gap-1">
@@ -339,7 +356,7 @@ export function LeavesPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-red-600"
+                                className="text-red-600 dark:text-red-400 dark:hover:bg-red-900/30"
                                 onClick={() => deleteLeaveTypeMutation.mutate(lt.id)}
                               >
                                 Delete
@@ -368,7 +385,7 @@ export function LeavesPage() {
                 <select
                   value={balancesStaffId}
                   onChange={(e) => setBalancesStaffId(e.target.value)}
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 >
                   <option value="">Select staff</option>
                   {sessionStaff.map((s) => (
@@ -382,7 +399,7 @@ export function LeavesPage() {
                   value={balancesYear}
                   onChange={(e) => setBalancesYear(e.target.value)}
                   placeholder="Year e.g. 2024-2025"
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm w-32"
+                  className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 w-32"
                 />
                 <Button
                   size="sm"
@@ -418,7 +435,7 @@ export function LeavesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-slate-600">
+                  <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                     <th className="pb-2 pr-4 font-medium">Leave type</th>
                     <th className="pb-2 pr-4 font-medium">Year</th>
                     <th className="pb-2 pr-4 font-medium">Total</th>
@@ -428,22 +445,22 @@ export function LeavesPage() {
                 </thead>
                 <tbody>
                   {leaveBalances.map((b) => (
-                    <tr key={b.id} className="border-b border-slate-100">
-                      <td className="py-3 pr-4 font-medium text-slate-900">{b.leaveType?.name ?? b.leaveTypeId}</td>
-                      <td className="py-3 pr-4 text-slate-600">{b.year}</td>
-                      <td className="py-3 pr-4">{b.totalDays}</td>
-                      <td className="py-3 pr-4">{b.usedDays}</td>
-                      <td className="py-3">{b.totalDays - b.usedDays}</td>
+                    <tr key={b.id} className="border-b border-slate-100 dark:border-slate-700">
+                      <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{b.leaveType?.name ?? b.leaveTypeId}</td>
+                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{b.year}</td>
+                      <td className="py-3 pr-4 text-slate-900 dark:text-slate-100">{b.totalDays}</td>
+                      <td className="py-3 pr-4 text-slate-900 dark:text-slate-100">{b.usedDays}</td>
+                      <td className="py-3 text-slate-900 dark:text-slate-100">{b.totalDays - b.usedDays}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
             {!balancesStaffId && hasPermission("leaves:manage") && (
-              <p className="text-sm text-slate-500">Select a staff member to view leave balances.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Select a staff member to view leave balances.</p>
             )}
             {balancesStaffId && leaveBalances.length === 0 && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
                 Leave balances are not initialized for this staff/year.{" "}
                 {staffLeaveTypes.length === 0
                   ? "Add leave types in the Leave Types tab first, then click Initialize balances."

@@ -147,6 +147,25 @@ export const leavesRepositorySupabase = {
     );
   },
 
+  async getLeaveRequestsPaginated(
+    sessionId: string,
+    page: number = 1,
+    pageSize: number = 50,
+    filters?: { status?: string; applicantType?: string; staffId?: string; studentId?: string }
+  ): Promise<{ data: LeaveRequest[]; total: number; page: number; pageSize: number; totalPages: number }> {
+    const all = await this.getLeaveRequests(sessionId, filters);
+    const total = all.length;
+    const start = (page - 1) * pageSize;
+    const data = all.slice(start, start + pageSize);
+    return {
+      data,
+      total,
+      page,
+      pageSize,
+      totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+    };
+  },
+
   async getLeaveRequest(id: string): Promise<LeaveRequest | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase

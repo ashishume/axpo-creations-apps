@@ -92,8 +92,8 @@ export function SchoolsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Schools & Sessions</h2>
-          <p className="text-slate-600">Manage schools and academic sessions</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Schools & Sessions</h2>
+          <p className="text-slate-600 dark:text-slate-400">Manage schools and academic sessions</p>
         </div>
       </div>
 
@@ -110,21 +110,21 @@ export function SchoolsPage() {
           </CardHeader>
           <CardContent>
             {schools.length === 0 ? (
-              <p className="text-sm text-slate-500">No schools yet. Add one to get started.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No schools yet. Add one to get started.</p>
             ) : (
               <ul className="space-y-2">
                 {schools.map((s) => (
                   <li
                     key={s.id}
-                    className="flex items-center justify-between rounded-lg border border-slate-100 p-3"
+                    className="flex items-center justify-between rounded-lg border border-slate-100 dark:border-slate-700 p-3"
                   >
                     <div>
-                      <p className="font-medium text-slate-900">{s.name}</p>
-                      <p className="text-xs text-slate-500">{s.address}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{s.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{s.address}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       {s.isLocked ? (
-                        <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Locked</span>
+                        <span className="rounded bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-200">Locked</span>
                       ) : null}
                       <PermissionGate permission="app:lock">
                         <Button
@@ -134,7 +134,7 @@ export function SchoolsPage() {
                           aria-label={s.isLocked ? "Unlock school" : "Lock school"}
                           title={s.isLocked ? "Unlock school for all users" : "Lock app for this school (only you can unlock)"}
                         >
-                          {s.isLocked ? <Unlock className="h-4 w-4 text-amber-600" /> : <Lock className="h-4 w-4" />}
+                          {s.isLocked ? <Unlock className="h-4 w-4 text-amber-600 dark:text-amber-400" /> : <Lock className="h-4 w-4 text-slate-600 dark:text-slate-300" />}
                         </Button>
                       </PermissionGate>
                       <Button
@@ -143,14 +143,14 @@ export function SchoolsPage() {
                         onClick={() => setSchoolModal({ open: true, school: s })}
                         aria-label="Edit school"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setConfirmDelete({ type: "school", id: s.id, name: s.name })}
                         aria-label="Delete school"
-                        className="text-red-600 hover:bg-red-50"
+                        className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -180,7 +180,7 @@ export function SchoolsPage() {
           </CardHeader>
           <CardContent>
             {sessions.length === 0 ? (
-              <p className="text-sm text-slate-500">No sessions. Add a session for a school.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No sessions. Add a session for a school.</p>
             ) : (
               <ul className="space-y-2">
                 {sessions.map((s) => {
@@ -193,21 +193,21 @@ export function SchoolsPage() {
                   return (
                     <li
                       key={s.id}
-                      className="flex items-center justify-between rounded-lg border border-slate-100 p-3"
+                      className="flex items-center justify-between rounded-lg border border-slate-100 dark:border-slate-700 p-3"
                     >
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <Calendar className="h-4 w-4 text-slate-400 dark:text-slate-300" />
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-medium text-slate-900">{s.year}</p>
+                            <p className="font-medium text-slate-900 dark:text-slate-100">{s.year}</p>
                             {completed && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/50 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-300">
                                 <CheckCircle2 className="h-3 w-3" />
                                 Completed
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             {school?.name} · {studentCount} student{studentCount !== 1 ? "s" : ""}
                           </p>
                         </div>
@@ -220,7 +220,7 @@ export function SchoolsPage() {
                             onClick={() => setPromoteModal({ open: true, fromSession: s })}
                             aria-label="Promote students to next session"
                             title="Promote students to next session"
-                            className="text-indigo-600 hover:bg-indigo-50"
+                            className="text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
                           >
                             <ArrowUpCircle className="h-4 w-4" />
                           </Button>
@@ -233,7 +233,7 @@ export function SchoolsPage() {
                           }
                           aria-label="Edit session"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -242,7 +242,7 @@ export function SchoolsPage() {
                             setConfirmDelete({ type: "session", id: s.id, name: `${s.year} (${school?.name})` })
                           }
                           aria-label="Delete session"
-                          className="text-red-600 hover:bg-red-50"
+                          className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

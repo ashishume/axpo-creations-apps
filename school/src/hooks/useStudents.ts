@@ -1,8 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { studentsRepository } from '../lib/db/repositories';
 import type { Student, FeePayment } from '../types';
 
 const QUERY_KEY = 'students';
+
+const DEFAULT_PAGE_SIZE = 10;
+const FILTERED_PAGE_SIZE = 50;
 
 export function useStudents() {
   return useQuery({
@@ -34,6 +37,39 @@ export function useStudentsPaginated(
     queryKey: [QUERY_KEY, 'paginated', page, pageSize, filters],
     queryFn: () => studentsRepository.getPaginated(page, pageSize, filters),
   });
+}
+
+/** Infinite list for Students list page: default 10 per page, 50 when filters applied. */
+export function useStudentsBySessionInfinite(
+  sessionId: string,
+  options?: { hasFilters?: boolean }
+) {
+  const pageSize = options?.hasFilters ? FILTERED_PAGE_SIZE : DEFAULT_PAGE_SIZE;
+  const filters: StudentFilters = { sessionId };
+
+  const q = useInfiniteQuery({
+    queryKey: [QUERY_KEY, 'infinite', sessionId, pageSize, filters],
+    queryFn: async ({ pageParam }) => {
+      const result = await studentsRepository.getPaginated(pageParam, pageSize, filters);
+      return result;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    enabled: !!sessionId,
+  });
+
+  const students = q.data?.pages.flatMap((p) => p.data) ?? [];
+  const total = q.data?.pages[0]?.total ?? 0;
+  return {
+    students,
+    total,
+    fetchNextPage: q.fetchNextPage,
+    hasNextPage: q.hasNextPage,
+    isFetchingNextPage: q.isFetchingNextPage,
+    isLoading: q.isLoading,
+    isFetching: q.isFetching,
+  };
 }
 
 export function useStudent(id: string) {

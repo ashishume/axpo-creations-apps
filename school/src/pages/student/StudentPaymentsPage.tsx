@@ -117,7 +117,7 @@ Thank you for your payment!
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Payment History</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Payment History</h1>
         <p className="text-slate-600">View all your fee payments and download receipts</p>
       </div>
 
@@ -138,7 +138,7 @@ Thank you for your payment!
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-slate-500">Payments</p>
-            <p className="text-2xl font-bold text-slate-900">{student.payments.length}</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{student.payments.length}</p>
           </CardContent>
         </Card>
 

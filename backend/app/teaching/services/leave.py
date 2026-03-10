@@ -207,6 +207,38 @@ class LeaveService:
             student_id=student_id,
         )
 
+    async def list_leave_requests_paginated(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+        status: str | None = None,
+        applicant_type: str | None = None,
+        staff_id: UUID | None = None,
+        student_id: UUID | None = None,
+    ) -> tuple[list[LeaveRequest], int]:
+        total = await leave_repository.count_leave_requests(
+            db,
+            session_id,
+            status=status,
+            applicant_type=applicant_type,
+            staff_id=staff_id,
+            student_id=student_id,
+        )
+        items = await leave_repository.list_leave_requests_paginated(
+            db,
+            session_id,
+            limit=limit,
+            offset=offset,
+            status=status,
+            applicant_type=applicant_type,
+            staff_id=staff_id,
+            student_id=student_id,
+        )
+        return items, total
+
     async def update_leave_request(
         self, db: AsyncSession, id: UUID, data: LeaveRequestUpdate
     ) -> LeaveRequest:

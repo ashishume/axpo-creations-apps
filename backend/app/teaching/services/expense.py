@@ -39,6 +39,34 @@ class ExpenseService:
     async def list_by_organization(self, db: AsyncSession, organization_id: UUID) -> list[Expense]:
         return await expense_repository.list_by_organization(db, organization_id)
 
+    async def list_by_session_paginated(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[Expense], int]:
+        total = await expense_repository.count_by_session(db, session_id)
+        items = await expense_repository.list_by_session_paginated(
+            db, session_id, limit=limit, offset=offset
+        )
+        return items, total
+
+    async def list_by_organization_paginated(
+        self,
+        db: AsyncSession,
+        organization_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[Expense], int]:
+        total = await expense_repository.count_by_organization(db, organization_id)
+        items = await expense_repository.list_by_organization_paginated(
+            db, organization_id, limit=limit, offset=offset
+        )
+        return items, total
+
     async def update(self, db: AsyncSession, id: UUID, data: ExpenseUpdate) -> Expense:
         expense = await self.get_or_404(db, id)
         for k, v in data.model_dump(exclude_unset=True).items():

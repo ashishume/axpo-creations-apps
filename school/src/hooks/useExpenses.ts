@@ -1,8 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { expensesRepository } from '../lib/db/repositories';
 import type { Expense } from '../types';
 
 const QUERY_KEY = 'expenses';
+
+const DEFAULT_PAGE_SIZE = 50;
 
 export function useExpenses() {
   return useQuery({
@@ -29,13 +31,40 @@ interface ExpenseFilters {
 
 export function useExpensesPaginated(
   page: number = 1, 
-  pageSize: number = 10, 
+  pageSize: number = 50, 
   filters?: ExpenseFilters
 ) {
   return useQuery({
     queryKey: [QUERY_KEY, 'paginated', page, pageSize, filters],
     queryFn: () => expensesRepository.getPaginated(page, pageSize, filters),
   });
+}
+
+/** Infinite list for Expenses list page: 50 per page. */
+export function useExpensesBySessionInfinite(sessionId: string) {
+  const pageSize = DEFAULT_PAGE_SIZE;
+  const filters: ExpenseFilters = { sessionId };
+
+  const q = useInfiniteQuery({
+    queryKey: [QUERY_KEY, 'infinite', sessionId, pageSize],
+    queryFn: async ({ pageParam }) => expensesRepository.getPaginated(pageParam, pageSize, filters),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    enabled: !!sessionId,
+  });
+
+  const expenses = q.data?.pages.flatMap((p) => p.data) ?? [];
+  const total = q.data?.pages[0]?.total ?? 0;
+  return {
+    expenses,
+    total,
+    fetchNextPage: q.fetchNextPage,
+    hasNextPage: q.hasNextPage,
+    isFetchingNextPage: q.isFetchingNextPage,
+    isLoading: q.isLoading,
+    isFetching: q.isFetching,
+  };
 }
 
 export function useExpense(id: string) {

@@ -34,14 +34,28 @@ function mapStaff(r: Record<string, unknown>): Staff {
   };
 }
 
+const LARGE_PAGE_SIZE = 10000;
+
+interface PaginatedApiResponse {
+  items: Record<string, unknown>[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
 export const staffRepositoryApi = {
   async getAll(): Promise<Staff[]> {
-    const list = await teachingFetchJson<Record<string, unknown>[]>('/staff');
+    const res = await teachingFetchJson<PaginatedApiResponse>(`/staff?limit=${LARGE_PAGE_SIZE}&offset=0`);
+    const list = res?.items ?? [];
     return Array.isArray(list) ? list.map(mapStaff) : [];
   },
 
   async getBySession(sessionId: string): Promise<Staff[]> {
-    const list = await teachingFetchJson<Record<string, unknown>[]>(`/staff?session_id=${sessionId}`);
+    const res = await teachingFetchJson<PaginatedApiResponse>(
+      `/staff?session_id=${sessionId}&limit=${LARGE_PAGE_SIZE}&offset=0`
+    );
+    const list = res?.items ?? [];
     return Array.isArray(list) ? list.map(mapStaff) : [];
   },
 
@@ -158,17 +172,24 @@ export const staffRepositoryApi = {
     pageSize: number = 10,
     filters?: { sessionId?: string; role?: string; search?: string }
   ): Promise<PaginatedResult<Staff>> {
-    let all = await this.getAll();
-    if (filters?.sessionId) all = all.filter((s) => s.sessionId === filters.sessionId);
-    if (filters?.role) all = all.filter((s) => s.role === filters.role);
-    if (filters?.search) {
-      const q = (filters.search ?? '').toLowerCase();
-      all = all.filter((s) => s.name.toLowerCase().includes(q) || s.employeeId.toLowerCase().includes(q));
-    }
-    const total = all.length;
-    const start = (page - 1) * pageSize;
-    const data = all.slice(start, start + pageSize);
-    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+    const hasFilters = !!(filters?.role ?? filters?.search);
+    const sessionId = filters?.sessionId ?? '';
+    const offset = (page - 1) * pageSize;
+    const params = new URLSearchParams();
+    if (sessionId) params.set('session_id', sessionId);
+    params.set('limit', String(pageSize));
+    params.set('offset', String(offset));
+    params.set('has_filters', String(hasFilters));
+    const res = await teachingFetchJson<PaginatedApiResponse>(`/staff?${params.toString()}`);
+    const items = res?.items ?? [];
+    const total = res?.total ?? 0;
+    return {
+      data: Array.isArray(items) ? items.map(mapStaff) : [],
+      total,
+      page,
+      pageSize,
+      totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+    };
   },
 
   async deleteSalaryPayment(staffId: string, paymentId: string): Promise<void> {

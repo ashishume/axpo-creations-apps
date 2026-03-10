@@ -22,8 +22,8 @@ export function LoadingSpinner({
 }: LoadingSpinnerProps) {
   const spinner = (
     <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
-      <Loader2 className={cn('animate-spin text-indigo-600', sizeClasses[size])} />
-      {text && <p className="text-sm text-slate-600">{text}</p>}
+      <Loader2 className={cn('animate-spin text-indigo-600 dark:text-indigo-400', sizeClasses[size])} />
+      {text && <p className="text-sm text-slate-600 dark:text-slate-400">{text}</p>}
     </div>
   );
 
@@ -52,7 +52,7 @@ export function LoadingDots({ className }: { className?: string }) {
 // Full page loading overlay
 export function LoadingOverlay({ text }: { text?: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
       <LoadingSpinner size="lg" text={text} />
     </div>
   );

@@ -38,7 +38,7 @@ export function SchoolSessionSelector() {
             setSchoolOpen(!schoolOpen);
             setSessionOpen(false);
           }}
-          className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+          className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"
         >
           {selectedSchool ? selectedSchool.name : "Select school"}
           <ChevronDown className="h-4 w-4" />
@@ -50,11 +50,11 @@ export function SchoolSessionSelector() {
               onClick={() => setSchoolOpen(false)}
             />
             <ul
-              className="absolute left-0 top-full z-20 mt-1 max-h-60 w-56 overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+              className="absolute left-0 top-full z-20 mt-1 max-h-60 w-56 overflow-auto rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 py-1 shadow-lg"
               role="listbox"
             >
               {schools.length === 0 ? (
-                <li className="px-3 py-2 text-sm text-slate-500">
+                <li className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
                   No schools. Add one in Schools & Sessions.
                 </li>
               ) : (
@@ -63,8 +63,8 @@ export function SchoolSessionSelector() {
                     <button
                       type="button"
                       className={cn(
-                        "w-full px-3 py-2 text-left text-sm hover:bg-slate-100",
-                        selectedSchoolId === s.id && "bg-indigo-50 text-indigo-800"
+                        "w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-700",
+                        selectedSchoolId === s.id && "bg-indigo-50 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200"
                       )}
                       onClick={() => {
                         setSelectedSchool(s.id);
@@ -90,7 +90,7 @@ export function SchoolSessionSelector() {
             setSchoolOpen(false);
           }}
           disabled={!selectedSchoolId}
-          className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+          className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
         >
           {selectedSession ? selectedSession.year : "Select session"}
           <ChevronDown className="h-4 w-4" />
@@ -102,11 +102,11 @@ export function SchoolSessionSelector() {
               onClick={() => setSessionOpen(false)}
             />
             <ul
-              className="absolute left-0 top-full z-20 mt-1 max-h-60 w-40 overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+              className="absolute left-0 top-full z-20 mt-1 max-h-60 w-40 overflow-auto rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 py-1 shadow-lg"
               role="listbox"
             >
               {sessionList.length === 0 ? (
-                <li className="px-3 py-2 text-sm text-slate-500">
+                <li className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
                   No sessions.
                 </li>
               ) : (
@@ -115,8 +115,8 @@ export function SchoolSessionSelector() {
                     <button
                       type="button"
                       className={cn(
-                        "w-full px-3 py-2 text-left text-sm hover:bg-slate-100",
-                        selectedSessionId === s.id && "bg-indigo-50 text-indigo-800"
+                        "w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-700",
+                        selectedSessionId === s.id && "bg-indigo-50 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200"
                       )}
                       onClick={() => {
                         setSelectedSession(s.id);

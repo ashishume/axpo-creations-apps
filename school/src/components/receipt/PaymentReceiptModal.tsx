@@ -68,7 +68,7 @@ export function PaymentReceiptModal({
       <div className="space-y-4">
         <div
           ref={printRef}
-          className="rounded-lg border border-slate-200 bg-slate-50 p-6 print:border-0 print:bg-white"
+          className="rounded-lg border border-slate-200 bg-slate-50 p-6 print:border-0 print:bg-white dark:bg-slate-900"
         >
           <h1 className="text-lg font-bold text-slate-900">Payment Receipt</h1>
           <p className="text-xs text-slate-500">{schoolName} · Session {sessionYear}</p>

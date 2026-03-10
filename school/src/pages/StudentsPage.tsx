@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import { useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useAddStudentPayment } from "../hooks/useStudents";
+import { useStudentsBySessionInfinite, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useAddStudentPayment } from "../hooks/useStudents";
 import { useClassesBySession, useCreateClass, useUpdateClass, useDeleteClass } from "../hooks/useClasses";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
@@ -28,9 +28,9 @@ import { SearchInput } from "../components/ui/SearchInput";
 import { FilterChips } from "../components/ui/FilterChips";
 
 const statusColors: Record<PaymentStatus, string> = {
-  "Fully Paid": "bg-green-100 text-green-800",
-  "Partially Paid": "bg-amber-100 text-amber-800",
-  "Not Paid": "bg-red-100 text-red-800",
+  "Fully Paid": "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300",
+  "Partially Paid": "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300",
+  "Not Paid": "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300",
 };
 
 export function StudentsPage() {
@@ -41,10 +41,6 @@ export function StudentsPage() {
     selectedSessionId,
     toast,
   } = useApp();
-
-  const { data: students = [], isLoading: studentsLoading } = useStudentsBySession(selectedSessionId ?? "");
-  const { data: sessionClasses = [], isLoading: classesLoading } = useClassesBySession(selectedSessionId ?? "");
-  const isAppLoading = studentsLoading || classesLoading;
 
   const createStudent = useCreateStudent();
   const createStudentsBulk = useCreateStudentsBulk();
@@ -87,6 +83,17 @@ export function StudentsPage() {
   const [verifyAddModalOpen, setVerifyAddModalOpen] = useState(false);
   const [pendingAddStudents, setPendingAddStudents] = useState<PendingStudent[]>([]);
   const [isAddingStudents, setIsAddingStudents] = useState(false);
+
+  const hasFilters = !!(statusFilter || classFilter || feeTypeFilter || searchQuery.trim());
+  const {
+    students,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: studentsLoading,
+  } = useStudentsBySessionInfinite(selectedSessionId ?? "", { hasFilters });
+  const { data: sessionClasses = [], isLoading: classesLoading } = useClassesBySession(selectedSessionId ?? "");
+  const isAppLoading = studentsLoading || classesLoading;
 
   const list = students;
 
@@ -298,8 +305,8 @@ export function StudentsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Students & Fees</h2>
-          <p className="text-sm text-slate-600 sm:text-base">Track student fees and payments</p>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 sm:text-2xl">Students & Fees</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400 sm:text-base">Track student fees and payments</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 [&_button]:touch-manipulation [&_button]:min-h-[44px] md:[&_button]:min-h-0">
           <Button
@@ -333,7 +340,7 @@ export function StudentsPage() {
 
       {!selectedSessionId ? (
         <Card>
-          <CardContent className="py-12 text-center text-slate-500">
+          <CardContent className="py-12 text-center text-slate-500 dark:text-slate-400">
             Select a school and session to view students.
           </CardContent>
         </Card>
@@ -368,7 +375,7 @@ export function StudentsPage() {
                   className="max-w-xs"
                 />
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-medium text-slate-500">Status:</span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Status:</span>
                   <FilterChips
                     options={[
                       { value: "", label: "All" },
@@ -381,11 +388,11 @@ export function StudentsPage() {
                   />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-medium text-slate-500">Class:</span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Class:</span>
                   <select
                     value={classFilter}
                     onChange={(e) => setClassFilter(e.target.value)}
-                    className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                   >
                     <option value="">All Classes</option>
                     {sessionClasses.map((c) => (
@@ -396,11 +403,11 @@ export function StudentsPage() {
                   </select>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-medium text-slate-500">Fee Type:</span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Fee Type:</span>
                   <select
                     value={feeTypeFilter}
                     onChange={(e) => setFeeTypeFilter(e.target.value)}
-                    className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                   >
                     <option value="">All Fee Types</option>
                     <option value="Regular">Regular</option>
@@ -411,14 +418,14 @@ export function StudentsPage() {
                 </div>
               </div>
               {list.length === 0 ? (
-                <p className="text-sm text-slate-500">No students in this session. Add one to get started.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">No students in this session. Add one to get started.</p>
               ) : filteredList.length === 0 ? (
-                <p className="text-sm text-slate-500">No students match your search or filter.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">No students match your search or filter.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 text-left text-slate-600">
+                      <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                         <th className="pb-2 pr-4 font-medium">Name</th>
                         <th className="pb-2 pr-4 font-medium">ID</th>
                         <th className="pb-2 pr-4 font-medium">Class</th>
@@ -442,27 +449,27 @@ export function StudentsPage() {
                         const target = s.targetAmount ?? 0;
                         const pct = target > 0 ? Math.min(100, (paid / target) * 100) : 0;
                         return (
-                          <tr key={s.id} className="border-b border-slate-100">
-                            <td className="py-3 pr-4 font-medium text-slate-900">{s.name}</td>
-                            <td className="py-3 pr-4 text-slate-600">{s.studentId}</td>
-                            <td className="py-3 pr-4 text-slate-600">
+                          <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700">
+                            <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{s.name}</td>
+                            <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{s.studentId}</td>
+                            <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">
                               {s.classId ? sessionClasses.find((c) => c.id === s.classId)?.name ?? "—" : "—"}
                             </td>
-                            <td className="py-3 pr-4 text-slate-600">{s.feeType}</td>
-                            <td className="py-3 pr-4">{formatCurrency(target)}</td>
-                            <td className="py-3 pr-4">{formatCurrency(paid)}</td>
-                            <td className="py-3 pr-4">{formatCurrency(remaining)}</td>
-                            <td className="py-3 pr-4 text-slate-600">
+                            <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{s.feeType}</td>
+                            <td className="py-3 pr-4 text-slate-900 dark:text-slate-100">{formatCurrency(target)}</td>
+                            <td className="py-3 pr-4 text-slate-900 dark:text-slate-100">{formatCurrency(paid)}</td>
+                            <td className="py-3 pr-4 text-slate-900 dark:text-slate-100">{formatCurrency(remaining)}</td>
+                            <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">
                               {fine > 0 ? formatCurrency(fine) : "—"}
                             </td>
-                            <td className="py-3 pr-4 font-medium">
+                            <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">
                               {fine > 0 ? formatCurrency(totalDue) : formatCurrency(remaining)}
                             </td>
                             <td className="py-3 pr-4">
                               <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", statusColors[status])}>
                                 {status}
                               </span>
-                              <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-200">
+                              <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
                                 <div
                                   className={cn(
                                     "h-full rounded-full",
@@ -480,7 +487,7 @@ export function StudentsPage() {
                                   onClick={() => setDetailsStudent({ student: s, initialTab: "overview" })}
                                   title="View student details"
                                 >
-                                  <Eye className="h-4 w-4 text-indigo-600" />
+                                  <Eye className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -488,7 +495,7 @@ export function StudentsPage() {
                                   onClick={() => setDetailsStudent({ student: s, initialTab: "payments" })}
                                   title="Record payment"
                                 >
-                                  <DollarSign className="h-4 w-4 text-green-600" />
+                                  <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -496,12 +503,12 @@ export function StudentsPage() {
                                   onClick={() => setStudentModal({ open: true, student: s })}
                                   title="Edit student"
                                 >
-                                  <Pencil className="h-4 w-4 text-slate-600" />
+                                  <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-red-600 hover:bg-red-50"
+                                  className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
                                   onClick={() => setConfirmDelete({ id: s.id, name: s.name })}
                                   title="Delete student"
                                 >
@@ -514,6 +521,17 @@ export function StudentsPage() {
                       })}
                     </tbody>
                   </table>
+                </div>
+              )}
+              {hasNextPage && list.length > 0 && (
+                <div className="mt-4 flex justify-center">
+                  <Button
+                    variant="secondary"
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                  >
+                    {isFetchingNextPage ? "Loading…" : "Load more"}
+                  </Button>
                 </div>
               )}
             </CardContent>
@@ -564,7 +582,7 @@ export function StudentsPage() {
 
           {/* Basic Info */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-slate-900 border-b pb-1">Basic Info</h4>
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-1">Basic Info</h4>
 
             {/* Student Photo Upload */}
             <div className="flex items-center gap-4">
@@ -573,11 +591,11 @@ export function StudentsPage() {
                   <img
                     src={studentPhotoPreview || studentModal.student?.photoUrl}
                     alt="Student"
-                    className="h-20 w-20 rounded-full object-cover border-2 border-slate-200"
+                    className="h-20 w-20 rounded-full object-cover border-2 border-slate-200 dark:border-slate-600"
                   />
                 ) : (
-                  <div className="h-20 w-20 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center">
-                    <User className="h-10 w-10 text-slate-400" />
+                  <div className="h-20 w-20 rounded-full bg-slate-100 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
+                    <User className="h-10 w-10 text-slate-400 dark:text-slate-400" />
                   </div>
                 )}
                 {(studentPhotoPreview || studentModal.student?.photoUrl) && (
@@ -613,41 +631,41 @@ export function StudentsPage() {
                   <Camera className="mr-1 h-4 w-4" />
                   {(studentPhotoPreview || studentModal.student?.photoUrl) ? "Change Photo" : "Add Photo"}
                 </Button>
-                <p className="mt-1 text-xs text-slate-500">Max 2MB, JPG or PNG</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Max 2MB, JPG or PNG</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Name *</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Name *</label>
                 <input
                   name="name"
                   type="text"
                   required
                   defaultValue={studentModal.student?.name}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Student ID</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Student ID</label>
                 <input
                   name="studentId"
                   type="text"
                   defaultValue={studentModal.student?.studentId}
                   placeholder="Auto-generated if empty"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Class *</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Class *</label>
                 <select
                   name="classId"
                   required
                   defaultValue={studentModal.student?.classId ?? ""}
                   onChange={(e) => handleClassSelectChange(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 >
                   <option value="">— Select class —</option>
                   {sessionClasses.map((c) => (
@@ -658,11 +676,11 @@ export function StudentsPage() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Fee type</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Fee type</label>
                 <select
                   name="feeType"
                   defaultValue={studentModal.student?.feeType ?? "Regular"}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 >
                   <option value="Regular">Regular</option>
                   <option value="Boarding">Boarding</option>
@@ -674,11 +692,11 @@ export function StudentsPage() {
 
             {/* Sibling Selection */}
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Sibling (30% monthly fee discount)</label>
+              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Sibling (30% monthly fee discount)</label>
               <select
                 name="siblingId"
                 defaultValue={studentModal.student?.siblingId ?? ""}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               >
                 <option value="">— No sibling —</option>
                 {list
@@ -689,70 +707,70 @@ export function StudentsPage() {
                     </option>
                   ))}
               </select>
-              <p className="mt-0.5 text-xs text-slate-500">Both siblings will get 30% discount on monthly fees</p>
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Both siblings will get 30% discount on monthly fees</p>
             </div>
           </div>
 
           {/* Fee Structure */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-slate-900 border-b pb-1">Fee Structure</h4>
-            <p className="text-xs text-slate-500">Selecting a class auto-fills these. You can override if needed.</p>
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-1">Fee Structure</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Selecting a class auto-fills these. You can override if needed.</p>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Registration (one-time)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Registration (one-time)</label>
                 <input
                   name="registrationFees"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.registrationFees ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.registrationFees ?? ""}
                   placeholder="₹"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Admission (one-time)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Admission (one-time)</label>
                 <input
                   name="admissionFees"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.admissionFees ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.admissionFees ?? ""}
                   placeholder="₹"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Annual Fund (one-time)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Annual Fund (one-time)</label>
                 <input
                   name="annualFund"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.annualFund ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.annualFund ?? ""}
                   placeholder="₹"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Monthly Tuition (₹/month)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Monthly Tuition (₹/month)</label>
                 <input
                   name="monthlyFees"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.monthlyFees ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.monthlyFees ?? ""}
                   placeholder="₹"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Transport (₹/month, optional)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Transport (₹/month, optional)</label>
                 <input
                   name="transportFees"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.transportFees ?? ""}
                   placeholder="Based on distance"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -760,35 +778,35 @@ export function StudentsPage() {
 
           {/* Late Fee Config */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-slate-900 border-b pb-1">Late Fee Configuration</h4>
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-1">Late Fee Configuration</h4>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Due day (1–28)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Due day (1–28)</label>
                 <input
                   name="dueDay"
                   type="number"
                   min={1}
                   max={28}
                   defaultValue={studentModal.student?.dueDayOfMonth ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.dueDayOfMonth ?? 10}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Late fee (₹)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Late fee (₹)</label>
                 <input
                   name="lateFeeAmount"
                   type="number"
                   min={0}
                   defaultValue={studentModal.student?.lateFeeAmount ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.lateFeeAmount ?? 50}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Frequency</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Frequency</label>
                 <select
                   name="lateFeeFrequency"
                   defaultValue={studentModal.student?.lateFeeFrequency ?? sessionClasses.find(c => c.id === studentModal.student?.classId)?.lateFeeFrequency ?? "weekly"}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 >
                   <option value="weekly">Per week</option>
                   <option value="daily">Per day</option>
@@ -797,7 +815,7 @@ export function StudentsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t">
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
             <Button type="button" variant="secondary" onClick={() => setStudentModal({ open: false })}>
               Cancel
             </Button>
@@ -813,35 +831,35 @@ export function StudentsPage() {
           title={`Add payment – ${paymentModal.student.name}`}
         >
           <form onSubmit={handleAddPayment} className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Remaining: {formatCurrency(getRemaining(paymentModal.student))}
             </p>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Date *</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Date *</label>
               <input
                 name="date"
                 type="date"
                 required
                 defaultValue={new Date().toISOString().slice(0, 10)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Amount (₹) *</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Amount (₹) *</label>
               <input
                 name="amount"
                 type="number"
                 required
                 min={0.01}
                 step={0.01}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Method</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Method</label>
               <select
                 name="method"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               >
                 <option value="Cash">Cash</option>
                 <option value="Cheque">Cheque</option>
@@ -850,11 +868,11 @@ export function StudentsPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Receipt number</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Receipt number</label>
               <input
                 name="receiptNumber"
                 type="text"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -874,7 +892,7 @@ export function StudentsPage() {
           title={`Payment history – ${historyStudent.name}`}
         >
           <div className="space-y-2">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Target: {formatCurrency(historyStudent.targetAmount ?? 0)} · Paid:{" "}
               {formatCurrency(getTotalPaid(historyStudent))} · Remaining:{" "}
               {formatCurrency(getRemaining(historyStudent))}
@@ -883,11 +901,11 @@ export function StudentsPage() {
               )}
             </p>
             {historyStudent.payments.length === 0 ? (
-              <p className="text-sm text-slate-500">No payments yet.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No payments yet.</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-slate-600">
+                  <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                     <th className="pb-1 pr-2 font-medium">Date</th>
                     <th className="pb-1 pr-2 font-medium">Amount</th>
                     <th className="pb-1 pr-2 font-medium">Method</th>
@@ -897,12 +915,12 @@ export function StudentsPage() {
                 </thead>
                 <tbody>
                   {getRunningBalances(historyStudent).map(({ afterPayment, payment }) => (
-                    <tr key={payment.id} className="border-b border-slate-100">
-                      <td className="py-1.5 pr-2">{formatDate(payment.date)}</td>
-                      <td className="py-1.5 pr-2">{formatCurrency(payment.amount)}</td>
-                      <td className="py-1.5 pr-2">{payment.method}</td>
-                      <td className="py-1.5 pr-2">{payment.receiptNumber}</td>
-                      <td className="py-1.5">{formatCurrency(afterPayment)}</td>
+                    <tr key={payment.id} className="border-b border-slate-100 dark:border-slate-700">
+                      <td className="py-1.5 pr-2 text-slate-900 dark:text-slate-100">{formatDate(payment.date)}</td>
+                      <td className="py-1.5 pr-2 text-slate-900 dark:text-slate-100">{formatCurrency(payment.amount)}</td>
+                      <td className="py-1.5 pr-2 text-slate-900 dark:text-slate-100">{payment.method}</td>
+                      <td className="py-1.5 pr-2 text-slate-900 dark:text-slate-100">{payment.receiptNumber}</td>
+                      <td className="py-1.5 text-slate-900 dark:text-slate-100">{formatCurrency(afterPayment)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -934,98 +952,98 @@ export function StudentsPage() {
         title="Manage classes"
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Define fee structure per class. Students assigned to a class will auto-fill these fees.
           </p>
-          <form key={editingClass?.id ?? "new"} onSubmit={handleSaveClass} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <form key={editingClass?.id ?? "new"} onSubmit={handleSaveClass} className="space-y-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Class name *</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Class name *</label>
                 <input
                   name="className"
                   type="text"
                   required
                   defaultValue={editingClass?.name}
                   placeholder="e.g. Class 1"
-                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Due day (1-28)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Due day (1-28)</label>
                 <input
                   name="dueDayOfMonth"
                   type="number"
                   min={1}
                   max={28}
                   defaultValue={editingClass?.dueDayOfMonth ?? 10}
-                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
             <div className="grid grid-cols-4 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Registration</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Registration</label>
                 <input
                   name="registrationFees"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.registrationFees ?? 500}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Admission</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Admission</label>
                 <input
                   name="admissionFees"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.admissionFees ?? 2500}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Annual Fund</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Annual Fund</label>
                 <input
                   name="annualFund"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.annualFund ?? 1500}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Monthly Fee</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Monthly Fee</label>
                 <input
                   name="monthlyFees"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.monthlyFees ?? 3000}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Late fee amount</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Late fee amount</label>
                 <input
                   name="lateFeeAmount"
                   type="number"
                   min={0}
                   defaultValue={editingClass?.lateFeeAmount ?? 50}
                   placeholder="₹"
-                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Late fee frequency</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Late fee frequency</label>
                 <select
                   name="lateFeeFrequency"
                   defaultValue={editingClass?.lateFeeFrequency ?? "weekly"}
-                  className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
                 >
                   <option value="weekly">Per week</option>
                   <option value="daily">Per day</option>
@@ -1044,12 +1062,12 @@ export function StudentsPage() {
             </div>
           </form>
           {sessionClasses.length === 0 ? (
-            <p className="text-sm text-slate-500">No classes yet. Add one above.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">No classes yet. Add one above.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-slate-600">
+                  <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                     <th className="pb-2 pr-2 font-medium">Class</th>
                     <th className="pb-2 pr-2 font-medium">Monthly</th>
                     <th className="pb-2 pr-2 font-medium">One-time</th>
@@ -1059,13 +1077,13 @@ export function StudentsPage() {
                 </thead>
                 <tbody>
                   {sessionClasses.map((c) => (
-                    <tr key={c.id} className="border-b border-slate-100">
-                      <td className="py-2 pr-2 font-medium text-slate-900">{c.name}</td>
-                      <td className="py-2 pr-2">{formatCurrency(c.monthlyFees)}/mo</td>
-                      <td className="py-2 pr-2 text-xs text-slate-600">
+                    <tr key={c.id} className="border-b border-slate-100 dark:border-slate-700">
+                      <td className="py-2 pr-2 font-medium text-slate-900 dark:text-slate-100">{c.name}</td>
+                      <td className="py-2 pr-2 text-slate-900 dark:text-slate-100">{formatCurrency(c.monthlyFees)}/mo</td>
+                      <td className="py-2 pr-2 text-xs text-slate-600 dark:text-slate-300">
                         Reg: ₹{c.registrationFees} + Adm: ₹{c.admissionFees} + AF: ₹{c.annualFund}
                       </td>
-                      <td className="py-2 pr-2">₹{c.lateFeeAmount}/{c.lateFeeFrequency === "weekly" ? "wk" : "day"}</td>
+                      <td className="py-2 pr-2 text-slate-900 dark:text-slate-100">₹{c.lateFeeAmount}/{c.lateFeeFrequency === "weekly" ? "wk" : "day"}</td>
                       <td className="py-2">
                         <div className="flex gap-1">
                           <Button
@@ -1074,12 +1092,12 @@ export function StudentsPage() {
                             onClick={() => setEditingClass(c)}
                             title="Edit class"
                           >
-                            <Pencil className="h-3.5 w-3.5" />
+                            <Pencil className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-red-600 hover:bg-red-50"
+                            className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
                             onClick={() => {
                               deleteClass(c.id);
                               toast("Class removed");

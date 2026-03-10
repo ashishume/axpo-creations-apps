@@ -28,20 +28,20 @@ function formatDate(s: string | null | undefined): string {
 function StatusBadge({ status, isLocked }: { status: string; isLocked: boolean }) {
   if (isLocked) {
     return (
-      <span className="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-800">
+      <span className="inline-flex items-center rounded-full bg-slate-200 dark:bg-slate-600 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:text-slate-200">
         Locked
       </span>
     );
   }
   const styles: Record<string, string> = {
-    active: "bg-green-100 text-green-800",
-    pending: "bg-amber-100 text-amber-800",
-    halted: "bg-red-100 text-red-800",
-    cancelled: "bg-slate-100 text-slate-600",
-    expired: "bg-slate-100 text-slate-600",
-    inactive: "bg-slate-100 text-slate-500",
+    active: "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300",
+    pending: "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300",
+    halted: "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300",
+    cancelled: "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300",
+    expired: "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300",
+    inactive: "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400",
   };
-  const className = styles[status] ?? "bg-slate-100 text-slate-600";
+  const className = styles[status] ?? "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300";
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}>
       {status}
@@ -118,8 +118,8 @@ export function OrgSubscriptionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">Org subscriptions</h2>
-        <p className="text-slate-600">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Org subscriptions</h2>
+        <p className="text-slate-600 dark:text-slate-400">
           View all organizations and their subscription status. Lock, unlock, grant, or revoke access.
         </p>
       </div>
@@ -135,19 +135,19 @@ export function OrgSubscriptionsPage() {
           {isLoading ? (
             <SkeletonList items={5} />
           ) : list.length === 0 ? (
-            <p className="text-sm text-slate-500">No organizations yet.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">No organizations yet.</p>
           ) : (
             <ul className="space-y-3">
               {list.map((org) => (
                 <li
                   key={org.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 p-3"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 dark:border-slate-700 p-3"
                 >
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-slate-400" />
+                    <Building2 className="h-5 w-5 text-slate-400 dark:text-slate-300" />
                     <div>
-                      <p className="font-medium text-slate-900">{org.name}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{org.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {org.slug ?? org.id.slice(0, 8)} · {org.planType} / {org.billingInterval} · Renews{" "}
                         {formatDate(org.currentPeriodEnd)}
                       </p>
@@ -165,7 +165,7 @@ export function OrgSubscriptionsPage() {
                             disabled={submitting}
                             aria-label="Unlock"
                           >
-                            <Unlock className="h-4 w-4" />
+                            <Unlock className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                           </Button>
                         ) : (
                           <Button
@@ -175,7 +175,7 @@ export function OrgSubscriptionsPage() {
                             disabled={submitting}
                             aria-label="Lock"
                           >
-                            <Lock className="h-4 w-4" />
+                            <Lock className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                           </Button>
                         )}
                         <Button
@@ -185,18 +185,18 @@ export function OrgSubscriptionsPage() {
                           disabled={submitting}
                           aria-label="Grant"
                         >
-                          <Gift className="h-4 w-4" />
+                          <Gift className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                         </Button>
                         {org.status !== "inactive" && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-red-600 hover:bg-red-50"
+                            className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
                             onClick={() => handleRevoke(org.id)}
                             disabled={submitting}
                             aria-label="Revoke"
                           >
-                            <RotateCcw className="h-4 w-4" />
+                            <RotateCcw className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                           </Button>
                         )}
                       </div>
@@ -216,15 +216,15 @@ export function OrgSubscriptionsPage() {
           title="Grant subscription"
         >
           <div className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Grant manual subscription to <strong>{grantModal.org.name}</strong> (no Razorpay).
             </p>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Plan</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Plan</label>
               <select
                 value={grantPlan}
                 onChange={(e) => setGrantPlan(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900"
+                className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100"
               >
                 {SUBSCRIPTION_PLANS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -234,11 +234,11 @@ export function OrgSubscriptionsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Interval</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Interval</label>
               <select
                 value={grantInterval}
                 onChange={(e) => setGrantInterval(e.target.value as BillingInterval)}
-                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900"
+                className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100"
               >
                 {BILLING_INTERVALS.map((i) => (
                   <option key={i} value={i}>
@@ -248,14 +248,14 @@ export function OrgSubscriptionsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Duration (days)</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Duration (days)</label>
               <input
                 type="number"
                 min={1}
                 max={3650}
                 value={grantDays}
                 onChange={(e) => setGrantDays(Number(e.target.value) || 30)}
-                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900"
+                className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-slate-100"
               />
             </div>
             <div className="flex justify-end gap-2">

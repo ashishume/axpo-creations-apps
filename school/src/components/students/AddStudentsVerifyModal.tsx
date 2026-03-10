@@ -120,7 +120,7 @@ export function AddStudentsVerifyModal({
               )}
             </button>
             {expandedIndex === index && (
-              <div className="px-4 pb-4 pt-0 space-y-4 border-t border-slate-100 bg-white">
+              <div className="px-4 pb-4 pt-0 space-y-4 border-t border-slate-100 bg-white dark:bg-slate-900">
                 <div className="grid grid-cols-2 gap-3 pt-3">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-600">

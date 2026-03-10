@@ -133,7 +133,7 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-900">
       <SubscriptionExpiredOverlay />
       <input
         ref={fileInputRef}
@@ -147,14 +147,14 @@ export function Layout() {
         type="button"
         aria-label="Close menu"
         className={cn(
-          "no-print fixed inset-0 z-40 bg-slate-900/50 transition-opacity md:hidden",
+          "no-print fixed inset-0 z-40 bg-slate-900/50 dark:bg-slate-950/70 transition-opacity md:hidden",
           sidebarOpen ? "visible opacity-100" : "invisible opacity-0 pointer-events-none"
         )}
         onClick={() => setSidebarOpen(false)}
       />
       <div
         className={cn(
-          "no-print fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col overflow-hidden border-r border-slate-200 bg-slate-50 transition-transform duration-200 ease-out md:static md:translate-x-0 md:transition-none",
+          "no-print fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col overflow-hidden border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 transition-transform duration-200 ease-out md:static md:translate-x-0 md:transition-none",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -169,19 +169,19 @@ export function Layout() {
       <main className="flex min-h-0 flex-1 flex-col overflow-auto">
         {isAppLocked ? (
           <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
-              <Lock className="h-8 w-8 text-amber-600" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/50">
+              <Lock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
             </div>
-            <h2 className="text-xl font-semibold text-slate-900">App locked</h2>
-            <p className="max-w-md text-center text-slate-600">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">App locked</h2>
+            <p className="max-w-md text-center text-slate-600 dark:text-slate-400">
               This school is currently locked. Only a Super Admin can unlock it. Please contact your administrator.
             </p>
-            <p className="text-sm text-slate-500">{selectedSchool?.name}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{selectedSchool?.name}</p>
           </div>
         ) : (
           <>
             {/* Mobile only: thin bar with menu button to open sidebar (school/session are in sidebar) */}
-            <div className="no-print sticky top-0 z-30 flex shrink-0 md:hidden items-center border-b border-slate-200 bg-white/95 px-3 py-2 backdrop-blur">
+            <div className="no-print sticky top-0 z-30 flex shrink-0 md:hidden items-center border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 px-3 py-2 backdrop-blur">
               <Button
                 variant="ghost"
                 size="sm"
@@ -191,7 +191,7 @@ export function Layout() {
               >
                 <Menu className="h-6 w-6" />
               </Button>
-              <span className="ml-2 truncate text-sm text-slate-500">
+              <span className="ml-2 truncate text-sm text-slate-500 dark:text-slate-400">
                 {selectedSchool?.name ?? "Select school"}
                 {selectedSchoolId && " • "}
                 {selectedSchoolId && (sessions.find((s) => s.id === selectedSessionId)?.year ?? "Select session")}

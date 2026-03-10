@@ -1,10 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { leavesRepository } from '../lib/db/repositories';
 import type { LeaveType, LeaveBalance, LeaveRequest } from '../types';
 
 const QUERY_KEY_LEAVE_TYPES = 'leaveTypes';
 const QUERY_KEY_LEAVE_REQUESTS = 'leaveRequests';
 const QUERY_KEY_LEAVE_BALANCES = 'leaveBalances';
+
+const DEFAULT_PAGE_SIZE = 50;
 
 export function useLeaveTypes(sessionId: string, applicableTo?: string) {
   return useQuery({
@@ -23,6 +25,34 @@ export function useLeaveRequests(
     queryFn: () => leavesRepository.getLeaveRequests(sessionId, filters),
     enabled: !!sessionId,
   });
+}
+
+/** Infinite list for Leave requests: 50 per page. */
+export function useLeaveRequestsInfinite(
+  sessionId: string,
+  filters?: { status?: string; applicantType?: string; staffId?: string; studentId?: string }
+) {
+  const q = useInfiniteQuery({
+    queryKey: [QUERY_KEY_LEAVE_REQUESTS, 'infinite', sessionId, DEFAULT_PAGE_SIZE, filters],
+    queryFn: async ({ pageParam }) =>
+      leavesRepository.getLeaveRequestsPaginated(sessionId, pageParam, DEFAULT_PAGE_SIZE, filters),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    enabled: !!sessionId,
+  });
+
+  const requests = q.data?.pages.flatMap((p) => p.data) ?? [];
+  const total = q.data?.pages[0]?.total ?? 0;
+  return {
+    requests,
+    total,
+    fetchNextPage: q.fetchNextPage,
+    hasNextPage: q.hasNextPage,
+    isFetchingNextPage: q.isFetchingNextPage,
+    isLoading: q.isLoading,
+    isFetching: q.isFetching,
+  };
 }
 
 export function useLeaveRequest(id: string) {

@@ -1,7 +1,7 @@
 """Expense repository: DB operations only."""
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.teaching.models.expense import Expense
@@ -30,6 +30,56 @@ class ExpenseRepository:
             .join(School, Session.school_id == School.id)
             .where(School.organization_id == organization_id)
             .order_by(Expense.date.desc())
+        )
+        return list(result.scalars().all())
+
+    async def count_by_session(self, db: AsyncSession, session_id: UUID) -> int:
+        result = await db.execute(select(func.count()).select_from(Expense).where(Expense.session_id == session_id))
+        return result.scalar() or 0
+
+    async def list_by_session_paginated(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> list[Expense]:
+        result = await db.execute(
+            select(Expense)
+            .where(Expense.session_id == session_id)
+            .order_by(Expense.date.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(result.scalars().all())
+
+    async def count_by_organization(self, db: AsyncSession, organization_id: UUID) -> int:
+        result = await db.execute(
+            select(func.count())
+            .select_from(Expense)
+            .join(Session, Expense.session_id == Session.id)
+            .join(School, Session.school_id == School.id)
+            .where(School.organization_id == organization_id)
+        )
+        return result.scalar() or 0
+
+    async def list_by_organization_paginated(
+        self,
+        db: AsyncSession,
+        organization_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> list[Expense]:
+        result = await db.execute(
+            select(Expense)
+            .join(Session, Expense.session_id == Session.id)
+            .join(School, Session.school_id == School.id)
+            .where(School.organization_id == organization_id)
+            .order_by(Expense.date.desc())
+            .limit(limit)
+            .offset(offset)
         )
         return list(result.scalars().all())
 

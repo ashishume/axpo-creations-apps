@@ -19,16 +19,16 @@ export function AppHeader() {
   );
 
   return (
-    <header className="w-full border-b border-slate-200 bg-white/95 px-2 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-white/80 md:px-6 md:py-2">
+    <header className="w-full border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 px-2 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-slate-900/80 md:px-6 md:py-2">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1.5 md:gap-x-6">
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className="flex shrink-0 items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+          <span className="flex shrink-0 items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <Building2 className="h-3.5 w-3.5" />
             School
           </span>
           <div className="flex flex-wrap gap-1">
             {schools.length === 0 ? (
-              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500">
+              <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs text-slate-500 dark:text-slate-400">
                 No schools yet
               </span>
             ) : (
@@ -40,8 +40,8 @@ export function AppHeader() {
                   className={cn(
                     "rounded-full px-2.5 py-1 text-xs font-medium transition-colors touch-manipulation min-h-[32px] md:min-h-0",
                     selectedSchoolId === s.id
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      ? "bg-indigo-600 text-white shadow-sm dark:bg-indigo-500"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                   )}
                 >
                   {s.name}
@@ -51,17 +51,17 @@ export function AppHeader() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className="flex shrink-0 items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+          <span className="flex shrink-0 items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <Calendar className="h-3.5 w-3.5" />
             Session
           </span>
           <div className="flex flex-wrap gap-1">
             {!selectedSchoolId ? (
-              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500">
+              <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs text-slate-500 dark:text-slate-400">
                 Select a school
               </span>
             ) : sessionList.length === 0 ? (
-              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500">
+              <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs text-slate-500 dark:text-slate-400">
                 No sessions
               </span>
             ) : (
@@ -73,8 +73,8 @@ export function AppHeader() {
                   className={cn(
                     "rounded-full px-2.5 py-1 text-xs font-medium transition-colors touch-manipulation min-h-[32px] md:min-h-0",
                     selectedSessionId === s.id
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      ? "bg-indigo-600 text-white shadow-sm dark:bg-indigo-500"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                   )}
                 >
                   {s.year}

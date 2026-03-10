@@ -34,15 +34,15 @@ export function ConfirmDialog({
       aria-modal="true"
       aria-labelledby="confirm-title"
     >
-      <div className="absolute inset-0 bg-slate-900/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/50 dark:bg-slate-950/70" onClick={onClose} />
       <div
-        className="relative z-10 w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="confirm-title" className="text-lg font-semibold text-slate-900">
+        <h2 id="confirm-title" className="text-lg font-semibold text-slate-900 dark:text-slate-50">
           {title}
         </h2>
-        <p className="mt-2 text-sm text-slate-600">{message}</p>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{message}</p>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>
             Cancel

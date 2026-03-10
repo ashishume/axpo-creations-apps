@@ -47,7 +47,7 @@ export function Tooltip({ text, children, side = 'top', className }: TooltipProp
       {visible && (
         <div
           className={cn(
-            'absolute z-50 whitespace-nowrap rounded-md bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white shadow-lg',
+            'absolute z-50 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2.5 py-1.5 text-xs font-medium text-white shadow-lg',
             positionClasses[side]
           )}
           role="tooltip"

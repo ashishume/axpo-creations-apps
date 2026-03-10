@@ -2,7 +2,7 @@
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -149,6 +149,57 @@ class LeaveRepository:
         if student_id is not None:
             q = q.where(LeaveRequest.student_id == student_id)
         q = q.order_by(LeaveRequest.applied_at.desc())
+        result = await db.execute(q)
+        return list(result.scalars().all())
+
+    async def count_leave_requests(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        *,
+        status: str | None = None,
+        applicant_type: str | None = None,
+        staff_id: UUID | None = None,
+        student_id: UUID | None = None,
+    ) -> int:
+        q = select(func.count()).select_from(LeaveRequest).where(LeaveRequest.session_id == session_id)
+        if status:
+            q = q.where(LeaveRequest.status == status)
+        if applicant_type:
+            q = q.where(LeaveRequest.applicant_type == applicant_type)
+        if staff_id is not None:
+            q = q.where(LeaveRequest.staff_id == staff_id)
+        if student_id is not None:
+            q = q.where(LeaveRequest.student_id == student_id)
+        result = await db.execute(q)
+        return result.scalar() or 0
+
+    async def list_leave_requests_paginated(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+        status: str | None = None,
+        applicant_type: str | None = None,
+        staff_id: UUID | None = None,
+        student_id: UUID | None = None,
+    ) -> list[LeaveRequest]:
+        q = (
+            select(LeaveRequest)
+            .options(selectinload(LeaveRequest.leave_type))
+            .where(LeaveRequest.session_id == session_id)
+        )
+        if status:
+            q = q.where(LeaveRequest.status == status)
+        if applicant_type:
+            q = q.where(LeaveRequest.applicant_type == applicant_type)
+        if staff_id is not None:
+            q = q.where(LeaveRequest.staff_id == staff_id)
+        if student_id is not None:
+            q = q.where(LeaveRequest.student_id == student_id)
+        q = q.order_by(LeaveRequest.applied_at.desc()).limit(limit).offset(offset)
         result = await db.execute(q)
         return list(result.scalars().all())
 

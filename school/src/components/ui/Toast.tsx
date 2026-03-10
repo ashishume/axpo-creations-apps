@@ -13,8 +13,8 @@ export function ToastContainer() {
           className={cn(
             "flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg",
             t.type === "success"
-              ? "border-green-200 bg-green-50 text-green-900"
-              : "border-red-200 bg-red-50 text-red-900"
+              ? "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950/50 dark:text-green-100"
+              : "border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950/50 dark:text-red-100"
           )}
           role="alert"
         >
@@ -22,7 +22,7 @@ export function ToastContainer() {
           <button
             type="button"
             onClick={() => dismissToast(t.id)}
-            className="rounded p-1 hover:bg-black/10"
+            className="rounded p-1 hover:bg-black/10 dark:hover:bg-white/10"
             aria-label="Dismiss"
           >
             <X className="h-4 w-4" />

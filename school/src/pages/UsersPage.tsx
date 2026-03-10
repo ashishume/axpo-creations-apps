@@ -149,7 +149,7 @@ export function UsersPage() {
 
   if (error) {
     return (
-      <div className="rounded-lg bg-red-50 p-4 text-red-600">
+      <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 text-red-600 dark:text-red-400">
         Failed to load users: {error instanceof Error ? error.message : 'Unknown error'}
       </div>
     );
@@ -159,8 +159,8 @@ export function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Users</h1>
-          <p className="text-sm text-slate-600">Manage user accounts and access</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Users</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Manage user accounts and access</p>
         </div>
         <PermissionGate permission="users:create">
           <Button onClick={() => setShowCreateModal(true)}>
@@ -174,60 +174,60 @@ export function UsersPage() {
         <SkeletonTable rows={5} columns={5} />
       ) : (
         <>
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+          <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Role
                   </th>
                   {isSuperAdmin && (
                     <>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         Organization
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         Scope
                       </th>
                     </>
                   )}
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Last Login
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
                 {displayUsers.map((user: User) => (
-                  <tr key={user.id} className="hover:bg-slate-50">
+                  <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
-                          <UserCircle className="h-6 w-6 text-indigo-600" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50">
+                          <UserCircle className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <div>
-                          <div className="font-medium text-slate-900">{user.name}</div>
-                          <div className="text-xs text-slate-500">{user.username}</div>
+                          <div className="font-medium text-slate-900 dark:text-slate-100">{user.name}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">{user.username}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-700">{getRoleName(user.roleId)}</td>
+                    <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{getRoleName(user.roleId)}</td>
                     {isSuperAdmin && (
                       <>
-                        <td className="px-6 py-4 text-sm text-slate-700">
+                        <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">
                           {user.organizationId
                             ? organizations.find((o) => o.id === user.organizationId)?.name ?? '—'
                             : 'Super Admin'}
                         </td>
-                        <td className="px-6 py-4 text-sm text-slate-700">
+                        <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">
                           {user.staffId
                             ? (() => {
                                 const s = staff.find((st) => st.id === user.staffId);
@@ -241,23 +241,23 @@ export function UsersPage() {
                     )}
                     <td className="px-6 py-4">
                       {user.isActive ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300">
                           <CheckCircle className="h-3 w-3" />
                           Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/50 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:text-red-300">
                           <XCircle className="h-3 w-3" />
                           Inactive
                         </span>
                       )}
                       {user.mustChangePassword && (
-                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/50 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
                           Must change password
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
                       {user.lastLoginAt
                         ? formatDate(user.lastLoginAt)
                         : 'Never'}
@@ -272,7 +272,7 @@ export function UsersPage() {
                             disabled={user.id === currentUser?.id}
                             title={user.id === currentUser?.id ? "Cannot edit your own account here" : "Edit user"}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -280,7 +280,7 @@ export function UsersPage() {
                             onClick={() => setResetPasswordUser(user)}
                             title="Reset password"
                           >
-                            <KeyRound className="h-4 w-4" />
+                            <KeyRound className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                           </Button>
                         </PermissionGate>
                         <PermissionGate permission="users:delete">
@@ -297,7 +297,7 @@ export function UsersPage() {
                                 : "Delete user"
                             }
                           >
-                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                           </Button>
                         </PermissionGate>
                       </div>
@@ -306,7 +306,7 @@ export function UsersPage() {
                 ))}
                 {displayUsers.length === 0 && (
                   <tr>
-                    <td colSpan={isSuperAdmin ? 7 : 5} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={isSuperAdmin ? 7 : 5} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                       No users found
                     </td>
                   </tr>
@@ -336,44 +336,44 @@ export function UsersPage() {
       >
         <form onSubmit={handleCreateUser} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Name</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
             <input
               type="text"
               value={createForm.name}
               onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="Full name"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Username</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Username</label>
             <input
               type="text"
               value={createForm.username}
               onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="Username for login"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Email (optional)</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Email (optional)</label>
             <input
               type="email"
               value={createForm.email}
               onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="user@example.com"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Role</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
             <select
               value={createForm.roleId}
               onChange={(e) => setCreateForm({ ...createForm, roleId: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             >
               <option value="">Select a role</option>
               {rolesForSelect.map((role) => (
@@ -385,9 +385,9 @@ export function UsersPage() {
           </div>
           {isSuperAdmin && (
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Organization</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Organization</label>
               {organizations.length === 0 ? (
-                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                <p className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
                   Create at least one organization first: go to <strong>Organizations</strong> in the sidebar, then add an organization. After that, you can assign new users to an org here.
                 </p>
               ) : (
@@ -402,7 +402,7 @@ export function UsersPage() {
                       })
                     }
                     required
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   >
                     <option value="">Select organization</option>
                     {organizations.map((org) => (
@@ -411,7 +411,7 @@ export function UsersPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     User will see only schools and data under this org.
                   </p>
                 </>
@@ -424,7 +424,7 @@ export function UsersPage() {
               <select
                 value={createForm.staffId ?? ''}
                 onChange={(e) => setCreateForm({ ...createForm, staffId: e.target.value || undefined })}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               >
                 <option value="">No link (org-level: sees all schools in org)</option>
                 {staffOptionsForCurrentOrg.map((s) => (
@@ -439,17 +439,17 @@ export function UsersPage() {
             </div>
           )}
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Default Password</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Default Password</label>
             <input
               type="password"
               value={createForm.password}
               onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
               required
               minLength={6}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="Minimum 6 characters"
             />
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               User will be required to change this on first login
             </p>
           </div>
@@ -473,41 +473,41 @@ export function UsersPage() {
         {editingUser && (
           <form onSubmit={handleUpdateUser} className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Name</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
               <input
                 type="text"
                 value={editingUser.name}
                 onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
                 required
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Username</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Username</label>
               <input
                 type="text"
                 value={editingUser.username}
                 disabled
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-500"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-sm text-slate-500 dark:text-slate-400"
               />
-              <p className="mt-1 text-xs text-slate-500">Username cannot be changed</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Username cannot be changed</p>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
               <input
                 type="email"
                 value={editingUser.email || ''}
                 onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Role</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
               <select
                 value={editingUser.roleId}
                 onChange={(e) => setEditingUser({ ...editingUser, roleId: e.target.value })}
                 required
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               >
                 {rolesForSelect.map((role) => (
                   <option key={role.id} value={role.id}>
@@ -518,7 +518,7 @@ export function UsersPage() {
             </div>
             {isSuperAdmin && organizations.length > 0 && (
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Organization</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Organization</label>
                 <select
                   value={editingUser.organizationId ?? ''}
                   onChange={(e) => {
@@ -529,7 +529,7 @@ export function UsersPage() {
                       staffId: orgId !== editingUser.organizationId ? undefined : editingUser.staffId,
                     });
                   }}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="">—</option>
                   {organizations.map((org) => (
@@ -546,7 +546,7 @@ export function UsersPage() {
                 <select
                   value={editingUser.staffId ?? ''}
                   onChange={(e) => setEditingUser({ ...editingUser, staffId: e.target.value || undefined })}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="">No link (org-level: sees all schools in org)</option>
                   {staffOptionsForCurrentOrg.map((s) => (
@@ -555,7 +555,7 @@ export function UsersPage() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   If set, user is school-scoped: they see only that staff member’s school.
                 </p>
               </div>
@@ -592,9 +592,9 @@ export function UsersPage() {
       >
         {deletingUser && (
           <div className="space-y-4">
-            <p className="text-slate-600">
+            <p className="text-slate-600 dark:text-slate-400">
               Are you sure you want to delete the user{' '}
-              <span className="font-semibold">{deletingUser.name}</span>? This action cannot be
+              <span className="font-semibold text-slate-900 dark:text-slate-100">{deletingUser.name}</span>? This action cannot be
               undone.
             </p>
             <div className="flex justify-end gap-3">
@@ -624,11 +624,11 @@ export function UsersPage() {
       >
         {resetPasswordUser && (
           <form onSubmit={handleResetPassword} className="space-y-4">
-            <p className="text-slate-600">
-              Reset password for <span className="font-semibold">{resetPasswordUser.name}</span>
+            <p className="text-slate-600 dark:text-slate-400">
+              Reset password for <span className="font-semibold text-slate-900 dark:text-slate-100">{resetPasswordUser.name}</span>
             </p>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                 New Password
               </label>
               <input
@@ -637,10 +637,10 @@ export function UsersPage() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 placeholder="Minimum 6 characters"
               />
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 User will be required to change this on their next login
               </p>
             </div>

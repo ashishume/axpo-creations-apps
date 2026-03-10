@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { useStaffBySession, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useAddSalaryPayment } from "../hooks/useStaff";
+import { useStaffBySessionInfinite, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useAddSalaryPayment } from "../hooks/useStaff";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -98,7 +98,6 @@ export function StaffPage() {
     toast,
   } = useApp();
 
-  const { data: staff = [], isLoading: isAppLoading } = useStaffBySession(selectedSessionId ?? "");
   const createStaff = useCreateStaff();
   const createStaffBulk = useCreateStaffBulk();
   const updateStaffMut = useUpdateStaff();
@@ -124,11 +123,22 @@ export function StaffPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
   
+  const hasFilters = !!(roleFilter || searchQuery.trim());
+  const {
+    staffList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isAppLoading,
+  } = useStaffBySessionInfinite(selectedSessionId ?? "", { hasFilters });
+
+  const staff = staffList;
+
   const last12Months = useMemo(() => getLast12Months(), []);
   const currentMonth = useMemo(() => getCurrentMonth(), []);
   const payableMonths = useMemo(() => getPayableMonths(), []);
 
-  const list = staff;
+  const list = staffList;
 
   const filteredList = useMemo(() => {
     let out = list;
@@ -210,7 +220,7 @@ export function StaffPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Staff & Salary</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Staff & Salary</h2>
           <p className="text-slate-600">Manage staff and salary payments</p>
         </div>
         <div className="flex items-center gap-2">
@@ -407,6 +417,17 @@ export function StaffPage() {
                 </table>
               </div>
             )}
+            {hasNextPage && list.length > 0 && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading…" : "Load more"}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -418,30 +439,30 @@ export function StaffPage() {
       >
         <form onSubmit={handleSaveStaff} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Name *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name *</label>
             <input
               name="name"
               type="text"
               required
               defaultValue={staffModal.staff?.name}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Employee ID</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Employee ID</label>
             <input
               name="employeeId"
               type="text"
               defaultValue={staffModal.staff?.employeeId}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Role</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
             <select
               name="role"
               defaultValue={staffModal.staff?.role ?? "Teacher"}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             >
               <option value="Teacher">Teacher</option>
               <option value="Administrative">Administrative</option>
@@ -450,23 +471,23 @@ export function StaffPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Subject / Grade (for teachers)</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Subject / Grade (for teachers)</label>
             <input
               name="subjectOrGrade"
               type="text"
               defaultValue={staffModal.staff?.subjectOrGrade}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Monthly salary (₹) *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Monthly salary (₹) *</label>
             <input
               name="monthlySalary"
               type="number"
               required
               min={1}
               defaultValue={staffModal.staff?.monthlySalary}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -485,18 +506,18 @@ export function StaffPage() {
           title={`Salary Payment – ${salaryModal.name}`}
         >
           <form onSubmit={handleSaveSalary} className="space-y-4">
-            <div className="rounded-lg bg-slate-50 p-3 mb-4">
-              <p className="text-sm text-slate-600">
-                Monthly Salary: <strong>{formatCurrency(salaryModal.monthlySalary)}</strong>
+            <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 mb-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Monthly Salary: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(salaryModal.monthlySalary)}</strong>
               </p>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Select Month</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Select Month</label>
               <select
                 name="month"
                 required
                 defaultValue={currentMonth}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               >
                 {payableMonths.map((month) => {
                   const paymentsForMonth = salaryModal.salaryPayments.filter(p => p.month === month);
@@ -511,16 +532,16 @@ export function StaffPage() {
                   );
                 })}
               </select>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 You can pay for the current month or advance salary for up to 6 future months. Multiple payments per month are allowed.
               </p>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Status</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
               <select
                 name="status"
                 defaultValue="Paid"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               >
                 <option value="Paid">Paid</option>
                 <option value="Partially Paid">Partially Paid</option>
@@ -528,30 +549,30 @@ export function StaffPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Amount (₹)</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Amount (₹)</label>
               <input
                 name="amount"
                 type="number"
                 min={0}
                 defaultValue={salaryModal.monthlySalary}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Payment date</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Payment date</label>
               <input
                 name="paymentDate"
                 type="date"
                 defaultValue={new Date().toISOString().slice(0, 10)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Method</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Method</label>
               <select
                 name="method"
                 defaultValue="Bank Transfer"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               >
                 <option value="">—</option>
                 <option value="Cash">Cash</option>
@@ -608,10 +629,10 @@ export function StaffPage() {
 
       {/* Salary History Modal - use latest staff from context so payments stay in sync */}
       {salaryHistoryModal && (() => {
-        const historyStaff = staff.find((s) => s.id === salaryHistoryModal.id) ?? salaryHistoryModal;
+        const historyStaff = staff.find((s: StaffType) => s.id === salaryHistoryModal.id) ?? salaryHistoryModal;
         const monthsToShow = getSalaryHistoryMonths(
           last12Months,
-          historyStaff.salaryPayments.map((p) => p.month)
+          historyStaff.salaryPayments.map((p: SalaryPayment) => p.month)
         );
         return (
         <Modal
@@ -639,9 +660,9 @@ export function StaffPage() {
                 </thead>
                 <tbody>
                   {monthsToShow.map((month) => {
-                    const paymentsForMonth = historyStaff.salaryPayments.filter(p => p.month === month);
-                    const totalAmount = paymentsForMonth.reduce((s, p) => s + p.amount, 0);
-                    const anyPaid = paymentsForMonth.some(p => p.status === "Paid");
+                    const paymentsForMonth = historyStaff.salaryPayments.filter((p: SalaryPayment) => p.month === month);
+                    const totalAmount = paymentsForMonth.reduce((s: number, p: SalaryPayment) => s + p.amount, 0);
+                    const anyPaid = paymentsForMonth.some((p: SalaryPayment) => p.status === "Paid");
                     const firstPayment = paymentsForMonth[0];
                     const lateDays = firstPayment ? calculateLateDays(firstPayment, salaryDueDay) : 0;
                     const statusLabel = paymentsForMonth.length > 1
@@ -702,8 +723,8 @@ export function StaffPage() {
                   <strong>
                     {formatCurrency(
                       historyStaff.salaryPayments
-                        .filter((p) => last12Months.includes(p.month) && p.status === "Paid")
-                        .reduce((sum, p) => sum + p.amount, 0)
+                        .filter((p: SalaryPayment) => last12Months.includes(p.month) && p.status === "Paid")
+                        .reduce((sum: number, p: SalaryPayment) => sum + p.amount, 0)
                     )}
                   </strong>
                 </p>

@@ -159,7 +159,7 @@ export function RolesPage() {
 
   if (error) {
     return (
-      <div className="rounded-lg bg-red-50 p-4 text-red-600">
+      <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 text-red-600 dark:text-red-400">
         Failed to load roles: {error instanceof Error ? error.message : 'Unknown error'}
       </div>
     );
@@ -168,7 +168,7 @@ export function RolesPage() {
   const PermissionsEditor = ({ disabled = false }: { disabled?: boolean }) => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-slate-700">Permissions</span>
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Permissions</span>
         {!disabled && (
           <div className="flex gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={selectAllPermissions}>
@@ -181,7 +181,7 @@ export function RolesPage() {
         )}
       </div>
       
-      <div className="max-h-96 space-y-4 overflow-y-auto rounded-lg border border-slate-200 p-4">
+      <div className="max-h-96 space-y-4 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4">
         {Object.entries(PERMISSION_MODULES).map(([moduleKey, modulePerms]) => {
           const allSelected = modulePerms.every(p => formPermissions.includes(p as Permission));
           const someSelected = modulePerms.some(p => formPermissions.includes(p as Permission));
@@ -192,14 +192,14 @@ export function RolesPage() {
                 type="button"
                 onClick={() => !disabled && toggleModulePermissions(moduleKey)}
                 disabled={disabled}
-                className={`flex items-center gap-2 text-sm font-medium ${disabled ? 'cursor-not-allowed text-slate-400' : 'text-slate-700 hover:text-indigo-600'}`}
+                className={`flex items-center gap-2 text-sm font-medium ${disabled ? 'cursor-not-allowed text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400'}`}
               >
                 {allSelected ? (
-                  <CheckSquare className="h-4 w-4 text-indigo-600" />
+                  <CheckSquare className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                 ) : someSelected ? (
-                  <div className="h-4 w-4 rounded border border-indigo-600 bg-indigo-100" />
+                  <div className="h-4 w-4 rounded border border-indigo-600 dark:border-indigo-400 bg-indigo-100 dark:bg-indigo-900/50" />
                 ) : (
-                  <Square className="h-4 w-4 text-slate-400" />
+                  <Square className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                 )}
                 {MODULE_LABELS[moduleKey] || moduleKey}
               </button>
@@ -216,11 +216,11 @@ export function RolesPage() {
                       className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                         disabled
                           ? isSelected
-                            ? 'bg-indigo-100 text-indigo-600'
-                            : 'bg-slate-100 text-slate-400'
+                            ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
                           : isSelected
-                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                       }`}
                     >
                       {getPermissionLabel(perm as Permission)}
@@ -233,7 +233,7 @@ export function RolesPage() {
         })}
       </div>
       
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-500 dark:text-slate-400">
         {formPermissions.length} of {ALL_PERMISSIONS.length} permissions selected
       </p>
     </div>
@@ -243,8 +243,8 @@ export function RolesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Roles & Permissions</h1>
-          <p className="text-sm text-slate-600">Manage roles and configure access permissions</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Roles & Permissions</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Manage roles and configure access permissions</p>
         </div>
         <PermissionGate permission="roles:manage">
           <Button onClick={openCreateModal}>
@@ -265,23 +265,23 @@ export function RolesPage() {
           {displayRoles.map((role) => (
             <div
               key={role.id}
-              className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+              className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                    role.isSystem ? 'bg-amber-100' : 'bg-indigo-100'
+                    role.isSystem ? 'bg-amber-100 dark:bg-amber-900/50' : 'bg-indigo-100 dark:bg-indigo-900/50'
                   }`}>
                     {role.isSystem ? (
-                      <Lock className="h-5 w-5 text-amber-600" />
+                      <Lock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                     ) : (
-                      <Shield className="h-5 w-5 text-indigo-600" />
+                      <Shield className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                     )}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900">{role.name}</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100">{role.name}</h3>
                     {role.isSystem && (
-                      <span className="text-xs text-amber-600">System Role</span>
+                      <span className="text-xs text-amber-600 dark:text-amber-400">System Role</span>
                     )}
                   </div>
                 </div>
@@ -295,7 +295,7 @@ export function RolesPage() {
                         onClick={() => openEditModal(role)}
                         title="Edit role"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -303,7 +303,7 @@ export function RolesPage() {
                         onClick={() => setDeletingRole(role)}
                         title="Delete role"
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                       </Button>
                     </div>
                   </PermissionGate>
@@ -311,24 +311,24 @@ export function RolesPage() {
               </div>
               
               {role.description && (
-                <p className="mt-2 text-sm text-slate-500">{role.description}</p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{role.description}</p>
               )}
               
               <div className="mt-4">
-                <div className="text-xs font-medium text-slate-500 mb-2">
+                <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
                   {role.permissions.length} permissions
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {role.permissions.slice(0, 5).map((perm) => (
                     <span
                       key={perm}
-                      className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
+                      className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs text-slate-600 dark:text-slate-300"
                     >
                       {perm}
                     </span>
                   ))}
                   {role.permissions.length > 5 && (
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                    <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs text-slate-600 dark:text-slate-300">
                       +{role.permissions.length - 5} more
                     </span>
                   )}
@@ -336,7 +336,7 @@ export function RolesPage() {
               </div>
               
               {role.isSystem && (
-                <p className="mt-4 text-xs text-slate-400">
+                <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
                   System roles cannot be modified or deleted
                 </p>
               )}
@@ -344,7 +344,7 @@ export function RolesPage() {
           ))}
           
           {displayRoles.length === 0 && (
-            <div className="col-span-full py-12 text-center text-slate-500">
+            <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400">
               No roles found
             </div>
           )}
@@ -359,23 +359,23 @@ export function RolesPage() {
       >
         <form onSubmit={handleCreateRole} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Role Name</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Role Name</label>
             <input
               type="text"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               required
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="e.g., Accountant"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Description</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
             <input
               type="text"
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder="Brief description of this role"
             />
           </div>
@@ -402,26 +402,26 @@ export function RolesPage() {
         {editingRole && (
           <form onSubmit={handleUpdateRole} className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Role Name</label>
-              <input
-                type="text"
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                required
-                disabled={editingRole.isSystem}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Description</label>
-              <input
-                type="text"
-                value={formDescription}
-                onChange={(e) => setFormDescription(e.target.value)}
-                disabled={editingRole.isSystem}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50"
-              />
-            </div>
+<label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Role Name</label>
+            <input
+              type="text"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              required
+              disabled={editingRole.isSystem}
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-400"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
+            <input
+              type="text"
+              value={formDescription}
+              onChange={(e) => setFormDescription(e.target.value)}
+              disabled={editingRole.isSystem}
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-400"
+            />
+          </div>
             
             <PermissionsEditor disabled={editingRole.isSystem} />
             
@@ -447,9 +447,9 @@ export function RolesPage() {
       >
         {deletingRole && (
           <div className="space-y-4">
-            <p className="text-slate-600">
+            <p className="text-slate-600 dark:text-slate-400">
               Are you sure you want to delete the role{' '}
-              <span className="font-semibold">{deletingRole.name}</span>? Users with this role will
+              <span className="font-semibold text-slate-900 dark:text-slate-100">{deletingRole.name}</span>? Users with this role will
               lose their permissions.
             </p>
             <div className="flex justify-end gap-3">

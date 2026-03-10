@@ -8,6 +8,8 @@ from app.teaching.dependencies import (
     get_current_teaching_user,
     require_active_org_subscription,
 )
+from app.teaching.pagination import DEFAULT_PAGE_SIZE_STUDENTS, FILTERED_PAGE_SIZE, MAX_PAGE_SIZE
+from app.teaching.schemas.pagination import PaginatedResponse
 from app.teaching.schemas.student import (
     StudentCreate,
     StudentUpdate,
@@ -39,20 +41,36 @@ async def create_student(
     return StudentResponse.model_validate(student)
 
 
-@router.get("", response_model=list[StudentResponse])
+@router.get("", response_model=PaginatedResponse[StudentResponse])
 async def list_students(
     session_id: UUID | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+    has_filters: bool = False,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    page_size = min(limit or (FILTERED_PAGE_SIZE if has_filters else DEFAULT_PAGE_SIZE_STUDENTS), MAX_PAGE_SIZE)
     if session_id:
         await enforce_session_access(db, user, session_id)
-        students = await student_service.list_by_session(db, session_id)
+        items, total = await student_service.list_by_session_paginated(
+            db, session_id, limit=page_size, offset=offset
+        )
     elif user.organization_id:
-        students = await student_service.list_by_organization(db, user.organization_id)
+        items, total = await student_service.list_by_organization_paginated(
+            db, user.organization_id, limit=page_size, offset=offset
+        )
     else:
         students = await student_service.list_all(db)
-    return [StudentResponse.model_validate(s) for s in students]
+        total = len(students)
+        items = students[offset : offset + page_size]
+    return PaginatedResponse(
+        items=[StudentResponse.model_validate(s) for s in items],
+        total=total,
+        limit=page_size,
+        offset=offset,
+        has_more=offset + len(items) < total,
+    )
 
 
 @router.post("/bulk", response_model=list[StudentResponse])

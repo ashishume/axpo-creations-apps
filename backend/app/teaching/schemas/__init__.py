@@ -1,4 +1,5 @@
 """Teaching Pydantic schemas."""
+from app.teaching.schemas.pagination import PaginatedResponse
 from app.teaching.schemas.auth import (
     LoginRequest,
     LoginResponse,
@@ -26,6 +27,7 @@ from app.teaching.schemas.leave import (
 )
 
 __all__ = [
+    "PaginatedResponse",
     "LoginRequest",
     "LoginResponse",
     "RefreshResponse",

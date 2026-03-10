@@ -8,6 +8,8 @@ from app.teaching.dependencies import (
     get_current_teaching_user,
     require_active_org_subscription,
 )
+from app.teaching.pagination import DEFAULT_PAGE_SIZE_STAFF, FILTERED_PAGE_SIZE, MAX_PAGE_SIZE
+from app.teaching.schemas.pagination import PaginatedResponse
 from app.teaching.schemas.staff import (
     StaffCreate,
     StaffUpdate,
@@ -41,20 +43,36 @@ async def create_staff(
     return StaffResponse.model_validate(staff)
 
 
-@router.get("", response_model=list[StaffResponse])
+@router.get("", response_model=PaginatedResponse[StaffResponse])
 async def list_staff(
     session_id: UUID | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+    has_filters: bool = False,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    page_size = min(limit or (FILTERED_PAGE_SIZE if has_filters else DEFAULT_PAGE_SIZE_STAFF), MAX_PAGE_SIZE)
     if session_id:
         await enforce_session_access(db, user, session_id)
-        staff_list = await staff_service.list_by_session(db, session_id)
+        items, total = await staff_service.list_by_session_paginated(
+            db, session_id, limit=page_size, offset=offset
+        )
     elif user.organization_id:
-        staff_list = await staff_service.list_by_organization(db, user.organization_id)
+        items, total = await staff_service.list_by_organization_paginated(
+            db, user.organization_id, limit=page_size, offset=offset
+        )
     else:
         staff_list = await staff_service.list_all(db)
-    return [StaffResponse.model_validate(s) for s in staff_list]
+        total = len(staff_list)
+        items = staff_list[offset : offset + page_size]
+    return PaginatedResponse(
+        items=[StaffResponse.model_validate(s) for s in items],
+        total=total,
+        limit=page_size,
+        offset=offset,
+        has_more=offset + len(items) < total,
+    )
 
 
 @router.post("/bulk", response_model=list[StaffResponse])

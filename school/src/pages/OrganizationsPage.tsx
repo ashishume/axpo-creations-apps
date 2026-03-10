@@ -66,7 +66,7 @@ export function OrganizationsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Organizations</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Organizations</h2>
           <p className="text-slate-600">Create and manage organizations (tenants). Each org can have multiple schools.</p>
         </div>
       </div>
@@ -96,9 +96,9 @@ export function OrganizationsPage() {
                   <div className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-slate-400" />
                     <div>
-                      <p className="font-medium text-slate-900">{org.name}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-50">{org.name}</p>
                       {(org.slug || org.billingEmail) && (
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {[org.slug, org.billingEmail].filter(Boolean).join(" · ")}
                         </p>
                       )}
@@ -112,7 +112,7 @@ export function OrganizationsPage() {
                         onClick={() => setModal({ open: true, org })}
                         aria-label="Edit organization"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -121,7 +121,7 @@ export function OrganizationsPage() {
                         aria-label="Delete organization"
                         className="text-red-600 hover:bg-red-50"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30" />
                       </Button>
                     </PermissionGate>
                   </div>

@@ -137,7 +137,7 @@ export function ApplyLeaveModal({
     <Modal open={open} onClose={onClose} title="Apply for leave">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Applicant type</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Applicant type</label>
           <select
             value={applicantType}
             onChange={(e) => {
@@ -146,7 +146,7 @@ export function ApplyLeaveModal({
               setStudentId("");
               setLeaveTypeId("");
             }}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
           >
             <option value="staff">Staff</option>
             <option value="student">Student</option>
@@ -155,11 +155,11 @@ export function ApplyLeaveModal({
 
         {applicantType === "staff" && (
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Staff member</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Staff member</label>
             <select
               value={staffId || preselectedStaffId}
               onChange={(e) => setStaffId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               required
             >
               <option value="">Select staff</option>
@@ -173,11 +173,11 @@ export function ApplyLeaveModal({
         )}
         {applicantType === "student" && (
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Student</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Student</label>
             <select
               value={studentId || preselectedStudentId}
               onChange={(e) => setStudentId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               required
             >
               <option value="">Select student</option>
@@ -191,11 +191,11 @@ export function ApplyLeaveModal({
         )}
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Leave type</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Leave type</label>
           <select
             value={leaveTypeId}
             onChange={(e) => setLeaveTypeId(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             required
           >
             <option value="">Select leave type</option>
@@ -209,11 +209,11 @@ export function ApplyLeaveModal({
           {applicantType === "staff" && effectiveStaffId && leaveTypeId && (
             <div className="mt-2 text-sm">
               {selectedLeaveBalance ? (
-                <span className="text-slate-600">
-                  Available balance: <strong>{availableDays}</strong> days
+                <span className="text-slate-600 dark:text-slate-300">
+                  Available balance: <strong className="text-slate-900 dark:text-slate-100">{availableDays}</strong> days
                 </span>
               ) : (
-                <span className="text-amber-700">
+                <span className="text-amber-700 dark:text-amber-300">
                   Leave balance not initialized for this staff. Ask admin to initialize in Leave Management → Balances.
                 </span>
               )}
@@ -223,49 +223,49 @@ export function ApplyLeaveModal({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">From date</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">From date</label>
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               required
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">To date</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">To date</label>
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               required
             />
           </div>
         </div>
         {fromDate && toDate && daysCount > 0 && (
-          <p className="text-sm text-slate-500">Total days: {daysCount}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Total days: {daysCount}</p>
         )}
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Reason</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Reason</label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="Reason for leave"
             required
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Document URL (optional)</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Document URL (optional)</label>
           <input
             type="url"
             value={documentUrl}
             onChange={(e) => setDocumentUrl(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             placeholder="https://..."
           />
         </div>

@@ -51,14 +51,28 @@ function mapStudent(r: Record<string, unknown>): Student {
   };
 }
 
+const LARGE_PAGE_SIZE = 10000;
+
+interface PaginatedApiResponse {
+  items: Record<string, unknown>[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
 export const studentsRepositoryApi = {
   async getAll(): Promise<Student[]> {
-    const list = await teachingFetchJson<Record<string, unknown>[]>('/students');
+    const res = await teachingFetchJson<PaginatedApiResponse>(`/students?limit=${LARGE_PAGE_SIZE}&offset=0`);
+    const list = res?.items ?? [];
     return Array.isArray(list) ? list.map(mapStudent) : [];
   },
 
   async getBySession(sessionId: string): Promise<Student[]> {
-    const list = await teachingFetchJson<Record<string, unknown>[]>(`/students?session_id=${sessionId}`);
+    const res = await teachingFetchJson<PaginatedApiResponse>(
+      `/students?session_id=${sessionId}&limit=${LARGE_PAGE_SIZE}&offset=0`
+    );
+    const list = res?.items ?? [];
     return Array.isArray(list) ? list.map(mapStudent) : [];
   },
 
@@ -198,17 +212,24 @@ export const studentsRepositoryApi = {
     pageSize: number = 10,
     filters?: { sessionId?: string; classId?: string; search?: string }
   ): Promise<PaginatedResult<Student>> {
-    let all = await this.getAll();
-    if (filters?.sessionId) all = all.filter((s) => s.sessionId === filters.sessionId);
-    if (filters?.classId) all = all.filter((s) => s.classId === filters.classId);
-    if (filters?.search) {
-      const q = (filters.search ?? '').toLowerCase();
-      all = all.filter((s) => s.name.toLowerCase().includes(q) || s.studentId.toLowerCase().includes(q));
-    }
-    const total = all.length;
-    const start = (page - 1) * pageSize;
-    const data = all.slice(start, start + pageSize);
-    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+    const hasFilters = !!(filters?.classId ?? filters?.search);
+    const sessionId = filters?.sessionId ?? '';
+    const offset = (page - 1) * pageSize;
+    const params = new URLSearchParams();
+    if (sessionId) params.set('session_id', sessionId);
+    params.set('limit', String(pageSize));
+    params.set('offset', String(offset));
+    params.set('has_filters', String(hasFilters));
+    const res = await teachingFetchJson<PaginatedApiResponse>(`/students?${params.toString()}`);
+    const items = res?.items ?? [];
+    const total = res?.total ?? 0;
+    return {
+      data: Array.isArray(items) ? items.map(mapStudent) : [],
+      total,
+      page,
+      pageSize,
+      totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+    };
   },
 
   async deletePayment(studentId: string, paymentId: string): Promise<void> {

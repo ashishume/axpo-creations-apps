@@ -16,14 +16,28 @@ function mapExpense(r: Record<string, unknown>): Expense {
   };
 }
 
+const LARGE_PAGE_SIZE = 10000;
+
+interface PaginatedApiResponse {
+  items: Record<string, unknown>[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
 export const expensesRepositoryApi = {
   async getAll(): Promise<Expense[]> {
-    const list = await teachingFetchJson<Record<string, unknown>[]>('/expenses');
+    const res = await teachingFetchJson<PaginatedApiResponse>(`/expenses?limit=${LARGE_PAGE_SIZE}&offset=0`);
+    const list = res?.items ?? [];
     return Array.isArray(list) ? list.map(mapExpense) : [];
   },
 
   async getBySession(sessionId: string): Promise<Expense[]> {
-    const list = await teachingFetchJson<Record<string, unknown>[]>(`/expenses?session_id=${sessionId}`);
+    const res = await teachingFetchJson<PaginatedApiResponse>(
+      `/expenses?session_id=${sessionId}&limit=${LARGE_PAGE_SIZE}&offset=0`
+    );
+    const list = res?.items ?? [];
     return Array.isArray(list) ? list.map(mapExpense) : [];
   },
 
@@ -89,21 +103,24 @@ export const expensesRepositoryApi = {
 
   async getPaginated(
     page: number = 1,
-    pageSize: number = 10,
+    pageSize: number = 50,
     filters?: { sessionId?: string; category?: string; search?: string; startDate?: string; endDate?: string }
   ): Promise<PaginatedResult<Expense>> {
-    let all = await this.getAll();
-    if (filters?.sessionId) all = all.filter((e) => e.sessionId === filters.sessionId);
-    if (filters?.category) all = all.filter((e) => e.category === filters.category);
-    if (filters?.startDate) all = all.filter((e) => e.date >= (filters.startDate ?? ''));
-    if (filters?.endDate) all = all.filter((e) => e.date <= (filters.endDate ?? ''));
-    if (filters?.search) {
-      const q = (filters.search ?? '').toLowerCase();
-      all = all.filter((e) => e.description.toLowerCase().includes(q) || e.vendorPayee.toLowerCase().includes(q));
-    }
-    const total = all.length;
-    const start = (page - 1) * pageSize;
-    const data = all.slice(start, start + pageSize);
-    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+    const sessionId = filters?.sessionId ?? '';
+    const offset = (page - 1) * pageSize;
+    const params = new URLSearchParams();
+    if (sessionId) params.set('session_id', sessionId);
+    params.set('limit', String(pageSize));
+    params.set('offset', String(offset));
+    const res = await teachingFetchJson<PaginatedApiResponse>(`/expenses?${params.toString()}`);
+    const items = res?.items ?? [];
+    const total = res?.total ?? 0;
+    return {
+      data: Array.isArray(items) ? items.map(mapExpense) : [],
+      total,
+      page,
+      pageSize,
+      totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+    };
   },
 };

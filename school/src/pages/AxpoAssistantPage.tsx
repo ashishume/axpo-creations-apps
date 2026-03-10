@@ -1079,7 +1079,7 @@ export function AxpoAssistantPage() {
       <div className="flex h-full items-center justify-center p-8">
         <Card className="max-w-md p-8 text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
-          <h2 className="mb-2 text-xl font-semibold text-slate-900">Access Restricted</h2>
+          <h2 className="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-50">Access Restricted</h2>
           <p className="text-slate-600">
             Axpo Assistant is available only to users with the highest level of access. Contact your administrator to request the &quot;Use Axpo Assistant&quot; permission.
           </p>
@@ -1094,7 +1094,7 @@ export function AxpoAssistantPage() {
       <div className="flex h-full items-center justify-center p-8">
         <Card className="max-w-md p-8 text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-amber-500" />
-          <h2 className="mb-2 text-xl font-semibold text-slate-900">No Session Selected</h2>
+          <h2 className="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-50">No Session Selected</h2>
           <p className="text-slate-600">
             Please select a school and session from the sidebar to use Axpo Assistant.
           </p>
@@ -1106,7 +1106,7 @@ export function AxpoAssistantPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Header with premium logo */}
-      <div className="border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
+      <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-6 py-4 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className="absolute -inset-1 animate-axpo-glow rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-violet-600 opacity-40 blur-lg" />
@@ -1116,7 +1116,7 @@ export function AxpoAssistantPage() {
             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-amber-900 shadow">PRO</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Axpo Assistant</h1>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50">Axpo Assistant</h1>
             <p className="text-sm text-slate-500">
               {selectedSession?.year} • {sessionClasses.length} classes • {sessionStudents.length} students
             </p>
@@ -1131,14 +1131,14 @@ export function AxpoAssistantPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-slate-50/80 p-4">
+      <div className="flex-1 overflow-y-auto bg-slate-50/80 dark:bg-slate-800/80 p-4">
         <div className="mx-auto max-w-3xl space-y-4">
           {/* Load more button for older messages */}
           {messages.length > visibleCount && (
             <button
               type="button"
               onClick={() => setVisibleCount((prev) => prev + 20)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"
             >
               Load {Math.min(20, messages.length - visibleCount)} earlier messages
             </button>
@@ -1170,7 +1170,7 @@ export function AxpoAssistantPage() {
 
           {/* Processing indicator */}
           {isProcessing && (
-            <div className="animate-axpo-message flex items-center gap-2 rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+            <div className="animate-axpo-message flex items-center gap-2 rounded-xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
               <div className="flex gap-1">
                 <span className="h-2 w-2 animate-bounce rounded-full bg-indigo-500 [animation-delay:0ms]" />
                 <span className="h-2 w-2 animate-bounce rounded-full bg-purple-500 [animation-delay:150ms]" />
@@ -1186,7 +1186,7 @@ export function AxpoAssistantPage() {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-slate-200 bg-white p-4">
+      <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
         <div className="mx-auto max-w-3xl">
           {/* Suggestions */}
           <div className="mb-3 flex flex-wrap gap-2">
@@ -1196,7 +1196,7 @@ export function AxpoAssistantPage() {
                 type="button"
                 onClick={() => handleSuggestionClick(suggestion.prompt)}
                 disabled={isProcessing || !!pendingAction}
-                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 dark:hover:border-indigo-600 dark:hover:bg-indigo-900/50 dark:hover:text-indigo-300 disabled:opacity-50"
               >
                 <span className="text-slate-400">{suggestion.icon}</span>
                 {suggestion.label}
@@ -1220,7 +1220,7 @@ export function AxpoAssistantPage() {
                 disabled={isProcessing || !!pendingAction}
                 placeholder="Ask me to add students, pay salaries, record expenses, or get analytics..."
                 rows={1}
-                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-4 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:opacity-60"
+                className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 py-3 pl-4 pr-4 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 disabled:opacity-60"
                 style={{ minHeight: "48px", maxHeight: "150px" }}
               />
             </div>

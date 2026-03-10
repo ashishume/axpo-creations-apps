@@ -65,10 +65,10 @@ export function YearReportPage() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between">
-          <h2 className="text-2xl font-bold text-slate-900">Year-End Report</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Year-End Report</h2>
         </div>
         <Card>
-          <CardContent className="py-12 text-center text-slate-500">
+          <CardContent className="py-12 text-center text-slate-500 dark:text-slate-400">
             Select a school and session to view the report.
           </CardContent>
         </Card>
@@ -79,7 +79,7 @@ export function YearReportPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Year-End Report</h2>
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Year-End Report</h2>
         <div className="flex items-center gap-2">
           <Button onClick={handlePrint}>
             <FileDown className="mr-2 h-4 w-4" />
@@ -89,68 +89,68 @@ export function YearReportPage() {
       </div>
 
       <div ref={printRef} className="year-report-print space-y-6">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 print:border print:shadow-none">
-          <h3 className="text-xl font-bold text-slate-900">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 print:border print:shadow-none">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">
             {school?.name} – {session?.year}
           </h3>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             {session?.startDate} to {session?.endDate}
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 print:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <h4 className="font-semibold text-slate-900">Income</h4>
-            <p className="mt-1 text-2xl font-bold text-green-600">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+            <h4 className="font-semibold text-slate-900 dark:text-slate-100">Income</h4>
+            <p className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
               {formatCurrency(report.incomeCollected)}
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Target: {formatCurrency(report.incomeTarget)}
             </p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <h4 className="font-semibold text-slate-900">Total expenses</h4>
-            <p className="mt-1 text-2xl font-bold text-red-600">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+            <h4 className="font-semibold text-slate-900 dark:text-slate-100">Total expenses</h4>
+            <p className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">
               {formatCurrency(report.totalExpenses)}
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <h4 className="font-semibold text-slate-900">Expenses by category</h4>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+          <h4 className="font-semibold text-slate-900 dark:text-slate-100">Expenses by category</h4>
           <ul className="mt-2 space-y-1 text-sm">
             {Object.entries(report.byCategory).map(([cat, amt]) => (
-              <li key={cat} className="flex justify-between">
-                <span className="text-slate-600">{cat}</span>
+              <li key={cat} className="flex justify-between text-slate-900 dark:text-slate-100">
+                <span className="text-slate-600 dark:text-slate-300">{cat}</span>
                 <span className="font-medium">{formatCurrency(amt)}</span>
               </li>
             ))}
             {Object.keys(report.byCategory).length === 0 && (
-              <li className="text-slate-500">No expenses</li>
+              <li className="text-slate-500 dark:text-slate-400">No expenses</li>
             )}
           </ul>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <h4 className="font-semibold text-slate-900">Staff salary (annual obligation)</h4>
-          <p className="mt-1 text-xl font-bold text-slate-900">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+          <h4 className="font-semibold text-slate-900 dark:text-slate-100">Staff salary (annual obligation)</h4>
+          <p className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">
             {formatCurrency(report.staffSalary)}
           </p>
-          <p className="text-sm text-slate-500">{sessionStaff.length} staff</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{sessionStaff.length} staff</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <h4 className="font-semibold text-slate-900">Net result</h4>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+          <h4 className="font-semibold text-slate-900 dark:text-slate-100">Net result</h4>
           <p
-            className={`mt-1 text-2xl font-bold ${report.net >= 0 ? "text-green-600" : "text-red-600"}`}
+            className={`mt-1 text-2xl font-bold ${report.net >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
           >
             {formatCurrency(report.net)}
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <h4 className="font-semibold text-slate-900">Student payment completion</h4>
-          <p className="mt-1 text-xl font-bold text-slate-900">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+          <h4 className="font-semibold text-slate-900 dark:text-slate-100">Student payment completion</h4>
+          <p className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">
             {report.fullyPaid} / {report.studentCount} ({report.completionRate.toFixed(1)}%)
           </p>
         </div>

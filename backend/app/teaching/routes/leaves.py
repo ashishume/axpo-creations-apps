@@ -10,6 +10,8 @@ from app.teaching.dependencies import (
     get_current_teaching_user,
     require_active_org_subscription,
 )
+from app.teaching.pagination import DEFAULT_PAGE_SIZE_LEAVES, MAX_PAGE_SIZE
+from app.teaching.schemas.pagination import PaginatedResponse
 from app.teaching.schemas.leave import (
     LeaveTypeCreate,
     LeaveTypeUpdate,
@@ -97,26 +99,37 @@ async def delete_leave_type(
 
 # ----- Leave Requests -----
 
-@router.get("/leave-requests", response_model=list[LeaveRequestResponse])
+@router.get("/leave-requests", response_model=PaginatedResponse[LeaveRequestResponse])
 async def list_leave_requests(
     session_id: UUID,
     status: str | None = None,
     applicant_type: str | None = None,
     staff_id: UUID | None = None,
     student_id: UUID | None = None,
+    limit: int | None = None,
+    offset: int = 0,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
     await enforce_session_access(db, user, session_id)
-    requests = await leave_service.list_leave_requests(
+    page_size = min(limit or DEFAULT_PAGE_SIZE_LEAVES, MAX_PAGE_SIZE)
+    items, total = await leave_service.list_leave_requests_paginated(
         db,
         session_id,
+        limit=page_size,
+        offset=offset,
         status=status,
         applicant_type=applicant_type,
         staff_id=staff_id,
         student_id=student_id,
     )
-    return [LeaveRequestResponse.model_validate(r) for r in requests]
+    return PaginatedResponse(
+        items=[LeaveRequestResponse.model_validate(r) for r in items],
+        total=total,
+        limit=page_size,
+        offset=offset,
+        has_more=offset + len(items) < total,
+    )
 
 
 @router.post("/leave-requests", response_model=LeaveRequestResponse)

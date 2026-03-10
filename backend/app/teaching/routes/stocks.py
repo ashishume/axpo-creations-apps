@@ -8,6 +8,8 @@ from app.teaching.dependencies import (
     get_current_teaching_user,
     require_active_org_subscription,
 )
+from app.teaching.pagination import DEFAULT_PAGE_SIZE_STOCKS, MAX_PAGE_SIZE
+from app.teaching.schemas.pagination import PaginatedResponse
 from app.teaching.schemas.stock import (
     StockCreate,
     StockUpdate,
@@ -39,20 +41,35 @@ async def create_stock(
     return StockResponse.model_validate(stock)
 
 
-@router.get("", response_model=list[StockResponse])
+@router.get("", response_model=PaginatedResponse[StockResponse])
 async def list_stocks(
     session_id: UUID | None = None,
+    limit: int | None = None,
+    offset: int = 0,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    page_size = min(limit or DEFAULT_PAGE_SIZE_STOCKS, MAX_PAGE_SIZE)
     if session_id:
         await enforce_session_access(db, user, session_id)
-        stocks = await stock_service.list_by_session(db, session_id)
+        items, total = await stock_service.list_by_session_paginated(
+            db, session_id, limit=page_size, offset=offset
+        )
     elif user.organization_id:
-        stocks = await stock_service.list_by_organization(db, user.organization_id)
+        items, total = await stock_service.list_by_organization_paginated(
+            db, user.organization_id, limit=page_size, offset=offset
+        )
     else:
         stocks = await stock_service.list_all(db)
-    return [StockResponse.model_validate(s) for s in stocks]
+        total = len(stocks)
+        items = stocks[offset : offset + page_size]
+    return PaginatedResponse(
+        items=[StockResponse.model_validate(s) for s in items],
+        total=total,
+        limit=page_size,
+        offset=offset,
+        has_more=offset + len(items) < total,
+    )
 
 
 @router.post("/bulk", response_model=list[StockResponse])

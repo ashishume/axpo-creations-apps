@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { useStocksBySession, useCreateStock, useUpdateStock, useDeleteStock, useAddStockTransaction } from "../hooks/useStocks";
+import { useStocksBySessionInfinite, useCreateStock, useUpdateStock, useDeleteStock, useAddStockTransaction } from "../hooks/useStocks";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -20,7 +20,13 @@ const statusColors = {
 export function StocksPage() {
   const { selectedSessionId, toast } = useApp();
 
-  const { data: stocks = [], isLoading: isAppLoading } = useStocksBySession(selectedSessionId ?? "");
+  const {
+    stocks,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isAppLoading,
+  } = useStocksBySessionInfinite(selectedSessionId ?? "");
   const createStock = useCreateStock();
   const updateStockMut = useUpdateStock();
   const deleteStockMut = useDeleteStock();
@@ -108,8 +114,8 @@ export function StocksPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Stock & Publishers</h2>
-          <p className="text-sm text-slate-600 sm:text-base">Track books/supplies bought on credit from publishers</p>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 sm:text-2xl">Stock & Publishers</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400 sm:text-base">Track books/supplies bought on credit from publishers</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -125,7 +131,7 @@ export function StocksPage() {
 
       {!selectedSessionId ? (
         <Card>
-          <CardContent className="py-12 text-center text-slate-500">
+          <CardContent className="py-12 text-center text-slate-500 dark:text-slate-400">
             Select a school and session to view stocks.
           </CardContent>
         </Card>
@@ -146,12 +152,12 @@ export function StocksPage() {
             <CardTitle>Stock Purchases ({sessionStocks.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Stock purchases are automatically added as expenses. Record sales to track income from sold items.
               Returns reduce the remaining stock value. Sales are shown as income in your dashboard.
             </p>
             {sessionStocks.length === 0 ? (
-              <p className="text-sm text-slate-500">No stock purchases yet. Add one to get started.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No stock purchases yet. Add one to get started.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -265,6 +271,17 @@ export function StocksPage() {
                 </table>
               </div>
             )}
+            {hasNextPage && stocks.length > 0 && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading…" : "Load more"}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -277,39 +294,39 @@ export function StocksPage() {
       >
         <form onSubmit={handleSaveStock} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Publisher name *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Publisher name *</label>
             <input
               name="publisherName"
               type="text"
               required
               defaultValue={stockModal.stock?.publisherName}
               placeholder="e.g. ABC Publications"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Description</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
             <input
               name="description"
               type="text"
               defaultValue={stockModal.stock?.description}
               placeholder="e.g. Books for 2024-25 session"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Purchase date *</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Purchase date *</label>
               <input
                 name="purchaseDate"
                 type="date"
                 required
                 defaultValue={stockModal.stock?.purchaseDate ?? new Date().toISOString().slice(0, 10)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Credit amount (₹) *</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Credit amount (₹) *</label>
               <input
                 name="totalCreditAmount"
                 type="number"
@@ -317,17 +334,17 @@ export function StocksPage() {
                 min={1}
                 defaultValue={stockModal.stock?.totalCreditAmount}
                 placeholder="e.g. 100000"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
               />
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Notes</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Notes</label>
             <textarea
               name="notes"
               rows={2}
               defaultValue={stockModal.stock?.notes}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -347,58 +364,58 @@ export function StocksPage() {
           title={`Record ${transactionModal.type === "sale" ? "sale" : "return"} – ${transactionModal.stock.publisherName}`}
         >
           <form onSubmit={handleAddTransaction} className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               {transactionModal.type === "sale" 
                 ? "Record items sold to students/customers"
                 : "Record items returned to publisher"}
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Date *</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Date *</label>
                 <input
                   name="date"
                   type="date"
                   required
                   defaultValue={new Date().toISOString().slice(0, 10)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Amount (₹) *</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Amount (₹) *</label>
                 <input
                   name="amount"
                   type="number"
                   required
                   min={1}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Quantity (optional)</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Quantity (optional)</label>
                 <input
                   name="quantity"
                   type="number"
                   min={1}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Receipt #</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Receipt #</label>
                 <input
                   name="receiptNumber"
                   type="text"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Description</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
               <input
                 name="description"
                 type="text"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
               />
             </div>
             <div className="flex justify-end gap-2">

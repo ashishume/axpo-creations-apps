@@ -64,23 +64,23 @@ export function Pagination({
       {/* Item count and page size selector */}
       <div className="flex items-center gap-4">
         {showItemCount && (
-          <span className="text-sm text-slate-600">
-            Showing <span className="font-medium">{startItem}</span> to{' '}
-            <span className="font-medium">{endItem}</span> of{' '}
-            <span className="font-medium">{totalItems}</span> results
+          <span className="text-sm text-slate-600 dark:text-slate-400">
+            Showing <span className="font-medium text-slate-900 dark:text-slate-100">{startItem}</span> to{' '}
+            <span className="font-medium text-slate-900 dark:text-slate-100">{endItem}</span> of{' '}
+            <span className="font-medium text-slate-900 dark:text-slate-100">{totalItems}</span> results
           </span>
         )}
 
         {showPageSizeSelector && onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600">Show:</span>
+            <span className="text-sm text-slate-600 dark:text-slate-400">Show:</span>
             <select
               value={pageSize}
               onChange={(e) => {
                 onPageSizeChange(Number(e.target.value));
                 onPageChange(1); // Reset to first page when changing page size
               }}
-              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-100 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>
@@ -123,7 +123,7 @@ export function Pagination({
               page === '...' ? (
                 <span
                   key={`ellipsis-${index}`}
-                  className="px-2 text-slate-400"
+                  className="px-2 text-slate-400 dark:text-slate-500"
                 >
                   ...
                 </span>

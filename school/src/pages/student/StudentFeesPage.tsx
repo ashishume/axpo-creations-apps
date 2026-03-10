@@ -88,7 +88,7 @@ export function StudentFeesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Fee Details</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Fee Details</h1>
         <p className="text-slate-600">View your complete fee structure and payment status</p>
       </div>
 

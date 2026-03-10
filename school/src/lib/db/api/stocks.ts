@@ -34,14 +34,28 @@ function mapStock(r: Record<string, unknown>): Stock {
   };
 }
 
+const LARGE_PAGE_SIZE = 10000;
+
+interface PaginatedApiResponse {
+  items: Record<string, unknown>[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
 export const stocksRepositoryApi = {
   async getAll(): Promise<Stock[]> {
-    const list = await teachingFetchJson<Record<string, unknown>[]>('/stocks');
+    const res = await teachingFetchJson<PaginatedApiResponse>(`/stocks?limit=${LARGE_PAGE_SIZE}&offset=0`);
+    const list = res?.items ?? [];
     return Array.isArray(list) ? list.map(mapStock) : [];
   },
 
   async getBySession(sessionId: string): Promise<Stock[]> {
-    const list = await teachingFetchJson<Record<string, unknown>[]>(`/stocks?session_id=${sessionId}`);
+    const res = await teachingFetchJson<PaginatedApiResponse>(
+      `/stocks?session_id=${sessionId}&limit=${LARGE_PAGE_SIZE}&offset=0`
+    );
+    const list = res?.items ?? [];
     return Array.isArray(list) ? list.map(mapStock) : [];
   },
 
@@ -106,20 +120,25 @@ export const stocksRepositoryApi = {
 
   async getPaginated(
     page: number = 1,
-    pageSize: number = 10,
+    pageSize: number = 50,
     filters?: { sessionId?: string; status?: string; search?: string }
   ): Promise<PaginatedResult<Stock>> {
-    let all = await this.getAll();
-    if (filters?.sessionId) all = all.filter((s) => s.sessionId === filters.sessionId);
-    if (filters?.status) all = all.filter((s) => s.status === filters.status);
-    if (filters?.search) {
-      const q = (filters.search ?? '').toLowerCase();
-      all = all.filter((s) => s.publisherName.toLowerCase().includes(q) || (s.description ?? '').toLowerCase().includes(q));
-    }
-    const total = all.length;
-    const start = (page - 1) * pageSize;
-    const data = all.slice(start, start + pageSize);
-    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+    const sessionId = filters?.sessionId ?? '';
+    const offset = (page - 1) * pageSize;
+    const params = new URLSearchParams();
+    if (sessionId) params.set('session_id', sessionId);
+    params.set('limit', String(pageSize));
+    params.set('offset', String(offset));
+    const res = await teachingFetchJson<PaginatedApiResponse>(`/stocks?${params.toString()}`);
+    const items = res?.items ?? [];
+    const total = res?.total ?? 0;
+    return {
+      data: Array.isArray(items) ? items.map(mapStock) : [],
+      total,
+      page,
+      pageSize,
+      totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+    };
   },
 
   async deleteTransaction(stockId: string, transactionId: string): Promise<void> {

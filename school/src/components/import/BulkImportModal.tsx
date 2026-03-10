@@ -315,13 +315,13 @@ export function BulkImportModal({
       className="max-w-2xl"
     >
       <div className="space-y-4">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           {type === "students"
             ? "Upload a CSV with columns: name, studentId, class, feeType, registrationFees, admissionFees, annualFund, monthlyFees, transportFees, dueDayOfMonth, lateFeeAmount, lateFeeFrequency, fatherName, motherName, guardianPhone, bloodGroup, currentAddress, permanentAddress, healthIssues. If class is provided, fees are auto-filled from class defaults. Download sample for full format."
             : "Upload a CSV with columns: name, employeeId, role, monthlySalary, subjectOrGrade (optional)."}
         </p>
         <div className="flex flex-wrap gap-2">
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700">
             <Upload className="h-4 w-4" />
             Choose file
             <input
@@ -334,14 +334,14 @@ export function BulkImportModal({
           <a
             href={`data:text/csv;charset=utf-8,${encodeURIComponent(sampleCSV)}`}
             download={sampleFilename}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"
           >
             <Download className="h-4 w-4" />
             Download sample CSV
           </a>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Or paste CSV below</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Or paste CSV below</label>
           <textarea
             value={rawCsv}
             onChange={(e) => {
@@ -351,7 +351,7 @@ export function BulkImportModal({
             onBlur={processCSV}
             placeholder="Paste CSV content here..."
             rows={6}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 font-mono text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
           />
         </div>
         <div className="flex justify-end">
@@ -362,27 +362,27 @@ export function BulkImportModal({
         </div>
         {parsed.length > 0 && (
           <>
-            <div className="max-h-48 overflow-auto rounded-lg border border-slate-200">
+            <div className="max-h-48 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
               <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-slate-50">
+                <thead className="sticky top-0 bg-slate-50 dark:bg-slate-800">
                   <tr>
-                    <th className="border-b p-2 text-left font-medium">Row</th>
-                    <th className="border-b p-2 text-left font-medium">Status</th>
-                    <th className="border-b p-2 text-left font-medium">Preview</th>
+                    <th className="border-b border-slate-200 dark:border-slate-600 p-2 text-left font-medium text-slate-900 dark:text-slate-100">Row</th>
+                    <th className="border-b border-slate-200 dark:border-slate-600 p-2 text-left font-medium text-slate-900 dark:text-slate-100">Status</th>
+                    <th className="border-b border-slate-200 dark:border-slate-600 p-2 text-left font-medium text-slate-900 dark:text-slate-100">Preview</th>
                   </tr>
                 </thead>
                 <tbody>
                   {parsed.slice(0, 20).map((r) => (
-                    <tr key={r.index} className="border-b border-slate-100">
-                      <td className="p-2">{r.index}</td>
+                    <tr key={r.index} className="border-b border-slate-100 dark:border-slate-700">
+                      <td className="p-2 text-slate-900 dark:text-slate-100">{r.index}</td>
                       <td className="p-2">
                         {r.valid ? (
-                          <span className="text-green-600">OK</span>
+                          <span className="text-green-600 dark:text-green-400">OK</span>
                         ) : (
-                          <span className="text-red-600">{r.error}</span>
+                          <span className="text-red-600 dark:text-red-400">{r.error}</span>
                         )}
                       </td>
-                      <td className="max-w-[200px] truncate p-2 text-slate-600">
+                      <td className="max-w-[200px] truncate p-2 text-slate-600 dark:text-slate-300">
                         {Object.values(r.data).slice(0, 3).join(", ")}
                       </td>
                     </tr>

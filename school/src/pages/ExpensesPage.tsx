@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { useExpensesBySession, useCreateExpense, useUpdateExpense, useDeleteExpense } from "../hooks/useExpenses";
+import { useExpensesBySessionInfinite, useCreateExpense, useUpdateExpense, useDeleteExpense } from "../hooks/useExpenses";
 import { useFixedCostsBySession, useCreateFixedCost, useUpdateFixedCost, useDeleteFixedCost } from "../hooks/useFixedCosts";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
@@ -31,7 +31,13 @@ const fixedCostCategories: ExpenseCategory[] = [
 export function ExpensesPage() {
   const { selectedSessionId, toast } = useApp();
 
-  const { data: expenses = [], isLoading: expLoading } = useExpensesBySession(selectedSessionId ?? "");
+  const {
+    expenses,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: expLoading,
+  } = useExpensesBySessionInfinite(selectedSessionId ?? "");
   const { data: fixedCosts = [], isLoading: fcLoading } = useFixedCostsBySession(selectedSessionId ?? "");
   const isAppLoading = expLoading || fcLoading;
 
@@ -141,8 +147,8 @@ export function ExpensesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Expenses</h2>
-          <p className="text-slate-600">Track expenses by category</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Expenses</h2>
+          <p className="text-slate-600 dark:text-slate-400">Track expenses by category</p>
         </div>
         <Button
           size="sm"
@@ -163,7 +169,7 @@ export function ExpensesPage() {
             className="max-w-xs"
           />
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium text-slate-500">Category:</span>
+            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Category:</span>
             <FilterChips
               options={[
                 { value: "", label: "All" },
@@ -174,19 +180,19 @@ export function ExpensesPage() {
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <label className="text-sm text-slate-500">From</label>
+            <label className="text-sm text-slate-500 dark:text-slate-400">From</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
             />
-            <label className="text-sm text-slate-500">To</label>
+            <label className="text-sm text-slate-500 dark:text-slate-400">To</label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm text-slate-900 dark:text-slate-100"
             />
           </div>
         </div>
@@ -194,7 +200,7 @@ export function ExpensesPage() {
 
       {!selectedSessionId ? (
         <Card>
-          <CardContent className="py-12 text-center text-slate-500">
+          <CardContent className="py-12 text-center text-slate-500 dark:text-slate-400">
             Select a school and session to view expenses.
           </CardContent>
         </Card>
@@ -223,16 +229,16 @@ export function ExpensesPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Expenses ({list.length})</CardTitle>
-            <span className="text-lg font-semibold text-slate-900">{formatCurrency(total)}</span>
+            <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(total)}</span>
           </CardHeader>
           <CardContent>
             {list.length === 0 ? (
-              <p className="text-sm text-slate-500">No expenses in this session.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No expenses in this session.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-slate-600">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                       <th className="pb-2 pr-4 font-medium">Date</th>
                       <th className="pb-2 pr-4 font-medium">Category</th>
                       <th className="pb-2 pr-4 font-medium">Description</th>
@@ -243,12 +249,12 @@ export function ExpensesPage() {
                   </thead>
                   <tbody>
                     {list.map((e) => (
-                      <tr key={e.id} className="border-b border-slate-100">
-                        <td className="py-3 pr-4 text-slate-600">{formatDate(e.date)}</td>
-                        <td className="py-3 pr-4 font-medium">{e.category}</td>
-                        <td className="py-3 pr-4 text-slate-700">{e.description}</td>
-                        <td className="py-3 pr-4 text-slate-600">{e.vendorPayee}</td>
-                        <td className="py-3 pr-4 font-medium">{formatCurrency(e.amount)}</td>
+                      <tr key={e.id} className="border-b border-slate-100 dark:border-slate-700">
+                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{formatDate(e.date)}</td>
+                        <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{e.category}</td>
+                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{e.description}</td>
+                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{e.vendorPayee}</td>
+                        <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{formatCurrency(e.amount)}</td>
                         <td className="py-3">
                           <div className="flex gap-1">
                             <Button
@@ -274,6 +280,17 @@ export function ExpensesPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+            {hasNextPage && expenses.length > 0 && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading…" : "Load more"}
+                </Button>
               </div>
             )}
           </CardContent>
@@ -446,18 +463,18 @@ export function ExpensesPage() {
       >
         <form onSubmit={handleSaveFixedCost} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Name *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name *</label>
             <input
               name="name"
               type="text"
               required
               placeholder="e.g., Rent, Internet, Electricity"
               defaultValue={fixedCostModal.cost?.name}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Monthly Amount (₹) *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Monthly Amount (₹) *</label>
             <input
               name="amount"
               type="number"
@@ -465,15 +482,15 @@ export function ExpensesPage() {
               min={1}
               step={1}
               defaultValue={fixedCostModal.cost?.amount}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Category</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
             <select
               name="category"
               defaultValue={fixedCostModal.cost?.category ?? "Utilities"}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
             >
               {fixedCostCategories.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -485,9 +502,9 @@ export function ExpensesPage() {
               name="isActive"
               type="checkbox"
               defaultChecked={fixedCostModal.cost?.isActive ?? true}
-              className="h-4 w-4 rounded border-slate-300"
+              className="h-4 w-4 rounded border-slate-300 dark:border-slate-500"
             />
-            <label className="text-sm text-slate-700">Active (will be counted in monthly expenses)</label>
+            <label className="text-sm text-slate-700 dark:text-slate-300">Active (will be counted in monthly expenses)</label>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setFixedCostModal({ open: false })}>
