@@ -16,7 +16,7 @@ import {
 import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import { formatInvoiceNumber } from "@/lib/invoice-number";
 import { getGstAmounts, amountToWords, roundToRupee, getRoundOff } from "@/lib/gst";
-import type { CustomerType } from "@/lib/db/types";
+import { CUSTOMER_TYPES, type CustomerType } from "@/lib/db/types";
 import { AlertTriangle } from "lucide-react";
 import { RemoveIcon, Spinner, TableSkeleton, Skeleton } from "@/components/ui";
 
@@ -32,7 +32,6 @@ interface LineRow {
 }
 
 const today = new Date().toISOString().slice(0, 10);
-const CUSTOMER_TYPES: CustomerType[] = ["Dealer", "Contractor", "Retail", "Builder"];
 
 export function NewInvoicePage() {
   const navigate = useNavigate();
@@ -59,7 +58,7 @@ export function NewInvoicePage() {
   );
 
   const [newCustName, setNewCustName] = useState("");
-  const [newCustType, setNewCustType] = useState<CustomerType>("Dealer");
+  const [newCustType, setNewCustType] = useState<CustomerType>("Customer");
   const [newCustPhone, setNewCustPhone] = useState("");
   const [newCustGstin, setNewCustGstin] = useState("");
   const [newCustBilling, setNewCustBilling] = useState("");

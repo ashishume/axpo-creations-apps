@@ -98,60 +98,76 @@ export function InvoicesPage() {
                 <th>Invoice No</th>
                 <th>Date</th>
                 <th>Customer</th>
-                <th>Total</th>
+                <th className="text-right">Total</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th className="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {invoices.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center" style={{ color: "var(--text-secondary)" }}>
-                    No invoices.{" "}
-                    <Link to="/invoices/new" className="no-underline">
-                      Create one
-                    </Link>
-                    .
+                  <td colSpan={6} className="py-12 text-center" style={{ color: "var(--text-secondary)" }}>
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-base">No invoices found</span>
+                      <Link to="/invoices/new" className="text-indigo-600 hover:text-indigo-700 font-medium no-underline">
+                        Create your first invoice
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               )}
               {invoices.map((inv) => {
                 const cust = customerMap.get(inv.customerId);
+                const formattedDate = new Date(inv.date).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                });
                 return (
-                  <tr key={inv.id} className="transition-colors duration-200">
-                    <td>{inv.number}</td>
-                    <td>{inv.date}</td>
-                    <td>{cust?.name ?? inv.customerId}</td>
-                    <td>₹{inv.total.toFixed(2)}</td>
+                  <tr key={inv.id}>
+                    <td>
+                      <span className="font-semibold text-slate-800">{inv.number}</span>
+                    </td>
+                    <td>
+                      <span className="text-slate-600">{formattedDate}</span>
+                    </td>
+                    <td>
+                      <span className="font-medium text-slate-700">{cust?.name ?? "—"}</span>
+                    </td>
+                    <td className="text-right">
+                      <span className="font-semibold text-slate-800 tabular-nums">
+                        ₹{inv.total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </td>
                     <td>
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${
                           inv.status === "final"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                            ? "bg-emerald-100 text-emerald-700"
                             : inv.status === "cancelled"
-                            ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-slate-100 text-slate-600"
                         }`}
                       >
                         {inv.status}
                       </span>
                     </td>
                     <td>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center justify-center gap-1">
                         <Link
                           to={`/invoices/${inv.id}`}
-                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors no-underline touch-manipulation"
+                          className="p-2.5 rounded-lg hover:bg-slate-100 transition-colors no-underline touch-manipulation"
                           title="View invoice"
                         >
-                          <ViewIcon size={16} className="text-blue-600 dark:text-blue-400" />
+                          <ViewIcon size={18} className="text-slate-500 hover:text-indigo-600" />
                         </Link>
                         {inv.status === "final" && (
                           <Link
                             to={`/invoices/${inv.id}/print`}
-                            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors no-underline touch-manipulation"
+                            className="p-2.5 rounded-lg hover:bg-slate-100 transition-colors no-underline touch-manipulation"
                             title="Print invoice"
                           >
-                            <PrintIcon size={16} className="text-green-600 dark:text-green-400" />
+                            <PrintIcon size={18} className="text-slate-500 hover:text-emerald-600" />
                           </Link>
                         )}
                       </div>

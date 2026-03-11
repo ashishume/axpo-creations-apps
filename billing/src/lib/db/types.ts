@@ -37,7 +37,10 @@ export interface Product {
   createdAt: string;
 }
 
-export type CustomerType = "Dealer" | "Contractor" | "Retail" | "Builder";
+export type CustomerType = "Dealer" | "Contractor" | "Retail" | "Builder" | "Customer";
+
+/** Standard customer types used throughout the app */
+export const CUSTOMER_TYPES: CustomerType[] = ["Dealer", "Contractor", "Retail", "Builder", "Customer"];
 
 export interface Customer {
   id: string;

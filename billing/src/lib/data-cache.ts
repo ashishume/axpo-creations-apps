@@ -38,8 +38,13 @@ export function setCached(key: string, data: unknown): void {
 
 export function invalidateCache(key: string): void {
   cache.delete(key);
-  if (STORE_CONSTITUENT_KEYS.has(key)) {
-    cache.delete("store");
+  // Check if key starts with any constituent key (handles mode suffixes like "stockMovements-shop")
+  const baseKey = key.split("-")[0];
+  if (STORE_CONSTITUENT_KEYS.has(key) || STORE_CONSTITUENT_KEYS.has(baseKey)) {
+    // Invalidate all store variants (store-shop, store-factory, etc.)
+    for (const k of cache.keys()) {
+      if (k.startsWith("store")) cache.delete(k);
+    }
   }
 }
 

@@ -5,9 +5,7 @@ import { useCustomers } from "@/hooks/useStore";
 import { deleteCustomerAsync } from "@/lib/store-async";
 import { Card, EditIcon, DeleteIcon, ViewIcon, PlusIcon, TableSkeleton } from "@/components/ui";
 import { AddCustomerModal } from "@/components/modals/AddCustomerModal";
-import type { CustomerType } from "@/lib/db/types";
-
-const CUSTOMER_TYPES: CustomerType[] = ["Dealer", "Contractor", "Retail", "Builder"];
+import { CUSTOMER_TYPES, type CustomerType } from "@/lib/db/types";
 
 export function CustomersPage() {
   const { data: customersData, loading, refetch } = useCustomers();

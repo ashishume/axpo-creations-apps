@@ -5,9 +5,7 @@ import { Link } from "react-router-dom";
 import { useCustomer } from "@/hooks/useStore";
 import { updateCustomerAsync } from "@/lib/store-async";
 import { Skeleton } from "@/components/ui";
-import type { CustomerType } from "@/lib/db/types";
-
-const CUSTOMER_TYPES: CustomerType[] = ["Dealer", "Contractor", "Retail", "Builder"];
+import { CUSTOMER_TYPES, type CustomerType } from "@/lib/db/types";
 
 export function EditCustomerPage() {
   const { id } = useParams<{ id: string }>();

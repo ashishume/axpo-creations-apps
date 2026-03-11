@@ -2,9 +2,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui";
 import { addCustomerAsync } from "@/lib/store-async";
 import { useBusinessMode } from "@/contexts/BusinessModeContext";
-import type { CustomerType } from "@/lib/db/types";
-
-const CUSTOMER_TYPES: CustomerType[] = ["Dealer", "Contractor", "Retail", "Builder"];
+import { CUSTOMER_TYPES, type CustomerType } from "@/lib/db/types";
 
 interface AddCustomerModalProps {
   isOpen: boolean;

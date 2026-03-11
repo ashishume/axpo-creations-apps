@@ -98,7 +98,7 @@ body {
 
 /* Table – horizontal scroll on mobile/tablet, -webkit-overflow-scrolling for smooth scroll on iOS */
 .table-container {
-  @apply w-full overflow-x-auto rounded-lg;
+  @apply w-full overflow-x-auto rounded-xl;
   -webkit-overflow-scrolling: touch;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -109,19 +109,28 @@ body {
 }
 
 .table th {
-  @apply px-4 py-3 text-left text-sm font-semibold;
+  @apply px-5 py-4 text-left text-xs font-bold uppercase tracking-wider;
   background: var(--table-header-bg);
-  color: var(--text-primary);
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
 }
 
 .table td {
-  @apply px-4 py-3 text-sm;
+  @apply px-5 py-4 text-sm font-medium;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border);
 }
 
+.table tbody tr {
+  @apply transition-all duration-150;
+}
+
 .table tbody tr:hover {
   background: var(--table-row-alt);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 /* Modal */

@@ -4,9 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { addCustomerAsync } from "@/lib/store-async";
 import { useBusinessMode } from "@/contexts/BusinessModeContext";
-import type { CustomerType } from "@/lib/db/types";
-
-const CUSTOMER_TYPES: CustomerType[] = ["Dealer", "Contractor", "Retail", "Builder"];
+import { CUSTOMER_TYPES, type CustomerType } from "@/lib/db/types";
 
 export function NewCustomerPage() {
   const navigate = useNavigate();
