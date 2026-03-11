@@ -1,6 +1,6 @@
 import { billingFetch, billingFetchJson } from "@/lib/api/client";
 import type { PurchaseInvoiceRepository } from "../repository";
-import type { PurchaseInvoice, PurchaseInvoiceItem } from "../types";
+import type { PurchaseInvoice, PurchaseInvoiceItem, BusinessType } from "../types";
 
 function mapInvoiceFromApi(r: Record<string, unknown>): PurchaseInvoice {
   return {
@@ -18,6 +18,7 @@ function mapInvoiceFromApi(r: Record<string, unknown>): PurchaseInvoice {
     total: Number(r.total ?? 0),
     totalInWords: String(r.total_in_words ?? ""),
     status: (r.status as PurchaseInvoice["status"]) ?? "final",
+    businessType: (r.business_type as BusinessType) ?? "factory",
     createdAt: String(r.created_at ?? ""),
   };
 }
@@ -38,8 +39,8 @@ function mapItemFromApi(r: Record<string, unknown>): PurchaseInvoiceItem {
 }
 
 export const purchaseInvoiceRepositoryApi: PurchaseInvoiceRepository = {
-  async getAll(): Promise<PurchaseInvoice[]> {
-    const list = await billingFetchJson<Record<string, unknown>[]>("/purchase-invoices");
+  async getAll(businessType: BusinessType): Promise<PurchaseInvoice[]> {
+    const list = await billingFetchJson<Record<string, unknown>[]>(`/purchase-invoices?business_type=${businessType}`);
     return Array.isArray(list) ? list.map(mapInvoiceFromApi) : [];
   },
 
@@ -103,8 +104,8 @@ export const purchaseInvoiceRepositoryApi: PurchaseInvoiceRepository = {
     }
   },
 
-  async getAllItems(): Promise<PurchaseInvoiceItem[]> {
-    const list = await billingFetchJson<Record<string, unknown>[]>("/purchase-invoices");
+  async getAllItems(businessType: BusinessType): Promise<PurchaseInvoiceItem[]> {
+    const list = await billingFetchJson<Record<string, unknown>[]>(`/purchase-invoices?business_type=${businessType}`);
     if (!Array.isArray(list)) return [];
     const all: PurchaseInvoiceItem[] = [];
     for (const pi of list) {

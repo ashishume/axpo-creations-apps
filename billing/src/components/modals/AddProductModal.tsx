@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Modal } from "@/components/ui";
 import { addProductAsync } from "@/lib/store-async";
 import { useProducts } from "@/hooks/useStore";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import type { ProductType } from "@/lib/db/types";
 
 const GST_RATES: { value: number; label: string }[] = [
@@ -23,6 +24,7 @@ interface AddProductModalProps {
 }
 
 export function AddProductModal({ isOpen, onClose, onSaved }: AddProductModalProps) {
+  const { mode } = useBusinessMode();
   const { data: products } = useProducts();
   const [name, setName] = useState("");
   const [productType, setProductType] = useState<ProductType>("");
@@ -52,12 +54,13 @@ export function AddProductModal({ isOpen, onClose, onSaved }: AddProductModalPro
       await addProductAsync({
         name: name.trim(),
         productType: productType.trim(),
-        hsn: hsn.trim() || undefined,
+        hsn: hsn.trim() || "",
         gstRate,
         unit: "pieces",
         sellingPrice,
         costPrice,
         currentStock: 0,
+        businessType: mode,
       });
       setName("");
       setProductType("");

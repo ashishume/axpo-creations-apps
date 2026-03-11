@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal } from "@/components/ui";
 import { addCustomerAsync } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import type { CustomerType } from "@/lib/db/types";
 
 const CUSTOMER_TYPES: CustomerType[] = ["Dealer", "Contractor", "Retail", "Builder"];
@@ -12,6 +13,7 @@ interface AddCustomerModalProps {
 }
 
 export function AddCustomerModal({ isOpen, onClose, onSaved }: AddCustomerModalProps) {
+  const { mode } = useBusinessMode();
   const [name, setName] = useState("");
   const [customerType, setCustomerType] = useState<CustomerType>("Dealer");
   const [phone, setPhone] = useState("");
@@ -38,6 +40,7 @@ export function AddCustomerModal({ isOpen, onClose, onSaved }: AddCustomerModalP
         creditDays: 0,
         creditLimit: 0,
         stateCode: stateCode.trim(),
+        businessType: mode,
       });
       setName(""); setCustomerType("Dealer"); setPhone(""); setGstin("");
       setBillingAddress(""); setShippingAddress(""); setStateCode("");

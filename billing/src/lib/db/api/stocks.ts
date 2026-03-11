@@ -1,6 +1,6 @@
 import { billingFetchJson } from "@/lib/api/client";
 import type { StockMovementRepository } from "../repository";
-import type { StockMovement } from "../types";
+import type { StockMovement, BusinessType } from "../types";
 import { productRepositoryApi } from "./products";
 
 function mapFromApi(r: Record<string, unknown>): StockMovement {
@@ -12,13 +12,14 @@ function mapFromApi(r: Record<string, unknown>): StockMovement {
     type: (r.type as StockMovement["type"]) ?? "adjustment",
     referenceId: r.reference_id != null ? String(r.reference_id) : null,
     remarks: String(r.remarks ?? ""),
+    businessType: (r.business_type as BusinessType) ?? "shop",
     createdAt: String(r.created_at ?? ""),
   };
 }
 
 export const stockMovementRepositoryApi: StockMovementRepository = {
-  async getAll(productId?: string): Promise<StockMovement[]> {
-    const list = await billingFetchJson<Record<string, unknown>[]>("/stocks");
+  async getAll(businessType: BusinessType, productId?: string): Promise<StockMovement[]> {
+    const list = await billingFetchJson<Record<string, unknown>[]>(`/stocks?business_type=${businessType}`);
     let arr = Array.isArray(list) ? list.map(mapFromApi) : [];
     if (productId) arr = arr.filter((m) => m.productId === productId);
     return arr;

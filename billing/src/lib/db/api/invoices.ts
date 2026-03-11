@@ -1,6 +1,6 @@
 import { billingFetch, billingFetchJson } from "@/lib/api/client";
 import type { InvoiceRepository } from "../repository";
-import type { Invoice, InvoiceItem } from "../types";
+import type { Invoice, InvoiceItem, BusinessType } from "../types";
 
 function mapInvoiceFromApi(r: Record<string, unknown>): Invoice {
   return {
@@ -19,6 +19,7 @@ function mapInvoiceFromApi(r: Record<string, unknown>): Invoice {
     totalInWords: String(r.total_in_words ?? ""),
     status: (r.status as Invoice["status"]) ?? "draft",
     cancelReason: String(r.cancel_reason ?? ""),
+    businessType: (r.business_type as BusinessType) ?? "shop",
     createdAt: String(r.created_at ?? ""),
   };
 }
@@ -39,8 +40,8 @@ function mapItemFromApi(r: Record<string, unknown>): InvoiceItem {
 }
 
 export const invoiceRepositoryApi: InvoiceRepository = {
-  async getAll(): Promise<Invoice[]> {
-    const list = await billingFetchJson<Record<string, unknown>[]>("/invoices");
+  async getAll(businessType: BusinessType): Promise<Invoice[]> {
+    const list = await billingFetchJson<Record<string, unknown>[]>(`/invoices?business_type=${businessType}`);
     return Array.isArray(list) ? list.map(mapInvoiceFromApi) : [];
   },
 
@@ -108,8 +109,8 @@ export const invoiceRepositoryApi: InvoiceRepository = {
   },
 
   /** Fetches all invoice items in one go using list endpoint (backend returns items per invoice). */
-  async getAllItems(): Promise<InvoiceItem[]> {
-    const list = await billingFetchJson<Record<string, unknown>[]>("/invoices");
+  async getAllItems(businessType: BusinessType): Promise<InvoiceItem[]> {
+    const list = await billingFetchJson<Record<string, unknown>[]>(`/invoices?business_type=${businessType}`);
     if (!Array.isArray(list)) return [];
     const all: InvoiceItem[] = [];
     for (const inv of list) {
@@ -119,8 +120,8 @@ export const invoiceRepositoryApi: InvoiceRepository = {
     return all;
   },
 
-  async getNextSeq(fyStart: number): Promise<number> {
-    const invoices = await this.getAll();
+  async getNextSeq(fyStart: number, businessType: BusinessType): Promise<number> {
+    const invoices = await this.getAll(businessType);
     const fySuffix = `${fyStart}-${String((fyStart + 1) % 100).padStart(2, "0")}`;
     const prefix = `INV/${fySuffix}/`;
 

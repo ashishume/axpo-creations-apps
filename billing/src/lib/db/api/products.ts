@@ -1,6 +1,6 @@
 import { billingFetch, billingFetchJson } from "@/lib/api/client";
 import type { ProductRepository } from "../repository";
-import type { Product } from "../types";
+import type { Product, BusinessType } from "../types";
 
 function mapFromApi(r: Record<string, unknown>): Product {
   return {
@@ -13,6 +13,7 @@ function mapFromApi(r: Record<string, unknown>): Product {
     sellingPrice: Number(r.selling_price ?? 0),
     costPrice: Number(r.cost_price ?? 0),
     currentStock: Number(r.current_stock ?? 0),
+    businessType: (r.business_type as BusinessType) ?? "shop",
     createdAt: String(r.created_at ?? ""),
   };
 }
@@ -27,12 +28,13 @@ function toApi(p: Omit<Product, "id" | "createdAt">): Record<string, unknown> {
     selling_price: p.sellingPrice,
     cost_price: p.costPrice,
     current_stock: p.currentStock,
+    business_type: p.businessType,
   };
 }
 
 export const productRepositoryApi: ProductRepository = {
-  async getAll(): Promise<Product[]> {
-    const list = await billingFetchJson<Record<string, unknown>[]>("/products");
+  async getAll(businessType: BusinessType): Promise<Product[]> {
+    const list = await billingFetchJson<Record<string, unknown>[]>(`/products?business_type=${businessType}`);
     return Array.isArray(list) ? list.map(mapFromApi) : [];
   },
 

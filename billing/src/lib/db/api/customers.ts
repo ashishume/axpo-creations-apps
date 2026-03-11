@@ -1,6 +1,6 @@
 import { billingFetch, billingFetchJson } from "@/lib/api/client";
 import type { CustomerRepository } from "../repository";
-import type { Customer } from "../types";
+import type { Customer, BusinessType } from "../types";
 
 function mapFromApi(r: Record<string, unknown>): Customer {
   return {
@@ -15,6 +15,7 @@ function mapFromApi(r: Record<string, unknown>): Customer {
     creditDays: Number(r.credit_days ?? 0),
     creditLimit: Number(r.credit_limit ?? 0),
     stateCode: String(r.state_code ?? ""),
+    businessType: (r.business_type as BusinessType) ?? "shop",
     createdAt: String(r.created_at ?? ""),
   };
 }
@@ -31,12 +32,13 @@ function toApi(c: Omit<Customer, "id" | "createdAt">): Record<string, unknown> {
     credit_days: c.creditDays,
     credit_limit: c.creditLimit,
     state_code: c.stateCode,
+    business_type: c.businessType,
   };
 }
 
 export const customerRepositoryApi: CustomerRepository = {
-  async getAll(): Promise<Customer[]> {
-    const list = await billingFetchJson<Record<string, unknown>[]>("/customers");
+  async getAll(businessType: BusinessType): Promise<Customer[]> {
+    const list = await billingFetchJson<Record<string, unknown>[]>(`/customers?business_type=${businessType}`);
     return Array.isArray(list) ? list.map(mapFromApi) : [];
   },
 
@@ -49,8 +51,8 @@ export const customerRepositoryApi: CustomerRepository = {
     }
   },
 
-  async getByPhone(phone: string): Promise<Customer | null> {
-    const list = await billingFetchJson<Record<string, unknown>[]>("/customers");
+  async getByPhone(phone: string, businessType: BusinessType): Promise<Customer | null> {
+    const list = await billingFetchJson<Record<string, unknown>[]>(`/customers?business_type=${businessType}`);
     if (!Array.isArray(list)) return null;
     const found = list.find((x) => (x.phone as string) === phone);
     return found ? mapFromApi(found) : null;

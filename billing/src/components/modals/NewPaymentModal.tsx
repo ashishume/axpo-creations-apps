@@ -11,6 +11,7 @@ import {
   addPaymentAsync,
   getNextReceiptSeqAsync,
 } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import { formatReceiptNumber } from "@/lib/invoice-number";
 import { Modal, Skeleton } from "@/components/ui";
 
@@ -23,6 +24,7 @@ interface NewPaymentModalProps {
 }
 
 export function NewPaymentModal({ isOpen, onClose, onSaved }: NewPaymentModalProps) {
+  const { mode: businessMode } = useBusinessMode();
   const { data: company, loading: companyLoading } = useCompany();
   const { data: customersData, loading: customersLoading } = useCustomers();
   const { data: invoicesData } = useInvoices();
@@ -35,7 +37,7 @@ export function NewPaymentModal({ isOpen, onClose, onSaved }: NewPaymentModalPro
   const [customerId, setCustomerId] = useState("");
   const [date, setDate] = useState(today);
   const [amount, setAmount] = useState(0);
-  const [mode, setMode] = useState<"cash" | "cheque" | "online">("cash");
+  const [paymentMode, setPaymentMode] = useState<"cash" | "cheque" | "online">("cash");
   const [chequeNo, setChequeNo] = useState("");
   const [chequeDate, setChequeDate] = useState("");
   const [bankName, setBankName] = useState("");
@@ -68,7 +70,7 @@ export function NewPaymentModal({ isOpen, onClose, onSaved }: NewPaymentModalPro
   }, [customerInvoices, allocations]);
 
   const handleSave = async () => {
-    const companyData = await getCompanyAsync();
+    const companyData = await getCompanyAsync(businessMode);
     if (!companyData) { alert("Set up company profile first."); return; }
     if (!customerId) { alert("Select a customer."); return; }
     if (amount <= 0) { alert("Amount must be greater than 0."); return; }
@@ -88,7 +90,7 @@ export function NewPaymentModal({ isOpen, onClose, onSaved }: NewPaymentModalPro
 
     setSaving(true);
     try {
-      const seq = await getNextReceiptSeqAsync(fyStart);
+      const seq = await getNextReceiptSeqAsync(fyStart, businessMode);
       const receiptNo = formatReceiptNumber(seq, fyStart);
       const allocationList = Object.entries(amountAgainstInvoices)
         .filter(([, amt]) => amt > 0)
@@ -100,15 +102,16 @@ export function NewPaymentModal({ isOpen, onClose, onSaved }: NewPaymentModalPro
           date,
           customerId,
           amount,
-          mode,
-          chequeNo: mode === "cheque" ? chequeNo : "",
-          chequeDate: mode === "cheque" ? chequeDate : "",
-          bankName: mode === "cheque" ? bankName : "",
-          referenceNo: mode === "online" ? referenceNo : "",
+          mode: paymentMode,
+          chequeNo: paymentMode === "cheque" ? chequeNo : "",
+          chequeDate: paymentMode === "cheque" ? chequeDate : "",
+          bankName: paymentMode === "cheque" ? bankName : "",
+          referenceNo: paymentMode === "online" ? referenceNo : "",
+          businessType: businessMode,
         },
         allocationList
       );
-      setCustomerId(""); setDate(today); setAmount(0); setMode("cash");
+      setCustomerId(""); setDate(today); setAmount(0); setPaymentMode("cash");
       setChequeNo(""); setChequeDate(""); setBankName(""); setReferenceNo("");
       setAmountAgainstInvoices({});
       onSaved();
@@ -163,13 +166,13 @@ export function NewPaymentModal({ isOpen, onClose, onSaved }: NewPaymentModalPro
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>Payment mode</label>
-            <select className="input" value={mode} onChange={(e) => setMode(e.target.value as "cash" | "cheque" | "online")}>
+            <select className="input" value={paymentMode} onChange={(e) => setPaymentMode(e.target.value as "cash" | "cheque" | "online")}>
               <option value="cash">Cash</option>
               <option value="cheque">Cheque</option>
               <option value="online">Online (NEFT/UPI)</option>
             </select>
           </div>
-          {mode === "cheque" && (
+          {paymentMode === "cheque" && (
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>Cheque No</label>
@@ -185,7 +188,7 @@ export function NewPaymentModal({ isOpen, onClose, onSaved }: NewPaymentModalPro
               </div>
             </div>
           )}
-          {mode === "online" && (
+          {paymentMode === "online" && (
             <div>
               <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>Reference No</label>
               <input type="text" className="input" value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} />

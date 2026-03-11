@@ -14,6 +14,7 @@ import type {
   PaymentAllocation,
   Product,
   StockMovement,
+  BusinessType,
 } from "../types";
 
 export interface StoreDataRpc {
@@ -47,6 +48,7 @@ function mapCompany(d: Record<string, unknown> | null): Company | null {
     logoPath: (d.logo_path as string) ?? "",
     financialYearStart: (d.financial_year_start as number) ?? new Date().getFullYear(),
     stateCode: (d.state_code as string) ?? "",
+    businessType: (d.business_type as BusinessType) ?? "shop",
   };
 }
 
@@ -61,6 +63,7 @@ function mapProduct(d: Record<string, unknown>): Product {
     sellingPrice: d.selling_price as number,
     costPrice: ((d.cost_price as number) ?? 0) as number,
     currentStock: d.current_stock as number,
+    businessType: (d.business_type as BusinessType) ?? "shop",
     createdAt: d.created_at as string,
   };
 }
@@ -78,6 +81,7 @@ function mapCustomer(d: Record<string, unknown>): Customer {
     creditDays: ((d.credit_days as number) ?? 0) as number,
     creditLimit: ((d.credit_limit as number) ?? 0) as number,
     stateCode: (d.state_code as string) ?? "",
+    businessType: (d.business_type as BusinessType) ?? "shop",
     createdAt: d.created_at as string,
   };
 }
@@ -99,6 +103,7 @@ function mapInvoice(d: Record<string, unknown>): Invoice {
     totalInWords: d.total_in_words as string,
     status: d.status as Invoice["status"],
     cancelReason: (d.cancel_reason as string) ?? "",
+    businessType: (d.business_type as BusinessType) ?? "shop",
     createdAt: d.created_at as string,
   };
 }
@@ -130,6 +135,7 @@ function mapPayment(d: Record<string, unknown>): Payment {
     chequeDate: (d.cheque_date as string) ?? "",
     bankName: (d.bank_name as string) ?? "",
     referenceNo: (d.reference_no as string) ?? "",
+    businessType: (d.business_type as BusinessType) ?? "shop",
     createdAt: d.created_at as string,
   };
 }
@@ -152,6 +158,7 @@ function mapStockMovement(d: Record<string, unknown>): StockMovement {
     type: d.type as StockMovement["type"],
     referenceId: d.reference_id as string | null,
     remarks: (d.remarks as string) ?? "",
+    businessType: (d.business_type as BusinessType) ?? "shop",
     createdAt: d.created_at as string,
   };
 }
@@ -163,6 +170,7 @@ function mapExpense(d: Record<string, unknown>): Expense {
     category: d.category as Expense["category"],
     amount: d.amount as number,
     description: (d.description as string) ?? "",
+    businessType: (d.business_type as BusinessType) ?? "shop",
     createdAt: d.created_at as string,
   };
 }

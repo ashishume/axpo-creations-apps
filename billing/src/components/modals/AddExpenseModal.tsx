@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal } from "@/components/ui";
 import { addExpenseAsync } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import type { ExpenseCategory } from "@/lib/db/types";
 
 const CATEGORIES: ExpenseCategory[] = [
@@ -16,6 +17,7 @@ interface AddExpenseModalProps {
 }
 
 export function AddExpenseModal({ isOpen, onClose, onSaved }: AddExpenseModalProps) {
+  const { mode } = useBusinessMode();
   const [date, setDate] = useState(today);
   const [category, setCategory] = useState<ExpenseCategory>("Labour");
   const [amount, setAmount] = useState(0);
@@ -27,7 +29,7 @@ export function AddExpenseModal({ isOpen, onClose, onSaved }: AddExpenseModalPro
     if (amount <= 0) { alert("Amount must be greater than 0."); return; }
     setSubmitting(true);
     try {
-      await addExpenseAsync({ date, category, amount, description: description.trim() });
+      await addExpenseAsync({ date, category, amount, description: description.trim(), businessType: mode });
       setDate(today); setCategory("Labour"); setAmount(0); setDescription("");
       onSaved();
       onClose();

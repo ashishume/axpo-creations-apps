@@ -1,6 +1,6 @@
 import { billingFetchJson } from "@/lib/api/client";
 import type { PaymentRepository } from "../repository";
-import type { Payment, PaymentAllocation } from "../types";
+import type { Payment, PaymentAllocation, BusinessType } from "../types";
 
 function mapPaymentFromApi(r: Record<string, unknown>): Payment {
   return {
@@ -14,6 +14,7 @@ function mapPaymentFromApi(r: Record<string, unknown>): Payment {
     chequeDate: String(r.cheque_date ?? ""),
     bankName: String(r.bank_name ?? ""),
     referenceNo: String(r.reference_no ?? ""),
+    businessType: (r.business_type as BusinessType) ?? "shop",
     createdAt: String(r.created_at ?? ""),
   };
 }
@@ -28,8 +29,8 @@ function mapAllocationFromApi(r: Record<string, unknown>): PaymentAllocation {
 }
 
 export const paymentRepositoryApi: PaymentRepository = {
-  async getAll(): Promise<Payment[]> {
-    const list = await billingFetchJson<Record<string, unknown>[]>("/payments");
+  async getAll(businessType: BusinessType): Promise<Payment[]> {
+    const list = await billingFetchJson<Record<string, unknown>[]>(`/payments?business_type=${businessType}`);
     return Array.isArray(list) ? list.map(mapPaymentFromApi) : [];
   },
 
@@ -89,8 +90,8 @@ export const paymentRepositoryApi: PaymentRepository = {
     return all;
   },
 
-  async getNextSeq(fyStart: number): Promise<number> {
-    const payments = await this.getAll();
+  async getNextSeq(fyStart: number, businessType: BusinessType): Promise<number> {
+    const payments = await this.getAll(businessType);
     const fyEnd = fyStart + 1;
     const start = `${fyStart}-04-01`;
     const end = `${fyEnd}-03-31`;

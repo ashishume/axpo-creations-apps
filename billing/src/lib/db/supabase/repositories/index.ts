@@ -3,6 +3,7 @@ export { productRepository } from "./products";
 export { customerRepository } from "./customers";
 export { supplierRepository } from "./suppliers";
 export { invoiceRepository } from "./invoices";
+export { purchaseInvoiceRepository } from "./purchase-invoices";
 export { paymentRepository } from "./payments";
 export { stockMovementRepository } from "./stock";
 export { expenseRepository } from "./expenses";
