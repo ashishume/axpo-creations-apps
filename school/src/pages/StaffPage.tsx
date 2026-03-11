@@ -342,7 +342,7 @@ export function StaffPage() {
   const salaryDueDay = selectedSession?.salaryDueDay ?? 5;
 
   const [staffModal, setStaffModal] = useState<{ open: boolean; staff?: StaffType }>({ open: false });
-  const [salaryModal, setSalaryModal] = useState<{ staff: StaffType; month: string } | null>(null);
+  const [salaryModal, setSalaryModal] = useState<{ staff: StaffType; month: string; fromHistory?: boolean } | null>(null);
   const [salaryHistoryModal, setSalaryHistoryModal] = useState<StaffType | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -532,6 +532,11 @@ export function StaffPage() {
       calculatedSalary,
     });
     toast("Salary payment recorded");
+    
+    // If opened from salary history, reopen it to show updated payment
+    if (salaryModal.fromHistory) {
+      setSalaryHistoryModal(staff);
+    }
     setSalaryModal(null);
   };
 
@@ -924,7 +929,13 @@ export function StaffPage() {
         staff={salaryModal.staff}
         month={salaryModal.month}
         salaryDueDay={salaryDueDay}
-        onClose={() => setSalaryModal(null)}
+        onClose={() => {
+          // If opened from salary history, reopen it when cancelled
+          if (salaryModal.fromHistory) {
+            setSalaryHistoryModal(salaryModal.staff);
+          }
+          setSalaryModal(null);
+        }}
         onSubmit={handleSaveSalary}
       />}
 
@@ -1090,8 +1101,7 @@ export function StaffPage() {
                                 size="sm"
                                 className="opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={() => {
-                                  setSalaryHistoryModal(null);
-                                  setSalaryModal({ staff: historyStaff, month });
+                                  setSalaryModal({ staff: historyStaff, month, fromHistory: true });
                                 }}
                                 title="Pay salary for this month"
                               >
