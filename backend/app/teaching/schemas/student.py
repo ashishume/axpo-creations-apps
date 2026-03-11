@@ -1,4 +1,6 @@
 """Student and Enrollment schemas."""
+from __future__ import annotations
+
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -57,10 +59,6 @@ class BulkStudentCreate(BaseModel):
     students: list[StudentCreate]
 
 
-class BulkStudentResponse(BaseModel):
-    students: list[StudentResponse]
-
-
 class StudentUpdate(BaseModel):
     name: str | None = None
     student_id: str | None = None
@@ -83,6 +81,10 @@ class StudentResponse(StudentBase):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class BulkStudentResponse(BaseModel):
+    students: list[StudentResponse]
 
 
 # ============================================
