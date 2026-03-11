@@ -2,15 +2,71 @@ import { getSupabase } from '../supabase';
 import type { Student, FeePayment, StudentPersonalDetails } from '../../../types';
 import type { PaginatedResult } from './schools';
 
-// Helper to convert DB row to Student
-function dbRowToStudent(row: Record<string, unknown>, payments: FeePayment[] = []): Student {
+/** Legacy shape returned by Supabase repo (student + session + fees in one). Used only in this file. */
+export type LegacyStudent = Student & {
+  sessionId?: string;
+  classId?: string;
+  personalDetails?: {
+    fatherName?: string;
+    motherName?: string;
+    guardianPhone?: string;
+    currentAddress?: string;
+    permanentAddress?: string;
+    bloodGroup?: string;
+    healthIssues?: string;
+  };
+  payments: FeePayment[];
+  registrationFees?: number;
+  annualFund?: number;
+  monthlyFees?: number;
+  transportFees?: number;
+  registrationPaid?: boolean;
+  annualFundPaid?: boolean;
+  dueDayOfMonth?: number;
+  lateFeeAmount?: number;
+  lateFeeFrequency?: 'daily' | 'weekly';
+  targetAmount?: number;
+  finePerDay?: number;
+  dueFrequency?: 'monthly' | 'quarterly';
+};
+
+/** Build FeePayment from DB row; legacy Supabase uses student_id so enrollmentId is empty. */
+function toFeePayment(p: Record<string, unknown>): FeePayment {
   return {
+    id: p.id as string,
+    enrollmentId: (p.enrollment_id ?? p.enrollmentId ?? '') as string,
+    date: p.date as string,
+    amount: Number(p.amount),
+    method: p.method as FeePayment['method'],
+    receiptNumber: (p.receipt_number ?? '') as string,
+    feeCategory: p.fee_category as FeePayment['feeCategory'],
+    month: p.month as string | undefined,
+    receiptPhotoUrl: p.receipt_photo_url != null ? String(p.receipt_photo_url) : undefined,
+  };
+}
+
+// Helper to convert DB row to legacy Student shape (session + fees in one)
+function dbRowToStudent(row: Record<string, unknown>, payments: FeePayment[] = []): LegacyStudent {
+  const base: Student = {
     id: row.id as string,
-    sessionId: row.session_id as string,
-    classId: row.class_id as string | undefined,
+    schoolId: (row.school_id ?? '') as string,
     name: row.name as string,
     studentId: row.student_id as string,
-    feeType: row.fee_type as Student['feeType'],
+    feeType: (row.fee_type ?? 'Regular') as Student['feeType'],
+    fatherName: row.father_name as string | undefined,
+    motherName: row.mother_name as string | undefined,
+    guardianPhone: row.guardian_phone as string | undefined,
+    currentAddress: row.current_address as string | undefined,
+    permanentAddress: row.permanent_address as string | undefined,
+    bloodGroup: row.blood_group as Student['bloodGroup'],
+    healthIssues: row.health_issues as string | undefined,
+    photoUrl: row.photo_url as string | undefined,
+    siblingId: row.sibling_id as string | undefined,
+  };
+  return {
+    ...base,
+    sessionId: row.session_id as string | undefined,
+    classId: row.class_id as string | undefined,
     personalDetails: {
       fatherName: row.father_name as string | undefined,
       motherName: row.mother_name as string | undefined,
@@ -20,6 +76,7 @@ function dbRowToStudent(row: Record<string, unknown>, payments: FeePayment[] = [
       bloodGroup: row.blood_group as StudentPersonalDetails['bloodGroup'],
       healthIssues: row.health_issues as string | undefined,
     },
+    payments,
     registrationFees: row.registration_fees != null ? Number(row.registration_fees) : undefined,
     annualFund: row.annual_fund != null ? Number(row.annual_fund) : undefined,
     monthlyFees: row.monthly_fees != null ? Number(row.monthly_fees) : undefined,
@@ -28,18 +85,15 @@ function dbRowToStudent(row: Record<string, unknown>, payments: FeePayment[] = [
     annualFundPaid: row.annual_fund_paid as boolean | undefined,
     dueDayOfMonth: row.due_day_of_month as number | undefined,
     lateFeeAmount: row.late_fee_amount != null ? Number(row.late_fee_amount) : undefined,
-    lateFeeFrequency: row.late_fee_frequency as Student['lateFeeFrequency'] | undefined,
-    payments,
+    lateFeeFrequency: row.late_fee_frequency as LegacyStudent['lateFeeFrequency'],
     targetAmount: row.target_amount != null ? Number(row.target_amount) : undefined,
     finePerDay: row.fine_per_day != null ? Number(row.fine_per_day) : undefined,
-    dueFrequency: row.due_frequency as Student['dueFrequency'] | undefined,
-    photoUrl: row.photo_url as string | undefined,
-    siblingId: row.sibling_id as string | undefined,
+    dueFrequency: row.due_frequency as LegacyStudent['dueFrequency'],
   };
 }
 
 export const studentsRepository = {
-  async getAll(): Promise<Student[]> {
+  async getAll(): Promise<LegacyStudent[]> {
     const supabase = getSupabase();
       const { data, error } = await supabase
         .from('school_xx_students')
@@ -56,24 +110,16 @@ export const studentsRepository = {
         .in('student_id', studentIds);
 
       const paymentsByStudent: Record<string, FeePayment[]> = {};
-      (paymentsData || []).forEach(p => {
-        if (!paymentsByStudent[p.student_id]) paymentsByStudent[p.student_id] = [];
-        paymentsByStudent[p.student_id].push({
-          id: p.id,
-          date: p.date,
-          amount: Number(p.amount),
-          method: p.method,
-          receiptNumber: p.receipt_number || '',
-          feeCategory: p.fee_category,
-          month: p.month,
-          receiptPhotoUrl: p.receipt_photo_url ?? undefined,
-        });
+      (paymentsData || []).forEach((p: Record<string, unknown>) => {
+        const sid = p.student_id as string;
+        if (!paymentsByStudent[sid]) paymentsByStudent[sid] = [];
+        paymentsByStudent[sid].push(toFeePayment(p));
       });
 
-    return (data || []).map(row => dbRowToStudent(row, paymentsByStudent[row.id] || []));
+    return (data || []).map((row: Record<string, unknown>) => dbRowToStudent(row, paymentsByStudent[row.id as string] || []));
   },
 
-  async getBySession(sessionId: string): Promise<Student[]> {
+  async getBySession(sessionId: string): Promise<LegacyStudent[]> {
     const supabase = getSupabase();
       const { data, error } = await supabase
         .from('school_xx_students')
@@ -90,28 +136,20 @@ export const studentsRepository = {
         .in('student_id', studentIds);
 
       const paymentsByStudent: Record<string, FeePayment[]> = {};
-      (paymentsData || []).forEach(p => {
-        if (!paymentsByStudent[p.student_id]) paymentsByStudent[p.student_id] = [];
-        paymentsByStudent[p.student_id].push({
-          id: p.id,
-          date: p.date,
-          amount: Number(p.amount),
-          method: p.method,
-          receiptNumber: p.receipt_number || '',
-          feeCategory: p.fee_category,
-          month: p.month,
-          receiptPhotoUrl: p.receipt_photo_url ?? undefined,
-        });
+      (paymentsData || []).forEach((p: Record<string, unknown>) => {
+        const sid = p.student_id as string;
+        if (!paymentsByStudent[sid]) paymentsByStudent[sid] = [];
+        paymentsByStudent[sid].push(toFeePayment(p));
       });
 
-    return (data || []).map(row => dbRowToStudent(row, paymentsByStudent[row.id] || []));
+    return (data || []).map((row: Record<string, unknown>) => dbRowToStudent(row, paymentsByStudent[row.id as string] || []));
   },
 
   async getPaginated(
     page: number = 1, 
     pageSize: number = 10, 
     filters?: { sessionId?: string; classId?: string; search?: string }
-  ): Promise<PaginatedResult<Student>> {
+  ): Promise<PaginatedResult<LegacyStudent>> {
     const supabase = getSupabase();
     const offset = (page - 1) * pageSize;
       let query = supabase
@@ -139,21 +177,13 @@ export const studentsRepository = {
         : { data: [] };
 
       const paymentsByStudent: Record<string, FeePayment[]> = {};
-      (paymentsData || []).forEach(p => {
-        if (!paymentsByStudent[p.student_id]) paymentsByStudent[p.student_id] = [];
-        paymentsByStudent[p.student_id].push({
-          id: p.id,
-          date: p.date,
-          amount: Number(p.amount),
-          method: p.method,
-          receiptNumber: p.receipt_number || '',
-          feeCategory: p.fee_category,
-          month: p.month,
-          receiptPhotoUrl: p.receipt_photo_url ?? undefined,
-        });
+      (paymentsData || []).forEach((p: Record<string, unknown>) => {
+        const sid = p.student_id as string;
+        if (!paymentsByStudent[sid]) paymentsByStudent[sid] = [];
+        paymentsByStudent[sid].push(toFeePayment(p));
       });
 
-      const students = (data || []).map(row => dbRowToStudent(row, paymentsByStudent[row.id] || []));
+      const students = (data || []).map((row: Record<string, unknown>) => dbRowToStudent(row, paymentsByStudent[row.id as string] || []));
 
     return {
       data: students,
@@ -164,7 +194,7 @@ export const studentsRepository = {
     };
   },
 
-  async getById(id: string): Promise<Student | null> {
+  async getById(id: string): Promise<LegacyStudent | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from('school_xx_students')
@@ -179,51 +209,43 @@ export const studentsRepository = {
       .select('*')
       .eq('student_id', id);
 
-    const payments: FeePayment[] = (paymentsData || []).map(p => ({
-      id: p.id,
-      date: p.date,
-      amount: Number(p.amount),
-      method: p.method,
-      receiptNumber: p.receipt_number || '',
-      feeCategory: p.fee_category,
-      month: p.month,
-      receiptPhotoUrl: p.receipt_photo_url ?? undefined,
-    }));
+    const payments: FeePayment[] = (paymentsData || []).map((p: Record<string, unknown>) => toFeePayment(p));
 
-    return dbRowToStudent(data, payments);
+    return dbRowToStudent(data as Record<string, unknown>, payments);
   },
 
-  async create(student: Omit<Student, 'id' | 'payments'>): Promise<Student> {
+  async create(student: Partial<LegacyStudent> & Pick<LegacyStudent, 'name' | 'studentId'>): Promise<LegacyStudent> {
     const supabase = getSupabase();
     const id = crypto.randomUUID();
+    const s = student as LegacyStudent;
     const { data, error } = await supabase
         .from('school_xx_students')
         .insert({
           id,
-          session_id: student.sessionId,
-          class_id: student.classId,
+          session_id: s.sessionId,
+          class_id: s.classId,
           name: student.name,
           student_id: student.studentId,
-          fee_type: student.feeType,
-          father_name: student.personalDetails?.fatherName,
-          mother_name: student.personalDetails?.motherName,
-          guardian_phone: student.personalDetails?.guardianPhone,
-          current_address: student.personalDetails?.currentAddress,
-          permanent_address: student.personalDetails?.permanentAddress,
-          blood_group: student.personalDetails?.bloodGroup,
-          health_issues: student.personalDetails?.healthIssues,
-          registration_fees: student.registrationFees,
-          annual_fund: student.annualFund,
-          monthly_fees: student.monthlyFees,
-          transport_fees: student.transportFees,
-          registration_paid: student.registrationPaid,
-          annual_fund_paid: student.annualFundPaid,
-          due_day_of_month: student.dueDayOfMonth,
-          late_fee_amount: student.lateFeeAmount,
-          late_fee_frequency: student.lateFeeFrequency,
-          target_amount: student.targetAmount,
-          fine_per_day: student.finePerDay,
-          due_frequency: student.dueFrequency,
+          fee_type: student.feeType ?? 'Regular',
+          father_name: s.personalDetails?.fatherName,
+          mother_name: s.personalDetails?.motherName,
+          guardian_phone: s.personalDetails?.guardianPhone,
+          current_address: s.personalDetails?.currentAddress,
+          permanent_address: s.personalDetails?.permanentAddress,
+          blood_group: s.personalDetails?.bloodGroup,
+          health_issues: s.personalDetails?.healthIssues,
+          registration_fees: s.registrationFees,
+          annual_fund: s.annualFund,
+          monthly_fees: s.monthlyFees,
+          transport_fees: s.transportFees,
+          registration_paid: s.registrationPaid,
+          annual_fund_paid: s.annualFundPaid,
+          due_day_of_month: s.dueDayOfMonth,
+          late_fee_amount: s.lateFeeAmount,
+          late_fee_frequency: s.lateFeeFrequency,
+          target_amount: s.targetAmount,
+          fine_per_day: s.finePerDay,
+          due_frequency: s.dueFrequency,
           photo_url: student.photoUrl,
           sibling_id: student.siblingId,
         })
@@ -232,16 +254,16 @@ export const studentsRepository = {
 
     if (error) throw new Error('Failed to create student');
 
-    return dbRowToStudent(data, []);
+    return dbRowToStudent(data as Record<string, unknown>, []);
   },
 
-  async createMany(students: Omit<Student, 'id' | 'payments'>[]): Promise<Student[]> {
+  async createMany(students: (Partial<LegacyStudent> & Pick<LegacyStudent, 'name' | 'studentId'>)[]): Promise<LegacyStudent[]> {
     if (students.length === 0) return [];
     const supabase = getSupabase();
     const rows = students.map((s) => ({
       id: crypto.randomUUID(),
-      session_id: s.sessionId,
-      class_id: s.classId,
+      session_id: (s as LegacyStudent).sessionId,
+      class_id: (s as LegacyStudent).classId,
       name: s.name,
       student_id: s.studentId,
       fee_type: s.feeType,
@@ -272,11 +294,11 @@ export const studentsRepository = {
     return (data || []).map((row) => dbRowToStudent(row, []));
   },
 
-  async update(id: string, updates: Partial<Omit<Student, 'id' | 'payments'>>): Promise<Student> {
+  async update(id: string, updates: Partial<LegacyStudent>): Promise<LegacyStudent> {
     const supabase = getSupabase();
       const dbUpdates: Record<string, unknown> = {};
       if (updates.sessionId !== undefined) dbUpdates.session_id = updates.sessionId;
-      if ('classId' in updates) dbUpdates.class_id = updates.classId ?? null;
+      if (updates.classId !== undefined) dbUpdates.class_id = updates.classId ?? null;
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.studentId !== undefined) dbUpdates.student_id = updates.studentId;
       if (updates.feeType !== undefined) dbUpdates.fee_type = updates.feeType;
@@ -313,18 +335,9 @@ export const studentsRepository = {
         .select('*')
         .eq('student_id', id);
 
-      const payments: FeePayment[] = (paymentsData || []).map(p => ({
-        id: p.id,
-        date: p.date,
-        amount: Number(p.amount),
-        method: p.method,
-        receiptNumber: p.receipt_number || '',
-        feeCategory: p.fee_category,
-        month: p.month,
-        receiptPhotoUrl: p.receipt_photo_url ?? undefined,
-      }));
+      const payments: FeePayment[] = (paymentsData || []).map((p: Record<string, unknown>) => toFeePayment(p));
 
-    return dbRowToStudent(data, payments);
+    return dbRowToStudent(data as Record<string, unknown>, payments);
   },
 
   async delete(id: string): Promise<void> {
@@ -335,6 +348,10 @@ export const studentsRepository = {
       .eq('id', id);
 
     if (error) throw new Error('Failed to delete student');
+  },
+
+  async deleteAllBySession(_sessionId: string): Promise<number> {
+    throw new Error('Delete all by session is only supported when using the Teaching API');
   },
 
   /** Bulk transfer students to a new session (single API call). Clears classId. Returns count updated. */
@@ -350,7 +367,7 @@ export const studentsRepository = {
     return data?.length ?? 0;
   },
 
-  async addPayment(studentId: string, payment: Omit<FeePayment, 'id'>): Promise<FeePayment> {
+  async addPayment(studentId: string, payment: Omit<FeePayment, 'id'>, _enrollmentId?: string): Promise<FeePayment> {
     const supabase = getSupabase();
     const id = crypto.randomUUID();
     const { data, error } = await supabase
@@ -371,16 +388,7 @@ export const studentsRepository = {
 
     if (error) throw new Error('Failed to add payment');
 
-    return {
-      id: data.id,
-      date: data.date,
-      amount: Number(data.amount),
-      method: data.method,
-      receiptNumber: data.receipt_number || '',
-      feeCategory: data.fee_category,
-      month: data.month,
-      receiptPhotoUrl: data.receipt_photo_url ?? undefined,
-    };
+    return toFeePayment(data as Record<string, unknown>);
   },
 
   async deletePayment(_studentId: string, paymentId: string): Promise<void> {

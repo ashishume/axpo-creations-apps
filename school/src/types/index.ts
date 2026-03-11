@@ -164,6 +164,35 @@ export interface StudentEnrollment {
   dueFrequency?: "monthly" | "quarterly";
 }
 
+/** Student + enrollment flattened for session view (table row / details modal). */
+export type SessionStudent = Student & {
+  enrollmentId?: string;
+  sessionId?: string;
+  classId?: string;
+  registrationFees?: number;
+  annualFund?: number;
+  monthlyFees?: number;
+  transportFees?: number;
+  registrationPaid?: boolean;
+  annualFundPaid?: boolean;
+  dueDayOfMonth?: number;
+  lateFeeAmount?: number;
+  lateFeeFrequency?: "daily" | "weekly";
+  targetAmount?: number;
+  finePerDay?: number;
+  dueFrequency?: "monthly" | "quarterly";
+  payments: FeePayment[];
+  personalDetails?: {
+    fatherName?: string;
+    motherName?: string;
+    guardianPhone?: string;
+    currentAddress?: string;
+    permanentAddress?: string;
+    bloodGroup?: string;
+    healthIssues?: string;
+  };
+};
+
 // Staff
 export type StaffRole =
   | "Teacher"

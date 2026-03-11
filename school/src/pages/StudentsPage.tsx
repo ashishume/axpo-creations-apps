@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import { useStudentsBySessionInfinite, useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useAddStudentPayment, useTransferStudentsToSession } from "../hooks/useStudents";
+import { useStudentsBySessionInfinite, useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useDeleteAllStudentsBySession, useAddStudentPayment, useTransferStudentsToSession } from "../hooks/useStudents";
 import { useClassesBySession, useCreateClass, useUpdateClass, useDeleteClass } from "../hooks/useClasses";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
@@ -12,7 +12,7 @@ import { BulkImportModal } from "../components/import/BulkImportModal";
 import { PaymentReceiptModal } from "../components/receipt/PaymentReceiptModal";
 import { StudentDetailsModal } from "../components/students/StudentDetailsModal";
 import { AddStudentsVerifyModal, type PendingStudent } from "../components/students/AddStudentsVerifyModal";
-import type { Student as StudentType, FeeType, PaymentMethod, StudentClass, StudentPersonalDetails } from "../types";
+import type { Student as StudentType, SessionStudent, FeeType, PaymentMethod, StudentClass, StudentPersonalDetails } from "../types";
 import { formatCurrency, formatDate } from "../lib/utils";
 import {
   getTotalPaid,
@@ -62,6 +62,7 @@ export function StudentsPage() {
   const createStudentsBulk = useCreateStudentsBulk();
   const updateStudentMut = useUpdateStudent();
   const deleteStudentMut = useDeleteStudent();
+  const deleteAllStudentsMut = useDeleteAllStudentsBySession();
   const addPaymentMut = useAddStudentPayment();
   const transferStudentsMut = useTransferStudentsToSession();
   const createClass = useCreateClass();
@@ -69,23 +70,37 @@ export function StudentsPage() {
   const deleteClassMut = useDeleteClass();
 
   const addStudentAsync = (data: Omit<StudentType, "id" | "payments">) => createStudent.mutateAsync(data);
-  const updateStudent = (id: string, data: Partial<StudentType>) => updateStudentMut.mutate({ id, updates: data });
-  const updateStudentAsync = (id: string, data: Partial<StudentType>) => updateStudentMut.mutateAsync({ id, updates: data });
-  const deleteStudent = (id: string) => deleteStudentMut.mutate(id);
-  const addFeePayment = async (studentId: string, payment: Omit<import("../types").FeePayment, "id">) => {
-    return addPaymentMut.mutateAsync({ studentId, payment });
+  const updateStudent = (id: string, data: Partial<StudentType>) =>
+    updateStudentMut.mutate({ id, updates: data, sessionId: selectedSessionId ?? undefined });
+  const updateStudentAsync = (id: string, data: Partial<StudentType>) =>
+    updateStudentMut.mutateAsync({ id, updates: data, sessionId: selectedSessionId ?? undefined });
+  const deleteStudent = (id: string) =>
+    deleteStudentMut.mutate(selectedSessionId ? { id, sessionId: selectedSessionId } : id);
+  const addFeePayment = async (
+    studentId: string,
+    payment: Omit<import("../types").FeePayment, "id" | "enrollmentId">,
+    enrollmentId?: string,
+    sessionId?: string
+  ) => {
+    return addPaymentMut.mutateAsync({
+      studentId,
+      payment,
+      enrollmentId,
+      sessionId: sessionId ?? selectedSessionId ?? undefined,
+    });
   };
   const addClass = (data: Omit<StudentClass, "id">) => createClass.mutate(data);
   const updateClass = (id: string, data: Partial<StudentClass>) => updateClassMut.mutate({ id, updates: data });
   const deleteClass = (id: string) => deleteClassMut.mutate(id);
   const studentFormRef = useRef<HTMLFormElement>(null);
   const studentPhotoInputRef = useRef<HTMLInputElement>(null);
-  const [studentModal, setStudentModal] = useState<{ open: boolean; student?: StudentType }>({ open: false });
+  const [studentModal, setStudentModal] = useState<{ open: boolean; student?: SessionStudent }>({ open: false });
   const [studentPhotoPreview, setStudentPhotoPreview] = useState<string | null>(null);
   const [selectedSiblingId, setSelectedSiblingId] = useState<string>("");
-  const [paymentModal, setPaymentModal] = useState<{ open: boolean; student: StudentType } | null>(null);
-  const [historyStudent, setHistoryStudent] = useState<StudentType | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{ open: boolean; student: SessionStudent } | null>(null);
+  const [historyStudent, setHistoryStudent] = useState<SessionStudent | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [classesModalOpen, setClassesModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<StudentClass | null>(null);
@@ -93,9 +108,9 @@ export function StudentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [classFilter, setClassFilter] = useState<string>("");
   const [feeTypeFilter, setFeeTypeFilter] = useState<string>("");
-  const [detailsStudent, setDetailsStudent] = useState<{ student: StudentType; initialTab?: "overview" | "fees" | "personal" | "payments" | "feeHistory" } | null>(null);
+  const [detailsStudent, setDetailsStudent] = useState<{ student: SessionStudent; initialTab?: "overview" | "fees" | "personal" | "payments" | "feeHistory" } | null>(null);
   const [receiptData, setReceiptData] = useState<{
-    student: StudentType;
+    student: SessionStudent;
     payment: { date: string; amount: number; method: PaymentMethod; receiptNumber: string };
     remainingAfter: number;
   } | null>(null);
@@ -241,7 +256,7 @@ export function StudentsPage() {
     // TODO: Upload photo and get URL (currently using base64 preview for demo)
     const photoUrl = studentPhotoPreview || studentModal.student?.photoUrl;
 
-    const studentData = {
+    const studentData: Record<string, unknown> = {
       name,
       studentId: studentId || undefined,
       feeType,
@@ -256,9 +271,14 @@ export function StudentsPage() {
       photoUrl,
       siblingId,
     };
+    const studentWithEnrollment = studentModal.student as unknown as { enrollmentId?: string; sessionId?: string };
+    if (studentModal.student && studentWithEnrollment.enrollmentId) {
+      studentData.enrollmentId = studentWithEnrollment.enrollmentId;
+      studentData.sessionId = studentWithEnrollment.sessionId;
+    }
 
     if (studentModal.student) {
-      updateStudent(studentModal.student.id, studentData);
+      updateStudent(studentModal.student.id, studentData as Partial<StudentType>);
 
       // If sibling is assigned, update the sibling to point back
       if (siblingId) {
@@ -276,8 +296,8 @@ export function StudentsPage() {
       const newStudent = await addStudentAsync({
         sessionId: selectedSessionId,
         ...studentData,
-        studentId: studentData.studentId || `STU-${Date.now()}`,
-      });
+        studentId: (studentData.studentId as string) || `STU-${Date.now()}`,
+      } as unknown as Omit<StudentType, "id" | "payments">);
       
       // If sibling is assigned, update the sibling to point back to the new student
       if (siblingId && newStudent) {
@@ -336,14 +356,19 @@ export function StudentsPage() {
     const receiptNumber = (form.elements.namedItem("receiptNumber") as HTMLInputElement).value.trim();
     if (!date || amount <= 0) return;
     const remainingBefore = getRemaining(paymentModal.student);
-    addFeePayment(paymentModal.student.id, {
-      date,
-      amount,
-      method,
-      receiptNumber: receiptNumber || "-",
-      feeCategory: "monthly" // Default to monthly fee payment
-    });
-    toast("Payment recorded");
+    addFeePayment(
+      paymentModal.student.id,
+      {
+        date,
+        amount,
+        method,
+        receiptNumber: receiptNumber || "-",
+        feeCategory: "monthly" // Default to monthly fee payment
+      },
+      (paymentModal.student as { enrollmentId?: string }).enrollmentId,
+      (paymentModal.student as { sessionId?: string }).sessionId
+    );
+    toast("Fees captured");
     setPaymentModal(null);
     setReceiptData({
       student: paymentModal.student,
@@ -385,6 +410,15 @@ export function StudentsPage() {
           >
             <Plus className="mr-1 h-4 w-4" />
             Add student
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!selectedSessionId}
+            onClick={() => setConfirmDeleteAll(true)}
+          >
+            <Trash2 className="mr-1 h-4 w-4" />
+            Delete all
           </Button>
           <Button
             size="sm"
@@ -1155,6 +1189,26 @@ export function StudentsPage() {
         confirmLabel="Delete"
       />
 
+      <ConfirmDialog
+        open={confirmDeleteAll}
+        onClose={() => setConfirmDeleteAll(false)}
+        onConfirm={() => {
+          if (!selectedSessionId) return;
+          deleteAllStudentsMut.mutate(selectedSessionId, {
+            onSuccess: (deleted) => {
+              toast(deleted > 0 ? `Deleted ${deleted} student(s)` : "No students to delete");
+              setConfirmDeleteAll(false);
+            },
+            onError: (err) => {
+              toast(err instanceof Error ? err.message : "Failed to delete all students", "error");
+            },
+          });
+        }}
+        title="Delete all students"
+        message="This will permanently delete all students in this session and their fee history. This action cannot be undone. Are you sure?"
+        confirmLabel="Delete all"
+      />
+
       <BulkImportModal
         open={importModalOpen}
         onClose={() => setImportModalOpen(false)}
@@ -1198,7 +1252,7 @@ export function StudentsPage() {
               finePerDay: r.finePerDay,
             };
           });
-          await createStudentsBulk.mutateAsync(studentsToCreate);
+          await createStudentsBulk.mutateAsync(studentsToCreate as unknown as Omit<StudentType, "id" | "payments">[]);
           toast(`${rows.length} student(s) imported`);
         }}
         onImportStaff={() => { }}
@@ -1252,8 +1306,10 @@ export function StudentsPage() {
               }
             }
 
-            const createdPayment = await addFeePayment(detailsStudent.student.id, payment);
-            toast("Payment recorded");
+            const enrollmentId = (detailsStudent.student as { enrollmentId?: string }).enrollmentId;
+            const sessionId = (detailsStudent.student as { sessionId?: string }).sessionId;
+            const createdPayment = await addFeePayment(detailsStudent.student.id, payment, enrollmentId, sessionId);
+            toast("Fees captured");
             // Keep new row visible: optimistically merge created payment (refetch state may not be updated yet)
             if (createdPayment) {
               setDetailsStudent({

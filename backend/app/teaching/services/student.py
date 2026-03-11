@@ -1,17 +1,22 @@
 """Student and Enrollment services: business logic; uses repositories for DB."""
 from uuid import UUID
 
+from sqlalchemy import delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
+from app.teaching.models.leave import LeaveRequest
 from app.teaching.models.student import Student, StudentEnrollment, FeePayment
+from app.teaching.models.user import User
 from app.teaching.schemas.student import (
     StudentCreate,
     StudentUpdate,
+    BulkStudentCreate,
     EnrollmentCreate,
     EnrollmentUpdate,
     FeePaymentCreate,
     BulkEnrollmentCreate,
+    EnrollmentsBulkCreate,
 )
 from app.teaching.repositories.student import student_repository, enrollment_repository
 from app.teaching.repositories.class_model import class_repository
@@ -23,6 +28,15 @@ class StudentService:
     async def create(self, db: AsyncSession, data: StudentCreate) -> Student:
         student = Student(**data.model_dump())
         return await student_repository.add(db, student)
+
+    async def create_bulk(
+        self, db: AsyncSession, data: BulkStudentCreate
+    ) -> list[Student]:
+        """Create multiple student identities in a single transaction."""
+        if not data.students:
+            return []
+        students = [Student(**s.model_dump()) for s in data.students]
+        return await student_repository.add_bulk(db, students)
 
     async def get(self, db: AsyncSession, id: UUID) -> Student | None:
         return await student_repository.get(db, id)
@@ -47,7 +61,26 @@ class StudentService:
 
     async def delete(self, db: AsyncSession, id: UUID) -> None:
         student = await self.get_or_404(db, id)
+        # Delete dependents explicitly so delete works regardless of DB CASCADE
+        enrollments = await enrollment_repository.list_by_student(db, id)
+        enrollment_ids = [e.id for e in enrollments]
+        if enrollment_ids:
+            await db.execute(delete(FeePayment).where(FeePayment.enrollment_id.in_(enrollment_ids)))
+        for enrollment in enrollments:
+            await enrollment_repository.delete(db, enrollment)
+        await db.execute(delete(LeaveRequest).where(LeaveRequest.student_id == id))
+        await db.execute(update(User).where(User.student_id == id).values(student_id=None))
+        await db.execute(update(Student).where(Student.sibling_id == id).values(sibling_id=None))
+        await db.flush()
         await student_repository.delete(db, student)
+
+    async def delete_all_by_session(self, db: AsyncSession, session_id: UUID) -> int:
+        """Delete all students enrolled in the given session (and their enrollments/payments). Returns count deleted."""
+        enrollments = await enrollment_repository.list_by_session(db, session_id)
+        student_ids = list({e.student_id for e in enrollments})
+        for sid in student_ids:
+            await self.delete(db, sid)
+        return len(student_ids)
 
 
 class EnrollmentService:
@@ -76,6 +109,40 @@ class EnrollmentService:
         
         enrollment = StudentEnrollment(**enrollment_data)
         return await enrollment_repository.add(db, enrollment)
+
+    async def create_bulk_enrollments(
+        self, db: AsyncSession, data: EnrollmentsBulkCreate
+    ) -> list[StudentEnrollment]:
+        """Create multiple enrollments with per-row fee structure (e.g. after bulk student import)."""
+        if not data.enrollments:
+            return []
+        to_add = []
+        for item in data.enrollments:
+            existing = await enrollment_repository.get_by_student_and_session(
+                db, item.student_id, item.session_id
+            )
+            if existing:
+                continue
+            enrollment_data = item.model_dump()
+            if enrollment_data.get("class_id"):
+                class_obj = await class_repository.get(db, enrollment_data["class_id"])
+                if class_obj:
+                    if enrollment_data.get("registration_fees") is None:
+                        enrollment_data["registration_fees"] = class_obj.registration_fees
+                    if enrollment_data.get("annual_fund") is None:
+                        enrollment_data["annual_fund"] = class_obj.annual_fund
+                    if enrollment_data.get("monthly_fees") is None:
+                        enrollment_data["monthly_fees"] = class_obj.monthly_fees
+                    if enrollment_data.get("due_day_of_month") is None:
+                        enrollment_data["due_day_of_month"] = class_obj.due_day_of_month
+                    if enrollment_data.get("late_fee_amount") is None:
+                        enrollment_data["late_fee_amount"] = class_obj.late_fee_amount
+                    if enrollment_data.get("late_fee_frequency") is None:
+                        enrollment_data["late_fee_frequency"] = class_obj.late_fee_frequency
+            to_add.append(StudentEnrollment(**enrollment_data))
+        if to_add:
+            return await enrollment_repository.add_bulk(db, to_add)
+        return []
 
     async def create_bulk(
         self, db: AsyncSession, data: BulkEnrollmentCreate

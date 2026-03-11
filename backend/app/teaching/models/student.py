@@ -104,8 +104,8 @@ class StudentEnrollment(TeachingBase):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    # Relationships
-    student: Mapped["Student"] = relationship("Student", back_populates="enrollments")
+    # Relationships - use joined to eager load
+    student: Mapped["Student"] = relationship("Student", back_populates="enrollments", lazy="joined")
     payments: Mapped[list["FeePayment"]] = relationship(
         "FeePayment", back_populates="enrollment", lazy="selectin"
     )
