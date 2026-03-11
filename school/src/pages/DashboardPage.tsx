@@ -55,40 +55,59 @@ export function DashboardPage() {
         <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Financial Dashboard</h2>
       </div>
 
-      {/* Key Metrics */}
+      {/* Income & Expenses breakdown */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Total Income (Received)</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(stats.totalIncomeReceived)}</p>
-                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  <span>Fees: {formatCurrency(stats.feeIncomeReceived)}</span>
-                  {stats.stockSalesIncome > 0 && (
-                    <span className="ml-2">Stock Sales: {formatCurrency(stats.stockSalesIncome)}</span>
-                  )}
-                </div>
+        <Card className="border-green-200 dark:border-green-900/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base text-green-800 dark:text-green-200">
+              <TrendingUp className="h-5 w-5" />
+              Income
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">From students</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(stats.feeIncomeReceived)}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Student fees received</p>
+            </div>
+            {stats.stockSalesIncome > 0 && (
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Stock sales</p>
+                <p className="text-lg font-semibold text-green-600 dark:text-green-400">{formatCurrency(stats.stockSalesIncome)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
+            )}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total income received</p>
+              <p className="text-xl font-bold text-green-700 dark:text-green-300">{formatCurrency(stats.totalIncomeReceived)}</p>
             </div>
           </CardContent>
         </Card>
-        
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Total Expenses</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(stats.totalExpenses)}</p>
-                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {stats.salaryExpenses > 0 && <span>Salaries: {formatCurrency(stats.salaryExpenses)}</span>}
-                  {stats.stockPurchaseExpenses > 0 && (
-                    <span className="ml-2">Stock: {formatCurrency(stats.stockPurchaseExpenses)}</span>
-                  )}
-                </div>
-              </div>
-              <TrendingDown className="h-8 w-8 text-red-500" />
+
+        <Card className="border-red-200 dark:border-red-900/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base text-red-800 dark:text-red-200">
+              <TrendingDown className="h-5 w-5" />
+              Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">From teachers</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(stats.salaryExpenses)}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Salary payments</p>
+            </div>
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Other expenses</p>
+              <p className="text-lg font-semibold text-red-600 dark:text-red-400">
+                {formatCurrency(stats.stockPurchaseExpenses + stats.fixedCostExpenses + stats.otherExpenses)}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Stock: {formatCurrency(stats.stockPurchaseExpenses)} · Fixed: {formatCurrency(stats.fixedCostExpenses)} · Other: {formatCurrency(stats.otherExpenses)}
+              </p>
+            </div>
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total expenses</p>
+              <p className="text-xl font-bold text-red-700 dark:text-red-300">{formatCurrency(stats.totalExpenses)}</p>
             </div>
           </CardContent>
         </Card>
