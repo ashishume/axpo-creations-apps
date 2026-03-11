@@ -7,8 +7,9 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.teaching.models.student import Student, FeePayment
+from app.teaching.models.student import StudentEnrollment
 from app.teaching.models.staff import Staff
 from app.teaching.models.expense import Expense
 from app.teaching.models.stock import Stock, StockTransaction
@@ -30,34 +31,39 @@ def _f(v: Decimal | float) -> float:
     return float(v) if v else 0.0
 
 
-def _calc_total_annual_fees(student: Student, class_map: dict[UUID, Class]) -> float:
-    cls = class_map.get(student.class_id) if student.class_id else None
-    reg = float(student.registration_fees or (cls.registration_fees if cls else _ZERO))  # Registration/Admission fees
-    ann = float(student.annual_fund or (cls.annual_fund if cls else _ZERO))
-    monthly = float(student.monthly_fees or (cls.monthly_fees if cls else _ZERO))
-    transport = float(student.transport_fees or _ZERO)
-    sibling_disc = 0.3 if getattr(student, "sibling_id", None) else 0
+def _calc_total_annual_fees(enrollment: StudentEnrollment, class_map: dict[UUID, Class]) -> float:
+    cls = class_map.get(enrollment.class_id) if enrollment.class_id else None
+    reg = float(enrollment.registration_fees or (cls.registration_fees if cls else _ZERO))
+    ann = float(enrollment.annual_fund or (cls.annual_fund if cls else _ZERO))
+    monthly = float(enrollment.monthly_fees or (cls.monthly_fees if cls else _ZERO))
+    transport = float(enrollment.transport_fees or _ZERO)
+    sibling_disc = 0.3 if (enrollment.student and enrollment.student.sibling_id) else 0
     discounted = monthly * (1 - sibling_disc)
     return reg + ann + (discounted * 12) + (transport * 12)
 
 
-def _get_target(student: Student, class_map: dict[UUID, Class]) -> float:
-    if student.target_amount and float(student.target_amount) > 0:
-        return float(student.target_amount)
-    return _calc_total_annual_fees(student, class_map)
+def _get_target(enrollment: StudentEnrollment, class_map: dict[UUID, Class]) -> float:
+    if enrollment.target_amount and float(enrollment.target_amount) > 0:
+        return float(enrollment.target_amount)
+    return _calc_total_annual_fees(enrollment, class_map)
 
 
-def _total_paid(student: Student) -> float:
-    return sum(float(p.amount) for p in student.payments)
+def _total_paid(enrollment: StudentEnrollment) -> float:
+    return sum(float(p.amount) for p in enrollment.payments)
 
 
 async def compute_dashboard_stats(
     db: AsyncSession, session_id: UUID
 ) -> DashboardStatsResponse:
-    students_q = await db.execute(
-        select(Student).where(Student.session_id == session_id)
+    enrollments_q = await db.execute(
+        select(StudentEnrollment)
+        .where(StudentEnrollment.session_id == session_id)
+        .options(
+            selectinload(StudentEnrollment.student),
+            selectinload(StudentEnrollment.payments),
+        )
     )
-    students = list(students_q.scalars().all())
+    enrollments = list(enrollments_q.scalars().all())
 
     staff_q = await db.execute(
         select(Staff).where(Staff.session_id == session_id)
@@ -89,7 +95,7 @@ async def compute_dashboard_stats(
     fixed_costs = list(fc_q.scalars().all())
 
     # --- Income ---
-    fee_income = sum(_total_paid(s) for s in students)
+    fee_income = sum(_total_paid(e) for e in enrollments)
     stock_sales = 0.0
     stock_returns = 0.0
     for st in stocks:
@@ -108,9 +114,9 @@ async def compute_dashboard_stats(
     other_exp = total_exp - stock_purchase_exp - salary_exp - fc_exp
 
     # --- Pending / Expected ---
-    total_expected = sum(_calc_total_annual_fees(s, class_map) for s in students)
-    pending_amount = sum(max(0.0, _get_target(s, class_map) - _total_paid(s)) for s in students)
-    pending_count = sum(1 for s in students if _total_paid(s) < _get_target(s, class_map))
+    total_expected = sum(_calc_total_annual_fees(e, class_map) for e in enrollments)
+    pending_amount = sum(max(0.0, _get_target(e, class_map) - _total_paid(e)) for e in enrollments)
+    pending_count = sum(1 for e in enrollments if _total_paid(e) < _get_target(e, class_map))
 
     # --- Obligations ---
     monthly_fc = sum(float(fc.amount) for fc in fixed_costs)
@@ -120,8 +126,8 @@ async def compute_dashboard_stats(
 
     # --- Monthly data ---
     by_month: dict[str, dict[str, float]] = defaultdict(lambda: {"income": 0.0, "expenses": 0.0})
-    for s in students:
-        for p in s.payments:
+    for e in enrollments:
+        for p in e.payments:
             m = str(p.date)[:7]
             by_month[m]["income"] += float(p.amount)
     for st in stocks:
@@ -145,9 +151,9 @@ async def compute_dashboard_stats(
 
     # --- Status distribution ---
     fully = partially = not_paid = 0
-    for s in students:
-        paid = _total_paid(s)
-        target = _get_target(s, class_map)
+    for e in enrollments:
+        paid = _total_paid(e)
+        target = _get_target(e, class_map)
         if paid >= target:
             fully += 1
         elif paid > 0:
@@ -162,10 +168,10 @@ async def compute_dashboard_stats(
 
     # --- Expected income breakdown by class ---
     pending_by_class: dict[str, float] = defaultdict(float)
-    for s in students:
-        remaining = max(0.0, _get_target(s, class_map) - _total_paid(s))
+    for e in enrollments:
+        remaining = max(0.0, _get_target(e, class_map) - _total_paid(e))
         if remaining > 0:
-            cls = class_map.get(s.class_id) if s.class_id else None
+            cls = class_map.get(e.class_id) if e.class_id else None
             cls_name = cls.name if cls else "Unassigned"
             pending_by_class[cls_name] += remaining
     breakdown = sorted(
@@ -199,7 +205,7 @@ async def compute_dashboard_stats(
         annual_fixed_costs_obligation=monthly_fc * 12,
         annual_salary_obligation=annual_salary,
         net=net,
-        student_count=len(students),
+        student_count=len(enrollments),
         staff_count=len(staff_list),
         active_fixed_costs_count=len(fixed_costs),
         monthly_data=monthly_data,
