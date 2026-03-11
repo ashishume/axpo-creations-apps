@@ -10,9 +10,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Package, Users, FileText, CreditCard, Receipt, AlertTriangle, BarChart3, TrendingUp, Wallet, Truck, ShoppingCart } from "lucide-react";
+import { Package, Users, FileText, CreditCard, Receipt, AlertTriangle, BarChart3, TrendingUp, Wallet, Truck, ShoppingCart, Factory, Store, Boxes } from "lucide-react";
 import { useStore } from "@/hooks/useStore";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import { Card, PieChart, Skeleton } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 const CHART_MONTHS = 6;
 
@@ -41,10 +43,13 @@ const STAT_ICONS = {
   invoices: FileText,
   payments: CreditCard,
   expenses: Receipt,
+  stock: Boxes,
+  purchases: ShoppingCart,
 } as const;
 
 export function DashboardPage() {
   const { data, loading } = useStore();
+  const { mode } = useBusinessMode();
 
   const company = data?.company ?? null;
   const productCount = data?.products.length ?? 0;
@@ -53,15 +58,23 @@ export function DashboardPage() {
   const invoiceCount = data?.invoices.filter((i) => i.status === "final").length ?? 0;
   const paymentCount = data?.payments.length ?? 0;
   const expenseCount = data?.expenses.length ?? 0;
+  const purchaseCount = data?.purchaseInvoices?.length ?? 0;
 
-  const stats = [
+  const factoryStats = [
     { label: "Products", value: productCount, href: "/products", iconKey: "products" as const, iconBg: "bg-blue-100 border-blue-200", iconColor: "text-blue-600" },
-    { label: "Customers", value: customerCount, href: "/customers", iconKey: "customers" as const, iconBg: "bg-emerald-100 border-emerald-200", iconColor: "text-emerald-600" },
     { label: "Suppliers", value: supplierCount, href: "/suppliers", iconKey: "suppliers" as const, iconBg: "bg-slate-100 border-slate-200", iconColor: "text-slate-600" },
-    { label: "Invoices", value: invoiceCount, href: "/invoices", iconKey: "invoices" as const, iconBg: "bg-violet-100 border-violet-200", iconColor: "text-violet-600" },
-    { label: "Payments", value: paymentCount, href: "/payments", iconKey: "payments" as const, iconBg: "bg-amber-100 border-amber-200", iconColor: "text-amber-600" },
+    { label: "Purchases", value: purchaseCount, href: "/purchase-invoices", iconKey: "purchases" as const, iconBg: "bg-violet-100 border-violet-200", iconColor: "text-violet-600" },
     { label: "Expenses", value: expenseCount, href: "/expenses", iconKey: "expenses" as const, iconBg: "bg-rose-100 border-rose-200", iconColor: "text-rose-600" },
   ];
+
+  const shopStats = [
+    { label: "Products", value: productCount, href: "/products", iconKey: "products" as const, iconBg: "bg-blue-100 border-blue-200", iconColor: "text-blue-600" },
+    { label: "Customers", value: customerCount, href: "/customers", iconKey: "customers" as const, iconBg: "bg-emerald-100 border-emerald-200", iconColor: "text-emerald-600" },
+    { label: "Invoices", value: invoiceCount, href: "/invoices", iconKey: "invoices" as const, iconBg: "bg-violet-100 border-violet-200", iconColor: "text-violet-600" },
+    { label: "Payments", value: paymentCount, href: "/payments", iconKey: "payments" as const, iconBg: "bg-amber-100 border-amber-200", iconColor: "text-amber-600" },
+  ];
+
+  const stats = mode === "factory" ? factoryStats : shopStats;
 
   // Calculate sales by product for pie chart
   const salesByProduct = useMemo(() => {
@@ -188,8 +201,8 @@ export function DashboardPage() {
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[1, 2, 3, 4].map((i) => (
             <Card key={i}>
               <Skeleton className="h-10 w-10 rounded-lg mb-3" />
               <Skeleton className="h-8 w-16 mb-2" />
@@ -204,8 +217,26 @@ export function DashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="mt-2 text-slate-600">Axpo Billing – GST-compliant billing for your business</p>
+        <div className="flex items-center gap-3 mb-2">
+          <div className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-sm",
+            mode === "factory" 
+              ? "bg-amber-100 border-amber-200 text-amber-700" 
+              : "bg-emerald-100 border-emerald-200 text-emerald-700"
+          )}>
+            {mode === "factory" ? <Factory className="h-5 w-5" /> : <Store className="h-5 w-5" />}
+          </div>
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+              {mode === "factory" ? "Factory Dashboard" : "Shop Dashboard"}
+            </h1>
+            <p className="text-slate-600">
+              {mode === "factory" 
+                ? "Manage production, suppliers, and expenses" 
+                : "Manage sales, customers, and payments"}
+            </p>
+          </div>
+        </div>
       </div>
 
       {!company && (
@@ -224,7 +255,7 @@ export function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {stats.map((stat) => {
           const IconComponent = STAT_ICONS[stat.iconKey];
           return (
@@ -390,30 +421,49 @@ export function DashboardPage() {
         <Card>
           <h2 className="text-lg font-semibold mb-4 text-slate-900">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-3">
-            <Link to="/invoices/new" className="btn btn-primary text-center no-underline inline-flex items-center justify-center gap-2">
-              <FileText className="h-4 w-4 shrink-0" strokeWidth={2} />
-              New Invoice
-            </Link>
-            <Link to="/purchase-invoices/new" className="btn btn-primary text-center no-underline inline-flex items-center justify-center gap-2">
-              <ShoppingCart className="h-4 w-4 shrink-0" strokeWidth={2} />
-              New Purchase
-            </Link>
-            <Link to="/payments/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
-              <CreditCard className="h-4 w-4 shrink-0" strokeWidth={2} />
-              Record Payment
-            </Link>
-            <Link to="/products/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
-              <Package className="h-4 w-4 shrink-0" strokeWidth={2} />
-              Add Product
-            </Link>
-            <Link to="/customers/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
-              <Users className="h-4 w-4 shrink-0" strokeWidth={2} />
-              Add Customer
-            </Link>
-            <Link to="/suppliers/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
-              <Truck className="h-4 w-4 shrink-0" strokeWidth={2} />
-              Add Supplier
-            </Link>
+            {mode === "factory" ? (
+              <>
+                <Link to="/purchase-invoices/new" className="btn btn-primary text-center no-underline inline-flex items-center justify-center gap-2">
+                  <ShoppingCart className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  New Purchase
+                </Link>
+                <Link to="/expenses/new" className="btn btn-primary text-center no-underline inline-flex items-center justify-center gap-2">
+                  <Receipt className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  Add Expense
+                </Link>
+                <Link to="/products/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
+                  <Package className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  Add Product
+                </Link>
+                <Link to="/suppliers/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
+                  <Truck className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  Add Supplier
+                </Link>
+                <Link to="/stock" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2 col-span-2">
+                  <Boxes className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  Manage Stock
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/invoices/new" className="btn btn-primary text-center no-underline inline-flex items-center justify-center gap-2">
+                  <FileText className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  New Invoice
+                </Link>
+                <Link to="/payments/new" className="btn btn-primary text-center no-underline inline-flex items-center justify-center gap-2">
+                  <CreditCard className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  Record Payment
+                </Link>
+                <Link to="/products/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
+                  <Package className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  Add Product
+                </Link>
+                <Link to="/customers/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
+                  <Users className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  Add Customer
+                </Link>
+              </>
+            )}
           </div>
         </Card>
         <Card>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBusinessMode, BusinessMode } from "@/contexts/BusinessModeContext";
 import { cn } from "@/lib/utils";
 import {
   Box,
@@ -18,28 +19,48 @@ import {
   Menu,
   Truck,
   ShoppingCart,
+  Factory,
+  Store,
+  Boxes,
 } from "lucide-react";
 
-const nav = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/setup", label: "Setup", icon: Settings },
-  { href: "/products", label: "Products", icon: Package },
-  { href: "/customers", label: "Customers", icon: Users },
-  { href: "/invoices", label: "Invoices", icon: FileText },
-  { href: "/payments", label: "Payments", icon: CreditCard },
-  { href: "/suppliers", label: "Suppliers", icon: Truck },
-  { href: "/purchase-invoices", label: "Purchases", icon: ShoppingCart },
-  { href: "/expenses", label: "Expenses", icon: Receipt },
-  { href: "/stock", label: "Stock", icon: TrendingUp },
-  { href: "/reports", label: "Reports", icon: BarChart3 },
-  { href: "/subscription", label: "Subscription", icon: Gem },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  mode?: "factory" | "shop" | "shared";
+};
+
+const navItems: NavItem[] = [
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, mode: "shared" },
+  { href: "/setup", label: "Setup", icon: Settings, mode: "shared" },
+  { href: "/products", label: "Products", icon: Package, mode: "shared" },
+  // Factory-specific
+  { href: "/suppliers", label: "Suppliers", icon: Truck, mode: "factory" },
+  { href: "/purchase-invoices", label: "Purchases", icon: ShoppingCart, mode: "factory" },
+  { href: "/expenses", label: "Expenses", icon: Receipt, mode: "factory" },
+  { href: "/stock", label: "Stock", icon: Boxes, mode: "factory" },
+  // Shop-specific
+  { href: "/customers", label: "Customers", icon: Users, mode: "shop" },
+  { href: "/invoices", label: "Sales Invoices", icon: FileText, mode: "shop" },
+  { href: "/payments", label: "Payments", icon: CreditCard, mode: "shop" },
+  // Shared
+  { href: "/reports", label: "Reports", icon: BarChart3, mode: "shared" },
+  { href: "/subscription", label: "Subscription", icon: Gem, mode: "shared" },
 ];
+
+function getFilteredNav(mode: BusinessMode): NavItem[] {
+  return navItems.filter((item) => item.mode === "shared" || item.mode === mode);
+}
 
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut, isAuthenticated } = useAuth();
+  const { mode, setMode } = useBusinessMode();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const filteredNav = getFilteredNav(mode);
 
   useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 768px)").matches;
@@ -80,8 +101,41 @@ export function AppLayout() {
           </NavLink>
           <p className="text-xs text-slate-500 mt-0.5">GST-compliant billing</p>
         </div>
+
+        {/* Mode Switcher */}
+        <div className="p-3 border-b border-slate-200">
+          <div className="flex rounded-lg bg-slate-200 p-1">
+            <button
+              type="button"
+              onClick={() => setMode("factory")}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                mode === "factory"
+                  ? "bg-white text-amber-700 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              <Factory className="h-4 w-4" />
+              Factory
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("shop")}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                mode === "shop"
+                  ? "bg-white text-emerald-700 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              <Store className="h-4 w-4" />
+              Shop
+            </button>
+          </div>
+        </div>
+
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
-          {nav.map(({ href, label, icon: Icon }) => (
+          {filteredNav.map(({ href, label, icon: Icon }) => (
             <NavLink
               key={href}
               to={href}

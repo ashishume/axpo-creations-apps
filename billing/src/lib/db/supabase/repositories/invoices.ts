@@ -84,17 +84,26 @@ export const invoiceRepository: InvoiceRepository = {
 
   async getNextSeq(fyStart: number): Promise<number> {
     const fyEnd = fyStart + 1;
-    const startDate = `${fyStart}-04-01`;
-    const endDate = `${fyEnd}-03-31`;
+    const fySuffix = `${fyStart}-${String((fyStart + 1) % 100).padStart(2, "0")}`;
+    const prefix = `INV/${fySuffix}/`;
 
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from("invoices")
-      .select("*", { count: "exact", head: true })
-      .gte("date", startDate)
-      .lte("date", endDate);
+      .select("number")
+      .like("number", `${prefix}%`)
+      .order("number", { ascending: false })
+      .limit(1);
 
     if (error) throw new Error(error.message);
-    return (count || 0) + 1;
+
+    if (!data || data.length === 0) {
+      return 1;
+    }
+
+    const lastNumber = data[0].number as string;
+    const seqPart = lastNumber.replace(prefix, "");
+    const lastSeq = parseInt(seqPart, 10) || 0;
+    return lastSeq + 1;
   },
 };
 

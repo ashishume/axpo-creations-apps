@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { BusinessModeProvider } from "@/contexts/BusinessModeContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AppLayout } from "@/components/AppLayout";
 import { LoginPage } from "@/app/login/page";
@@ -47,6 +48,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <SubscriptionProvider>
+          <BusinessModeProvider>
           <ToastProvider>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
@@ -93,6 +95,7 @@ function App() {
               </Route>
             </Routes>
           </ToastProvider>
+          </BusinessModeProvider>
         </SubscriptionProvider>
       </AuthProvider>
     </BrowserRouter>

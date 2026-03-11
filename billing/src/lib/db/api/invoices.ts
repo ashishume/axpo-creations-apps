@@ -121,10 +121,22 @@ export const invoiceRepositoryApi: InvoiceRepository = {
 
   async getNextSeq(fyStart: number): Promise<number> {
     const invoices = await this.getAll();
-    const fyEnd = fyStart + 1;
-    const start = `${fyStart}-04-01`;
-    const end = `${fyEnd}-03-31`;
-    const count = invoices.filter((i: Invoice) => i.date >= start && i.date <= end).length;
-    return count + 1;
+    const fySuffix = `${fyStart}-${String((fyStart + 1) % 100).padStart(2, "0")}`;
+    const prefix = `INV/${fySuffix}/`;
+
+    const fyInvoices = invoices.filter((i: Invoice) => i.number.startsWith(prefix));
+
+    if (fyInvoices.length === 0) {
+      return 1;
+    }
+
+    let maxSeq = 0;
+    for (const inv of fyInvoices) {
+      const seqPart = inv.number.replace(prefix, "");
+      const seq = parseInt(seqPart, 10) || 0;
+      if (seq > maxSeq) maxSeq = seq;
+    }
+
+    return maxSeq + 1;
   },
 };
