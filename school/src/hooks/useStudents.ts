@@ -16,6 +16,109 @@ function invalidateSessionStudentList(queryClient: QueryClient, sessionId?: stri
   }
 }
 
+/** SessionStudent-like minimal for cache (add new student without refetch). */
+type SessionStudentLike = Record<string, unknown> & { id: string; payments: unknown[] };
+
+/** Enrollment/fee fields from create payload so stub shows "Not Paid" not "Fully Paid". */
+type EnrollmentStubFields = {
+  classId?: string;
+  registrationFees?: number;
+  annualFund?: number;
+  monthlyFees?: number;
+  transportFees?: number;
+  registrationPaid?: boolean;
+  annualFundPaid?: boolean;
+  dueDayOfMonth?: number;
+  lateFeeAmount?: number;
+  lateFeeFrequency?: string;
+};
+
+/** Add one student to session caches (bySession + infinite) without refetch. */
+function addStudentToSessionCache(
+  queryClient: QueryClient,
+  sessionId: string,
+  student: Student,
+  enrollmentFields?: EnrollmentStubFields
+) {
+  const stub: SessionStudentLike = {
+    ...student,
+    id: student.id,
+    sessionId,
+    payments: [],
+    enrollmentId: undefined,
+    classId: enrollmentFields?.classId,
+    registrationFees: enrollmentFields?.registrationFees,
+    annualFund: enrollmentFields?.annualFund,
+    monthlyFees: enrollmentFields?.monthlyFees,
+    transportFees: enrollmentFields?.transportFees,
+    registrationPaid: enrollmentFields?.registrationPaid ?? false,
+    annualFundPaid: enrollmentFields?.annualFundPaid ?? false,
+    dueDayOfMonth: enrollmentFields?.dueDayOfMonth,
+    lateFeeAmount: enrollmentFields?.lateFeeAmount,
+    lateFeeFrequency: enrollmentFields?.lateFeeFrequency,
+    personalDetails: student.fatherName || student.motherName ? {
+      fatherName: student.fatherName,
+      motherName: student.motherName,
+      guardianPhone: student.guardianPhone,
+      currentAddress: student.currentAddress,
+      permanentAddress: student.permanentAddress,
+      bloodGroup: student.bloodGroup,
+      healthIssues: student.healthIssues,
+    } : undefined,
+  };
+
+  queryClient.setQueryData(
+    [QUERY_KEY, 'bySession', sessionId],
+    (old: SessionStudentLike[] | undefined) => (old ? [...old, stub] : [stub])
+  );
+
+  queryClient.setQueriesData<{ pages: { data: SessionStudentLike[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      const [first, ...rest] = old.pages;
+      return {
+        ...old,
+        pages: [
+          { ...first, data: [...(first.data ?? []), stub], total: (first.total ?? 0) + 1 },
+          ...rest,
+        ],
+      };
+    }
+  );
+}
+
+/** Remove one student from session caches (bySession + infinite) without refetch. */
+function removeStudentFromSessionCache(
+  queryClient: QueryClient,
+  sessionId: string,
+  studentId: string
+) {
+  queryClient.setQueryData(
+    [QUERY_KEY, 'bySession', sessionId],
+    (old: SessionStudentLike[] | undefined) =>
+      (old ? old.filter((s) => s.id !== studentId) : [])
+  );
+
+  queryClient.setQueriesData<{ pages: { data: SessionStudentLike[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      const newPages = old.pages.map((p) => ({
+        ...p,
+        data: (p.data ?? []).filter((s) => s.id !== studentId),
+      }));
+      if (newPages[0]) {
+        newPages[0] = {
+          ...newPages[0],
+          total: Math.max(0, (newPages[0].total ?? 0) - 1),
+        };
+      }
+      return { ...old, pages: newPages };
+    }
+  );
+}
+
 const DEFAULT_PAGE_SIZE = 10;
 const FILTERED_PAGE_SIZE = 50;
 
@@ -98,8 +201,28 @@ export function useCreateStudent() {
   return useMutation({
     mutationFn: (payload: Omit<Student, 'id' | 'payments'> & { sessionId?: string }) =>
       studentsRepository.create(payload as Omit<Student, 'id' | 'payments'>),
-    onSuccess: (_, payload) => {
-      invalidateSessionStudentList(queryClient, payload.sessionId);
+    onSuccess: (data, payload) => {
+      if (payload.sessionId) {
+        const p = payload as Record<string, unknown>;
+        const enrollmentFields: EnrollmentStubFields | undefined =
+          (p.registrationFees !== undefined || p.monthlyFees !== undefined || p.classId !== undefined)
+            ? {
+                classId: p.classId as string | undefined,
+                registrationFees: p.registrationFees as number | undefined,
+                annualFund: p.annualFund as number | undefined,
+                monthlyFees: p.monthlyFees as number | undefined,
+                transportFees: p.transportFees as number | undefined,
+                registrationPaid: (p.registrationPaid as boolean | undefined) ?? false,
+                annualFundPaid: (p.annualFundPaid as boolean | undefined) ?? false,
+                dueDayOfMonth: p.dueDayOfMonth as number | undefined,
+                lateFeeAmount: p.lateFeeAmount as number | undefined,
+                lateFeeFrequency: p.lateFeeFrequency as string | undefined,
+              }
+            : undefined;
+        addStudentToSessionCache(queryClient, payload.sessionId, data, enrollmentFields);
+      } else {
+        invalidateSessionStudentList(queryClient, null);
+      }
     },
   });
 }
@@ -145,8 +268,14 @@ export function useDeleteStudent() {
       return studentsRepository.delete(id);
     },
     onSuccess: (_, payload) => {
+      const id = typeof payload === 'string' ? payload : payload.id;
       const sessionId = typeof payload === 'string' ? undefined : payload.sessionId;
-      invalidateSessionStudentList(queryClient, sessionId);
+      if (sessionId) {
+        removeStudentFromSessionCache(queryClient, sessionId, id);
+      } else {
+        invalidateSessionStudentList(queryClient, null);
+      }
+      queryClient.removeQueries({ queryKey: [QUERY_KEY, id] });
     },
   });
 }
@@ -188,7 +317,7 @@ export function useAddStudentPayment() {
       payment: Omit<FeePayment, 'id' | 'enrollmentId'>;
       enrollmentId?: string;
       sessionId?: string;
-    }) => studentsRepository.addPayment(studentId, payment, enrollmentId),
+    }) => (studentsRepository as { addPayment: (id: string, p: typeof payment, enrollmentId?: string) => Promise<FeePayment> }).addPayment(studentId, payment, enrollmentId),
     onSuccess: (_, { studentId, sessionId }) => {
       invalidateSessionStudentList(queryClient, sessionId);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, studentId] });
