@@ -18,7 +18,7 @@ import { formatInvoiceNumber } from "@/lib/invoice-number";
 import { getGstAmounts, amountToWords, roundToRupee, getRoundOff } from "@/lib/gst";
 import { CUSTOMER_TYPES, type CustomerType } from "@/lib/db/types";
 import { AlertTriangle } from "lucide-react";
-import { RemoveIcon, Spinner, TableSkeleton, Skeleton } from "@/components/ui";
+import { RemoveIcon, Spinner, TableSkeleton, Skeleton, SearchableSelect } from "@/components/ui";
 
 interface LineRow {
   productId: string;
@@ -384,18 +384,17 @@ export function NewInvoicePage() {
               <label className="block mb-2 font-medium" style={{ color: "var(--text-primary)" }}>
                 Select Customer
               </label>
-              <select
+              <SearchableSelect
                 value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
-                className="input"
-              >
-                <option value="">Select customer (name, phone, type)</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} – {c.phone} ({c.customerType})
-                  </option>
-                ))}
-              </select>
+                onChange={setCustomerId}
+                placeholder="Search by name, phone, or GSTIN..."
+                emptyOption="— Select Customer —"
+                options={customers.map((c) => ({
+                  value: c.id,
+                  label: `${c.name} – ${c.phone || "No phone"} (${c.customerType})`,
+                  searchText: `${c.name} ${c.phone || ""} ${c.gstin || ""} ${c.customerType}`.toLowerCase(),
+                }))}
+              />
               <p className="mt-2 text-sm">
                 <Link to="/customers" className="no-underline">Manage customers</Link>
               </p>

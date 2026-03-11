@@ -15,7 +15,8 @@ export function PrintPaymentPage() {
 
   const { data: payment, loading: paymentLoading } = usePayment(id);
   const { data: allocations = [], loading: allocationsLoading } = usePaymentAllocations(id);
-  const { data: customer } = useCustomer(payment?.customerId ?? "");
+  const customerId = payment?.customerId ?? "";
+  const { data: customer } = useCustomer(customerId, { enabled: !!customerId });
   const { data: company } = useCompany();
   const { data: invoices = [] } = useInvoices();
 
@@ -47,131 +48,223 @@ export function PrintPaymentPage() {
   const invoiceList = invoices ?? [];
   const getInvoice = (invoiceId: string) => invoiceList.find((inv) => inv.id === invoiceId);
 
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const getPaymentModeLabel = (mode: string) => {
+    switch (mode) {
+      case "cash": return "Cash";
+      case "cheque": return "Cheque";
+      case "online": return "Online / UPI / NEFT";
+      default: return mode;
+    }
+  };
+
   return (
-    <div className="print-area animate-fadeIn bg-white text-slate-900 p-6 sm:p-8 max-w-[210mm] mx-auto">
+    <div className="print-area animate-fadeIn bg-white text-slate-900 p-6 sm:p-8 max-w-[210mm] mx-auto shadow-sm">
       {/* Header */}
-      <header className="border-b-2 border-slate-800 pb-4 mb-6">
+      <header className="pb-4 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div>
+          <div className="flex-1">
             {company?.logoPath && (
-              <img src={company.logoPath} alt="Logo" className="h-14 mb-3 object-contain" />
+              <img src={company.logoPath} alt="Logo" className="h-16 mb-3 object-contain" />
             )}
-            <h1 className="text-xl font-bold text-slate-900 m-0">{company?.name ?? ""}</h1>
-            <p className="text-sm text-slate-600 mt-1 mb-0 leading-snug">{company?.address ?? ""}</p>
-            <p className="text-sm text-slate-600 mt-0.5 mb-0">GSTIN: {company?.gstin ?? ""}</p>
-            {company?.phone && <p className="text-sm text-slate-600 mt-0 mb-0">Ph: {company.phone}</p>}
+            <h1 className="text-2xl font-bold text-slate-900 m-0">{company?.name ?? ""}</h1>
+            <p className="text-sm text-slate-600 mt-2 mb-0 leading-relaxed max-w-[280px]">{company?.address ?? ""}</p>
+            <div className="mt-2 space-y-0.5 text-sm">
+              <p className="m-0 text-slate-600">
+                <span className="font-medium">GSTIN:</span> <span className="text-slate-800">{company?.gstin ?? ""}</span>
+              </p>
+              {company?.phone && (
+                <p className="m-0 text-slate-600">
+                  <span className="font-medium">Ph:</span> {company.phone}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="text-right">
-            <h2 className="text-lg font-bold uppercase tracking-wide text-slate-900 m-0 border-b-2 border-slate-800 pb-1 inline-block">
-              Payment Receipt
-            </h2>
-            <div className="mt-3 text-sm space-y-0.5">
-              <p className="m-0"><span className="text-slate-500">Receipt No:</span> <strong>{payment.receiptNo}</strong></p>
-              <p className="m-0"><span className="text-slate-500">Date:</span> <strong>{payment.date}</strong></p>
+          <div className="text-right sm:min-w-[200px]">
+            <div className="inline-block bg-green-700 text-white px-4 py-2 rounded">
+              <h2 className="text-lg font-bold uppercase tracking-wide m-0">
+                Payment Receipt
+              </h2>
+            </div>
+            <div className="mt-4 border border-slate-200 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b border-slate-200">
+                    <td className="py-2 px-3 text-slate-500 text-left">Receipt No</td>
+                    <td className="py-2 px-3 font-bold text-slate-900 text-right">{payment.receiptNo}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-3 text-slate-500 text-left">Date</td>
+                    <td className="py-2 px-3 font-medium text-slate-900 text-right">{formatDate(payment.date)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Received from */}
+      <hr className="border-slate-300 mb-6" />
+
+      {/* Received From */}
       <section className="mb-6">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Received From</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-2">
+          <span className="w-1 h-4 bg-green-700 rounded"></span>
+          Received From
+        </h3>
         <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-          <p className="font-semibold text-slate-900 m-0">{customer?.name ?? payment.customerId}</p>
-          {customer?.billingAddress && (
-            <p className="text-sm text-slate-600 mt-1 mb-0 leading-snug">{customer.billingAddress}</p>
+          {customer ? (
+            <>
+              <p className="font-bold text-slate-900 m-0 text-base">{customer.name}</p>
+              {customer.phone && (
+                <p className="text-sm text-slate-600 mt-1 mb-0">
+                  <span className="font-medium">Ph:</span> {customer.phone}
+                </p>
+              )}
+              {customer.billingAddress && (
+                <p className="text-sm text-slate-600 mt-1 mb-0 leading-relaxed">{customer.billingAddress}</p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-slate-500 italic m-0">Customer ID: {payment.customerId}</p>
           )}
         </div>
       </section>
 
-      {/* Payment details */}
-      <section className="border border-slate-200 rounded-lg overflow-hidden mb-6">
-        <table className="w-full text-sm">
-          <tbody>
-            <tr className="border-b border-slate-200 bg-slate-50/50">
-              <td className="py-3 px-4 text-slate-600 font-medium w-40">Amount</td>
-              <td className="py-3 px-4 font-bold text-lg text-slate-900">₹{payment.amount.toFixed(2)}</td>
-            </tr>
-            <tr className="border-b border-slate-200">
-              <td className="py-2 px-4 text-slate-600">Mode</td>
-              <td className="py-2 px-4 font-medium capitalize">{payment.mode}</td>
-            </tr>
-            {payment.mode === "cheque" && (payment.chequeNo || payment.bankName) && (
-              <>
-                <tr className="border-b border-slate-200">
-                  <td className="py-2 px-4 text-slate-600">Cheque No</td>
-                  <td className="py-2 px-4">{payment.chequeNo ?? "—"}</td>
-                </tr>
-                <tr className="border-b border-slate-200">
-                  <td className="py-2 px-4 text-slate-600">Cheque Date</td>
-                  <td className="py-2 px-4">{payment.chequeDate ?? "—"}</td>
-                </tr>
-                <tr className="border-b border-slate-200">
-                  <td className="py-2 px-4 text-slate-600">Bank</td>
-                  <td className="py-2 px-4">{payment.bankName ?? "—"}</td>
-                </tr>
-              </>
-            )}
-            {payment.mode === "online" && payment.referenceNo && (
-              <tr className="border-b border-slate-200">
-                <td className="py-2 px-4 text-slate-600">Reference No</td>
-                <td className="py-2 px-4">{payment.referenceNo}</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {/* Payment Amount - Large display */}
+      <section className="mb-6 text-center p-6 bg-green-50 border border-green-200 rounded-lg">
+        <p className="text-sm text-green-700 uppercase font-medium tracking-wider m-0 mb-2">Amount Received</p>
+        <p className="text-4xl font-bold text-green-800 m-0">₹{payment.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</p>
+        <p className="text-sm text-green-600 mt-2 m-0 capitalize">
+          Payment Mode: <span className="font-medium">{getPaymentModeLabel(payment.mode)}</span>
+        </p>
       </section>
 
-      {/* Allocations */}
+      {/* Payment Details */}
+      <section className="mb-6">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-2">
+          <span className="w-1 h-4 bg-green-700 rounded"></span>
+          Payment Details
+        </h3>
+        <div className="border border-slate-200 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <tbody>
+              <tr className="border-b border-slate-100">
+                <td className="py-3 px-4 text-slate-600 w-40">Payment Mode</td>
+                <td className="py-3 px-4 font-medium text-slate-900 capitalize">{getPaymentModeLabel(payment.mode)}</td>
+              </tr>
+              {payment.mode === "cheque" && (
+                <>
+                  {payment.chequeNo && (
+                    <tr className="border-b border-slate-100">
+                      <td className="py-2 px-4 text-slate-600">Cheque No</td>
+                      <td className="py-2 px-4 font-medium">{payment.chequeNo}</td>
+                    </tr>
+                  )}
+                  {payment.chequeDate && (
+                    <tr className="border-b border-slate-100">
+                      <td className="py-2 px-4 text-slate-600">Cheque Date</td>
+                      <td className="py-2 px-4 font-medium">{formatDate(payment.chequeDate)}</td>
+                    </tr>
+                  )}
+                  {payment.bankName && (
+                    <tr className="border-b border-slate-100">
+                      <td className="py-2 px-4 text-slate-600">Bank</td>
+                      <td className="py-2 px-4 font-medium">{payment.bankName}</td>
+                    </tr>
+                  )}
+                </>
+              )}
+              {payment.mode === "online" && payment.referenceNo && (
+                <tr className="border-b border-slate-100">
+                  <td className="py-2 px-4 text-slate-600">Reference No / UTR</td>
+                  <td className="py-2 px-4 font-medium font-mono">{payment.referenceNo}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Invoice Allocations */}
       {allocationsList.length > 0 && (
         <section className="mb-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Adjusted Against Invoices</h3>
-          <div className="overflow-x-auto -mx-1">
-            <table className="w-full border-collapse text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-2">
+            <span className="w-1 h-4 bg-green-700 rounded"></span>
+            Adjusted Against Invoices
+          </h3>
+          <div className="border border-slate-200 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-800 text-white">
-                  <th className="text-left py-2.5 px-4 font-semibold">Invoice No</th>
-                  <th className="text-right py-2.5 px-4 font-semibold w-32">Amount (₹)</th>
+                <tr className="bg-slate-100">
+                  <th className="text-left py-2.5 px-4 font-semibold text-slate-700">Invoice No</th>
+                  <th className="text-left py-2.5 px-4 font-semibold text-slate-700">Date</th>
+                  <th className="text-right py-2.5 px-4 font-semibold text-slate-700 w-32">Amount Adjusted</th>
                 </tr>
               </thead>
               <tbody>
                 {allocationsList.map((a) => {
                   const inv = getInvoice(a.invoiceId);
                   return (
-                    <tr key={a.id} className="border-b border-slate-200 last:border-0">
-                      <td className="py-2 px-4 font-medium">{inv?.number ?? a.invoiceId}</td>
-                      <td className="py-2 px-4 text-right">₹{a.amount.toFixed(2)}</td>
+                    <tr key={a.id} className="border-t border-slate-100">
+                      <td className="py-2.5 px-4 font-medium text-slate-900">{inv?.number ?? a.invoiceId}</td>
+                      <td className="py-2.5 px-4 text-slate-600">{inv ? formatDate(inv.date) : "—"}</td>
+                      <td className="py-2.5 px-4 text-right font-medium">₹{a.amount.toFixed(2)}</td>
                     </tr>
                   );
                 })}
               </tbody>
+              <tfoot>
+                <tr className="bg-slate-50 border-t border-slate-200">
+                  <td colSpan={2} className="py-2.5 px-4 font-semibold text-slate-700">Total Adjusted</td>
+                  <td className="py-2.5 px-4 text-right font-bold text-slate-900">₹{allocatedTotal.toFixed(2)}</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </section>
       )}
 
+      {/* Advance Balance */}
       {advance > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-          <p className="m-0 text-sm">
-            <span className="font-medium text-slate-700">Advance / Balance carried forward:</span>{" "}
-            <strong className="text-slate-900">₹{advance.toFixed(2)}</strong>
-          </p>
-        </div>
+        <section className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-amber-800 m-0">Advance / Balance Carried Forward</h3>
+              <p className="text-xs text-amber-600 m-0 mt-1">This amount will be adjusted against future invoices</p>
+            </div>
+            <p className="text-2xl font-bold text-amber-800 m-0">₹{advance.toFixed(2)}</p>
+          </div>
+        </section>
       )}
 
-      <footer className="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <p className="text-sm text-slate-500 m-0">
-          This is a computer-generated receipt. Thank you for your payment.
-        </p>
-        <div className="flex flex-col items-start sm:items-end">
-          <p className="text-sm text-slate-600 m-0">Authorised Signature</p>
-          <p className="text-xs text-slate-400 mt-6 m-0">_________________________</p>
+      {/* Footer */}
+      <footer className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pt-6 border-t border-slate-200 mt-8">
+        <div>
+          <p className="text-xs text-slate-500 m-0">
+            This is a computer-generated receipt. Thank you for your payment.
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm text-slate-600 m-0 mb-8">For {company?.name ?? ""}</p>
+          <p className="text-xs text-slate-500 m-0 border-t border-slate-300 pt-1 inline-block px-4">
+            Authorised Signatory
+          </p>
         </div>
       </footer>
 
-      <div className="no-print mt-8 flex gap-3">
+      {/* Print controls */}
+      <div className="no-print mt-8 flex gap-3 pt-6 border-t border-slate-200">
         <button type="button" onClick={() => window.print()} className="btn btn-primary">
-          Print
+          Print Receipt
         </button>
         <Link to="/payments" className="btn btn-secondary no-underline">
           Back to payments

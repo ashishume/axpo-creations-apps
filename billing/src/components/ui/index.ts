@@ -7,6 +7,8 @@ export { ToastProvider, useToast } from "./Toast";
 export { Spinner, PageLoader, Skeleton, CardSkeleton, TableSkeleton, PageShellSkeleton } from "./Loading";
 export { PieChart } from "./PieChart";
 export { FormField } from "./FormField";
+export { SearchableSelect } from "./SearchableSelect";
+export type { SearchableSelectOption, SearchableSelectProps } from "./SearchableSelect";
 export {
   EditIcon,
   DeleteIcon,
