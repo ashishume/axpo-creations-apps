@@ -303,6 +303,15 @@ export const studentsRepositoryApi = {
     await teachingFetch(`/students/${id}`, { method: 'DELETE' });
   },
 
+  /** Delete all students enrolled in the given session. Returns number deleted. */
+  async deleteAllBySession(sessionId: string): Promise<number> {
+    const res = await teachingFetchJson<{ deleted: number }>(
+      `/students?session_id=${encodeURIComponent(sessionId)}`,
+      { method: 'DELETE' }
+    );
+    return res?.deleted ?? 0;
+  },
+
   // Backward-compatible bulk import: 1x session, 1x students/bulk, 1x enrollments/bulk
   async createMany(studentsWithEnrollment: any[]): Promise<Student[]> {
     if (studentsWithEnrollment.length === 0) return [];

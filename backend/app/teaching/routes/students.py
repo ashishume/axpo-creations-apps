@@ -68,6 +68,18 @@ async def create_students_bulk(
     return BulkStudentResponse(students=[StudentResponse.model_validate(s) for s in students])
 
 
+@router.delete("", status_code=200)
+async def delete_all_students_by_session(
+    session_id: UUID,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Delete all students enrolled in the given session. Requires session_id query param."""
+    await enforce_session_access(db, user, session_id)
+    deleted = await student_service.delete_all_by_session(db, session_id)
+    return {"deleted": deleted}
+
+
 @router.get("", response_model=PaginatedResponse[StudentResponse])
 async def list_students(
     limit: int | None = None,

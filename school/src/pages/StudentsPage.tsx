@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import { useStudentsBySessionInfinite, useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useAddStudentPayment, useTransferStudentsToSession } from "../hooks/useStudents";
+import { useStudentsBySessionInfinite, useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useDeleteAllStudentsBySession, useAddStudentPayment, useTransferStudentsToSession } from "../hooks/useStudents";
 import { useClassesBySession, useCreateClass, useUpdateClass, useDeleteClass } from "../hooks/useClasses";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
@@ -62,6 +62,7 @@ export function StudentsPage() {
   const createStudentsBulk = useCreateStudentsBulk();
   const updateStudentMut = useUpdateStudent();
   const deleteStudentMut = useDeleteStudent();
+  const deleteAllStudentsMut = useDeleteAllStudentsBySession();
   const addPaymentMut = useAddStudentPayment();
   const transferStudentsMut = useTransferStudentsToSession();
   const createClass = useCreateClass();
@@ -99,6 +100,7 @@ export function StudentsPage() {
   const [paymentModal, setPaymentModal] = useState<{ open: boolean; student: SessionStudent } | null>(null);
   const [historyStudent, setHistoryStudent] = useState<SessionStudent | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [classesModalOpen, setClassesModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<StudentClass | null>(null);
@@ -408,6 +410,15 @@ export function StudentsPage() {
           >
             <Plus className="mr-1 h-4 w-4" />
             Add student
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!selectedSessionId}
+            onClick={() => setConfirmDeleteAll(true)}
+          >
+            <Trash2 className="mr-1 h-4 w-4" />
+            Delete all
           </Button>
           <Button
             size="sm"
@@ -1176,6 +1187,26 @@ export function StudentsPage() {
         title="Delete student"
         message={`Delete "${confirmDelete?.name}"? Payment history will be removed.`}
         confirmLabel="Delete"
+      />
+
+      <ConfirmDialog
+        open={confirmDeleteAll}
+        onClose={() => setConfirmDeleteAll(false)}
+        onConfirm={() => {
+          if (!selectedSessionId) return;
+          deleteAllStudentsMut.mutate(selectedSessionId, {
+            onSuccess: (deleted) => {
+              toast(deleted > 0 ? `Deleted ${deleted} student(s)` : "No students to delete");
+              setConfirmDeleteAll(false);
+            },
+            onError: (err) => {
+              toast(err instanceof Error ? err.message : "Failed to delete all students", "error");
+            },
+          });
+        }}
+        title="Delete all students"
+        message="This will permanently delete all students in this session and their fee history. This action cannot be undone. Are you sure?"
+        confirmLabel="Delete all"
       />
 
       <BulkImportModal

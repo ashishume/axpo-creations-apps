@@ -337,6 +337,10 @@ export const studentsRepository = {
     if (error) throw new Error('Failed to delete student');
   },
 
+  async deleteAllBySession(_sessionId: string): Promise<number> {
+    throw new Error('Delete all by session is only supported when using the Teaching API');
+  },
+
   /** Bulk transfer students to a new session (single API call). Clears classId. Returns count updated. */
   async transferToSession(studentIds: string[], newSessionId: string): Promise<number> {
     if (studentIds.length === 0) return 0;

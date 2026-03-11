@@ -151,6 +151,17 @@ export function useDeleteStudent() {
   });
 }
 
+export function useDeleteAllStudentsBySession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sessionId: string) => studentsRepository.deleteAllBySession(sessionId),
+    onSuccess: (_, sessionId) => {
+      invalidateSessionStudentList(queryClient, sessionId);
+    },
+  });
+}
+
 export function useTransferStudentsToSession() {
   const queryClient = useQueryClient();
 

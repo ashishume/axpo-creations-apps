@@ -74,6 +74,14 @@ class StudentService:
         await db.flush()
         await student_repository.delete(db, student)
 
+    async def delete_all_by_session(self, db: AsyncSession, session_id: UUID) -> int:
+        """Delete all students enrolled in the given session (and their enrollments/payments). Returns count deleted."""
+        enrollments = await enrollment_repository.list_by_session(db, session_id)
+        student_ids = list({e.student_id for e in enrollments})
+        for sid in student_ids:
+            await self.delete(db, sid)
+        return len(student_ids)
+
 
 class EnrollmentService:
     """Service for StudentEnrollment (session-specific) operations."""
