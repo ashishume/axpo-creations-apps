@@ -1,4 +1,4 @@
-import type { School, Session, Student, Staff, Expense, StudentClass, Stock, FixedMonthlyCost } from "../types";
+import type { School, Session, Student, Staff, Expense, StudentClass, Stock, FixedMonthlyCost, SessionStudent, FeePayment } from "../types";
 import { generateId } from "../lib/utils";
 
 export function createSampleSchools(): School[] {
@@ -69,7 +69,7 @@ function getClassId(sessionId: string, className: string): string | undefined {
   return classIdMap[sessionId]?.[className];
 }
 
-export function createSampleStudents(): Student[] {
+export function createSampleStudents(): SessionStudent[] {
   // Each student is assigned a class
   const base = [
     { 
@@ -147,12 +147,13 @@ export function createSampleStudents(): Student[] {
   ];
   
   const sessions = ["sess1", "sess2", "sess3", "sess4", "sess5"];
-  const students: Student[] = [];
+  const sessionToSchool: Record<string, string> = { sess1: "s1", sess2: "s1", sess3: "s2", sess4: "s2", sess5: "s3" };
+  const students: SessionStudent[] = [];
   
   sessions.forEach((sessionId, si) => {
     base.slice(0, 8 + (si % 5)).forEach((b, i) => {
       const id = generateId();
-      const payments: Student["payments"] = [];
+      const payments: FeePayment[] = [];
       const classId = getClassId(sessionId, b.className);
       
       // Calculate total annual fees
@@ -170,6 +171,7 @@ export function createSampleStudents(): Student[] {
             const isFirstPaymentOfFirstStudent = si === 0 && i === 0 && catIdx === 0;
             payments.push({
               id: generateId(),
+              enrollmentId: id,
               date: d.toISOString().slice(0, 10),
               amount: amt,
               method: ["Cash", "Online", "Cheque", "Bank Transfer"][i % 4] as "Cash" | "Online" | "Cheque" | "Bank Transfer",
@@ -188,6 +190,7 @@ export function createSampleStudents(): Student[] {
       const isFirstOrSecondInSession = i === 0 || i === 1;
       students.push({
         id,
+        schoolId: sessionToSchool[sessionId] ?? "s1",
         sessionId,
         classId,
         name: b.name,
@@ -233,6 +236,7 @@ export function createSampleStaff(): Staff[] {
         employeeId: `EMP-${sessionId.slice(-1)}-${100 + i}`,
         role,
         monthlySalary: salaries[i],
+        allowedLeavesPerMonth: 2,
         subjectOrGrade: role === "Teacher" ? (i === 0 ? "Mathematics" : i === 1 ? "Science" : "English") : undefined,
         salaryPayments: months.map((month, mi) => ({
           id: generateId(),
@@ -241,6 +245,14 @@ export function createSampleStaff(): Staff[] {
           status: mi < 4 ? "Paid" : mi === 4 ? "Partially Paid" : "Pending",
           paymentDate: mi < 4 ? `${month}-${5 + mi}` : undefined,
           method: "Bank Transfer",
+          daysWorked: 30,
+          leavesTaken: 0,
+          allowedLeaves: 2,
+          excessLeaves: 0,
+          leaveDeduction: 0,
+          extraAllowance: 0,
+          extraDeduction: 0,
+          calculatedSalary: salaries[i],
         })),
       });
     });

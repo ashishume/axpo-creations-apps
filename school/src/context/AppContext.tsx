@@ -677,9 +677,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Group by session to set sibling links after creation
       const studentsBySession = new Map<string, typeof sampleStudents>();
       for (const stu of sampleStudents) {
-        const list = studentsBySession.get(stu.sessionId) ?? [];
+        const sid = stu.sessionId ?? '';
+        const list = studentsBySession.get(sid) ?? [];
         list.push(stu);
-        studentsBySession.set(stu.sessionId, list);
+        studentsBySession.set(sid, list);
       }
       for (const [sampleSessionId, sessionStudents] of studentsBySession) {
         const sessionId = sessionIdMap[sampleSessionId];
@@ -707,7 +708,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             finePerDay: stu.finePerDay,
             dueFrequency: stu.dueFrequency,
             photoUrl: stu.photoUrl,
-          });
+          } as never);
           createdIds.push(created.id);
         }
         // Set sibling links: first two and next two students per session
@@ -724,6 +725,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const studentId = createdIds[i];
           for (const p of stu.payments) {
             await studentsRepository.addPayment(studentId, {
+              enrollmentId: p.enrollmentId || '',
               date: p.date,
               amount: p.amount,
               method: p.method,
@@ -746,6 +748,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           role: s.role,
           monthlySalary: s.monthlySalary,
           subjectOrGrade: s.subjectOrGrade,
+          allowedLeavesPerMonth: s.allowedLeavesPerMonth ?? 2,
         });
       }
       const sampleExpensesList = createSampleExpenses();
@@ -891,29 +894,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const created = await classesRepository.create(cls);
       classIdMap[cls.id] = created.id;
     }
-    for (const stu of data.students) {
-      const sessionId = sessionIdMap[stu.sessionId];
+    for (const stu of data.students as unknown as Record<string, unknown>[]) {
+      const sessionId = sessionIdMap[stu.sessionId as string];
       if (!sessionId) continue;
-      const classId = stu.classId ? classIdMap[stu.classId] : undefined;
+      const classId = stu.classId ? classIdMap[stu.classId as string] : undefined;
       const { payments, id: _omitId, ...studentData } = stu;
       const created = await studentsRepository.create({
-        ...studentData,
+        ...(studentData as Record<string, unknown>),
         sessionId,
         classId,
-      });
-      // Restore fee payments for this student (v2 format)
+      } as never);
       const paymentsList = Array.isArray(payments) ? payments : [];
-      for (const p of paymentsList) {
+      for (const p of paymentsList as Record<string, unknown>[]) {
         try {
           await studentsRepository.addPayment(created.id, {
-            date: p.date,
-            amount: p.amount,
-            method: p.method,
-            receiptNumber: p.receiptNumber ?? "",
-            feeCategory: p.feeCategory,
-            month: p.month,
-            receiptPhotoUrl: p.receiptPhotoUrl,
-          });
+            enrollmentId: (p.enrollmentId as string) || '',
+            date: p.date as string,
+            amount: p.amount as number,
+            method: p.method as string,
+            receiptNumber: (p.receiptNumber as string) ?? "",
+            feeCategory: p.feeCategory as string,
+            month: p.month as string | undefined,
+            receiptPhotoUrl: p.receiptPhotoUrl as string | undefined,
+          } as never);
         } catch {
           // skip duplicate or invalid payment
         }
@@ -929,6 +932,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         role: s.role,
         monthlySalary: s.monthlySalary,
         subjectOrGrade: s.subjectOrGrade,
+        allowedLeavesPerMonth: s.allowedLeavesPerMonth ?? 2,
       });
     }
     for (const e of data.expenses) {

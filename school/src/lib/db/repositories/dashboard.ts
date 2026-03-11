@@ -5,6 +5,7 @@ import type {
   Session,
   StudentClass,
   Student,
+  SessionStudent,
   FeePayment,
   Staff,
   SalaryPayment,
@@ -21,7 +22,7 @@ export interface DashboardData {
   schools: School[];
   sessions: Session[];
   classes: StudentClass[];
-  students: Student[];
+  students: SessionStudent[];
   staff: Staff[];
   expenses: Expense[];
   stocks: Stock[];
@@ -32,6 +33,7 @@ export interface DashboardData {
 function mapPayment(row: Record<string, unknown>): FeePayment {
   return {
     id: row.id as string,
+    enrollmentId: (row.enrollment_id as string) || '',
     date: row.date as string,
     amount: Number(row.amount) || 0,
     method: row.method as FeePayment['method'],
@@ -42,11 +44,12 @@ function mapPayment(row: Record<string, unknown>): FeePayment {
   };
 }
 
-function mapStudent(row: Record<string, unknown>): Student {
+function mapStudent(row: Record<string, unknown>): SessionStudent {
   const paymentsRaw = (row.payments as Record<string, unknown>[] | null) || [];
   const payments = paymentsRaw.map(mapPayment);
   return {
     id: row.id as string,
+    schoolId: (row.school_id as string) || '',
     sessionId: row.session_id as string,
     classId: row.class_id as string | undefined,
     name: row.name as string,
@@ -69,11 +72,11 @@ function mapStudent(row: Record<string, unknown>): Student {
     annualFundPaid: row.annual_fund_paid as boolean | undefined,
     dueDayOfMonth: row.due_day_of_month as number | undefined,
     lateFeeAmount: row.late_fee_amount != null ? Number(row.late_fee_amount) : undefined,
-    lateFeeFrequency: row.late_fee_frequency as Student['lateFeeFrequency'] | undefined,
+    lateFeeFrequency: row.late_fee_frequency as SessionStudent['lateFeeFrequency'] | undefined,
     payments,
     targetAmount: row.target_amount != null ? Number(row.target_amount) : undefined,
     finePerDay: row.fine_per_day != null ? Number(row.fine_per_day) : undefined,
-    dueFrequency: row.due_frequency as Student['dueFrequency'] | undefined,
+    dueFrequency: row.due_frequency as SessionStudent['dueFrequency'] | undefined,
     photoUrl: row.photo_url as string | undefined,
     siblingId: row.sibling_id as string | undefined,
   };
@@ -88,6 +91,14 @@ function mapSalaryPayment(row: Record<string, unknown>): SalaryPayment {
     paymentDate: row.payment_date as string | undefined,
     method: row.method as SalaryPayment['method'] | undefined,
     dueDate: row.due_date as string | undefined,
+    daysWorked: 30,
+    leavesTaken: 0,
+    allowedLeaves: 2,
+    excessLeaves: 0,
+    leaveDeduction: 0,
+    extraAllowance: 0,
+    extraDeduction: 0,
+    calculatedSalary: Number(row.paid_amount) || 0,
   };
 }
 
@@ -102,6 +113,7 @@ function mapStaff(row: Record<string, unknown>): Staff {
     role: row.role as Staff['role'],
     monthlySalary: Number(row.monthly_salary) || 0,
     subjectOrGrade: row.subject_or_grade as string | undefined,
+    allowedLeavesPerMonth: (row.allowed_leaves_per_month as number) ?? 2,
     salaryPayments,
   };
 }

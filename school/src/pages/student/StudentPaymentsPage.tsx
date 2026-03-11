@@ -8,6 +8,7 @@ import { Pagination, usePagination } from '../../components/ui/Pagination';
 import { formatCurrency, formatDate, formatMonthYear } from '../../lib/utils';
 import { Skeleton, SkeletonStats, SkeletonTable } from '../../components/ui/Skeleton';
 import { Download, Receipt, CreditCard, AlertCircle, Filter } from 'lucide-react';
+import type { SessionStudent, FeePayment } from '../../types';
 
 const CATEGORY_LABELS: Record<string, string> = {
   registration: 'Registration/Admission',
@@ -20,23 +21,26 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export function StudentPaymentsPage() {
   const { user } = useAuth();
-  const { data: student, isLoading, error } = useStudent(user?.studentId || '');
+  const { data: rawStudent, isLoading, error } = useStudent(user?.studentId || '');
   const { page, pageSize, setPage, setPageSize } = usePagination(10);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
+
+  const student = rawStudent as unknown as SessionStudent | undefined;
+  const allPayments: FeePayment[] = student?.payments ?? [];
 
   const filteredPayments = useMemo(() => {
     if (!student) return [];
     
-    let payments = [...student.payments].sort(
+    let payments = [...allPayments].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
     
     if (categoryFilter) {
-      payments = payments.filter(p => p.feeCategory === categoryFilter);
+      payments = payments.filter((p: FeePayment) => p.feeCategory === categoryFilter);
     }
     
     return payments;
-  }, [student, categoryFilter]);
+  }, [student, allPayments, categoryFilter]);
 
   const paginatedPayments = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -45,21 +49,18 @@ export function StudentPaymentsPage() {
 
   const totalPages = Math.ceil(filteredPayments.length / pageSize);
 
-  // Calculate totals
   const totalPaid = useMemo(() => {
-    if (!student) return 0;
-    return student.payments.reduce((sum, p) => sum + p.amount, 0);
-  }, [student]);
+    return allPayments.reduce((sum: number, p: FeePayment) => sum + p.amount, 0);
+  }, [allPayments]);
 
   const paymentsByCategory = useMemo(() => {
-    if (!student) return {};
     const result: Record<string, number> = {};
-    student.payments.forEach(p => {
+    allPayments.forEach((p: FeePayment) => {
       if (!result[p.feeCategory]) result[p.feeCategory] = 0;
       result[p.feeCategory] += p.amount;
     });
     return result;
-  }, [student]);
+  }, [allPayments]);
 
   if (isLoading) {
     return (
@@ -74,7 +75,7 @@ export function StudentPaymentsPage() {
     );
   }
 
-  if (error || !student) {
+  if (error || !rawStudent) {
     return (
       <div className="rounded-lg bg-red-50 p-6 text-center text-red-600">
         <AlertCircle className="mx-auto mb-2 h-8 w-8" />
@@ -84,8 +85,7 @@ export function StudentPaymentsPage() {
   }
 
   const handleDownloadReceipt = (paymentId: string) => {
-    // In a real app, this would generate/download a PDF receipt
-    const payment = student.payments.find(p => p.id === paymentId);
+    const payment = allPayments.find((p: FeePayment) => p.id === paymentId);
     if (!payment) return;
     
     const receiptContent = `
@@ -94,8 +94,8 @@ PAYMENT RECEIPT
 Receipt No: ${payment.receiptNumber || paymentId}
 Date: ${formatDate(payment.date)}
 
-Student: ${student.name}
-Student ID: ${student.studentId}
+    Student: ${student!.name}
+Student ID: ${student!.studentId}
 
 Payment Details:
 Category: ${CATEGORY_LABELS[payment.feeCategory] || payment.feeCategory}
@@ -139,7 +139,7 @@ Thank you for your payment!
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-slate-500">Payments</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{student.payments.length}</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{allPayments.length}</p>
           </CardContent>
         </Card>
 

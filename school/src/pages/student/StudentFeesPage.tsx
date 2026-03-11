@@ -5,10 +5,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { formatCurrency, formatMonthYear } from '../../lib/utils';
 import { Skeleton, SkeletonTable } from '../../components/ui/Skeleton';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import type { SessionStudent, FeePayment } from '../../types';
 
 export function StudentFeesPage() {
   const { user } = useAuth();
-  const { data: student, isLoading, error } = useStudent(user?.studentId || '');
+  const { data: rawStudent, isLoading, error } = useStudent(user?.studentId || '');
 
   // Generate last 12 months
   const months = useMemo(() => {
@@ -40,7 +41,7 @@ export function StudentFeesPage() {
     );
   }
 
-  if (error || !student) {
+  if (error || !rawStudent) {
     return (
       <div className="rounded-lg bg-red-50 p-6 text-center text-red-600">
         <AlertCircle className="mx-auto mb-2 h-8 w-8" />
@@ -49,9 +50,11 @@ export function StudentFeesPage() {
     );
   }
 
-  // Group payments by month
-  const paymentsByMonth = new Map<string, typeof student.payments>();
-  student.payments.forEach(p => {
+  const student = rawStudent as unknown as SessionStudent;
+  const payments: FeePayment[] = student.payments ?? [];
+
+  const paymentsByMonth = new Map<string, FeePayment[]>();
+  payments.forEach((p: FeePayment) => {
     const month = p.month || p.date.slice(0, 7);
     if (!paymentsByMonth.has(month)) {
       paymentsByMonth.set(month, []);
@@ -59,7 +62,6 @@ export function StudentFeesPage() {
     paymentsByMonth.get(month)!.push(p);
   });
 
-  // One-time fees status
   const oneTimeFees = [
     { 
       name: 'Registration/Admission fees', 
@@ -164,7 +166,7 @@ export function StudentFeesPage() {
               </div>
               <div className="border-l border-slate-200 pl-4">
                 <p className="text-sm text-slate-500">Due Date</p>
-                <p className="text-lg font-semibold text-slate-900">{student.dueDayOfMonth || 10}th of each month</p>
+                <p className="text-lg font-semibold text-slate-900">{(student.dueDayOfMonth) || 10}th of each month</p>
               </div>
             </div>
           </div>
@@ -181,11 +183,11 @@ export function StudentFeesPage() {
               </thead>
               <tbody>
                 {months.map((month) => {
-                  const monthPayments = student.payments.filter(
-                    p => (p.month === month || p.date.startsWith(month)) && 
+                  const monthPayments = payments.filter(
+                    (p: FeePayment) => (p.month === month || p.date.startsWith(month)) && 
                          (p.feeCategory === 'monthly' || p.feeCategory === 'transport')
                   );
-                  const paidAmount = monthPayments.reduce((sum, p) => sum + p.amount, 0);
+                  const paidAmount = monthPayments.reduce((sum: number, p: FeePayment) => sum + p.amount, 0);
                   const isPaid = paidAmount >= totalMonthly;
                   const isPartial = paidAmount > 0 && paidAmount < totalMonthly;
 
@@ -222,7 +224,7 @@ export function StudentFeesPage() {
       </Card>
 
       {/* Late Fee Info */}
-      {student.lateFeeAmount && student.lateFeeAmount > 0 && (
+      {(student.lateFeeAmount ?? 0) > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Late Fee Policy</CardTitle>
@@ -230,8 +232,8 @@ export function StudentFeesPage() {
           <CardContent>
             <div className="rounded-lg bg-amber-50 p-4">
               <p className="text-sm text-amber-800">
-                <strong>Late Fee:</strong> {formatCurrency(student.lateFeeAmount)} applied{' '}
-                {student.lateFeeFrequency === 'daily' ? 'per day' : 'per week'} after the due date.
+                <strong>Late Fee:</strong> {formatCurrency(student.lateFeeAmount ?? 0)} applied{' '}
+                {(student.lateFeeFrequency) === 'daily' ? 'per day' : 'per week'} after the due date.
               </p>
             </div>
           </CardContent>

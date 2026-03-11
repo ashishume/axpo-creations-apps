@@ -4,16 +4,17 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { formatCurrency, formatDate } from '../../lib/utils';
 import { SkeletonDashboard } from '../../components/ui/Skeleton';
 import { GraduationCap, CreditCard, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import type { SessionStudent, FeePayment } from '../../types';
 
 export function StudentDashboardPage() {
   const { user } = useAuth();
-  const { data: student, isLoading, error } = useStudent(user?.studentId || '');
+  const { data: rawStudent, isLoading, error } = useStudent(user?.studentId || '');
 
   if (isLoading) {
     return <SkeletonDashboard />;
   }
 
-  if (error || !student) {
+  if (error || !rawStudent) {
     return (
       <div className="rounded-lg bg-red-50 p-6 text-center text-red-600">
         <AlertCircle className="mx-auto mb-2 h-8 w-8" />
@@ -23,25 +24,25 @@ export function StudentDashboardPage() {
     );
   }
 
-  // Calculate fee summary
+  const student = rawStudent as unknown as SessionStudent;
+  const payments: FeePayment[] = student.payments ?? [];
+
   const totalFees = (student.registrationFees || 0) + 
                     (student.annualFund || 0) +
                     ((student.monthlyFees || 0) * 12) +
                     ((student.transportFees || 0) * 12);
   
-  const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalPaid = payments.reduce((sum: number, p: FeePayment) => sum + p.amount, 0);
   const balance = totalFees - totalPaid;
   const paidPercentage = totalFees > 0 ? Math.round((totalPaid / totalFees) * 100) : 0;
 
-  // Get recent payments
-  const recentPayments = [...student.payments]
+  const recentPayments = [...payments]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
-  // Calculate upcoming dues
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthlyPayments = student.payments.filter(p => p.feeCategory === 'monthly');
-  const paidMonths = new Set(monthlyPayments.map(p => p.month));
+  const monthlyPayments = payments.filter((p: FeePayment) => p.feeCategory === 'monthly');
+  const paidMonths = new Set(monthlyPayments.map((p: FeePayment) => p.month));
   const isCurrentMonthPaid = paidMonths.has(currentMonth);
 
   return (
@@ -181,7 +182,7 @@ export function StudentDashboardPage() {
               <h4 className="mb-2 text-sm font-medium text-slate-700">Recent Payments</h4>
               {recentPayments.length > 0 ? (
                 <div className="space-y-2">
-                  {recentPayments.map((payment) => (
+                  {recentPayments.map((payment: FeePayment) => (
                     <div 
                       key={payment.id} 
                       className="flex items-center justify-between rounded-lg border border-slate-100 p-2"

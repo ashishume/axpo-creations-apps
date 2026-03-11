@@ -5,7 +5,7 @@ import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { FormField } from "../ui/FormField";
 import type {
-  Student,
+  SessionStudent,
   StudentClass,
   FeeType,
   StudentPersonalDetails,
@@ -13,7 +13,7 @@ import type {
 import { ChevronDown, ChevronUp, User } from "lucide-react";
 import { formatCurrency } from "../../lib/utils";
 
-export type PendingStudent = Omit<Student, "id" | "payments">;
+export type PendingStudent = Omit<SessionStudent, "id" | "payments"> & { payments?: never };
 
 const FEE_TYPES: FeeType[] = [
   "Regular",

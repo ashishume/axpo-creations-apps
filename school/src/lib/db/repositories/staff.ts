@@ -288,6 +288,14 @@ export const staffRepository = {
       expectedAmount: Number(data.expected_amount),
       dueDate: data.due_date,
       lateDays: data.late_days,
+      daysWorked: Number(data.days_worked) || 30,
+      leavesTaken: Number(data.leaves_taken) || 0,
+      allowedLeaves: Number(data.allowed_leaves) || 2,
+      excessLeaves: Number(data.excess_leaves) || 0,
+      leaveDeduction: Number(data.leave_deduction) || 0,
+      extraAllowance: Number(data.extra_allowance) || 0,
+      extraDeduction: Number(data.extra_deduction) || 0,
+      calculatedSalary: Number(data.calculated_salary) || Number(data.paid_amount) || 0,
     };
   },
 
@@ -341,6 +349,14 @@ export const staffRepository = {
       expectedAmount: Number(data.expected_amount),
       dueDate: data.due_date,
       lateDays: data.late_days,
+      daysWorked: Number(data.days_worked) || 30,
+      leavesTaken: Number(data.leaves_taken) || 0,
+      allowedLeaves: Number(data.allowed_leaves) || 2,
+      excessLeaves: Number(data.excess_leaves) || 0,
+      leaveDeduction: Number(data.leave_deduction) || 0,
+      extraAllowance: Number(data.extra_allowance) || 0,
+      extraDeduction: Number(data.extra_deduction) || 0,
+      calculatedSalary: Number(data.calculated_salary) || Number(data.paid_amount) || 0,
     };
   },
 

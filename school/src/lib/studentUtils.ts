@@ -1,26 +1,23 @@
-import type { Student, StudentClass } from "../types";
+import type { SessionStudent, StudentClass } from "../types";
 import { differenceInDays, differenceInWeeks, isAfter } from "date-fns";
 
-// Calculate sibling discount (30% on monthly fees when siblingId is set)
-export function getSiblingDiscount(student: Student, studentClass?: StudentClass): number {
+type StudentLike = SessionStudent;
+
+export function getSiblingDiscount(student: StudentLike, studentClass?: StudentClass): number {
   if (!student.siblingId) return 0;
 
   const monthlyFee = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
-  // 30% discount on monthly fees for 12 months
   return monthlyFee * 12 * 0.3;
 }
 
-// Get monthly fees after sibling discount
-export function getDiscountedMonthlyFees(student: Student, studentClass?: StudentClass): number {
+export function getDiscountedMonthlyFees(student: StudentLike, studentClass?: StudentClass): number {
   const monthlyFee = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
   if (!student.siblingId) return monthlyFee;
-  // 30% discount
   return monthlyFee * 0.7;
 }
 
-// Calculate total annual fees for a student
-export function getTotalAnnualFees(student: Student, studentClass?: StudentClass): number {
-  const registration = student.registrationFees ?? studentClass?.registrationFees ?? 0;  // Registration/Admission fees
+export function getTotalAnnualFees(student: StudentLike, studentClass?: StudentClass): number {
+  const registration = student.registrationFees ?? studentClass?.registrationFees ?? 0;
   const annualFund = student.annualFund ?? studentClass?.annualFund ?? 0;
   const monthlyFee = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
   const transportFee = student.transportFees ?? 0;
@@ -34,7 +31,7 @@ export function getTotalAnnualFees(student: Student, studentClass?: StudentClass
 }
 
 // Get target amount (for backward compatibility or calculated)
-export function getTargetAmount(student: Student, studentClass?: StudentClass): number {
+export function getTargetAmount(student: StudentLike, studentClass?: StudentClass): number {
   // Use legacy targetAmount if set, otherwise calculate
   if (student.targetAmount && student.targetAmount > 0) {
     return student.targetAmount;
@@ -42,18 +39,18 @@ export function getTargetAmount(student: Student, studentClass?: StudentClass): 
   return getTotalAnnualFees(student, studentClass);
 }
 
-export function getTotalPaid(student: Student): number {
+export function getTotalPaid(student: StudentLike): number {
   return student.payments.reduce((sum, p) => sum + p.amount, 0);
 }
 
-export function getRemaining(student: Student, studentClass?: StudentClass): number {
+export function getRemaining(student: StudentLike, studentClass?: StudentClass): number {
   const target = getTargetAmount(student, studentClass);
   return Math.max(0, target - getTotalPaid(student));
 }
 
 export type PaymentStatus = "Fully Paid" | "Partially Paid" | "Not Paid";
 
-export function getPaymentStatus(student: Student, studentClass?: StudentClass): PaymentStatus {
+export function getPaymentStatus(student: StudentLike, studentClass?: StudentClass): PaymentStatus {
   const paid = getTotalPaid(student);
   const target = getTargetAmount(student, studentClass);
   if (paid >= target) return "Fully Paid";
@@ -63,7 +60,7 @@ export function getPaymentStatus(student: Student, studentClass?: StudentClass):
 
 /** Calculate late fee for a given month based on frequency (daily or weekly) */
 export function getFineForMonth(
-  student: Student,
+  student: StudentLike,
   studentClass: StudentClass | undefined,
   year: number,
   month: number,
@@ -88,7 +85,7 @@ export function getFineForMonth(
 }
 
 /** Total fine for a student up to today */
-export function getTotalFine(student: Student, studentClass?: StudentClass): number {
+export function getTotalFine(student: StudentLike, studentClass?: StudentClass): number {
   const dueDay = student.dueDayOfMonth ?? studentClass?.dueDayOfMonth;
   const lateFeeAmount = student.lateFeeAmount ?? studentClass?.lateFeeAmount ?? student.finePerDay ?? 0;
 
@@ -106,7 +103,7 @@ export function getTotalFine(student: Student, studentClass?: StudentClass): num
   return total;
 }
 
-export function getRunningBalances(student: Student, studentClass?: StudentClass): { afterPayment: number; payment: typeof student.payments[0] }[] {
+export function getRunningBalances(student: StudentLike, studentClass?: StudentClass): { afterPayment: number; payment: typeof student.payments[0] }[] {
   const target = getTargetAmount(student, studentClass);
   let balance = target;
   return student.payments
@@ -119,7 +116,7 @@ export function getRunningBalances(student: Student, studentClass?: StudentClass
 }
 
 // Get payments by category
-export function getPaymentsByCategory(student: Student) {
+export function getPaymentsByCategory(student: StudentLike) {
   const categories = {
     registration: 0,
     admission: 0,
@@ -139,7 +136,7 @@ export function getPaymentsByCategory(student: Student) {
 
 /** Set of months (YYYY-MM) already paid for a given category (e.g. "monthly" or "transport") */
 export function getPaidMonthsByCategory(
-  student: Student,
+  student: StudentLike,
   category: "monthly" | "transport"
 ): Set<string> {
   const set = new Set<string>();
@@ -151,7 +148,7 @@ export function getPaidMonthsByCategory(
 
 /** Next unpaid month (YYYY-MM) for a category; if current month not paid, return it, else next month not in paid set */
 export function getNextUnpaidMonth(
-  student: Student,
+  student: StudentLike,
   category: "monthly" | "transport" = "monthly"
 ): string {
   const paid = getPaidMonthsByCategory(student, category);
@@ -191,7 +188,7 @@ export type MonthlyFeeStatus = "Paid" | "Partially Paid" | "Not Paid";
 
 /** Get payment status for a specific month and category */
 export function getMonthlyPaymentStatus(
-  student: Student,
+  student: StudentLike,
   month: string,
   category: "monthly" | "transport",
   expectedAmount: number
@@ -214,12 +211,12 @@ export function getMonthlyPaymentStatus(
 }
 
 /** Get all payments for a specific month (all categories) */
-export function getPaymentsForMonth(student: Student, month: string) {
+export function getPaymentsForMonth(student: StudentLike, month: string) {
   return student.payments.filter((p) => p.month === month);
 }
 
 /** Get one-time fee payments (registration, annualFund) */
-export function getOneTimeFeePayments(student: Student) {
+export function getOneTimeFeePayments(student: StudentLike) {
   return {
     registration: student.payments.filter(
       (p) => p.feeCategory === "registration" || p.feeCategory === "admission"
@@ -229,6 +226,6 @@ export function getOneTimeFeePayments(student: Student) {
 }
 
 /** Get "other" category payments */
-export function getOtherPayments(student: Student) {
+export function getOtherPayments(student: StudentLike) {
   return student.payments.filter((p) => p.feeCategory === "other");
 }

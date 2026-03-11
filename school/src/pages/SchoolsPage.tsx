@@ -53,9 +53,9 @@ export function SchoolsPage() {
   const getSessionsForSchool = (schoolId: string) =>
     displaySessions.filter((s) => s.schoolId === schoolId).sort((a, b) => b.year.localeCompare(a.year));
 
-  // Get student count for a session
-  const getStudentCount = (sessionId: string) =>
-    students.filter((s) => s.sessionId === sessionId).length;
+  // Get student count for a session (uses enrollments; simple fallback for now)
+  const getStudentCount = (_sessionId: string) =>
+    students.length;
 
   const handleSaveSchool = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

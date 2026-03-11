@@ -5,7 +5,7 @@ import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Textarea } from "../ui/Textarea";
 import { FormField } from "../ui/FormField";
-import type { Student, StudentClass, PaymentMethod, StudentPersonalDetails } from "../../types";
+import type { SessionStudent, StudentClass, PaymentMethod, StudentPersonalDetails } from "../../types";
 import { formatCurrency, formatDate, formatMonthYear } from "../../lib/utils";
 import { 
   getTotalPaid, 
@@ -30,7 +30,7 @@ import type { Session } from "../../types";
 interface StudentDetailsModalProps {
   open: boolean;
   onClose: () => void;
-  student: Student;
+  student: SessionStudent;
   studentClass?: StudentClass;
   session?: Session;
   initialTab?: "overview" | "fees" | "personal" | "payments" | "feeHistory";
@@ -43,7 +43,7 @@ interface StudentDetailsModalProps {
     month?: string;
     receiptPhotoUrl?: string;
   }) => void | Promise<void>;
-  onUpdateStudent?: (data: Partial<Student>) => void;
+  onUpdateStudent?: (data: Partial<SessionStudent>) => void;
   onPaymentSuccess?: () => void;
 }
 

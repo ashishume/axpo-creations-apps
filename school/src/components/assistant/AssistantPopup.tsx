@@ -368,21 +368,21 @@ export function AssistantPopup() {
       try {
         switch (intentResult.intent) {
           case "add_student": {
-            const studentPayload = (items as Partial<Student>[]).map((studentData) => ({
+            const studentPayload = (items as Record<string, unknown>[]).map((studentData: Record<string, unknown>) => ({
               sessionId: selectedSessionId!,
-              name: studentData.name || "Unknown",
-              studentId: studentData.studentId || `STU-${Date.now()}`,
-              feeType: studentData.feeType || "Regular",
-              classId: studentData.classId,
-              personalDetails: studentData.personalDetails,
-              registrationFees: studentData.registrationFees,
-              annualFund: studentData.annualFund,
-              monthlyFees: studentData.monthlyFees,
-              dueDayOfMonth: studentData.dueDayOfMonth,
-              lateFeeAmount: studentData.lateFeeAmount,
-              lateFeeFrequency: studentData.lateFeeFrequency,
+              name: (studentData.name as string) || "Unknown",
+              studentId: (studentData.studentId as string) || `STU-${Date.now()}`,
+              feeType: (studentData.feeType as string) || "Regular",
+              classId: studentData.classId as string | undefined,
+              personalDetails: studentData.personalDetails as Record<string, unknown> | undefined,
+              registrationFees: studentData.registrationFees as number | undefined,
+              annualFund: studentData.annualFund as number | undefined,
+              monthlyFees: studentData.monthlyFees as number | undefined,
+              dueDayOfMonth: studentData.dueDayOfMonth as number | undefined,
+              lateFeeAmount: studentData.lateFeeAmount as number | undefined,
+              lateFeeFrequency: studentData.lateFeeFrequency as string | undefined,
             }));
-            await addStudents(studentPayload);
+            await addStudents(studentPayload as never[]);
             const n = items.length;
             return { success: true, message: n === 1 ? `Student "${(items[0] as Partial<Student>).name}" added successfully!` : `${n} students added successfully!` };
           }
@@ -402,15 +402,17 @@ export function AssistantPopup() {
           }
 
           case "add_staff": {
-            const staffPayload = (items as Partial<Staff>[]).map((staffData) => ({
+            const staffPayload = (items as Record<string, unknown>[]).map((staffData: Record<string, unknown>) => ({
               sessionId: selectedSessionId!,
-              name: staffData.name || "Unknown",
-              employeeId: staffData.employeeId || `EMP-${Date.now()}`,
-              role: staffData.role || "Teacher",
-              monthlySalary: staffData.monthlySalary || 0,
-              subjectOrGrade: staffData.subjectOrGrade,
+              name: (staffData.name as string) || "Unknown",
+              employeeId: (staffData.employeeId as string) || `EMP-${Date.now()}`,
+              role: (staffData.role as string) || "Teacher",
+              monthlySalary: (staffData.monthlySalary as number) || 0,
+              subjectOrGrade: staffData.subjectOrGrade as string | undefined,
+              allowedLeavesPerMonth: (staffData.allowedLeavesPerMonth as number) || 2,
+              salaryPayments: [],
             }));
-            await addStaffBatch(staffPayload);
+            await addStaffBatch(staffPayload as never[]);
             const n = items.length;
             return { success: true, message: n === 1 ? `Staff "${(items[0] as Partial<Staff>).name}" added successfully!` : `${n} staff members added successfully!` };
           }
@@ -444,6 +446,14 @@ export function AssistantPopup() {
                 status: (p.status || "Paid") as "Paid" | "Pending" | "Partially Paid",
                 paymentDate: p.paymentDate || new Date().toISOString().split("T")[0],
                 method: (p.method || "Cash") as import("../../types").PaymentMethod | undefined,
+                daysWorked: 30,
+                leavesTaken: 0,
+                allowedLeaves: staffMember.allowedLeavesPerMonth ?? 2,
+                excessLeaves: 0,
+                leaveDeduction: 0,
+                extraAllowance: 0,
+                extraDeduction: 0,
+                calculatedSalary: p.amount || staffMember.monthlySalary,
               };
               if (existing) toUpdate.push({ staffId: p.staffId, month: p.month, staffMember });
               else toAdd.push({ staffId: p.staffId, payment: paymentPayload });
