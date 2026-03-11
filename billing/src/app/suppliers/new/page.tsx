@@ -3,9 +3,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { addSupplierAsync } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 
 export function NewSupplierPage() {
   const navigate = useNavigate();
+  const { mode } = useBusinessMode();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [gstin, setGstin] = useState("");
@@ -26,13 +28,14 @@ export function NewSupplierPage() {
     try {
       await addSupplierAsync({
         name: name.trim(),
-        phone: phone.trim() || undefined,
-        gstin: gstin.trim() || undefined,
-        address: address.trim() || undefined,
-        stateCode: stateCode.trim() || undefined,
+        phone: phone.trim() || "",
+        gstin: gstin.trim() || "",
+        address: address.trim() || "",
+        stateCode: stateCode.trim() || "",
         openingBalance,
         creditDays,
         creditLimit,
+        businessType: mode,
       });
       navigate("/suppliers");
     } catch (err) {

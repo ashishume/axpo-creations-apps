@@ -1,12 +1,13 @@
 import { supabase } from "../client";
 import type { PaymentRepository } from "../../repository";
-import type { Payment, PaymentAllocation } from "../../types";
+import type { Payment, PaymentAllocation, BusinessType } from "../../types";
 
 export const paymentRepository: PaymentRepository = {
-  async getAll(): Promise<Payment[]> {
+  async getAll(businessType: BusinessType): Promise<Payment[]> {
     const { data, error } = await supabase
       .from("payments")
       .select("*")
+      .eq("business_type", businessType)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -66,7 +67,7 @@ export const paymentRepository: PaymentRepository = {
     return (data || []).map(mapAllocationFromDb);
   },
 
-  async getNextSeq(fyStart: number): Promise<number> {
+  async getNextSeq(fyStart: number, businessType: BusinessType): Promise<number> {
     const fyEnd = fyStart + 1;
     const startDate = `${fyStart}-04-01`;
     const endDate = `${fyEnd}-03-31`;
@@ -74,6 +75,7 @@ export const paymentRepository: PaymentRepository = {
     const { count, error } = await supabase
       .from("payments")
       .select("*", { count: "exact", head: true })
+      .eq("business_type", businessType)
       .gte("date", startDate)
       .lte("date", endDate);
 
@@ -94,16 +96,15 @@ function mapPaymentFromDb(data: Record<string, unknown>): Payment {
     chequeDate: data.cheque_date as string,
     bankName: data.bank_name as string,
     referenceNo: data.reference_no as string,
+    businessType: (data.business_type as BusinessType) || "shop",
     createdAt: data.created_at as string,
   };
 }
 
 function mapPaymentToDb(payment: Omit<Payment, "id" | "createdAt">): Record<string, unknown> {
-  // PostgreSQL DATE columns do not accept empty string; use null for optional dates
   const chequeDate = payment.chequeDate && String(payment.chequeDate).trim() !== ""
     ? payment.chequeDate
     : null;
-  // Ensure required date is never empty (fallback to today if somehow missing)
   const date = payment.date && String(payment.date).trim() !== ""
     ? payment.date
     : new Date().toISOString().slice(0, 10);
@@ -118,6 +119,7 @@ function mapPaymentToDb(payment: Omit<Payment, "id" | "createdAt">): Record<stri
     cheque_date: chequeDate,
     bank_name: payment.bankName && String(payment.bankName).trim() !== "" ? payment.bankName : null,
     reference_no: payment.referenceNo && String(payment.referenceNo).trim() !== "" ? payment.referenceNo : null,
+    business_type: payment.businessType,
   };
 }
 

@@ -3,12 +3,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { addCustomerAsync } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import type { CustomerType } from "@/lib/db/types";
 
 const CUSTOMER_TYPES: CustomerType[] = ["Dealer", "Contractor", "Retail", "Builder"];
 
 export function NewCustomerPage() {
   const navigate = useNavigate();
+  const { mode } = useBusinessMode();
   const [name, setName] = useState("");
   const [customerType, setCustomerType] = useState<CustomerType>("Dealer");
   const [phone, setPhone] = useState("");
@@ -41,6 +43,7 @@ export function NewCustomerPage() {
         creditDays: 0,
         creditLimit: 0,
         stateCode: stateCode.trim(),
+        businessType: mode,
       });
       navigate("/customers");
     } catch (err) {

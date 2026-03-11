@@ -1,12 +1,13 @@
 import { supabase } from "../client";
 import type { InvoiceRepository } from "../../repository";
-import type { Invoice, InvoiceItem } from "../../types";
+import type { Invoice, InvoiceItem, BusinessType } from "../../types";
 
 export const invoiceRepository: InvoiceRepository = {
-  async getAll(): Promise<Invoice[]> {
+  async getAll(businessType: BusinessType): Promise<Invoice[]> {
     const { data, error } = await supabase
       .from("invoices")
       .select("*")
+      .eq("business_type", businessType)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -73,23 +74,24 @@ export const invoiceRepository: InvoiceRepository = {
     return (data || []).map(mapItemFromDb);
   },
 
-  async getAllItems(): Promise<InvoiceItem[]> {
+  async getAllItems(businessType: BusinessType): Promise<InvoiceItem[]> {
     const { data, error } = await supabase
       .from("invoice_items")
-      .select("*");
+      .select("*, invoices!inner(business_type)")
+      .eq("invoices.business_type", businessType);
 
     if (error) throw new Error(error.message);
     return (data || []).map(mapItemFromDb);
   },
 
-  async getNextSeq(fyStart: number): Promise<number> {
-    const fyEnd = fyStart + 1;
+  async getNextSeq(fyStart: number, businessType: BusinessType): Promise<number> {
     const fySuffix = `${fyStart}-${String((fyStart + 1) % 100).padStart(2, "0")}`;
     const prefix = `INV/${fySuffix}/`;
 
     const { data, error } = await supabase
       .from("invoices")
       .select("number")
+      .eq("business_type", businessType)
       .like("number", `${prefix}%`)
       .order("number", { ascending: false })
       .limit(1);
@@ -124,6 +126,7 @@ function mapInvoiceFromDb(data: Record<string, unknown>): Invoice {
     totalInWords: data.total_in_words as string,
     status: data.status as Invoice["status"],
     cancelReason: data.cancel_reason as string,
+    businessType: (data.business_type as BusinessType) || "shop",
     createdAt: data.created_at as string,
   };
 }
@@ -144,6 +147,7 @@ function mapInvoiceToDb(invoice: Omit<Invoice, "id" | "createdAt">): Record<stri
     total_in_words: invoice.totalInWords,
     status: invoice.status,
     cancel_reason: invoice.cancelReason,
+    business_type: invoice.businessType,
   };
 }
 

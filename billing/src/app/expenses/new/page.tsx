@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { addExpenseAsync } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import type { ExpenseCategory } from "@/lib/db/types";
 
 const CATEGORIES: ExpenseCategory[] = [
@@ -19,6 +20,7 @@ const today = new Date().toISOString().slice(0, 10);
 
 export function NewExpensePage() {
   const navigate = useNavigate();
+  const { mode } = useBusinessMode();
   const [date, setDate] = useState(today);
   const [category, setCategory] = useState<ExpenseCategory>("Labour");
   const [amount, setAmount] = useState(0);
@@ -33,7 +35,7 @@ export function NewExpensePage() {
     }
     setSubmitting(true);
     try {
-      await addExpenseAsync({ date, category, amount, description: description.trim() });
+      await addExpenseAsync({ date, category, amount, description: description.trim(), businessType: mode });
       navigate("/expenses");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to save expense.");

@@ -1,5 +1,8 @@
 // Data types for Axpo Billing MVP (local state)
 
+/** Business type for separating Shop and Factory data */
+export type BusinessType = "shop" | "factory";
+
 /** Product category; free-form (e.g. Ceramic Tiles, Vitrified Tiles). */
 export type ProductType = string;
 
@@ -17,6 +20,7 @@ export interface Company {
   logoPath: string;
   financialYearStart: number; // e.g. 2024 for FY 2024-25
   stateCode: string; // for GST intrastate check
+  businessType: BusinessType;
 }
 
 export interface Product {
@@ -29,6 +33,7 @@ export interface Product {
   sellingPrice: number;
   costPrice: number; // per piece, for margin/profit (optional in UI, default 0)
   currentStock: number;
+  businessType: BusinessType;
   createdAt: string;
 }
 
@@ -46,6 +51,7 @@ export interface Customer {
   creditDays: number; // 0, 7, 15, 30, 60
   creditLimit: number;
   stateCode: string; // for GST
+  businessType: BusinessType;
   createdAt: string;
 }
 
@@ -59,6 +65,7 @@ export interface Supplier {
   openingBalance: number;
   creditDays: number;
   creditLimit: number;
+  businessType: BusinessType;
   createdAt: string;
 }
 
@@ -80,6 +87,7 @@ export interface Invoice {
   totalInWords: string;
   status: InvoiceStatus;
   cancelReason: string;
+  businessType: BusinessType;
   createdAt: string;
 }
 
@@ -113,6 +121,7 @@ export interface PurchaseInvoice {
   total: number;
   totalInWords: string;
   status: PurchaseInvoiceStatus;
+  businessType: BusinessType;
   createdAt: string;
 }
 
@@ -142,6 +151,7 @@ export interface Payment {
   chequeDate: string;
   bankName: string;
   referenceNo: string;
+  businessType: BusinessType;
   createdAt: string;
 }
 
@@ -162,6 +172,7 @@ export interface StockMovement {
   type: StockMovementType;
   referenceId: string | null; // invoice id for sale
   remarks: string;
+  businessType: BusinessType;
   createdAt: string;
 }
 
@@ -180,6 +191,7 @@ export interface Expense {
   category: ExpenseCategory;
   amount: number;
   description: string;
+  businessType: BusinessType;
   createdAt: string;
 }
 

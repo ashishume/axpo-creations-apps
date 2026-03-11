@@ -1,12 +1,13 @@
 import { supabase } from "../client";
 import type { CompanyRepository } from "../../repository";
-import type { Company } from "../../types";
+import type { Company, BusinessType } from "../../types";
 
 export const companyRepository: CompanyRepository = {
-  async get(): Promise<Company | null> {
+  async get(businessType: BusinessType): Promise<Company | null> {
     const { data, error } = await supabase
       .from("companies")
       .select("*")
+      .eq("business_type", businessType)
       .limit(1)
       .single();
 
@@ -15,11 +16,10 @@ export const companyRepository: CompanyRepository = {
   },
 
   async set(companyData: Omit<Company, "id">): Promise<Company> {
-    // Check if company exists
-    const existing = await this.get();
+    const businessType = companyData.businessType;
+    const existing = await this.get(businessType);
     
     if (existing) {
-      // Update existing
       const { data, error } = await supabase
         .from("companies")
         .update(mapToDb(companyData))
@@ -30,7 +30,6 @@ export const companyRepository: CompanyRepository = {
       if (error) throw new Error(error.message);
       return mapFromDb(data);
     } else {
-      // Create new
       const { data, error } = await supabase
         .from("companies")
         .insert(mapToDb(companyData))
@@ -43,7 +42,6 @@ export const companyRepository: CompanyRepository = {
   },
 };
 
-// Map database columns (snake_case) to TypeScript (camelCase)
 function mapFromDb(data: Record<string, unknown>): Company {
   return {
     id: data.id as string,
@@ -59,6 +57,7 @@ function mapFromDb(data: Record<string, unknown>): Company {
     logoPath: data.logo_path as string,
     financialYearStart: data.financial_year_start as number,
     stateCode: data.state_code as string,
+    businessType: (data.business_type as BusinessType) || "shop",
   };
 }
 
@@ -76,5 +75,6 @@ function mapToDb(company: Omit<Company, "id">): Record<string, unknown> {
     logo_path: company.logoPath,
     financial_year_start: company.financialYearStart,
     state_code: company.stateCode,
+    business_type: company.businessType,
   };
 }

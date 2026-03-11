@@ -25,6 +25,7 @@ import {
   type StoreData,
 } from "@/lib/store-async";
 import { getCached, setCached, invalidateCache } from "@/lib/data-cache";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 
 import type {
   Company,
@@ -39,6 +40,7 @@ import type {
   Supplier,
   PurchaseInvoice,
   PurchaseInvoiceItem,
+  BusinessType,
 } from "@/lib/db/types";
 
 export type UseAsyncDataOptions = {
@@ -48,7 +50,6 @@ export type UseAsyncDataOptions = {
   enabled?: boolean;
 };
 
-// Generic hook for async data fetching with optional cache and lazy loading
 function useAsyncData<T>(
   fetcher: () => Promise<T>,
   deps: unknown[] = [],
@@ -104,7 +105,12 @@ function useAsyncData<T>(
 // ============================================================
 
 export function useCompany(options?: UseAsyncDataOptions) {
-  return useAsyncData<Company | null>(getCompanyAsync, [], { cacheKey: "company", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<Company | null>(
+    () => getCompanyAsync(mode),
+    [mode],
+    { cacheKey: `company-${mode}`, ...options }
+  );
 }
 
 // ============================================================
@@ -112,11 +118,20 @@ export function useCompany(options?: UseAsyncDataOptions) {
 // ============================================================
 
 export function useProducts(options?: UseAsyncDataOptions) {
-  return useAsyncData<Product[]>(getProductsAsync, [], { cacheKey: "products", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<Product[]>(
+    () => getProductsAsync(mode),
+    [mode],
+    { cacheKey: `products-${mode}`, ...options }
+  );
 }
 
 export function useProduct(id: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<Product | null>(() => getProductAsync(id), [id], { cacheKey: id ? `product-${id}` : undefined, ...options });
+  return useAsyncData<Product | null>(
+    () => getProductAsync(id),
+    [id],
+    { cacheKey: id ? `product-${id}` : undefined, ...options }
+  );
 }
 
 // ============================================================
@@ -124,11 +139,20 @@ export function useProduct(id: string, options?: UseAsyncDataOptions) {
 // ============================================================
 
 export function useCustomers(options?: UseAsyncDataOptions) {
-  return useAsyncData<Customer[]>(getCustomersAsync, [], { cacheKey: "customers", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<Customer[]>(
+    () => getCustomersAsync(mode),
+    [mode],
+    { cacheKey: `customers-${mode}`, ...options }
+  );
 }
 
 export function useCustomer(id: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<Customer | null>(() => getCustomerAsync(id), [id], { cacheKey: id ? `customer-${id}` : undefined, ...options });
+  return useAsyncData<Customer | null>(
+    () => getCustomerAsync(id),
+    [id],
+    { cacheKey: id ? `customer-${id}` : undefined, ...options }
+  );
 }
 
 // ============================================================
@@ -136,11 +160,20 @@ export function useCustomer(id: string, options?: UseAsyncDataOptions) {
 // ============================================================
 
 export function useSuppliers(options?: UseAsyncDataOptions) {
-  return useAsyncData<Supplier[]>(getSuppliersAsync, [], { cacheKey: "suppliers", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<Supplier[]>(
+    () => getSuppliersAsync(mode),
+    [mode],
+    { cacheKey: `suppliers-${mode}`, ...options }
+  );
 }
 
 export function useSupplier(id: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<Supplier | null>(() => getSupplierAsync(id), [id], { cacheKey: id ? `supplier-${id}` : undefined, ...options });
+  return useAsyncData<Supplier | null>(
+    () => getSupplierAsync(id),
+    [id],
+    { cacheKey: id ? `supplier-${id}` : undefined, ...options }
+  );
 }
 
 // ============================================================
@@ -148,15 +181,29 @@ export function useSupplier(id: string, options?: UseAsyncDataOptions) {
 // ============================================================
 
 export function useInvoices(options?: UseAsyncDataOptions) {
-  return useAsyncData<Invoice[]>(getInvoicesAsync, [], { cacheKey: "invoices", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<Invoice[]>(
+    () => getInvoicesAsync(mode),
+    [mode],
+    { cacheKey: `invoices-${mode}`, ...options }
+  );
 }
 
 export function useInvoice(id: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<Invoice | null>(() => getInvoiceAsync(id), [id], { cacheKey: id ? `invoice-${id}` : undefined, ...options });
+  return useAsyncData<Invoice | null>(
+    () => getInvoiceAsync(id),
+    [id],
+    { cacheKey: id ? `invoice-${id}` : undefined, ...options }
+  );
 }
 
 export function useInvoiceItems(invoiceId?: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<InvoiceItem[]>(() => getInvoiceItemsAsync(invoiceId), [invoiceId], { cacheKey: invoiceId ? `invoiceItems-${invoiceId}` : "invoiceItems", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<InvoiceItem[]>(
+    () => getInvoiceItemsAsync(mode, invoiceId),
+    [mode, invoiceId],
+    { cacheKey: invoiceId ? `invoiceItems-${invoiceId}` : `invoiceItems-${mode}`, ...options }
+  );
 }
 
 // ============================================================
@@ -164,15 +211,29 @@ export function useInvoiceItems(invoiceId?: string, options?: UseAsyncDataOption
 // ============================================================
 
 export function usePurchaseInvoices(options?: UseAsyncDataOptions) {
-  return useAsyncData<PurchaseInvoice[]>(getPurchaseInvoicesAsync, [], { cacheKey: "purchaseInvoices", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<PurchaseInvoice[]>(
+    () => getPurchaseInvoicesAsync(mode),
+    [mode],
+    { cacheKey: `purchaseInvoices-${mode}`, ...options }
+  );
 }
 
 export function usePurchaseInvoice(id: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<PurchaseInvoice | null>(() => getPurchaseInvoiceAsync(id), [id], { cacheKey: id ? `purchaseInvoice-${id}` : undefined, ...options });
+  return useAsyncData<PurchaseInvoice | null>(
+    () => getPurchaseInvoiceAsync(id),
+    [id],
+    { cacheKey: id ? `purchaseInvoice-${id}` : undefined, ...options }
+  );
 }
 
 export function usePurchaseInvoiceItems(purchaseInvoiceId?: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<PurchaseInvoiceItem[]>(() => getPurchaseInvoiceItemsAsync(purchaseInvoiceId), [purchaseInvoiceId], { cacheKey: purchaseInvoiceId ? `purchaseInvoiceItems-${purchaseInvoiceId}` : "purchaseInvoiceItems", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<PurchaseInvoiceItem[]>(
+    () => getPurchaseInvoiceItemsAsync(mode, purchaseInvoiceId),
+    [mode, purchaseInvoiceId],
+    { cacheKey: purchaseInvoiceId ? `purchaseInvoiceItems-${purchaseInvoiceId}` : `purchaseInvoiceItems-${mode}`, ...options }
+  );
 }
 
 // ============================================================
@@ -180,15 +241,28 @@ export function usePurchaseInvoiceItems(purchaseInvoiceId?: string, options?: Us
 // ============================================================
 
 export function usePayments(options?: UseAsyncDataOptions) {
-  return useAsyncData<Payment[]>(getPaymentsAsync, [], { cacheKey: "payments", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<Payment[]>(
+    () => getPaymentsAsync(mode),
+    [mode],
+    { cacheKey: `payments-${mode}`, ...options }
+  );
 }
 
 export function usePayment(id: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<Payment | null>(() => getPaymentAsync(id), [id], { cacheKey: id ? `payment-${id}` : undefined, ...options });
+  return useAsyncData<Payment | null>(
+    () => getPaymentAsync(id),
+    [id],
+    { cacheKey: id ? `payment-${id}` : undefined, ...options }
+  );
 }
 
 export function usePaymentAllocations(paymentId?: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<PaymentAllocation[]>(() => getPaymentAllocationsAsync(paymentId), [paymentId], { cacheKey: paymentId ? `paymentAllocations-${paymentId}` : "paymentAllocations", ...options });
+  return useAsyncData<PaymentAllocation[]>(
+    () => getPaymentAllocationsAsync(paymentId),
+    [paymentId],
+    { cacheKey: paymentId ? `paymentAllocations-${paymentId}` : "paymentAllocations", ...options }
+  );
 }
 
 // ============================================================
@@ -196,7 +270,12 @@ export function usePaymentAllocations(paymentId?: string, options?: UseAsyncData
 // ============================================================
 
 export function useStockMovements(productId?: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<StockMovement[]>(() => getStockMovementsAsync(productId), [productId], { cacheKey: productId ? `stockMovements-${productId}` : "stockMovements", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<StockMovement[]>(
+    () => getStockMovementsAsync(mode, productId),
+    [mode, productId],
+    { cacheKey: productId ? `stockMovements-${productId}` : `stockMovements-${mode}`, ...options }
+  );
 }
 
 // ============================================================
@@ -204,34 +283,52 @@ export function useStockMovements(productId?: string, options?: UseAsyncDataOpti
 // ============================================================
 
 export function useExpenses(options?: UseAsyncDataOptions) {
-  return useAsyncData<Expense[]>(getExpensesAsync, [], { cacheKey: "expenses", ...options });
+  const { mode } = useBusinessMode();
+  return useAsyncData<Expense[]>(
+    () => getExpensesAsync(mode),
+    [mode],
+    { cacheKey: `expenses-${mode}`, ...options }
+  );
 }
 
 export function useExpense(id: string, options?: UseAsyncDataOptions) {
-  return useAsyncData<Expense | null>(() => getExpenseAsync(id), [id], { cacheKey: id ? `expense-${id}` : undefined, ...options });
+  return useAsyncData<Expense | null>(
+    () => getExpenseAsync(id),
+    [id],
+    { cacheKey: id ? `expense-${id}` : undefined, ...options }
+  );
 }
 
 // ============================================================
 // COMBINED STORE DATA
 // ============================================================
 
-async function getStoreAndPopulateCache(): Promise<StoreData> {
-  const data = await getStoreAsync();
-  setCached("company", data.company);
-  setCached("products", data.products);
-  setCached("customers", data.customers);
-  setCached("suppliers", data.suppliers);
-  setCached("invoices", data.invoices);
-  setCached("invoiceItems", data.invoiceItems);
-  setCached("purchaseInvoices", data.purchaseInvoices);
-  setCached("purchaseInvoiceItems", data.purchaseInvoiceItems);
-  setCached("payments", data.payments);
-  setCached("paymentAllocations", data.paymentAllocations);
-  setCached("stockMovements", data.stockMovements);
-  setCached("expenses", data.expenses);
-  return data;
+export function useStore(options?: UseAsyncDataOptions) {
+  const { mode } = useBusinessMode();
+
+  const getStoreAndPopulateCache = async (): Promise<StoreData> => {
+    const data = await getStoreAsync(mode);
+    setCached(`company-${mode}`, data.company);
+    setCached(`products-${mode}`, data.products);
+    setCached(`customers-${mode}`, data.customers);
+    setCached(`suppliers-${mode}`, data.suppliers);
+    setCached(`invoices-${mode}`, data.invoices);
+    setCached(`invoiceItems-${mode}`, data.invoiceItems);
+    setCached(`purchaseInvoices-${mode}`, data.purchaseInvoices);
+    setCached(`purchaseInvoiceItems-${mode}`, data.purchaseInvoiceItems);
+    setCached(`payments-${mode}`, data.payments);
+    setCached("paymentAllocations", data.paymentAllocations);
+    setCached(`stockMovements-${mode}`, data.stockMovements);
+    setCached(`expenses-${mode}`, data.expenses);
+    return data;
+  };
+
+  return useAsyncData<StoreData>(
+    getStoreAndPopulateCache,
+    [mode],
+    { cacheKey: `store-${mode}`, ...options }
+  );
 }
 
-export function useStore(options?: UseAsyncDataOptions) {
-  return useAsyncData<StoreData>(getStoreAndPopulateCache, [], { cacheKey: "store", ...options });
-}
+// Re-export BusinessType for convenience
+export type { BusinessType };

@@ -1,13 +1,14 @@
 import { supabase } from "../client";
 import type { StockMovementRepository } from "../../repository";
-import type { StockMovement } from "../../types";
+import type { StockMovement, BusinessType } from "../../types";
 import { productRepository } from "./products";
 
 export const stockMovementRepository: StockMovementRepository = {
-  async getAll(productId?: string): Promise<StockMovement[]> {
+  async getAll(businessType: BusinessType, productId?: string): Promise<StockMovement[]> {
     let query = supabase
       .from("stock_movements")
       .select("*")
+      .eq("business_type", businessType)
       .order("created_at", { ascending: false });
 
     if (productId) {
@@ -45,6 +46,7 @@ function mapFromDb(data: Record<string, unknown>): StockMovement {
     type: data.type as StockMovement["type"],
     referenceId: data.reference_id as string | null,
     remarks: data.remarks as string,
+    businessType: (data.business_type as BusinessType) || "shop",
     createdAt: data.created_at as string,
   };
 }
@@ -57,5 +59,6 @@ function mapToDb(movement: Omit<StockMovement, "id" | "createdAt">): Record<stri
     type: movement.type,
     reference_id: movement.referenceId,
     remarks: movement.remarks,
+    business_type: movement.businessType,
   };
 }

@@ -1,12 +1,13 @@
 import { supabase } from "../client";
 import type { CustomerRepository } from "../../repository";
-import type { Customer } from "../../types";
+import type { Customer, BusinessType } from "../../types";
 
 export const customerRepository: CustomerRepository = {
-  async getAll(): Promise<Customer[]> {
+  async getAll(businessType: BusinessType): Promise<Customer[]> {
     const { data, error } = await supabase
       .from("customers")
       .select("*")
+      .eq("business_type", businessType)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -24,11 +25,12 @@ export const customerRepository: CustomerRepository = {
     return mapFromDb(data);
   },
 
-  async getByPhone(phone: string): Promise<Customer | null> {
+  async getByPhone(phone: string, businessType: BusinessType): Promise<Customer | null> {
     const { data, error } = await supabase
       .from("customers")
       .select("*")
       .eq("phone", phone)
+      .eq("business_type", businessType)
       .single();
 
     if (error || !data) return null;
@@ -108,6 +110,7 @@ function mapFromDb(data: Record<string, unknown>): Customer {
     creditDays: (data.credit_days as number) || 0,
     creditLimit: (data.credit_limit as number) || 0,
     stateCode: data.state_code as string,
+    businessType: (data.business_type as BusinessType) || "shop",
     createdAt: data.created_at as string,
   };
 }
@@ -124,5 +127,6 @@ function mapToDb(customer: Omit<Customer, "id" | "createdAt">): Record<string, u
     credit_days: customer.creditDays,
     credit_limit: customer.creditLimit,
     state_code: customer.stateCode,
+    business_type: customer.businessType,
   };
 }

@@ -46,6 +46,7 @@ CREATE TABLE companies (
   logo_path TEXT,
   financial_year_start INTEGER NOT NULL DEFAULT 2024,
   state_code TEXT,
+  business_type TEXT NOT NULL DEFAULT 'shop' CHECK (business_type IN ('shop', 'factory')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -60,6 +61,7 @@ CREATE TABLE products (
   selling_price NUMERIC NOT NULL DEFAULT 0,
   cost_price NUMERIC DEFAULT 0,
   current_stock INTEGER DEFAULT 0,
+  business_type TEXT NOT NULL DEFAULT 'shop' CHECK (business_type IN ('shop', 'factory')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -76,6 +78,7 @@ CREATE TABLE customers (
   credit_days INTEGER DEFAULT 0,
   credit_limit NUMERIC DEFAULT 0,
   state_code TEXT,
+  business_type TEXT NOT NULL DEFAULT 'shop' CHECK (business_type IN ('shop', 'factory')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -90,6 +93,7 @@ CREATE TABLE suppliers (
   opening_balance NUMERIC DEFAULT 0,
   credit_days INTEGER DEFAULT 0,
   credit_limit NUMERIC DEFAULT 0,
+  business_type TEXT NOT NULL DEFAULT 'factory' CHECK (business_type IN ('shop', 'factory')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -110,6 +114,7 @@ CREATE TABLE invoices (
   total_in_words TEXT,
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'final', 'cancelled')),
   cancel_reason TEXT,
+  business_type TEXT NOT NULL DEFAULT 'shop' CHECK (business_type IN ('shop', 'factory')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -144,6 +149,7 @@ CREATE TABLE purchase_invoices (
   total NUMERIC NOT NULL DEFAULT 0,
   total_in_words TEXT,
   status TEXT NOT NULL DEFAULT 'final' CHECK (status IN ('draft', 'final', 'cancelled')),
+  business_type TEXT NOT NULL DEFAULT 'factory' CHECK (business_type IN ('shop', 'factory')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -173,6 +179,7 @@ CREATE TABLE payments (
   cheque_date DATE,
   bank_name TEXT,
   reference_no TEXT,
+  business_type TEXT NOT NULL DEFAULT 'shop' CHECK (business_type IN ('shop', 'factory')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -194,6 +201,7 @@ CREATE TABLE stock_movements (
   type TEXT NOT NULL CHECK (type IN ('opening', 'production', 'purchase', 'sale', 'adjustment')),
   reference_id UUID,
   remarks TEXT,
+  business_type TEXT NOT NULL DEFAULT 'shop' CHECK (business_type IN ('shop', 'factory')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -204,6 +212,7 @@ CREATE TABLE expenses (
   category TEXT NOT NULL CHECK (category IN ('Labour', 'Raw material', 'Fuel', 'Electricity', 'Maintenance', 'Rent', 'Other')),
   amount NUMERIC NOT NULL DEFAULT 0,
   description TEXT,
+  business_type TEXT NOT NULL DEFAULT 'factory' CHECK (business_type IN ('shop', 'factory')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

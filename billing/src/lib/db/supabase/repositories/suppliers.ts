@@ -1,12 +1,13 @@
 import { supabase } from "../client";
 import type { SupplierRepository } from "../../repository";
-import type { Supplier } from "../../types";
+import type { Supplier, BusinessType } from "../../types";
 
 export const supplierRepository: SupplierRepository = {
-  async getAll(): Promise<Supplier[]> {
+  async getAll(businessType: BusinessType): Promise<Supplier[]> {
     const { data, error } = await supabase
       .from("suppliers")
       .select("*")
+      .eq("business_type", businessType)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -86,6 +87,7 @@ function mapFromDb(data: Record<string, unknown>): Supplier {
     openingBalance: (data.opening_balance as number) ?? 0,
     creditDays: (data.credit_days as number) ?? 0,
     creditLimit: (data.credit_limit as number) ?? 0,
+    businessType: (data.business_type as BusinessType) || "factory",
     createdAt: data.created_at as string,
   };
 }
@@ -100,5 +102,6 @@ function mapToDb(supplier: Omit<Supplier, "id" | "createdAt">): Record<string, u
     opening_balance: supplier.openingBalance,
     credit_days: supplier.creditDays,
     credit_limit: supplier.creditLimit,
+    business_type: supplier.businessType,
   };
 }

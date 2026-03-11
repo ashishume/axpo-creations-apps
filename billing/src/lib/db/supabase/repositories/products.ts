@@ -1,12 +1,13 @@
 import { supabase } from "../client";
 import type { ProductRepository } from "../../repository";
-import type { Product } from "../../types";
+import type { Product, BusinessType } from "../../types";
 
 export const productRepository: ProductRepository = {
-  async getAll(): Promise<Product[]> {
+  async getAll(businessType: BusinessType): Promise<Product[]> {
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .eq("business_type", businessType)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -108,6 +109,7 @@ function mapFromDb(data: Record<string, unknown>): Product {
     sellingPrice: data.selling_price as number,
     costPrice: (data.cost_price as number) || 0,
     currentStock: data.current_stock as number,
+    businessType: (data.business_type as BusinessType) || "shop",
     createdAt: data.created_at as string,
   };
 }
@@ -122,5 +124,6 @@ function mapToDb(product: Omit<Product, "id" | "createdAt">): Record<string, unk
     selling_price: product.sellingPrice,
     cost_price: product.costPrice,
     current_stock: product.currentStock,
+    business_type: product.businessType,
   };
 }

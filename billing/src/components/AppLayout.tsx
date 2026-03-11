@@ -33,16 +33,17 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, mode: "shared" },
+  { href: "/invoices", label: "Sales Invoices", icon: FileText, mode: "shop" },
   { href: "/setup", label: "Setup", icon: Settings, mode: "shared" },
   { href: "/products", label: "Products", icon: Package, mode: "shared" },
   // Factory-specific
   { href: "/suppliers", label: "Suppliers", icon: Truck, mode: "factory" },
   { href: "/purchase-invoices", label: "Purchases", icon: ShoppingCart, mode: "factory" },
   { href: "/expenses", label: "Expenses", icon: Receipt, mode: "factory" },
-  { href: "/stock", label: "Stock", icon: Boxes, mode: "factory" },
+  { href: "/stock", label: "Stock", icon: Boxes, mode: "shared" },
   // Shop-specific
   { href: "/customers", label: "Customers", icon: Users, mode: "shop" },
-  { href: "/invoices", label: "Sales Invoices", icon: FileText, mode: "shop" },
+
   { href: "/payments", label: "Payments", icon: CreditCard, mode: "shop" },
   // Shared
   { href: "/reports", label: "Reports", icon: BarChart3, mode: "shared" },

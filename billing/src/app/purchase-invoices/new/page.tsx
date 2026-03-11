@@ -8,6 +8,7 @@ import {
   addPurchaseInvoiceAsync,
   addSupplierAsync,
 } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import { formatPurchaseInvoiceNumber } from "@/lib/invoice-number";
 import { getGstAmounts, amountToWords, roundToRupee, getRoundOff } from "@/lib/gst";
 import { RemoveIcon, Skeleton, TableSkeleton } from "@/components/ui";
@@ -28,6 +29,7 @@ const today = new Date().toISOString().slice(0, 10);
 
 export function NewPurchaseInvoicePage() {
   const navigate = useNavigate();
+  const { mode } = useBusinessMode();
   const { data: company, loading: companyLoading } = useCompany();
   const { data: suppliersData, loading: suppliersLoading, refetch: refetchSuppliers } = useSuppliers();
   const { data: productsData, loading: productsLoading } = useProducts();
@@ -131,7 +133,7 @@ export function NewPurchaseInvoicePage() {
 
     setSaving(true);
     try {
-      const seq = await getNextPurchaseInvoiceSeqAsync(fyStart);
+      const seq = await getNextPurchaseInvoiceSeqAsync(fyStart, mode);
       const number = formatPurchaseInvoiceNumber(seq, fyStart);
 
       const cgstTotal = lineCalcs.reduce((s, l) => {
@@ -162,6 +164,7 @@ export function NewPurchaseInvoicePage() {
           total: grandTotal,
           totalInWords,
           status: "final",
+          businessType: mode,
         },
         lineCalcs.map((l) => ({
           productId: l.productId,
@@ -248,7 +251,7 @@ export function NewPurchaseInvoicePage() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>Items</h2>
           <button type="button" onClick={addLine} className="btn btn-primary">
-            + Add line
+            + Add Product
           </button>
         </div>
 

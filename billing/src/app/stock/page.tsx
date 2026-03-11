@@ -3,13 +3,15 @@ import { useState, useMemo } from "react";
 import { AlertTriangle } from "lucide-react";
 import { useProducts, useStockMovements } from "@/hooks/useStore";
 import { addStockMovementAsync } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import { Card, Skeleton, TableSkeleton } from "@/components/ui";
-import type { Product } from "@/lib/db/types";
+import type { Product, BusinessType } from "@/lib/db/types";
 
 const today = new Date().toISOString().slice(0, 10);
 const LOW_STOCK_THRESHOLD = 500;
 
 export function StockPage() {
+  const { mode } = useBusinessMode();
   const [activeTab, setActiveTab] = useState<"current" | "add" | "reduce">("current");
 
   const { data: products, loading: productsLoading, refetch: refetchProducts } = useProducts();
@@ -199,11 +201,11 @@ export function StockPage() {
       )}
 
       {activeTab === "add" && (
-        <AddStockForm products={productsList} onSuccess={handleSuccess} />
+        <AddStockForm products={productsList} onSuccess={handleSuccess} businessType={mode} />
       )}
 
       {activeTab === "reduce" && (
-        <ReduceStockForm products={productsList} onSuccess={handleSuccess} />
+        <ReduceStockForm products={productsList} onSuccess={handleSuccess} businessType={mode} />
       )}
     </div>
   );
@@ -212,9 +214,11 @@ export function StockPage() {
 function AddStockForm({
   products,
   onSuccess,
+  businessType,
 }: {
   products: Product[];
   onSuccess: () => void;
+  businessType: BusinessType;
 }) {
   const [date, setDate] = useState(today);
   const [productId, setProductId] = useState(products[0]?.id ?? "");
@@ -237,6 +241,7 @@ function AddStockForm({
         type: "purchase",
         referenceId: null,
         remarks: remarks.trim() || "Purchased",
+        businessType,
       });
       setQuantity(0);
       setRemarks("");
@@ -324,9 +329,11 @@ function AddStockForm({
 function ReduceStockForm({
   products,
   onSuccess,
+  businessType,
 }: {
   products: Product[];
   onSuccess: () => void;
+  businessType: BusinessType;
 }) {
   const [date, setDate] = useState(today);
   const [productId, setProductId] = useState(products[0]?.id ?? "");
@@ -359,6 +366,7 @@ function ReduceStockForm({
         type: "adjustment",
         referenceId: null,
         remarks: remarks.trim() || "Reduced",
+        businessType,
       });
       setQuantity(0);
       setRemarks("");

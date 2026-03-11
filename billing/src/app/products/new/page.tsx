@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { addProductAsync } from "@/lib/store-async";
 import { useProducts } from "@/hooks/useStore";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import type { ProductType } from "@/lib/db/types";
 
 const GST_RATES: { value: number; label: string }[] = [
@@ -21,6 +22,7 @@ const GST_RATES: { value: number; label: string }[] = [
 
 export function NewProductPage() {
   const navigate = useNavigate();
+  const { mode } = useBusinessMode();
   const { data: products } = useProducts();
   const [name, setName] = useState("");
   const [productType, setProductType] = useState<ProductType>("");
@@ -50,12 +52,13 @@ export function NewProductPage() {
       await addProductAsync({
         name: name.trim(),
         productType: productType.trim(),
-        hsn: hsn.trim() || undefined,
+        hsn: hsn.trim() || "",
         gstRate,
         unit: "pieces",
         sellingPrice,
         costPrice,
         currentStock: 0,
+        businessType: mode,
       });
       navigate("/products");
     } catch {

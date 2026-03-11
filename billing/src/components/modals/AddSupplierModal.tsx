@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal } from "@/components/ui";
 import { addSupplierAsync } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 
 interface AddSupplierModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface AddSupplierModalProps {
 }
 
 export function AddSupplierModal({ isOpen, onClose, onSaved }: AddSupplierModalProps) {
+  const { mode } = useBusinessMode();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [gstin, setGstin] = useState("");
@@ -26,13 +28,14 @@ export function AddSupplierModal({ isOpen, onClose, onSaved }: AddSupplierModalP
     try {
       await addSupplierAsync({
         name: name.trim(),
-        phone: phone.trim() || undefined,
-        gstin: gstin.trim() || undefined,
-        address: address.trim() || undefined,
-        stateCode: stateCode.trim() || undefined,
+        phone: phone.trim() || "",
+        gstin: gstin.trim() || "",
+        address: address.trim() || "",
+        stateCode: stateCode.trim() || "",
         openingBalance: 0,
         creditDays: 0,
         creditLimit: 0,
+        businessType: mode,
       });
       setName("");
       setPhone("");

@@ -1,12 +1,13 @@
 import { supabase } from "../client";
 import type { ExpenseRepository } from "../../repository";
-import type { Expense } from "../../types";
+import type { Expense, BusinessType } from "../../types";
 
 export const expenseRepository: ExpenseRepository = {
-  async getAll(): Promise<Expense[]> {
+  async getAll(businessType: BusinessType): Promise<Expense[]> {
     const { data, error } = await supabase
       .from("expenses")
       .select("*")
+      .eq("business_type", businessType)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -68,6 +69,7 @@ function mapFromDb(data: Record<string, unknown>): Expense {
     category: data.category as Expense["category"],
     amount: data.amount as number,
     description: data.description as string,
+    businessType: (data.business_type as BusinessType) || "factory",
     createdAt: data.created_at as string,
   };
 }
@@ -78,5 +80,6 @@ function mapToDb(expense: Omit<Expense, "id" | "createdAt">): Record<string, unk
     category: expense.category,
     amount: expense.amount,
     description: expense.description,
+    business_type: expense.businessType,
   };
 }

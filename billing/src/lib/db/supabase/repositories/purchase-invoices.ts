@@ -1,14 +1,15 @@
 import { supabase } from "../client";
 import type { PurchaseInvoiceRepository } from "../../repository";
-import type { PurchaseInvoice, PurchaseInvoiceItem } from "../../types";
+import type { PurchaseInvoice, PurchaseInvoiceItem, BusinessType } from "../../types";
 import { stockMovementRepository } from "./stock";
 import { productRepository } from "./products";
 
 export const purchaseInvoiceRepository: PurchaseInvoiceRepository = {
-  async getAll(): Promise<PurchaseInvoice[]> {
+  async getAll(businessType: BusinessType): Promise<PurchaseInvoice[]> {
     const { data, error } = await supabase
       .from("purchase_invoices")
       .select("*")
+      .eq("business_type", businessType)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -58,6 +59,7 @@ export const purchaseInvoiceRepository: PurchaseInvoiceRepository = {
             type: "purchase",
             referenceId: invoice.id,
             remarks: `Purchase invoice ${purchaseInvoiceData.number}`,
+            businessType: purchaseInvoiceData.businessType,
           });
           await productRepository.updateStock(productId, quantity);
         }
@@ -89,10 +91,11 @@ export const purchaseInvoiceRepository: PurchaseInvoiceRepository = {
     return (data || []).map(mapItemFromDb);
   },
 
-  async getAllItems(): Promise<PurchaseInvoiceItem[]> {
+  async getAllItems(businessType: BusinessType): Promise<PurchaseInvoiceItem[]> {
     const { data, error } = await supabase
       .from("purchase_invoice_items")
-      .select("*");
+      .select("*, purchase_invoices!inner(business_type)")
+      .eq("purchase_invoices.business_type", businessType);
 
     if (error) throw new Error(error.message);
     return (data || []).map(mapItemFromDb);
@@ -115,6 +118,7 @@ function mapInvoiceFromDb(data: Record<string, unknown>): PurchaseInvoice {
     total: Number(data.total ?? 0),
     totalInWords: String(data.total_in_words ?? ""),
     status: (data.status as PurchaseInvoice["status"]) ?? "final",
+    businessType: (data.business_type as BusinessType) || "factory",
     createdAt: String(data.created_at ?? ""),
   };
 }
@@ -134,6 +138,7 @@ function mapInvoiceToDb(pi: Omit<PurchaseInvoice, "id" | "createdAt">): Record<s
     total: pi.total,
     total_in_words: pi.totalInWords,
     status: pi.status,
+    business_type: pi.businessType,
   };
 }
 

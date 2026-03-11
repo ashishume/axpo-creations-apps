@@ -13,6 +13,7 @@ import {
   addStockMovementAsync,
   addCustomerAsync,
 } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import { formatInvoiceNumber } from "@/lib/invoice-number";
 import { getGstAmounts, amountToWords, roundToRupee, getRoundOff } from "@/lib/gst";
 import type { CustomerType } from "@/lib/db/types";
@@ -35,14 +36,14 @@ const CUSTOMER_TYPES: CustomerType[] = ["Dealer", "Contractor", "Retail", "Build
 
 export function NewInvoicePage() {
   const navigate = useNavigate();
+  const { mode } = useBusinessMode();
   const { data: company, loading: companyLoading } = useCompany();
   const { data: customersData, loading: customersLoading, refetch: refetchCustomers } = useCustomers();
   const { data: productsData, loading: productsLoading } = useProducts();
 
   const fyStart = company?.financialYearStart ?? new Date().getFullYear();
-  const [customerChoice, setCustomerChoice] = useState<"existing" | "new">("existing");
+  const [customerChoice, setCustomerChoice] = useState<"existing" | "new">("new");
   const [customerId, setCustomerId] = useState("");
-  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
   const [invDate, setInvDate] = useState(today);
   const [lines, setLines] = useState<LineRow[]>([]);
   const [invoiceDiscount, setInvoiceDiscount] = useState(0);
@@ -158,13 +159,9 @@ export function NewInvoicePage() {
     setLines(lines.filter((_, i) => i !== idx));
   };
 
-  const saveNewCustomerFromModal = async () => {
+  const saveNewCustomer = async () => {
     if (!newCustName.trim()) {
       alert("Customer name is required.");
-      return;
-    }
-    if (!newCustPhone.trim()) {
-      alert("Phone is required.");
       return;
     }
     setSavingCustomer(true);
@@ -180,11 +177,11 @@ export function NewInvoicePage() {
         creditDays: 0,
         creditLimit: 0,
         stateCode: newCustStateCode.trim(),
+        businessType: mode,
       });
       await refetchCustomers();
       setCustomerId(c.id);
       setCustomerChoice("existing");
-      setShowNewCustomerModal(false);
       setNewCustName("");
       setNewCustPhone("");
       setNewCustGstin("");
@@ -196,6 +193,16 @@ export function NewInvoicePage() {
     } finally {
       setSavingCustomer(false);
     }
+  };
+
+  const clearNewCustomerForm = () => {
+    setNewCustName("");
+    setNewCustType("Dealer");
+    setNewCustPhone("");
+    setNewCustGstin("");
+    setNewCustBilling("");
+    setNewCustShipping("");
+    setNewCustStateCode("");
   };
 
   const handleSave = async () => {
@@ -225,7 +232,7 @@ export function NewInvoicePage() {
 
     setSaving(true);
     try {
-      const seq = await getNextInvoiceSeqAsync(fyStart);
+      const seq = await getNextInvoiceSeqAsync(fyStart, mode);
       const number = formatInvoiceNumber(seq, fyStart);
 
       const inv = await addInvoiceAsync(
@@ -253,6 +260,7 @@ export function NewInvoicePage() {
           totalInWords,
           status: "final",
           cancelReason: "",
+          businessType: mode,
         },
         lineCalcs.map((l) => {
           const p = getProduct(l.productId);
@@ -277,6 +285,7 @@ export function NewInvoicePage() {
           type: "sale",
           referenceId: inv.id,
           remarks: `Invoice ${number}`,
+          businessType: mode,
         });
       }
 
@@ -335,109 +344,80 @@ export function NewInvoicePage() {
       </p>
 
       <div className="card mt-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Customer selection */}
-          <div>
-            <label className="block mb-2 font-medium" style={{ color: "var(--text-primary)" }}>
-              Customer *
-            </label>
-            <div className="flex items-center gap-4 mb-3">
-              <label className="flex items-center gap-2 cursor-pointer" style={{ color: "var(--text-primary)" }}>
-                <input
-                  type="radio"
-                  checked={customerChoice === "existing"}
-                  onChange={() => {
-                    setCustomerChoice("existing");
-                    setShowNewCustomerModal(false);
-                  }}
-                  className="cursor-pointer w-4 h-4"
-                />
-                <span>Existing</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer" style={{ color: "var(--text-primary)" }}>
-                <input
-                  type="radio"
-                  checked={customerChoice === "new"}
-                  onChange={() => setCustomerChoice("new")}
-                  className="cursor-pointer w-4 h-4"
-                />
-                <span>New</span>
-              </label>
-            </div>
-            
-            {customerChoice === "existing" && (
-              <>
-                <select
-                  value={customerId}
-                  onChange={(e) => setCustomerId(e.target.value)}
-                  className="input"
-                >
-                  <option value="">Select customer (name, phone, type)</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} – {c.phone} ({c.customerType})
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-2 text-sm">
-                  <Link to="/customers" className="no-underline">Manage customers</Link>
-                </p>
-              </>
-            )}
-            
-            {customerChoice === "new" && (
-              <div>
-                {customerId ? (
-                  <div className="flex items-center gap-2">
-                    <span style={{ color: "var(--text-secondary)" }}>
-                      Selected: {customers.find((x) => x.id === customerId)?.name}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowNewCustomerModal(true)}
-                      className="btn btn-secondary py-1 px-3 text-sm"
-                    >
-                      Change
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowNewCustomerModal(true)}
-                    className="btn btn-primary"
-                  >
-                    Add new customer
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-          
-          {/* Invoice date */}
-          <div>
-            <label className="block mb-2 font-medium" style={{ color: "var(--text-primary)" }}>
-              Invoice Date
-            </label>
-            <input
-              type="date"
-              value={invDate}
-              onChange={(e) => setInvDate(e.target.value)}
-              className="input w-auto"
-            />
+        <div className="flex items-center justify-between mb-4">
+          <label className="font-medium" style={{ color: "var(--text-primary)" }}>
+            Customer *
+          </label>
+          <div className="flex rounded-lg bg-slate-200 p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setCustomerChoice("new");
+                setCustomerId("");
+              }}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${customerChoice === "new"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
+            >
+              New Customer
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCustomerChoice("existing");
+                clearNewCustomerForm();
+              }}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${customerChoice === "existing"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
+            >
+              Existing Customer
+            </button>
+
           </div>
         </div>
-      </div>
 
-      {/* New Customer Modal */}
-      {showNewCustomerModal && (
-        <div className="modal-overlay" style={{ zIndex: 100 }}>
-          <div className="modal-content p-6 max-w-[440px]">
-            <h3 className="text-lg font-semibold mt-0 mb-4" style={{ color: "var(--text-primary)" }}>
-              Add new customer
-            </h3>
-            <div className="space-y-3">
+        {customerChoice === "existing" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block mb-2 font-medium" style={{ color: "var(--text-primary)" }}>
+                Select Customer
+              </label>
+              <select
+                value={customerId}
+                onChange={(e) => setCustomerId(e.target.value)}
+                className="input"
+              >
+                <option value="">Select customer (name, phone, type)</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} – {c.phone} ({c.customerType})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-sm">
+                <Link to="/customers" className="no-underline">Manage customers</Link>
+              </p>
+            </div>
+            <div>
+              <label className="block mb-2 font-medium" style={{ color: "var(--text-primary)" }}>
+                Invoice Date
+              </label>
+              <input
+                type="date"
+                value={invDate}
+                onChange={(e) => setInvDate(e.target.value)}
+                className="input w-auto"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block mb-1 text-sm" style={{ color: "var(--text-primary)" }}>
+                <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                   Name *
                 </label>
                 <input
@@ -445,10 +425,24 @@ export function NewInvoicePage() {
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
                   className="input"
+                  placeholder="Customer name"
+                  autoFocus
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm" style={{ color: "var(--text-primary)" }}>
+                <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={newCustPhone}
+                  onChange={(e) => setNewCustPhone(e.target.value)}
+                  className="input"
+                  placeholder="Phone number"
+                />
+              </div>
+              {/* <div>
+                <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                   Type
                 </label>
                 <select
@@ -462,32 +456,36 @@ export function NewInvoicePage() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </div> */}
               <div>
-                <label className="block mb-1 text-sm" style={{ color: "var(--text-primary)" }}>
-                  Phone *
+                <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  Invoice Date
                 </label>
                 <input
-                  type="text"
-                  value={newCustPhone}
-                  onChange={(e) => setNewCustPhone(e.target.value)}
+                  type="date"
+                  value={invDate}
+                  onChange={(e) => setInvDate(e.target.value)}
                   className="input"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block mb-1 text-sm" style={{ color: "var(--text-primary)" }}>
-                  GSTIN (optional)
+                <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  GSTIN
                 </label>
                 <input
                   type="text"
                   value={newCustGstin}
                   onChange={(e) => setNewCustGstin(e.target.value.toUpperCase())}
                   className="input"
+                  placeholder="Optional"
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm" style={{ color: "var(--text-primary)" }}>
-                  State code (for GST)
+                <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  State Code
                 </label>
                 <input
                   type="text"
@@ -498,34 +496,37 @@ export function NewInvoicePage() {
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm" style={{ color: "var(--text-primary)" }}>
-                  Billing address
+                <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  Billing Address
                 </label>
-                <textarea
+                <input
+                  type="text"
                   value={newCustBilling}
                   onChange={(e) => setNewCustBilling(e.target.value)}
-                  className="input min-h-[60px]"
-                  rows={2}
+                  className="input"
+                  placeholder="Address"
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm" style={{ color: "var(--text-primary)" }}>
-                  Shipping address (optional)
+                <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  Shipping Address
                 </label>
-                <textarea
+                <input
+                  type="text"
                   value={newCustShipping}
                   onChange={(e) => setNewCustShipping(e.target.value)}
-                  className="input min-h-[60px]"
-                  rows={2}
+                  className="input"
+                  placeholder="Same as billing if empty"
                 />
               </div>
             </div>
-            <div className="flex gap-2 mt-4">
+
+            <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={saveNewCustomerFromModal}
+                onClick={saveNewCustomer}
                 className="btn btn-primary"
-                disabled={savingCustomer}
+                disabled={savingCustomer || !newCustName.trim()}
               >
                 {savingCustomer ? (
                   <span className="inline-flex items-center gap-2">
@@ -533,21 +534,29 @@ export function NewInvoicePage() {
                     Saving...
                   </span>
                 ) : (
-                  "Save & use"
+                  "Save & Continue"
                 )}
               </button>
               <button
                 type="button"
-                onClick={() => setShowNewCustomerModal(false)}
+                onClick={() => {
+                  setCustomerChoice("existing");
+                  clearNewCustomerForm();
+                }}
                 className="btn btn-secondary"
                 disabled={savingCustomer}
               >
                 Cancel
               </button>
+              {!newCustName.trim() && !newCustPhone.trim() && (
+                <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                  Enter name and phone to save
+                </span>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Stock warning */}
       {stockIssues.length > 0 && (
@@ -574,7 +583,7 @@ export function NewInvoicePage() {
         <div className="flex justify-between items-center mb-4">
           <strong style={{ color: "var(--text-primary)" }}>Items</strong>
           <button type="button" onClick={addLine} className="btn btn-primary">
-            + Add Line
+            + Add Product
           </button>
         </div>
         <div className="table-container border-0">
@@ -610,8 +619,8 @@ export function NewInvoicePage() {
                         className="input w-full min-w-[180px] py-1.5"
                       >
                         {products.map((pr) => (
-                          <option 
-                            key={pr.id} 
+                          <option
+                            key={pr.id}
                             value={pr.id}
                             disabled={pr.currentStock <= 0}
                           >
@@ -724,9 +733,9 @@ export function NewInvoicePage() {
 
       {/* Save button */}
       <div className="mt-6">
-        <button 
-          type="button" 
-          onClick={handleSave} 
+        <button
+          type="button"
+          onClick={handleSave}
           className="btn btn-primary"
           disabled={stockIssues.length > 0 || saving}
         >

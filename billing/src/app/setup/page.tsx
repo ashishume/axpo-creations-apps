@@ -2,12 +2,14 @@
 import { useEffect, useState } from "react";
 import { useCompany } from "@/hooks/useStore";
 import { setCompanyAsync } from "@/lib/store-async";
+import { useBusinessMode } from "@/contexts/BusinessModeContext";
 import type { Company } from "@/lib/db/types";
 import { Card, Input, Textarea, Skeleton } from "@/components/ui";
 
 const currentFY = new Date().getMonth() >= 2 ? new Date().getFullYear() : new Date().getFullYear() - 1;
 
 export function SetupPage() {
+  const { mode } = useBusinessMode();
   const { data: company, loading } = useCompany();
   const [form, setForm] = useState<Partial<Company>>({
     name: "",
@@ -55,7 +57,6 @@ export function SetupPage() {
     setSaving(true);
     try {
       await setCompanyAsync({
-        id: form.id || "company-1",
         name: form.name,
         address: form.address || "",
         gstin: form.gstin,
@@ -68,6 +69,7 @@ export function SetupPage() {
         logoPath: form.logoPath || "",
         financialYearStart: form.financialYearStart ?? currentFY,
         stateCode: form.stateCode || "",
+        businessType: mode,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
