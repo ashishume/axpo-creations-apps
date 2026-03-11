@@ -1,11 +1,38 @@
 -- Supabase Schema for Axpo Billing
--- Run this in Supabase SQL Editor to create all tables
+-- Run this in Supabase SQL Editor to replace existing tables and add new ones.
+-- Part 1: Drop existing tables (replace). Part 2: Create all tables (add/updated).
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- =============================================================================
+-- PART 1: REPLACE — Drop existing tables (reverse dependency order)
+-- Run this to clear old definitions before recreating. Safe to run if tables don't exist.
+-- =============================================================================
+
+DROP TABLE IF EXISTS payment_allocations CASCADE;
+DROP TABLE IF EXISTS purchase_invoice_items CASCADE;
+DROP TABLE IF EXISTS invoice_items CASCADE;
+DROP TABLE IF EXISTS stock_movements CASCADE;
+DROP TABLE IF EXISTS payments CASCADE;
+DROP TABLE IF EXISTS purchase_invoices CASCADE;
+DROP TABLE IF EXISTS invoices CASCADE;
+DROP TABLE IF EXISTS user_subscriptions CASCADE;
+DROP TABLE IF EXISTS expenses CASCADE;
+DROP TABLE IF EXISTS suppliers CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS companies CASCADE;
+DROP TABLE IF EXISTS subscription_plans CASCADE;
+-- users references auth.users; drop only if you want to replace it
+DROP TABLE IF EXISTS users CASCADE;
+
+-- =============================================================================
+-- PART 2: ADD — Create all tables (updated definitions)
+-- =============================================================================
+
 -- Companies table
-CREATE TABLE IF NOT EXISTS companies (
+CREATE TABLE companies (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   address TEXT,
@@ -22,12 +49,12 @@ CREATE TABLE IF NOT EXISTS companies (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Products table
-CREATE TABLE IF NOT EXISTS products (
+-- Products table (product_type free-form; hsn nullable)
+CREATE TABLE products (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
-  product_type TEXT NOT NULL CHECK (product_type IN ('Red Clay Bricks', 'Fly Ash Bricks', 'Wire Cut Bricks', 'Concrete Blocks')),
-  hsn TEXT DEFAULT '6904',
+  product_type TEXT NOT NULL,
+  hsn TEXT DEFAULT NULL,
   gst_rate NUMERIC NOT NULL DEFAULT 5,
   unit TEXT DEFAULT 'pieces',
   selling_price NUMERIC NOT NULL DEFAULT 0,
@@ -37,7 +64,7 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- Customers table
-CREATE TABLE IF NOT EXISTS customers (
+CREATE TABLE customers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   customer_type TEXT NOT NULL CHECK (customer_type IN ('Dealer', 'Contractor', 'Retail', 'Builder')),
@@ -52,8 +79,22 @@ CREATE TABLE IF NOT EXISTS customers (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Suppliers table
+CREATE TABLE suppliers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  phone TEXT,
+  gstin TEXT,
+  address TEXT,
+  state_code TEXT,
+  opening_balance NUMERIC DEFAULT 0,
+  credit_days INTEGER DEFAULT 0,
+  credit_limit NUMERIC DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Invoices table
-CREATE TABLE IF NOT EXISTS invoices (
+CREATE TABLE invoices (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   number TEXT NOT NULL UNIQUE,
   date DATE NOT NULL,
@@ -73,7 +114,7 @@ CREATE TABLE IF NOT EXISTS invoices (
 );
 
 -- Invoice items table
-CREATE TABLE IF NOT EXISTS invoice_items (
+CREATE TABLE invoice_items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
   product_id UUID REFERENCES products(id),
@@ -82,13 +123,46 @@ CREATE TABLE IF NOT EXISTS invoice_items (
   cost_price NUMERIC DEFAULT 0,
   discount NUMERIC DEFAULT 0,
   line_total NUMERIC NOT NULL DEFAULT 0,
+  taxable_amount NUMERIC DEFAULT 0,
+  gst_amount NUMERIC DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Purchase invoices table
+CREATE TABLE purchase_invoices (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  number TEXT NOT NULL UNIQUE,
+  date DATE NOT NULL,
+  supplier_id UUID REFERENCES suppliers(id),
+  subtotal NUMERIC NOT NULL DEFAULT 0,
+  discount NUMERIC DEFAULT 0,
   taxable_amount NUMERIC NOT NULL DEFAULT 0,
+  cgst_amount NUMERIC DEFAULT 0,
+  sgst_amount NUMERIC DEFAULT 0,
+  igst_amount NUMERIC DEFAULT 0,
+  round_off NUMERIC DEFAULT 0,
+  total NUMERIC NOT NULL DEFAULT 0,
+  total_in_words TEXT,
+  status TEXT NOT NULL DEFAULT 'final' CHECK (status IN ('draft', 'final', 'cancelled')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Purchase invoice items table
+CREATE TABLE purchase_invoice_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  purchase_invoice_id UUID REFERENCES purchase_invoices(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id),
+  quantity INTEGER NOT NULL DEFAULT 0,
+  rate NUMERIC NOT NULL DEFAULT 0,
+  discount NUMERIC DEFAULT 0,
+  line_total NUMERIC NOT NULL DEFAULT 0,
+  taxable_amount NUMERIC DEFAULT 0,
   gst_amount NUMERIC DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Payments table
-CREATE TABLE IF NOT EXISTS payments (
+CREATE TABLE payments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   receipt_no TEXT NOT NULL,
   date DATE NOT NULL,
@@ -103,7 +177,7 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 
 -- Payment allocations table
-CREATE TABLE IF NOT EXISTS payment_allocations (
+CREATE TABLE payment_allocations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   payment_id UUID REFERENCES payments(id) ON DELETE CASCADE,
   invoice_id UUID REFERENCES invoices(id),
@@ -111,20 +185,20 @@ CREATE TABLE IF NOT EXISTS payment_allocations (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Stock movements table
-CREATE TABLE IF NOT EXISTS stock_movements (
+-- Stock movements table (includes 'purchase' type)
+CREATE TABLE stock_movements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   date DATE NOT NULL,
   product_id UUID REFERENCES products(id),
   quantity INTEGER NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('opening', 'production', 'sale', 'adjustment')),
+  type TEXT NOT NULL CHECK (type IN ('opening', 'production', 'purchase', 'sale', 'adjustment')),
   reference_id UUID,
   remarks TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Expenses table
-CREATE TABLE IF NOT EXISTS expenses (
+CREATE TABLE expenses (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   date DATE NOT NULL,
   category TEXT NOT NULL CHECK (category IN ('Labour', 'Raw material', 'Fuel', 'Electricity', 'Maintenance', 'Rent', 'Other')),
@@ -134,7 +208,7 @@ CREATE TABLE IF NOT EXISTS expenses (
 );
 
 -- Users table (extends Supabase auth.users)
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   name TEXT,
@@ -144,7 +218,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Subscription plans table
-CREATE TABLE IF NOT EXISTS subscription_plans (
+CREATE TABLE subscription_plans (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   price NUMERIC NOT NULL DEFAULT 0,
@@ -154,7 +228,7 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
 );
 
 -- User subscriptions table
-CREATE TABLE IF NOT EXISTS user_subscriptions (
+CREATE TABLE user_subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   plan_id TEXT REFERENCES subscription_plans(id),
@@ -181,13 +255,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- =============================================================================
 -- Row Level Security (RLS) policies
--- Enable RLS on all tables
+-- =============================================================================
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE purchase_invoices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE purchase_invoice_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_allocations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stock_movements ENABLE ROW LEVEL SECURITY;
@@ -196,13 +274,15 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
 
--- For now, allow all operations for authenticated users
--- In production, you would want more granular policies
+-- Allow all operations for authenticated users
 CREATE POLICY "Allow all for authenticated users" ON companies FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow all for authenticated users" ON products FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow all for authenticated users" ON customers FOR ALL TO authenticated USING (true);
+CREATE POLICY "Allow all for authenticated users" ON suppliers FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow all for authenticated users" ON invoices FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow all for authenticated users" ON invoice_items FOR ALL TO authenticated USING (true);
+CREATE POLICY "Allow all for authenticated users" ON purchase_invoices FOR ALL TO authenticated USING (true);
+CREATE POLICY "Allow all for authenticated users" ON purchase_invoice_items FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow all for authenticated users" ON payments FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow all for authenticated users" ON payment_allocations FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow all for authenticated users" ON stock_movements FOR ALL TO authenticated USING (true);
@@ -212,12 +292,15 @@ CREATE POLICY "Users can update own profile" ON users FOR UPDATE TO authenticate
 CREATE POLICY "Allow read subscription plans" ON subscription_plans FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Users can view own subscriptions" ON user_subscriptions FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
--- Also allow anon access for development (remove in production)
+-- Anon access for development (remove in production)
 CREATE POLICY "Allow anon access" ON companies FOR ALL TO anon USING (true);
 CREATE POLICY "Allow anon access" ON products FOR ALL TO anon USING (true);
 CREATE POLICY "Allow anon access" ON customers FOR ALL TO anon USING (true);
+CREATE POLICY "Allow anon access" ON suppliers FOR ALL TO anon USING (true);
 CREATE POLICY "Allow anon access" ON invoices FOR ALL TO anon USING (true);
 CREATE POLICY "Allow anon access" ON invoice_items FOR ALL TO anon USING (true);
+CREATE POLICY "Allow anon access" ON purchase_invoices FOR ALL TO anon USING (true);
+CREATE POLICY "Allow anon access" ON purchase_invoice_items FOR ALL TO anon USING (true);
 CREATE POLICY "Allow anon access" ON payments FOR ALL TO anon USING (true);
 CREATE POLICY "Allow anon access" ON payment_allocations FOR ALL TO anon USING (true);
 CREATE POLICY "Allow anon access" ON stock_movements FOR ALL TO anon USING (true);

@@ -19,8 +19,11 @@ const defaultData: StoreData = {
   company: null,
   products: [],
   customers: [],
+  suppliers: [],
   invoices: [],
   invoiceItems: [],
+  purchaseInvoices: [],
+  purchaseInvoiceItems: [],
   payments: [],
   paymentAllocations: [],
   stockMovements: [],
@@ -36,6 +39,9 @@ function load(): StoreData {
     if (!raw) return defaultData;
     const data = JSON.parse(raw) as StoreData;
     if (!data.expenses) data.expenses = [];
+    if (!data.suppliers) data.suppliers = [];
+    if (!data.purchaseInvoices) data.purchaseInvoices = [];
+    if (!data.purchaseInvoiceItems) data.purchaseInvoiceItems = [];
     data.products = (data.products || []).map((p) => ({ ...p, costPrice: p.costPrice ?? 0 }));
     return data;
   } catch {

@@ -26,6 +26,9 @@ export interface StoreDataRpc {
   paymentAllocations: PaymentAllocation[];
   stockMovements: StockMovement[];
   expenses: Expense[];
+  suppliers?: import("../types").Supplier[];
+  purchaseInvoices?: import("../types").PurchaseInvoice[];
+  purchaseInvoiceItems?: import("../types").PurchaseInvoiceItem[];
 }
 
 function mapCompany(d: Record<string, unknown> | null): Company | null {

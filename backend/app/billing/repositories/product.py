@@ -33,5 +33,12 @@ class ProductRepository:
         await db.delete(product)
         await db.flush()
 
+    async def increment_stock(self, db: AsyncSession, id: UUID, quantity: int) -> None:
+        """Add quantity to product current_stock (can be negative)."""
+        product = await self.get(db, id)
+        if product:
+            product.current_stock = (product.current_stock or 0) + quantity
+            await self.update(db, product)
+
 
 product_repository = ProductRepository()

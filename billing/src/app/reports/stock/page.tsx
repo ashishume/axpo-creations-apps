@@ -14,7 +14,7 @@ export function StockReportPage() {
     const movements = data?.stockMovements ?? [];
     return products.map((p) => {
       const movs = movements.filter((m) => m.productId === p.id);
-      const added = movs.filter((m) => m.type === "production" || m.type === "opening").reduce((s, m) => s + (m.quantity > 0 ? m.quantity : 0), 0);
+      const added = movs.filter((m) => m.type === "production" || m.type === "purchase" || m.type === "opening").reduce((s, m) => s + (m.quantity > 0 ? m.quantity : 0), 0);
       const sold = movs.filter((m) => m.type === "sale").reduce((s, m) => s + Math.abs(m.quantity), 0);
       const reduced = movs.filter((m) => m.type === "adjustment" && m.quantity < 0).reduce((s, m) => s + Math.abs(m.quantity), 0);
       return { product: p, added, sold, reduced, current: p.currentStock };

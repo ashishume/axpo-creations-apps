@@ -16,6 +16,8 @@ import {
   Gem,
   LogOut,
   Menu,
+  Truck,
+  ShoppingCart,
 } from "lucide-react";
 
 const nav = [
@@ -25,6 +27,8 @@ const nav = [
   { href: "/customers", label: "Customers", icon: Users },
   { href: "/invoices", label: "Invoices", icon: FileText },
   { href: "/payments", label: "Payments", icon: CreditCard },
+  { href: "/suppliers", label: "Suppliers", icon: Truck },
+  { href: "/purchase-invoices", label: "Purchases", icon: ShoppingCart },
   { href: "/expenses", label: "Expenses", icon: Receipt },
   { href: "/stock", label: "Stock", icon: TrendingUp },
   { href: "/reports", label: "Reports", icon: BarChart3 },

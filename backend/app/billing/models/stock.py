@@ -20,7 +20,7 @@ class StockMovement(BillingBase):
         nullable=True,
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
-    type: Mapped[str] = mapped_column(String(20), nullable=False)  # opening, production, sale, adjustment
+    type: Mapped[str] = mapped_column(String(20), nullable=False)  # opening, production, purchase, sale, adjustment
     reference_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     remarks: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

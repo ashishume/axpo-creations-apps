@@ -1,18 +1,10 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { useProduct } from "@/hooks/useStore";
+import { useProduct, useProducts } from "@/hooks/useStore";
 import { updateProductAsync } from "@/lib/store-async";
 import type { ProductType } from "@/lib/db/types";
 import { Skeleton } from "@/components/ui";
-
-const PRODUCT_TYPES: ProductType[] = [
-  "Red Clay Bricks",
-  "Fly Ash Bricks",
-  "Wire Cut Bricks",
-  "Concrete Blocks",
-];
 
 const GST_RATES: { value: number; label: string }[] = [
   { value: 5, label: "5%" },
@@ -31,18 +23,26 @@ export function EditProductPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: product, loading } = useProduct(id ?? "");
+  const { data: products } = useProducts();
   const [name, setName] = useState("");
-  const [productType, setProductType] = useState<ProductType>("Red Clay Bricks");
+  const [productType, setProductType] = useState<ProductType>("");
+  const [hsn, setHsn] = useState("");
   const [gstRate, setGstRate] = useState(5);
   const [sellingPrice, setSellingPrice] = useState(0);
   const [costPrice, setCostPrice] = useState(0);
   const [currentStock, setCurrentStock] = useState(0);
   const [saving, setSaving] = useState(false);
 
+  const productTypeSuggestions = useMemo(() => {
+    const list = products ?? [];
+    return [...new Set(list.map((p) => p.productType).filter(Boolean))].sort();
+  }, [products]);
+
   useEffect(() => {
     if (product) {
       setName(product.name);
       setProductType(product.productType);
+      setHsn(product.hsn ?? "");
       setGstRate(product.gstRate);
       setSellingPrice(product.sellingPrice);
       setCostPrice(product.costPrice ?? 0);
@@ -62,15 +62,20 @@ export function EditProductPage() {
       alert("Product name is required");
       return;
     }
+    if (!productType.trim()) {
+      alert("Product type is required");
+      return;
+    }
     setSaving(true);
     try {
       await updateProductAsync(id!, {
         name: name.trim(),
-        productType,
+        productType: productType.trim(),
+        hsn: hsn.trim() || undefined,
         gstRate,
         sellingPrice,
         costPrice,
-        // Stock is updated only from the Stock page; HSN kept as default in store
+        // Stock is updated only from the Stock page; HSN editable on form
       });
       navigate("/products");
     } catch {
@@ -110,16 +115,30 @@ export function EditProductPage() {
           />
         </div>
         <div className="mb-4">
-          <label className="block mb-1">Product Type</label>
-          <select
-            value={productType}
-            onChange={(e) => setProductType(e.target.value as ProductType)}
+          <label className="block mb-1">Product Type *</label>
+          <input
+            type="text"
             className="input"
-          >
-            {PRODUCT_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
+            list="product-type-list-edit"
+            value={productType}
+            onChange={(e) => setProductType(e.target.value)}
+            placeholder="e.g. Ceramic Tiles, Vitrified Tiles"
+          />
+          <datalist id="product-type-list-edit">
+            {productTypeSuggestions.map((t) => (
+              <option key={t} value={t} />
             ))}
-          </select>
+          </datalist>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">HSN Code</label>
+          <input
+            type="text"
+            className="input"
+            value={hsn}
+            onChange={(e) => setHsn(e.target.value)}
+            placeholder="e.g. 6904, 6907, 6908"
+          />
         </div>
         <div className="mb-4">
           <label className="block mb-1">GST Rate</label>

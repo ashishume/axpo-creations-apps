@@ -20,7 +20,7 @@ class AuthService:
     async def login(self, db: AsyncSession, email: str, password: str) -> User:
         result = await db.execute(select(User).where(User.email == email))
         user = result.scalar_one_or_none()
-        if not user or not verify_password(password, user.password_hash):
+        if not user or not user.password_hash or not verify_password(password, user.password_hash):
             raise UnauthorizedError("Invalid email or password")
         return user
 

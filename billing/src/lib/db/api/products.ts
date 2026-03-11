@@ -6,8 +6,8 @@ function mapFromApi(r: Record<string, unknown>): Product {
   return {
     id: String(r.id),
     name: String(r.name ?? ""),
-    productType: (r.product_type as Product["productType"]) ?? "Red Clay Bricks",
-    hsn: String(r.hsn ?? "6904"),
+    productType: String(r.product_type ?? ""),
+    hsn: String(r.hsn ?? ""),
     gstRate: Number(r.gst_rate ?? 5),
     unit: String(r.unit ?? "pieces"),
     sellingPrice: Number(r.selling_price ?? 0),

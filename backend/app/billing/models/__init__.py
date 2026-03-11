@@ -7,6 +7,8 @@ from app.billing.models.invoice import Invoice, InvoiceItem
 from app.billing.models.payment import Payment, PaymentAllocation
 from app.billing.models.expense import Expense
 from app.billing.models.stock import StockMovement
+from app.billing.models.supplier import Supplier
+from app.billing.models.purchase_invoice import PurchaseInvoice, PurchaseInvoiceItem
 from app.billing.models.user import User
 from app.billing.models.subscription import SubscriptionPlan, UserSubscription
 
@@ -21,6 +23,9 @@ __all__ = [
     "PaymentAllocation",
     "Expense",
     "StockMovement",
+    "Supplier",
+    "PurchaseInvoice",
+    "PurchaseInvoiceItem",
     "User",
     "SubscriptionPlan",
     "UserSubscription",

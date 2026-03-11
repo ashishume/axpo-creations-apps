@@ -34,16 +34,13 @@ CREATE TABLE IF NOT EXISTS products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   product_type VARCHAR(50) NOT NULL,
-  hsn TEXT DEFAULT '6904',
+  hsn TEXT DEFAULT NULL,
   gst_rate NUMERIC NOT NULL DEFAULT 5,
   unit TEXT DEFAULT 'pieces',
   selling_price NUMERIC NOT NULL DEFAULT 0,
   cost_price NUMERIC,
   current_stock INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
-  CONSTRAINT products_product_type_check CHECK (product_type IN (
-    'Red Clay Bricks', 'Fly Ash Bricks', 'Wire Cut Bricks', 'Concrete Blocks'
-  ))
+  created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
 );
 
 -- -----------------------------------------------------------------------------
@@ -65,6 +62,22 @@ CREATE TABLE IF NOT EXISTS customers (
   CONSTRAINT customers_customer_type_check CHECK (customer_type IN (
     'Dealer', 'Contractor', 'Retail', 'Builder'
   ))
+);
+
+-- -----------------------------------------------------------------------------
+-- Suppliers
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS suppliers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  phone TEXT,
+  gstin TEXT,
+  address TEXT,
+  state_code TEXT,
+  opening_balance NUMERIC NOT NULL DEFAULT 0,
+  credit_days INTEGER NOT NULL DEFAULT 0,
+  credit_limit NUMERIC NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
 );
 
 -- -----------------------------------------------------------------------------
@@ -136,6 +149,45 @@ CREATE TABLE IF NOT EXISTS invoice_items (
 );
 
 -- -----------------------------------------------------------------------------
+-- Purchase invoices (depends: suppliers)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS purchase_invoices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  number TEXT NOT NULL,
+  date DATE NOT NULL,
+  supplier_id UUID REFERENCES suppliers(id),
+  subtotal NUMERIC NOT NULL DEFAULT 0,
+  discount NUMERIC,
+  taxable_amount NUMERIC NOT NULL DEFAULT 0,
+  cgst_amount NUMERIC,
+  sgst_amount NUMERIC,
+  igst_amount NUMERIC,
+  round_off NUMERIC,
+  total NUMERIC NOT NULL DEFAULT 0,
+  total_in_words TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'final',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
+  CONSTRAINT purchase_invoices_status_check CHECK (status IN ('draft', 'final', 'cancelled'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS purchase_invoices_number_key ON purchase_invoices (number);
+
+-- -----------------------------------------------------------------------------
+-- Purchase invoice items (depends: purchase_invoices, products)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS purchase_invoice_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  purchase_invoice_id UUID NOT NULL REFERENCES purchase_invoices(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id),
+  quantity INTEGER NOT NULL DEFAULT 0,
+  rate NUMERIC NOT NULL DEFAULT 0,
+  discount NUMERIC,
+  line_total NUMERIC NOT NULL DEFAULT 0,
+  taxable_amount NUMERIC,
+  gst_amount NUMERIC,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
+);
+
+-- -----------------------------------------------------------------------------
 -- Payments (depends: customers)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS payments (
@@ -192,7 +244,7 @@ CREATE TABLE IF NOT EXISTS stock_movements (
   remarks TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
   CONSTRAINT stock_movements_type_check CHECK (type IN (
-    'opening', 'production', 'sale', 'adjustment'
+    'opening', 'production', 'purchase', 'sale', 'adjustment'
   ))
 );
 

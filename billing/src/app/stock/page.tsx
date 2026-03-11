@@ -23,7 +23,7 @@ export function StockPage() {
   const stockSummary = useMemo(() => {
     return productsList.map((p) => {
       const movs = movementsList.filter((m) => m.productId === p.id);
-      const added = movs.filter((m) => m.type === "production" || m.type === "opening").reduce((s, m) => s + (m.quantity > 0 ? m.quantity : 0), 0);
+      const added = movs.filter((m) => m.type === "production" || m.type === "purchase" || m.type === "opening").reduce((s, m) => s + (m.quantity > 0 ? m.quantity : 0), 0);
       const sold = movs.filter((m) => m.type === "sale").reduce((s, m) => s + Math.abs(m.quantity), 0);
       const reduced = movs.filter((m) => m.type === "adjustment" && m.quantity < 0).reduce((s, m) => s + Math.abs(m.quantity), 0);
       return {
@@ -177,7 +177,7 @@ export function StockPage() {
                   {historyList.map((m) => {
                     const p = productsList.find((x) => x.id === m.productId);
                     const change = m.quantity > 0 ? `+${m.quantity}` : m.quantity;
-                    const reason = m.type === "sale" ? "Sale" : m.type === "production" || m.type === "opening" ? "Added" : "Reduced";
+                    const reason = m.type === "sale" ? "Sale" : m.type === "purchase" ? "Purchased" : m.type === "production" || m.type === "opening" ? "Added" : "Reduced";
                     return (
                       <tr key={m.id} className="transition-colors duration-200">
                         <td>{m.date}</td>
@@ -234,9 +234,9 @@ function AddStockForm({
         date,
         productId,
         quantity,
-        type: "production",
+        type: "purchase",
         referenceId: null,
-        remarks: remarks.trim() || "Added",
+        remarks: remarks.trim() || "Purchased",
       });
       setQuantity(0);
       setRemarks("");
@@ -252,7 +252,7 @@ function AddStockForm({
     <Card className="mt-6 max-w-md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <p style={{ color: "var(--text-secondary)" }}>
-          Add bricks or blocks to stock (e.g. after production or when you receive stock).
+          Add stock (e.g. after purchase or when you receive stock).
         </p>
 
         <div>
@@ -309,7 +309,7 @@ function AddStockForm({
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
             className="input"
-            placeholder="e.g. Production, Received"
+            placeholder="e.g. Purchase, Received"
           />
         </div>
 

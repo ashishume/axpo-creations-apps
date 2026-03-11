@@ -18,8 +18,8 @@ class Product(BillingBase):
     product_type: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
-    )  # Red Clay Bricks, Fly Ash Bricks, Wire Cut Bricks, Concrete Blocks
-    hsn: Mapped[str | None] = mapped_column(Text, default="6904")
+    )
+    hsn: Mapped[str | None] = mapped_column(Text, default=None)
     gst_rate: Mapped[Decimal] = mapped_column(Numeric, nullable=False, default=5)
     unit: Mapped[str | None] = mapped_column(Text, default="pieces")
     selling_price: Mapped[Decimal] = mapped_column(Numeric, nullable=False, default=0)

@@ -1,14 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Modal } from "@/components/ui";
 import { addProductAsync } from "@/lib/store-async";
+import { useProducts } from "@/hooks/useStore";
 import type { ProductType } from "@/lib/db/types";
-
-const PRODUCT_TYPES: ProductType[] = [
-  "Red Clay Bricks",
-  "Fly Ash Bricks",
-  "Wire Cut Bricks",
-  "Concrete Blocks",
-];
 
 const GST_RATES: { value: number; label: string }[] = [
   { value: 5, label: "5%" },
@@ -29,12 +23,19 @@ interface AddProductModalProps {
 }
 
 export function AddProductModal({ isOpen, onClose, onSaved }: AddProductModalProps) {
+  const { data: products } = useProducts();
   const [name, setName] = useState("");
-  const [productType, setProductType] = useState<ProductType>("Red Clay Bricks");
+  const [productType, setProductType] = useState<ProductType>("");
+  const [hsn, setHsn] = useState("");
   const [gstRate, setGstRate] = useState(5);
   const [sellingPrice, setSellingPrice] = useState(0);
   const [costPrice, setCostPrice] = useState(0);
   const [saving, setSaving] = useState(false);
+
+  const productTypeSuggestions = useMemo(() => {
+    const list = products ?? [];
+    return [...new Set(list.map((p) => p.productType).filter(Boolean))].sort();
+  }, [products]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +43,16 @@ export function AddProductModal({ isOpen, onClose, onSaved }: AddProductModalPro
       alert("Product name is required");
       return;
     }
+    if (!productType.trim()) {
+      alert("Product type is required");
+      return;
+    }
     setSaving(true);
     try {
       await addProductAsync({
         name: name.trim(),
-        productType,
-        hsn: "6904",
+        productType: productType.trim(),
+        hsn: hsn.trim() || undefined,
         gstRate,
         unit: "pieces",
         sellingPrice,
@@ -55,7 +60,8 @@ export function AddProductModal({ isOpen, onClose, onSaved }: AddProductModalPro
         currentStock: 0,
       });
       setName("");
-      setProductType("Red Clay Bricks");
+      setProductType("");
+      setHsn("");
       setGstRate(5);
       setSellingPrice(0);
       setCostPrice(0);
@@ -77,10 +83,24 @@ export function AddProductModal({ isOpen, onClose, onSaved }: AddProductModalPro
             <input type="text" className="input" value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>Product Type</label>
-            <select className="input" value={productType} onChange={(e) => setProductType(e.target.value as ProductType)}>
-              {PRODUCT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>Product Type *</label>
+            <input
+              type="text"
+              className="input"
+              list="product-type-list-modal"
+              value={productType}
+              onChange={(e) => setProductType(e.target.value)}
+              placeholder="e.g. Ceramic Tiles, Vitrified Tiles"
+            />
+            <datalist id="product-type-list-modal">
+              {productTypeSuggestions.map((t) => (
+                <option key={t} value={t} />
+              ))}
+            </datalist>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>HSN Code</label>
+            <input type="text" className="input" value={hsn} onChange={(e) => setHsn(e.target.value)} placeholder="e.g. 6904, 6907" />
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>GST Rate</label>

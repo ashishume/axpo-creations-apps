@@ -18,13 +18,18 @@ import {
   PaymentAllocation,
   Product,
   StockMovement,
+  Supplier,
+  PurchaseInvoice,
+  PurchaseInvoiceItem,
 } from "./db/types";
 
 import {
   companyRepository,
   productRepository,
   customerRepository,
+  supplierRepository,
   invoiceRepository,
+  purchaseInvoiceRepository,
   paymentRepository,
   stockMovementRepository,
   expenseRepository,
@@ -114,6 +119,39 @@ export async function deleteCustomerAsync(id: string): Promise<{ ok: boolean; er
 }
 
 // ============================================================
+// SUPPLIERS
+// ============================================================
+
+export async function getSuppliersAsync(): Promise<Supplier[]> {
+  return supplierRepository.getAll();
+}
+
+export async function getSupplierAsync(id: string): Promise<Supplier | null> {
+  return supplierRepository.getById(id);
+}
+
+export async function addSupplierAsync(s: Omit<Supplier, "id" | "createdAt">): Promise<Supplier> {
+  const created = await supplierRepository.create(s);
+  invalidateCache("suppliers");
+  return created;
+}
+
+export async function updateSupplierAsync(id: string, updates: Partial<Supplier>): Promise<void> {
+  await supplierRepository.update(id, updates);
+  invalidateCache("suppliers");
+  invalidateCache(`supplier-${id}`);
+}
+
+export async function deleteSupplierAsync(id: string): Promise<{ ok: boolean; error?: string }> {
+  const result = await supplierRepository.delete(id);
+  if (result.ok) {
+    invalidateCache("suppliers");
+    invalidateCache(`supplier-${id}`);
+  }
+  return result;
+}
+
+// ============================================================
 // INVOICES
 // ============================================================
 
@@ -152,6 +190,46 @@ export async function updateInvoiceAsync(id: string, updates: Partial<Invoice>):
 
 export async function getNextInvoiceSeqAsync(fyStart: number): Promise<number> {
   return invoiceRepository.getNextSeq(fyStart);
+}
+
+// ============================================================
+// PURCHASE INVOICES
+// ============================================================
+
+export async function getPurchaseInvoicesAsync(): Promise<PurchaseInvoice[]> {
+  return purchaseInvoiceRepository.getAll();
+}
+
+export async function getPurchaseInvoiceAsync(id: string): Promise<PurchaseInvoice | null> {
+  return purchaseInvoiceRepository.getById(id);
+}
+
+export async function getPurchaseInvoiceItemsAsync(purchaseInvoiceId?: string): Promise<PurchaseInvoiceItem[]> {
+  if (purchaseInvoiceId) {
+    return purchaseInvoiceRepository.getItems(purchaseInvoiceId);
+  }
+  return purchaseInvoiceRepository.getAllItems();
+}
+
+export async function addPurchaseInvoiceAsync(
+  pi: Omit<PurchaseInvoice, "id" | "createdAt">,
+  items: Omit<PurchaseInvoiceItem, "id" | "purchaseInvoiceId" | "createdAt">[]
+): Promise<PurchaseInvoice> {
+  const created = await purchaseInvoiceRepository.create(pi, items);
+  invalidateCache("purchaseInvoices");
+  invalidateCache("purchaseInvoiceItems");
+  invalidateCache("products");
+  invalidateCache("stockMovements");
+  return created;
+}
+
+export async function getNextPurchaseInvoiceSeqAsync(fyStart: number): Promise<number> {
+  const list = await getPurchaseInvoicesAsync();
+  const fyEnd = fyStart + 1;
+  const start = `${fyStart}-04-01`;
+  const end = `${fyEnd}-03-31`;
+  const count = list.filter((i) => i.date >= start && i.date <= end).length;
+  return count + 1;
 }
 
 // ============================================================
@@ -246,8 +324,11 @@ export interface StoreData {
   company: Company | null;
   products: Product[];
   customers: Customer[];
+  suppliers: Supplier[];
   invoices: Invoice[];
   invoiceItems: InvoiceItem[];
+  purchaseInvoices: PurchaseInvoice[];
+  purchaseInvoiceItems: PurchaseInvoiceItem[];
   payments: Payment[];
   paymentAllocations: PaymentAllocation[];
   stockMovements: StockMovement[];
@@ -257,15 +338,30 @@ export interface StoreData {
 export async function getStoreAsync(): Promise<StoreData> {
   if (!isBillingApiConfigured()) {
     const rpcData = await getStoreDataViaRpc();
-    if (rpcData) return rpcData;
+    if (rpcData) {
+      const [suppliers, purchaseInvoices, purchaseInvoiceItems] = await Promise.all([
+        getSuppliersAsync(),
+        getPurchaseInvoicesAsync(),
+        getPurchaseInvoiceItemsAsync(),
+      ]);
+      return {
+        ...rpcData,
+        suppliers,
+        purchaseInvoices,
+        purchaseInvoiceItems,
+      };
+    }
   }
 
   const [
     company,
     products,
     customers,
+    suppliers,
     invoices,
     invoiceItems,
+    purchaseInvoices,
+    purchaseInvoiceItems,
     payments,
     paymentAllocations,
     stockMovements,
@@ -274,8 +370,11 @@ export async function getStoreAsync(): Promise<StoreData> {
     getCompanyAsync(),
     getProductsAsync(),
     getCustomersAsync(),
+    getSuppliersAsync(),
     getInvoicesAsync(),
     getInvoiceItemsAsync(),
+    getPurchaseInvoicesAsync(),
+    getPurchaseInvoiceItemsAsync(),
     getPaymentsAsync(),
     getPaymentAllocationsAsync(),
     getStockMovementsAsync(),
@@ -286,8 +385,11 @@ export async function getStoreAsync(): Promise<StoreData> {
     company,
     products,
     customers,
+    suppliers,
     invoices,
     invoiceItems,
+    purchaseInvoices,
+    purchaseInvoiceItems,
     payments,
     paymentAllocations,
     stockMovements,

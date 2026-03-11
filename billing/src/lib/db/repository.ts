@@ -7,8 +7,11 @@ import type {
   Company,
   Product,
   Customer,
+  Supplier,
   Invoice,
   InvoiceItem,
+  PurchaseInvoice,
+  PurchaseInvoiceItem,
   Payment,
   PaymentAllocation,
   StockMovement,
@@ -40,6 +43,9 @@ export interface CustomerRepository extends Repository<Customer> {
   getByPhone(phone: string): Promise<Customer | null>;
 }
 
+// Supplier repository
+export interface SupplierRepository extends Repository<Supplier> {}
+
 // Invoice repository with line items
 export interface InvoiceRepository {
   getAll(): Promise<Invoice[]>;
@@ -52,6 +58,19 @@ export interface InvoiceRepository {
   getItems(invoiceId: string): Promise<InvoiceItem[]>;
   getAllItems(): Promise<InvoiceItem[]>;
   getNextSeq(fyStart: number): Promise<number>;
+}
+
+// Purchase invoice repository
+export interface PurchaseInvoiceRepository {
+  getAll(): Promise<PurchaseInvoice[]>;
+  getById(id: string): Promise<PurchaseInvoice | null>;
+  create(
+    purchaseInvoice: Omit<PurchaseInvoice, "id" | "createdAt">,
+    items: Omit<PurchaseInvoiceItem, "id" | "purchaseInvoiceId" | "createdAt">[]
+  ): Promise<PurchaseInvoice>;
+  update(id: string, data: Partial<PurchaseInvoice>): Promise<void>;
+  getItems(purchaseInvoiceId: string): Promise<PurchaseInvoiceItem[]>;
+  getAllItems(): Promise<PurchaseInvoiceItem[]>;
 }
 
 // Payment repository with allocations
@@ -136,7 +155,9 @@ export interface Database {
   company: CompanyRepository;
   products: ProductRepository;
   customers: CustomerRepository;
+  suppliers: SupplierRepository;
   invoices: InvoiceRepository;
+  purchaseInvoices: PurchaseInvoiceRepository;
   payments: PaymentRepository;
   stockMovements: StockMovementRepository;
   expenses: ExpenseRepository;

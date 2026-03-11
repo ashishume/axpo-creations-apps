@@ -1,24 +1,20 @@
-
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useProducts } from "@/hooks/useStore";
 import { deleteProductAsync } from "@/lib/store-async";
 import { Card, EditIcon, DeleteIcon, PlusIcon, Skeleton, TableSkeleton } from "@/components/ui";
 import { AddProductModal } from "@/components/modals/AddProductModal";
-import type { ProductType } from "@/lib/db/types";
-
-const PRODUCT_TYPES: ProductType[] = [
-  "Red Clay Bricks",
-  "Fly Ash Bricks",
-  "Wire Cut Bricks",
-  "Concrete Blocks",
-];
 
 export function ProductsPage() {
   const { data: products, loading, refetch } = useProducts();
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<ProductType | "">("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
   const [addModalOpen, setAddModalOpen] = useState(false);
+
+  const typeOptions = useMemo(() => {
+    const list = products ?? [];
+    return [...new Set(list.map((p) => p.productType).filter(Boolean))].sort();
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     const list = products ?? [];
@@ -76,12 +72,12 @@ export function ProductsPage() {
         />
         <select
           value={typeFilter}
-          onChange={(e) => setTypeFilter((e.target.value || "") as ProductType | "")}
+          onChange={(e) => setTypeFilter(e.target.value)}
           className="input w-full sm:w-44 min-w-0"
           style={{ color: "var(--text-primary)" }}
         >
           <option value="">All types</option>
-          {PRODUCT_TYPES.map((t) => (
+          {typeOptions.map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
         </select>

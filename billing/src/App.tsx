@@ -24,6 +24,12 @@ import { ExpensesPage } from "@/app/expenses/page";
 import { NewExpensePage } from "@/app/expenses/new/page";
 import { EditExpensePage } from "@/app/expenses/[id]/edit/page";
 import { StockPage } from "@/app/stock/page";
+import { SuppliersPage } from "@/app/suppliers/page";
+import { NewSupplierPage } from "@/app/suppliers/new/page";
+import { EditSupplierPage } from "@/app/suppliers/[id]/edit/page";
+import { PurchaseInvoicesPage } from "@/app/purchase-invoices/page";
+import { NewPurchaseInvoicePage } from "@/app/purchase-invoices/new/page";
+import { ViewPurchaseInvoicePage } from "@/app/purchase-invoices/[id]/page";
 import { SubscriptionPage } from "@/app/subscription/page";
 import { ReportsPage } from "@/app/reports/page";
 import { ProfitReportPage } from "@/app/reports/profit/page";
@@ -55,10 +61,16 @@ function App() {
                   <Route path="customers" element={<CustomersPage />} />
                   <Route path="customers/new" element={<NewCustomerPage />} />
                   <Route path="customers/:id/edit" element={<EditCustomerPage />} />
+                  <Route path="suppliers" element={<SuppliersPage />} />
+                  <Route path="suppliers/new" element={<NewSupplierPage />} />
+                  <Route path="suppliers/:id/edit" element={<EditSupplierPage />} />
                   <Route path="invoices" element={<InvoicesPage />} />
                   <Route path="invoices/new" element={<NewInvoicePage />} />
                   <Route path="invoices/:id" element={<ViewInvoicePage />} />
                   <Route path="invoices/:id/print" element={<PrintInvoicePage />} />
+                  <Route path="purchase-invoices" element={<PurchaseInvoicesPage />} />
+                  <Route path="purchase-invoices/new" element={<NewPurchaseInvoicePage />} />
+                  <Route path="purchase-invoices/:id" element={<ViewPurchaseInvoicePage />} />
                   <Route path="payments" element={<PaymentsPage />} />
                   <Route path="payments/new" element={<NewPaymentPage />} />
                   <Route path="payments/:id/print" element={<PrintPaymentPage />} />

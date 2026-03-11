@@ -1,6 +1,7 @@
 export { companyRepository } from "./company";
 export { productRepository } from "./products";
 export { customerRepository } from "./customers";
+export { supplierRepository } from "./suppliers";
 export { invoiceRepository } from "./invoices";
 export { paymentRepository } from "./payments";
 export { stockMovementRepository } from "./stock";

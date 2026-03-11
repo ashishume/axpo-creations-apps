@@ -10,7 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Package, Users, FileText, CreditCard, Receipt, AlertTriangle, BarChart3, TrendingUp, Wallet } from "lucide-react";
+import { Package, Users, FileText, CreditCard, Receipt, AlertTriangle, BarChart3, TrendingUp, Wallet, Truck, ShoppingCart } from "lucide-react";
 import { useStore } from "@/hooks/useStore";
 import { Card, PieChart, Skeleton } from "@/components/ui";
 
@@ -37,6 +37,7 @@ function formatMonth(key: string): string {
 const STAT_ICONS = {
   products: Package,
   customers: Users,
+  suppliers: Truck,
   invoices: FileText,
   payments: CreditCard,
   expenses: Receipt,
@@ -48,6 +49,7 @@ export function DashboardPage() {
   const company = data?.company ?? null;
   const productCount = data?.products.length ?? 0;
   const customerCount = data?.customers.length ?? 0;
+  const supplierCount = data?.suppliers.length ?? 0;
   const invoiceCount = data?.invoices.filter((i) => i.status === "final").length ?? 0;
   const paymentCount = data?.payments.length ?? 0;
   const expenseCount = data?.expenses.length ?? 0;
@@ -55,6 +57,7 @@ export function DashboardPage() {
   const stats = [
     { label: "Products", value: productCount, href: "/products", iconKey: "products" as const, iconBg: "bg-blue-100 border-blue-200", iconColor: "text-blue-600" },
     { label: "Customers", value: customerCount, href: "/customers", iconKey: "customers" as const, iconBg: "bg-emerald-100 border-emerald-200", iconColor: "text-emerald-600" },
+    { label: "Suppliers", value: supplierCount, href: "/suppliers", iconKey: "suppliers" as const, iconBg: "bg-slate-100 border-slate-200", iconColor: "text-slate-600" },
     { label: "Invoices", value: invoiceCount, href: "/invoices", iconKey: "invoices" as const, iconBg: "bg-violet-100 border-violet-200", iconColor: "text-violet-600" },
     { label: "Payments", value: paymentCount, href: "/payments", iconKey: "payments" as const, iconBg: "bg-amber-100 border-amber-200", iconColor: "text-amber-600" },
     { label: "Expenses", value: expenseCount, href: "/expenses", iconKey: "expenses" as const, iconBg: "bg-rose-100 border-rose-200", iconColor: "text-rose-600" },
@@ -185,8 +188,8 @@ export function DashboardPage() {
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-          {[1, 2, 3, 4, 5].map((i) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i}>
               <Skeleton className="h-10 w-10 rounded-lg mb-3" />
               <Skeleton className="h-8 w-16 mb-2" />
@@ -202,7 +205,7 @@ export function DashboardPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="mt-2 text-slate-600">Axpo Billing – GST-compliant billing for brick manufacturers</p>
+        <p className="mt-2 text-slate-600">Axpo Billing – GST-compliant billing for your business</p>
       </div>
 
       {!company && (
@@ -391,6 +394,10 @@ export function DashboardPage() {
               <FileText className="h-4 w-4 shrink-0" strokeWidth={2} />
               New Invoice
             </Link>
+            <Link to="/purchase-invoices/new" className="btn btn-primary text-center no-underline inline-flex items-center justify-center gap-2">
+              <ShoppingCart className="h-4 w-4 shrink-0" strokeWidth={2} />
+              New Purchase
+            </Link>
             <Link to="/payments/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
               <CreditCard className="h-4 w-4 shrink-0" strokeWidth={2} />
               Record Payment
@@ -402,6 +409,10 @@ export function DashboardPage() {
             <Link to="/customers/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
               <Users className="h-4 w-4 shrink-0" strokeWidth={2} />
               Add Customer
+            </Link>
+            <Link to="/suppliers/new" className="btn btn-secondary text-center no-underline inline-flex items-center justify-center gap-2">
+              <Truck className="h-4 w-4 shrink-0" strokeWidth={2} />
+              Add Supplier
             </Link>
           </div>
         </Card>

@@ -1,16 +1,10 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { addProductAsync } from "@/lib/store-async";
+import { useProducts } from "@/hooks/useStore";
 import type { ProductType } from "@/lib/db/types";
-
-const PRODUCT_TYPES: ProductType[] = [
-  "Red Clay Bricks",
-  "Fly Ash Bricks",
-  "Wire Cut Bricks",
-  "Concrete Blocks",
-];
 
 const GST_RATES: { value: number; label: string }[] = [
   { value: 5, label: "5%" },
@@ -27,12 +21,19 @@ const GST_RATES: { value: number; label: string }[] = [
 
 export function NewProductPage() {
   const navigate = useNavigate();
+  const { data: products } = useProducts();
   const [name, setName] = useState("");
-  const [productType, setProductType] = useState<ProductType>("Red Clay Bricks");
+  const [productType, setProductType] = useState<ProductType>("");
+  const [hsn, setHsn] = useState("");
   const [gstRate, setGstRate] = useState(5);
   const [sellingPrice, setSellingPrice] = useState(0);
   const [costPrice, setCostPrice] = useState(0);
   const [saving, setSaving] = useState(false);
+
+  const productTypeSuggestions = useMemo(() => {
+    const list = products ?? [];
+    return [...new Set(list.map((p) => p.productType).filter(Boolean))].sort();
+  }, [products]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,12 +41,16 @@ export function NewProductPage() {
       alert("Product name is required");
       return;
     }
+    if (!productType.trim()) {
+      alert("Product type is required");
+      return;
+    }
     setSaving(true);
     try {
       await addProductAsync({
         name: name.trim(),
-        productType,
-        hsn: "6904",
+        productType: productType.trim(),
+        hsn: hsn.trim() || undefined,
         gstRate,
         unit: "pieces",
         sellingPrice,
@@ -78,16 +83,33 @@ export function NewProductPage() {
           />
         </div>
         <div className="mb-4">
-          <label className="block mb-1">Product Type</label>
-          <select
+          <label className="block mb-1">Product Type *</label>
+          <input
+            type="text"
             className="input"
+            list="product-type-list"
             value={productType}
-            onChange={(e) => setProductType(e.target.value as ProductType)}
-          >
-            {PRODUCT_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
+            onChange={(e) => setProductType(e.target.value)}
+            placeholder="e.g. Ceramic Tiles, Vitrified Tiles"
+          />
+          <datalist id="product-type-list">
+            {productTypeSuggestions.map((t) => (
+              <option key={t} value={t} />
             ))}
-          </select>
+          </datalist>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">HSN Code</label>
+          <input
+            type="text"
+            className="input"
+            value={hsn}
+            onChange={(e) => setHsn(e.target.value)}
+            placeholder="e.g. 6904, 6907, 6908"
+          />
+          <small style={{ color: "var(--text-secondary)" }} className="block mt-1">
+            HSN for GST (e.g. 6904 bricks, 6907/6908 tiles).
+          </small>
         </div>
         <div className="mb-4">
           <label className="block mb-1">GST Rate</label>

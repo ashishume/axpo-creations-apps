@@ -18,6 +18,11 @@ export function formatReceiptNumber(seq: number, fyStart: number): string {
   return `RCP/${suffix}/${seq.toString().padStart(4, "0")}`;
 }
 
+export function formatPurchaseInvoiceNumber(seq: number, fyStart: number): string {
+  const suffix = getFinancialYearSuffix(fyStart);
+  return `PI/${suffix}/${seq.toString().padStart(4, "0")}`;
+}
+
 export function getCurrentFYStart(): number {
   const now = new Date();
   const year = now.getFullYear();

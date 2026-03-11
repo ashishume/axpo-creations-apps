@@ -1,6 +1,7 @@
 // Data types for Axpo Billing MVP (local state)
 
-export type ProductType = "Red Clay Bricks" | "Fly Ash Bricks" | "Wire Cut Bricks" | "Concrete Blocks";
+/** Product category; free-form (e.g. Ceramic Tiles, Vitrified Tiles). */
+export type ProductType = string;
 
 export interface Company {
   id: string;
@@ -48,6 +49,19 @@ export interface Customer {
   createdAt: string;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  phone: string;
+  gstin: string;
+  address: string;
+  stateCode: string;
+  openingBalance: number;
+  creditDays: number;
+  creditLimit: number;
+  createdAt: string;
+}
+
 export type InvoiceStatus = "draft" | "final" | "cancelled";
 
 export interface Invoice {
@@ -82,6 +96,39 @@ export interface InvoiceItem {
   gstAmount: number;
 }
 
+export type PurchaseInvoiceStatus = "draft" | "final" | "cancelled";
+
+export interface PurchaseInvoice {
+  id: string;
+  number: string;
+  date: string;
+  supplierId: string;
+  subtotal: number;
+  discount: number;
+  taxableAmount: number;
+  cgstAmount: number;
+  sgstAmount: number;
+  igstAmount: number;
+  roundOff: number;
+  total: number;
+  totalInWords: string;
+  status: PurchaseInvoiceStatus;
+  createdAt: string;
+}
+
+export interface PurchaseInvoiceItem {
+  id: string;
+  purchaseInvoiceId: string;
+  productId: string;
+  quantity: number;
+  rate: number;
+  discount: number;
+  lineTotal: number;
+  taxableAmount: number;
+  gstAmount: number;
+  createdAt: string;
+}
+
 export type PaymentMode = "cash" | "cheque" | "online";
 
 export interface Payment {
@@ -105,7 +152,7 @@ export interface PaymentAllocation {
   amount: number;
 }
 
-export type StockMovementType = "opening" | "production" | "sale" | "adjustment";
+export type StockMovementType = "opening" | "production" | "purchase" | "sale" | "adjustment";
 
 export interface StockMovement {
   id: string;
@@ -140,8 +187,11 @@ export interface StoreData {
   company: Company | null;
   products: Product[];
   customers: Customer[];
+  suppliers: Supplier[];
   invoices: Invoice[];
   invoiceItems: InvoiceItem[];
+  purchaseInvoices: PurchaseInvoice[];
+  purchaseInvoiceItems: PurchaseInvoiceItem[];
   payments: Payment[];
   paymentAllocations: PaymentAllocation[];
   stockMovements: StockMovement[];

@@ -9,7 +9,7 @@ class StockMovementCreate(BaseModel):
     date: date
     product_id: UUID | None = None
     quantity: int
-    type: str  # opening, production, sale, adjustment
+    type: str  # opening, production, purchase, sale, adjustment
     reference_id: UUID | None = None
     remarks: str | None = None
 

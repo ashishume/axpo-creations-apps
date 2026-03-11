@@ -7,9 +7,14 @@ import {
   getProductAsync,
   getCustomersAsync,
   getCustomerAsync,
+  getSuppliersAsync,
+  getSupplierAsync,
   getInvoicesAsync,
   getInvoiceAsync,
   getInvoiceItemsAsync,
+  getPurchaseInvoicesAsync,
+  getPurchaseInvoiceAsync,
+  getPurchaseInvoiceItemsAsync,
   getPaymentsAsync,
   getPaymentAsync,
   getPaymentAllocationsAsync,
@@ -31,6 +36,9 @@ import type {
   PaymentAllocation,
   Product,
   StockMovement,
+  Supplier,
+  PurchaseInvoice,
+  PurchaseInvoiceItem,
 } from "@/lib/db/types";
 
 export type UseAsyncDataOptions = {
@@ -124,6 +132,18 @@ export function useCustomer(id: string, options?: UseAsyncDataOptions) {
 }
 
 // ============================================================
+// SUPPLIERS
+// ============================================================
+
+export function useSuppliers(options?: UseAsyncDataOptions) {
+  return useAsyncData<Supplier[]>(getSuppliersAsync, [], { cacheKey: "suppliers", ...options });
+}
+
+export function useSupplier(id: string, options?: UseAsyncDataOptions) {
+  return useAsyncData<Supplier | null>(() => getSupplierAsync(id), [id], { cacheKey: id ? `supplier-${id}` : undefined, ...options });
+}
+
+// ============================================================
 // INVOICES
 // ============================================================
 
@@ -137,6 +157,22 @@ export function useInvoice(id: string, options?: UseAsyncDataOptions) {
 
 export function useInvoiceItems(invoiceId?: string, options?: UseAsyncDataOptions) {
   return useAsyncData<InvoiceItem[]>(() => getInvoiceItemsAsync(invoiceId), [invoiceId], { cacheKey: invoiceId ? `invoiceItems-${invoiceId}` : "invoiceItems", ...options });
+}
+
+// ============================================================
+// PURCHASE INVOICES
+// ============================================================
+
+export function usePurchaseInvoices(options?: UseAsyncDataOptions) {
+  return useAsyncData<PurchaseInvoice[]>(getPurchaseInvoicesAsync, [], { cacheKey: "purchaseInvoices", ...options });
+}
+
+export function usePurchaseInvoice(id: string, options?: UseAsyncDataOptions) {
+  return useAsyncData<PurchaseInvoice | null>(() => getPurchaseInvoiceAsync(id), [id], { cacheKey: id ? `purchaseInvoice-${id}` : undefined, ...options });
+}
+
+export function usePurchaseInvoiceItems(purchaseInvoiceId?: string, options?: UseAsyncDataOptions) {
+  return useAsyncData<PurchaseInvoiceItem[]>(() => getPurchaseInvoiceItemsAsync(purchaseInvoiceId), [purchaseInvoiceId], { cacheKey: purchaseInvoiceId ? `purchaseInvoiceItems-${purchaseInvoiceId}` : "purchaseInvoiceItems", ...options });
 }
 
 // ============================================================
@@ -184,8 +220,11 @@ async function getStoreAndPopulateCache(): Promise<StoreData> {
   setCached("company", data.company);
   setCached("products", data.products);
   setCached("customers", data.customers);
+  setCached("suppliers", data.suppliers);
   setCached("invoices", data.invoices);
   setCached("invoiceItems", data.invoiceItems);
+  setCached("purchaseInvoices", data.purchaseInvoices);
+  setCached("purchaseInvoiceItems", data.purchaseInvoiceItems);
   setCached("payments", data.payments);
   setCached("paymentAllocations", data.paymentAllocations);
   setCached("stockMovements", data.stockMovements);

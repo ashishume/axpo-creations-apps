@@ -8,8 +8,8 @@ from pydantic import BaseModel
 
 class ProductBase(BaseModel):
     name: str
-    product_type: str  # Red Clay Bricks, Fly Ash Bricks, Wire Cut Bricks, Concrete Blocks
-    hsn: str | None = "6904"
+    product_type: str
+    hsn: str | None = None
     gst_rate: Decimal = 5
     unit: str | None = "pieces"
     selling_price: Decimal = 0
