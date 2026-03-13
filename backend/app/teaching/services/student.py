@@ -17,6 +17,7 @@ from app.teaching.schemas.student import (
     FeePaymentCreate,
     BulkEnrollmentCreate,
     EnrollmentsBulkCreate,
+    TransferStudentsCreate,
 )
 from app.teaching.repositories.student import student_repository, enrollment_repository
 from app.teaching.repositories.class_model import class_repository
@@ -194,6 +195,62 @@ class EnrollmentService:
         if enrollments:
             return await enrollment_repository.add_bulk(db, enrollments)
         return []
+
+    async def transfer_to_session(
+        self, db: AsyncSession, data: TransferStudentsCreate
+    ) -> int:
+        """Copy students from one session to another: copy enrollment and fee details, reset payment status.
+        Does not copy any payment records. Maps class to target session by class name."""
+        from_session_id = data.from_session_id
+        to_session_id = data.to_session_id
+        student_ids = data.student_ids
+        if not student_ids:
+            return 0
+
+        target_classes = await class_repository.list_by_session(db, to_session_id)
+        name_to_class_id = {c.name: c.id for c in target_classes}
+
+        to_add: list[StudentEnrollment] = []
+        for student_id in student_ids:
+            existing_in_target = await enrollment_repository.get_by_student_and_session(
+                db, student_id, to_session_id
+            )
+            if existing_in_target:
+                continue
+            source = await enrollment_repository.get_by_student_and_session(
+                db, student_id, from_session_id
+            )
+            if not source:
+                continue
+
+            target_class_id = None
+            if source.class_id:
+                source_class = await class_repository.get(db, source.class_id)
+                if source_class and source_class.name in name_to_class_id:
+                    target_class_id = name_to_class_id[source_class.name]
+
+            new_enrollment = StudentEnrollment(
+                student_id=student_id,
+                session_id=to_session_id,
+                class_id=target_class_id,
+                registration_fees=source.registration_fees,
+                annual_fund=source.annual_fund,
+                monthly_fees=source.monthly_fees,
+                transport_fees=source.transport_fees,
+                due_day_of_month=source.due_day_of_month,
+                late_fee_amount=source.late_fee_amount,
+                late_fee_frequency=source.late_fee_frequency,
+                target_amount=source.target_amount,
+                fine_per_day=source.fine_per_day,
+                due_frequency=source.due_frequency,
+                registration_paid=False,
+                annual_fund_paid=False,
+            )
+            to_add.append(new_enrollment)
+
+        if to_add:
+            await enrollment_repository.add_bulk(db, to_add)
+        return len(to_add)
 
     async def get(self, db: AsyncSession, id: UUID) -> StudentEnrollment | None:
         return await enrollment_repository.get(db, id)

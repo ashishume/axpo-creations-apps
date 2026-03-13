@@ -354,13 +354,18 @@ export const studentsRepository = {
     throw new Error('Delete all by session is only supported when using the Teaching API');
   },
 
-  /** Bulk transfer students to a new session (single API call). Clears classId. Returns count updated. */
-  async transferToSession(studentIds: string[], newSessionId: string): Promise<number> {
+  /** Bulk transfer students to a new session. Accepts same shape as API (copy with fee details, reset payments). Supabase path: update session_id and clear class_id. */
+  async transferToSession(params: {
+    fromSessionId: string;
+    studentIds: string[];
+    toSessionId: string;
+  }): Promise<number> {
+    const { studentIds, toSessionId } = params;
     if (studentIds.length === 0) return 0;
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from('school_xx_students')
-      .update({ session_id: newSessionId, class_id: null })
+      .update({ session_id: toSessionId, class_id: null })
       .in('id', studentIds)
       .select('id');
     if (error) throw new Error('Failed to transfer students');

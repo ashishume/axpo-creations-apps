@@ -160,3 +160,14 @@ class EnrollmentsBulkCreate(BaseModel):
 
 class EnrollmentsBulkResponse(BaseModel):
     enrollments: list[EnrollmentResponse] = []
+
+
+class TransferStudentsCreate(BaseModel):
+    """Transfer (copy) students from one session to another with fee details; payment status is reset."""
+    from_session_id: UUID
+    to_session_id: UUID
+    student_ids: list[UUID]
+
+
+class TransferStudentsResponse(BaseModel):
+    transferred: int

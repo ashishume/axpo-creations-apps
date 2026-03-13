@@ -429,13 +429,22 @@ export const studentsRepositoryApi = {
     };
   },
 
-  async transferToSession(studentIds: string[], newSessionId: string): Promise<number> {
-    // This is now "bulk enroll" - create enrollments for existing students
-    await enrollmentsRepositoryApi.createBulk({
-      studentIds,
-      sessionId: newSessionId,
+  async transferToSession(params: {
+    fromSessionId: string;
+    studentIds: string[];
+    toSessionId: string;
+  }): Promise<number> {
+    const { fromSessionId, studentIds, toSessionId } = params;
+    if (studentIds.length === 0) return 0;
+    const res = await teachingFetchJson<{ transferred: number }>('/students/transfer', {
+      method: 'POST',
+      body: JSON.stringify({
+        from_session_id: fromSessionId,
+        to_session_id: toSessionId,
+        student_ids: studentIds,
+      }),
     });
-    return studentIds.length;
+    return res?.transferred ?? 0;
   },
 
   async addFeePayment(studentId: string, payment: any): Promise<void> {

@@ -1511,6 +1511,7 @@ export function StudentsPage() {
                       try {
                         const studentIds = Array.from(transferSelectedIds);
                         const count = await transferStudentsMut.mutateAsync({
+                          fromSessionId: selectedSessionId ?? "",
                           studentIds,
                           newSessionId: transferTargetSessionId,
                         });

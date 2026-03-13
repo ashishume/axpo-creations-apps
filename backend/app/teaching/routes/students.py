@@ -25,6 +25,8 @@ from app.teaching.schemas.student import (
     BulkEnrollmentResponse,
     EnrollmentsBulkCreate,
     EnrollmentsBulkResponse,
+    TransferStudentsCreate,
+    TransferStudentsResponse,
 )
 from app.teaching.services.student import student_service, enrollment_service
 from app.teaching.models.user import User
@@ -131,6 +133,20 @@ async def enroll_students_bulk(
         enrolled=len(enrollments),
         enrollments=[EnrollmentResponse.model_validate(e) for e in enrollments],
     )
+
+
+@router.post("/transfer", response_model=TransferStudentsResponse)
+async def transfer_students_to_session(
+    data: TransferStudentsCreate,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Copy students from one session to another. Copies enrollment and fee details from the source
+    session; payment status is reset (no payments are copied)."""
+    await enforce_session_access(db, user, data.from_session_id)
+    await enforce_session_access(db, user, data.to_session_id)
+    transferred = await enrollment_service.transfer_to_session(db, data)
+    return TransferStudentsResponse(transferred=transferred)
 
 
 @router.post("/enrollments/bulk", response_model=EnrollmentsBulkResponse)

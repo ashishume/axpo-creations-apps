@@ -299,8 +299,20 @@ export function useTransferStudentsToSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ studentIds, newSessionId }: { studentIds: string[]; newSessionId: string }) =>
-      studentsRepository.transferToSession(studentIds, newSessionId),
+    mutationFn: ({
+      fromSessionId,
+      studentIds,
+      newSessionId,
+    }: {
+      fromSessionId: string;
+      studentIds: string[];
+      newSessionId: string;
+    }) =>
+      studentsRepository.transferToSession({
+        fromSessionId,
+        studentIds,
+        toSessionId: newSessionId,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
