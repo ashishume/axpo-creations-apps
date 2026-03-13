@@ -14,7 +14,7 @@ import {
 import { orgSubscriptionApi } from "../lib/db/api/orgSubscription";
 import { isTeachingApiConfigured } from "../lib/api/client";
 import { DEFAULT_ROLE_IDS } from "../types/auth";
-import { CreditCard, Check, Crown, X, Settings } from "lucide-react";
+import { CreditCard, Check, Crown, Settings, Loader2 } from "lucide-react";
 
 const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
 
@@ -74,14 +74,15 @@ export function SubscriptionPage() {
     refetch,
   } = useSubscription();
   const [billingIntervalChoice, setBillingIntervalChoice] = useState<BillingInterval>("monthly");
-  const [subscribing, setSubscribing] = useState(false);
+  /** Plan id currently in checkout flow; only that button shows loading. */
+  const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
   const isSuperAdmin = user?.roleId === DEFAULT_ROLE_IDS.SUPER_ADMIN;
   const canManagePlans = hasPermission("plans:manage") || isSuperAdmin;
   const showRazorpay = isTeachingApiConfigured();
 
   const handleSubscribe = async (planId: string, interval: BillingInterval) => {
     if (!user) return;
-    setSubscribing(true);
+    setSubscribingPlanId(planId);
     try {
       const result = await orgSubscriptionApi.create(planId, interval);
       await loadRazorpay();
@@ -112,7 +113,7 @@ export function SubscriptionPage() {
     } catch (e) {
       toast(e instanceof Error ? e.message : "Could not start checkout", "error");
     } finally {
-      setSubscribing(false);
+      setSubscribingPlanId(null);
     }
   };
 
@@ -237,10 +238,14 @@ export function SubscriptionPage() {
                         size="sm"
                         className="mt-2 w-full gap-2"
                         onClick={() => handleSubscribe(plan.id, billingIntervalChoice)}
-                        disabled={subscribing}
+                        disabled={subscribingPlanId !== null}
                       >
-                        <Crown className="h-4 w-4" />
-                        {subscribing ? "Opening checkout…" : `Subscribe ${plan.name}`}
+                        {subscribingPlanId === plan.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Crown className="h-4 w-4" />
+                        )}
+                        {subscribingPlanId === plan.id ? "Opening checkout…" : `Subscribe ${plan.name}`}
                       </Button>
                     )}
                   </CardContent>
