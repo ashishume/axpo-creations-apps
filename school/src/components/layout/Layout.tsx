@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useIsMutating } from "@tanstack/react-query";
 import { Sidebar, type PageId, PAGE_PATHS } from "./Sidebar";
 import { ToastContainer } from "../ui/Toast";
+import { LoadingOverlay } from "../ui/LoadingSpinner";
 import { useApp } from "../../context/AppContext";
 import type { BackupData } from "../../context/AppContext";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
@@ -59,6 +61,7 @@ export function Layout() {
   const { pathname } = useLocation();
   const page = pathnameToPage(pathname);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMutating = useIsMutating() > 0;
   const { loadSampleData, clearAllData, exportData, importData, toast, schools, sessions, selectedSchoolId, selectedSessionId } = useApp();
   const { hasPermission } = useAuth();
   const selectedSchool = selectedSchoolId ? schools.find((s) => s.id === selectedSchoolId) : null;
@@ -134,6 +137,7 @@ export function Layout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-900">
+      {isMutating && <LoadingOverlay text="Saving…" />}
       <SubscriptionExpiredOverlay />
       <input
         ref={fileInputRef}

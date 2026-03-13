@@ -462,7 +462,7 @@ export function StudentsPage() {
               Add student
             </Button>
           </PermissionGate>
-          <Button
+          {/* <Button
             size="sm"
             variant="danger"
             disabled={!selectedSessionId}
@@ -470,7 +470,7 @@ export function StudentsPage() {
           >
             <Trash2 className="mr-1 h-4 w-4" />
             Delete all students (Danger)
-          </Button>
+          </Button> */}
           <Button
             size="sm"
             variant="secondary"

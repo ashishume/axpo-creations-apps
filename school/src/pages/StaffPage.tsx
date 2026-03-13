@@ -622,7 +622,7 @@ export function StaffPage() {
             <ArrowRightLeft className="mr-1 h-4 w-4" />
             Transfer to new session
           </Button>
-          <Button
+          {/* <Button
             size="sm"
             variant="danger"
             disabled={!selectedSessionId}
@@ -630,7 +630,7 @@ export function StaffPage() {
           >
             <Trash2 className="mr-1 h-4 w-4" />
             Delete all staff (Danger)
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -689,33 +689,33 @@ export function StaffPage() {
                     ))}
                   </Select>
                   {uniqueClasses.length > 0 && (
-                <Select
-                  value={classFilter}
-                  onChange={(e) => setClassFilter(e.target.value)}
-                  className="w-36"
-                >
-                  <option value="">All Classes</option>
-                  {uniqueClasses.map((cls) => (
-                    <option key={cls} value={cls}>
-                      {cls}
-                    </option>
-                  ))}
-                </Select>
-              )}
-              {uniqueSubjects.length > 0 && (
-                <Select
-                  value={subjectFilter}
-                  onChange={(e) => setSubjectFilter(e.target.value)}
-                  className="w-36"
-                >
-                  <option value="">All Subjects</option>
-                  {uniqueSubjects.map((sub) => (
-                    <option key={sub} value={sub}>
-                      {sub}
-                    </option>
-                  ))}
-                </Select>
-              )}
+                    <Select
+                      value={classFilter}
+                      onChange={(e) => setClassFilter(e.target.value)}
+                      className="w-36"
+                    >
+                      <option value="">All Classes</option>
+                      {uniqueClasses.map((cls) => (
+                        <option key={cls} value={cls}>
+                          {cls}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                  {uniqueSubjects.length > 0 && (
+                    <Select
+                      value={subjectFilter}
+                      onChange={(e) => setSubjectFilter(e.target.value)}
+                      className="w-36"
+                    >
+                      <option value="">All Subjects</option>
+                      {uniqueSubjects.map((sub) => (
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
                 </div>
               </div>
               <div className="overflow-x-auto min-h-13 overflow-y-hidden rounded-md flex items-center">
