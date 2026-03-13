@@ -47,6 +47,18 @@ async def create_staff(
     return StaffResponse.model_validate(staff)
 
 
+@router.delete("", status_code=200)
+async def delete_all_staff_by_session(
+    session_id: UUID,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Delete all staff in the given session. Requires session_id query param."""
+    await enforce_session_access(db, user, session_id)
+    deleted = await staff_service.delete_all_by_session(db, session_id)
+    return {"deleted": deleted}
+
+
 @router.get("", response_model=PaginatedResponse[StaffResponse])
 async def list_staff(
     session_id: UUID | None = None,

@@ -142,6 +142,15 @@ export const staffRepositoryApi = {
     await teachingFetch(`/staff/${id}`, { method: 'DELETE' });
   },
 
+  /** Delete all staff in the given session. Returns number deleted. */
+  async deleteAllBySession(sessionId: string): Promise<number> {
+    const res = await teachingFetchJson<{ deleted: number }>(
+      `/staff?session_id=${encodeURIComponent(sessionId)}`,
+      { method: 'DELETE' }
+    );
+    return res?.deleted ?? 0;
+  },
+
   async createMany(staffMembers: Omit<Staff, 'id' | 'salaryPayments'>[]): Promise<Staff[]> {
     if (staffMembers.length === 0) return [];
     const body = staffMembers.map((data) => ({

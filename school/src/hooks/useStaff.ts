@@ -141,6 +141,17 @@ export function useDeleteStaff() {
   });
 }
 
+export function useDeleteAllStaffBySession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sessionId: string) => staffRepository.deleteAllBySession(sessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
 export function useTransferStaffToSession() {
   const queryClient = useQueryClient();
   return useMutation({

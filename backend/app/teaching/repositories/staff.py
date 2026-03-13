@@ -2,7 +2,7 @@
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import select, func, or_, and_
+from sqlalchemy import select, func, or_, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.teaching.models.staff import Staff, SalaryPayment
@@ -142,6 +142,12 @@ class StaffRepository:
     async def delete(self, db: AsyncSession, staff: Staff) -> None:
         await db.delete(staff)
         await db.flush()
+
+    async def delete_all_by_session(self, db: AsyncSession, session_id: UUID) -> int:
+        """Delete all staff in the given session. Returns count deleted. Salary payments and leave data cascade."""
+        result = await db.execute(delete(Staff).where(Staff.session_id == session_id))
+        await db.flush()
+        return result.rowcount or 0
 
     async def has_salary_payment_for_month(
         self, db: AsyncSession, staff_id: UUID, month: str

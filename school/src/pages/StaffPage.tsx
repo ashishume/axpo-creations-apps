@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { useStaffBySessionInfinite, useStaffBySession, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useAddSalaryPayment, useTransferStaffToSession, useLeaveSummary } from "../hooks/useStaff";
+import { useStaffBySessionInfinite, useStaffBySession, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useDeleteAllStaffBySession, useAddSalaryPayment, useTransferStaffToSession, useLeaveSummary } from "../hooks/useStaff";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
@@ -12,6 +12,7 @@ import { BulkImportModal, exportStaffToCSV } from "../components/import/BulkImpo
 import type { Staff as StaffType, StaffRole, SalaryPayment, ClassSubject } from "../types";
 import { STAFF_ROLES, STAFF_ROLE_FILTER_OPTIONS } from "../constants/staffRoles";
 import { formatCurrency, formatDate, formatMonthYear, cn } from "../lib/utils";
+import { getFeeHistoryMonths } from "../lib/studentUtils";
 import { SearchInput } from "../components/ui/SearchInput";
 import { FilterChips } from "../components/ui/FilterChips";
 import { Input } from "../components/ui/Input";
@@ -76,33 +77,10 @@ function getCurrentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-// Generate last 12 months (current + 11 past)
-function getLast12Months(): string[] {
-  const months: string[] = [];
-  const now = new Date();
-  for (let i = 0; i < 12; i++) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
-  }
-  return months;
-}
-
-// Build months to show in salary history: last 12 months + any month that has a payment (e.g. future advance)
-// Sorted newest first so future/current appear at top
-function getSalaryHistoryMonths(last12: string[], paymentMonths: string[]): string[] {
-  const set = new Set<string>([...last12, ...paymentMonths]);
+// Build months to show in salary history: session months + any month that has a payment (e.g. advance). Sorted newest first.
+function getSalaryHistoryMonths(sessionMonths: string[], paymentMonths: string[]): string[] {
+  const set = new Set<string>([...sessionMonths, ...paymentMonths]);
   return Array.from(set).sort((a, b) => b.localeCompare(a));
-}
-
-// Generate current month + next 6 months for salary payment
-function getPayableMonths(): string[] {
-  const months: string[] = [];
-  const now = new Date();
-  for (let i = 0; i <= 6; i++) {
-    const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
-    months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
-  }
-  return months;
 }
 
 // Salary Payment Modal Component with leave calculations
@@ -350,6 +328,7 @@ export function StaffPage() {
   const deleteStaffMut = useDeleteStaff();
   const addSalaryMut = useAddSalaryPayment();
   const transferStaffMut = useTransferStaffToSession();
+  const deleteAllStaffMut = useDeleteAllStaffBySession();
   const { data: allSessionStaff = [] } = useStaffBySession(selectedSessionId ?? "");
 
   const addStaff = (data: Omit<StaffType, "id" | "salaryPayments">) => createStaff.mutate(data);
@@ -380,6 +359,7 @@ export function StaffPage() {
   const [transferTargetSessionId, setTransferTargetSessionId] = useState<string | null>(null);
   const [transferSelectedIds, setTransferSelectedIds] = useState<Set<string>>(new Set());
   const [transferSubmitting, setTransferSubmitting] = useState(false);
+  const [confirmDeleteAllStaff, setConfirmDeleteAllStaff] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [classFilter, setClassFilter] = useState<string>("");
@@ -392,6 +372,7 @@ export function StaffPage() {
   const hasFilters = !!(roleFilter || debouncedSearch || classFilter || subjectFilter);
   const {
     staffList,
+    total: staffTotal,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -405,9 +386,13 @@ export function StaffPage() {
   const staff = staffList;
   const isInitialLoading = isAppLoading && staffList.length === 0;
 
-  const last12Months = useMemo(() => getLast12Months(), []);
+  // Months derived from selected session (start/end date) so transfer to new session shows correct months
+  const sessionMonths = useMemo(() => {
+    if (!selectedSession?.startDate || !selectedSession?.endDate) return [];
+    return getFeeHistoryMonths(selectedSession.startDate, selectedSession.endDate);
+  }, [selectedSession?.startDate, selectedSession?.endDate]);
   const currentMonth = useMemo(() => getCurrentMonth(), []);
-  const payableMonths = useMemo(() => getPayableMonths(), []);
+  const payableMonths = sessionMonths;
 
   const list = staffList;
 
@@ -637,6 +622,15 @@ export function StaffPage() {
             <ArrowRightLeft className="mr-1 h-4 w-4" />
             Transfer to new session
           </Button>
+          <Button
+            size="sm"
+            variant="danger"
+            disabled={!selectedSessionId}
+            onClick={() => setConfirmDeleteAllStaff(true)}
+          >
+            <Trash2 className="mr-1 h-4 w-4" />
+            Delete all staff (Danger)
+          </Button>
         </div>
       </div>
 
@@ -671,7 +665,7 @@ export function StaffPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Staff ({filteredList.length})</CardTitle>
+            <CardTitle>Staff ({staffTotal})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -724,7 +718,7 @@ export function StaffPage() {
               )}
                 </div>
               </div>
-              <div className="overflow-x-auto max-h-16 overflow-y-hidden rounded-md">
+              <div className="overflow-x-auto min-h-13 overflow-y-hidden rounded-md flex items-center">
                 <FilterChips
                   options={STAFF_ROLE_FILTER_OPTIONS}
                   value={roleFilter}
@@ -1014,6 +1008,26 @@ export function StaffPage() {
         confirmLabel="Delete"
       />
 
+      <ConfirmDialog
+        open={confirmDeleteAllStaff}
+        onClose={() => setConfirmDeleteAllStaff(false)}
+        onConfirm={() => {
+          if (!selectedSessionId) return;
+          deleteAllStaffMut.mutate(selectedSessionId, {
+            onSuccess: (deleted) => {
+              toast(deleted > 0 ? `Deleted ${deleted} staff member(s)` : "No staff to delete");
+              setConfirmDeleteAllStaff(false);
+            },
+            onError: (err) => {
+              toast(err instanceof Error ? err.message : "Failed to delete all staff", "error");
+            },
+          });
+        }}
+        title="Delete all staff"
+        message="This will permanently delete all staff in this session and their salary history. This action cannot be undone. Are you sure?"
+        confirmLabel="Delete all"
+      />
+
       <BulkImportModal
         open={importModalOpen}
         onClose={() => setImportModalOpen(false)}
@@ -1049,6 +1063,7 @@ export function StaffPage() {
           });
           await createStaffBulk.mutateAsync(staffToCreate);
           toast(`${rows.length} staff member(s) imported`);
+          setImportModalOpen(false);
         }}
       />
 
@@ -1056,7 +1071,7 @@ export function StaffPage() {
       {salaryHistoryModal && (() => {
         const historyStaff = staff.find((s: StaffType) => s.id === salaryHistoryModal.id) ?? salaryHistoryModal;
         const monthsToShow = getSalaryHistoryMonths(
-          last12Months,
+          sessionMonths,
           historyStaff.salaryPayments.map((p: SalaryPayment) => p.month)
         );
         return (
@@ -1184,11 +1199,11 @@ export function StaffPage() {
               <div className="flex justify-between border-t border-slate-200 pt-4">
                 <div>
                   <p className="text-sm text-slate-600">
-                    Total Paid (Last 12 months):{" "}
+                    Total Paid (this session):{" "}
                     <strong>
                       {formatCurrency(
                         historyStaff.salaryPayments
-                          .filter((p: SalaryPayment) => last12Months.includes(p.month) && p.status === "Paid")
+                          .filter((p: SalaryPayment) => sessionMonths.includes(p.month) && p.status === "Paid")
                           .reduce((sum: number, p: SalaryPayment) => sum + p.amount, 0)
                       )}
                     </strong>

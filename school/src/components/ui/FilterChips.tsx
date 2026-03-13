@@ -21,7 +21,7 @@ export function FilterChips({ options, value, onChange, className }: FilterChips
           type="button"
           onClick={() => onChange(opt.value)}
           className={cn(
-            "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+            "rounded-full px-4 py-2.5 text-sm font-medium transition-colors",
             value === opt.value
               ? "bg-indigo-600 text-white shadow-sm dark:bg-indigo-500"
               : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:ring-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600 dark:hover:bg-slate-700 dark:hover:ring-slate-500"

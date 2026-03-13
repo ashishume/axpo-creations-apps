@@ -255,6 +255,18 @@ export const staffRepository = {
     if (error) throw new Error('Failed to delete staff member');
   },
 
+  /** Delete all staff in the given session. Returns number deleted. */
+  async deleteAllBySession(sessionId: string): Promise<number> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('school_xx_staff')
+      .delete()
+      .eq('session_id', sessionId)
+      .select('id');
+    if (error) throw new Error('Failed to delete all staff');
+    return data?.length ?? 0;
+  },
+
   /** Copy staff to another session; salary payment records are not copied. */
   async transferToSession(params: {
     fromSessionId: string;

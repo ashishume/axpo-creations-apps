@@ -68,6 +68,10 @@ class StaffService:
             raise NotFoundError("Staff not found")
         return staff
 
+    async def delete_all_by_session(self, db: AsyncSession, session_id: UUID) -> int:
+        """Delete all staff in the given session. Returns count deleted."""
+        return await staff_repository.delete_all_by_session(db, session_id)
+
     async def list_by_session(self, db: AsyncSession, session_id: UUID) -> list[Staff]:
         return await staff_repository.list_by_session(db, session_id)
 

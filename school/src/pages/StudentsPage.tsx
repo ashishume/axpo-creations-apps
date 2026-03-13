@@ -129,6 +129,7 @@ export function StudentsPage() {
   const hasFilters = !!(statusFilter || classFilter || feeTypeFilter || debouncedSearch);
   const {
     students,
+    total: studentsTotal,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -454,7 +455,7 @@ export function StudentsPage() {
             <Plus className="mr-1 h-4 w-4" />
             Add student
           </Button>
-          {/* <Button
+          <Button
             size="sm"
             variant="danger"
             disabled={!selectedSessionId}
@@ -462,7 +463,7 @@ export function StudentsPage() {
           >
             <Trash2 className="mr-1 h-4 w-4" />
             Delete all students (Danger)
-          </Button> */}
+          </Button>
           <Button
             size="sm"
             variant="secondary"
@@ -506,7 +507,7 @@ export function StudentsPage() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Students ({filteredList.length})</CardTitle>
+              <CardTitle>Students ({studentsTotal})</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
@@ -516,7 +517,7 @@ export function StudentsPage() {
                   placeholder="Search by name or ID..."
                   className="max-w-xs"
                 />
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 min-h-13">
                   <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Status:</span>
                   <FilterChips
                     options={[
@@ -1297,6 +1298,7 @@ export function StudentsPage() {
           });
           await createStudentsBulk.mutateAsync(studentsToCreate as unknown as Omit<StudentType, "id" | "payments">[]);
           toast(`${rows.length} student(s) imported`);
+          setImportModalOpen(false);
         }}
         onImportStaff={() => { }}
       />
