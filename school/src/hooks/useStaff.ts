@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { staffRepository, type ExtendedSalaryPayment } from '../lib/db/repositories';
 import { staffRepositoryApi } from '../lib/db/api/staff';
 import type { Staff, LeaveSummary } from '../types';
@@ -40,13 +40,17 @@ export function useStaffPaginated(
   });
 }
 
-/** Infinite list for Staff list page: default 10 per page, 50 when filters applied. */
+/** Infinite list for Staff list page: default 10 per page, 50 when filters applied. Search and role are sent to backend. */
 export function useStaffBySessionInfinite(
   sessionId: string,
-  options?: { hasFilters?: boolean }
+  options?: { hasFilters?: boolean; search?: string; role?: string }
 ) {
   const pageSize = options?.hasFilters ? FILTERED_PAGE_SIZE : DEFAULT_PAGE_SIZE;
-  const filters: StaffFilters = { sessionId };
+  const filters: StaffFilters = {
+    sessionId,
+    search: options?.search?.trim() || undefined,
+    role: options?.role || undefined,
+  };
 
   const q = useInfiniteQuery({
     queryKey: [QUERY_KEY, 'infinite', sessionId, pageSize, filters],
@@ -55,6 +59,7 @@ export function useStaffBySessionInfinite(
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     enabled: !!sessionId,
+    placeholderData: keepPreviousData,
   });
 
   const staffList = q.data?.pages.flatMap((p) => p.data) ?? [];

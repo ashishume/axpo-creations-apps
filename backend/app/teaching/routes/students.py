@@ -156,6 +156,7 @@ async def list_enrollments(
     limit: int | None = None,
     offset: int = 0,
     has_filters: bool = False,
+    search: str | None = None,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
@@ -165,7 +166,11 @@ async def list_enrollments(
     if session_id:
         await enforce_session_access(db, user, session_id)
         items, total = await enrollment_service.list_by_session_paginated(
-            db, session_id, limit=page_size, offset=offset
+            db,
+            session_id,
+            limit=page_size,
+            offset=offset,
+            search=search.strip() if search else None,
         )
     elif student_id:
         student = await student_service.get_or_404(db, student_id)

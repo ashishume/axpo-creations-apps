@@ -51,6 +51,8 @@ async def list_staff(
     limit: int | None = None,
     offset: int = 0,
     has_filters: bool = False,
+    search: str | None = None,
+    role: str | None = None,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
@@ -58,7 +60,12 @@ async def list_staff(
     if session_id:
         await enforce_session_access(db, user, session_id)
         items, total = await staff_service.list_by_session_paginated(
-            db, session_id, limit=page_size, offset=offset
+            db,
+            session_id,
+            limit=page_size,
+            offset=offset,
+            search=search.strip() if search else None,
+            role=role or None,
         )
     elif user.organization_id:
         items, total = await staff_service.list_by_organization_paginated(

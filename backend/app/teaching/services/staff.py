@@ -83,10 +83,19 @@ class StaffService:
         *,
         limit: int,
         offset: int,
+        search: str | None = None,
+        role: str | None = None,
     ) -> tuple[list[Staff], int]:
-        total = await staff_repository.count_by_session(db, session_id)
+        total = await staff_repository.count_by_session(
+            db, session_id, search=search, role=role
+        )
         items = await staff_repository.list_by_session_paginated(
-            db, session_id, limit=limit, offset=offset
+            db,
+            session_id,
+            limit=limit,
+            offset=offset,
+            search=search,
+            role=role,
         )
         return items, total
 

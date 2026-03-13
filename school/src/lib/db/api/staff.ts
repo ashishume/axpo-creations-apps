@@ -263,6 +263,8 @@ export const staffRepositoryApi = {
     params.set('limit', String(pageSize));
     params.set('offset', String(offset));
     params.set('has_filters', String(hasFilters));
+    if (filters?.search?.trim()) params.set('search', filters.search.trim());
+    if (filters?.role) params.set('role', filters.role);
     const res = await teachingFetchJson<PaginatedApiResponse>(`/staff?${params.toString()}`);
     const items = res?.items ?? [];
     const total = res?.total ?? 0;

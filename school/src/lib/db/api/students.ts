@@ -580,6 +580,7 @@ export const enrollmentsRepositoryApi = {
     params.set('limit', String(pageSize));
     params.set('offset', String(offset));
     params.set('has_filters', String(hasFilters));
+    if (filters?.search?.trim()) params.set('search', filters.search.trim());
     const res = await teachingFetchJson<PaginatedApiResponse>(`/students/enrollments?${params.toString()}`);
     const items = res?.items ?? [];
     const total = res?.total ?? 0;

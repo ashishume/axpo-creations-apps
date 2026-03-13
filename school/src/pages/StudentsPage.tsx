@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { useStudentsBySessionInfinite, useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useDeleteAllStudentsBySession, useAddStudentPayment, useTransferStudentsToSession } from "../hooks/useStudents";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useClassesBySession, useCreateClass, useUpdateClass, useDeleteClass } from "../hooks/useClasses";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
@@ -124,17 +125,21 @@ export function StudentsPage() {
   const [transferSelectedIds, setTransferSelectedIds] = useState<Set<string>>(new Set());
   const [transferSubmitting, setTransferSubmitting] = useState(false);
 
-  const hasFilters = !!(statusFilter || classFilter || feeTypeFilter || searchQuery.trim());
+  const debouncedSearch = useDebouncedValue(searchQuery.trim(), 300);
+  const hasFilters = !!(statusFilter || classFilter || feeTypeFilter || debouncedSearch);
   const {
     students,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading: studentsLoading,
-  } = useStudentsBySessionInfinite(selectedSessionId ?? "", { hasFilters });
+  } = useStudentsBySessionInfinite(selectedSessionId ?? "", {
+    hasFilters,
+    search: debouncedSearch || undefined,
+  });
   const { data: allSessionStudents = [], isLoading: allStudentsLoading } = useStudentsBySession(selectedSessionId ?? "");
   const { data: sessionClasses = [], isLoading: classesLoading } = useClassesBySession(selectedSessionId ?? "");
-  const isAppLoading = studentsLoading || classesLoading;
+  const isInitialLoading = (studentsLoading && students.length === 0) || classesLoading;
 
   const list = students;
 
@@ -157,15 +162,9 @@ export function StudentsPage() {
     }
   }, [studentModal.open, studentModal.student?.siblingId]);
 
+  // Search is applied on backend; status, class, feeType filters on client
   const filteredList = useMemo(() => {
     let out = list;
-    const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      out = out.filter(
-        (s) =>
-          s.name.toLowerCase().includes(q) || (s.studentId && s.studentId.toLowerCase().includes(q))
-      );
-    }
     if (statusFilter) {
       out = out.filter((s) => getPaymentStatus(s) === statusFilter);
     }
@@ -176,7 +175,7 @@ export function StudentsPage() {
       out = out.filter((s) => s.feeType === feeTypeFilter);
     }
     return out;
-  }, [list, searchQuery, statusFilter, classFilter, feeTypeFilter]);
+  }, [list, statusFilter, classFilter, feeTypeFilter]);
 
   const handleClassSelectChange = (classId: string) => {
     if (!classId || !studentFormRef.current) return;
@@ -487,7 +486,7 @@ export function StudentsPage() {
             Select a school and session to view students.
           </CardContent>
         </Card>
-      ) : isAppLoading ? (
+      ) : isInitialLoading ? (
         <div className="space-y-4">
           <Card>
             <CardHeader>

@@ -2,11 +2,23 @@
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.teaching.models.staff import Staff, SalaryPayment
 from app.teaching.models.school import School, Session
+
+
+def _search_words(search: str) -> list[str]:
+    """Split search into non-empty words for basic fuzzy matching."""
+    if not search or not search.strip():
+        return []
+    return [w.strip() for w in search.strip().split() if w.strip()]
+
+
+def _escape_like(value: str) -> str:
+    """Escape % and _ for use in SQL LIKE/ILIKE patterns."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 class StaffRepository:
@@ -34,8 +46,29 @@ class StaffRepository:
         )
         return list(result.scalars().all())
 
-    async def count_by_session(self, db: AsyncSession, session_id: UUID) -> int:
-        result = await db.execute(select(func.count()).select_from(Staff).where(Staff.session_id == session_id))
+    async def count_by_session(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        *,
+        search: str | None = None,
+        role: str | None = None,
+    ) -> int:
+        q = select(func.count()).select_from(Staff).where(Staff.session_id == session_id)
+        if search:
+            words = _search_words(search)
+            if words:
+                conditions = [
+                    or_(
+                        Staff.name.ilike(f"%{_escape_like(w)}%"),
+                        Staff.employee_id.ilike(f"%{_escape_like(w)}%"),
+                    )
+                    for w in words
+                ]
+                q = q.where(and_(*conditions))
+        if role:
+            q = q.where(Staff.role == role)
+        result = await db.execute(q)
         return result.scalar() or 0
 
     async def list_by_session_paginated(
@@ -45,14 +78,25 @@ class StaffRepository:
         *,
         limit: int,
         offset: int,
+        search: str | None = None,
+        role: str | None = None,
     ) -> list[Staff]:
-        result = await db.execute(
-            select(Staff)
-            .where(Staff.session_id == session_id)
-            .order_by(Staff.created_at.desc())
-            .limit(limit)
-            .offset(offset)
-        )
+        q = select(Staff).where(Staff.session_id == session_id)
+        if search:
+            words = _search_words(search)
+            if words:
+                conditions = [
+                    or_(
+                        Staff.name.ilike(f"%{_escape_like(w)}%"),
+                        Staff.employee_id.ilike(f"%{_escape_like(w)}%"),
+                    )
+                    for w in words
+                ]
+                q = q.where(and_(*conditions))
+        if role:
+            q = q.where(Staff.role == role)
+        q = q.order_by(Staff.created_at.desc()).limit(limit).offset(offset)
+        result = await db.execute(q)
         return list(result.scalars().all())
 
     async def count_by_organization(self, db: AsyncSession, organization_id: UUID) -> int:

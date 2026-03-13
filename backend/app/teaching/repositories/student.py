@@ -3,12 +3,24 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.teaching.models.student import Student, StudentEnrollment, FeePayment
 from app.teaching.models.school import School, Session
+
+
+def _search_words(search: str) -> list[str]:
+    """Split search into non-empty words for basic fuzzy matching."""
+    if not search or not search.strip():
+        return []
+    return [w.strip() for w in search.strip().split() if w.strip()]
+
+
+def _escape_like(value: str) -> str:
+    """Escape % and _ for use in SQL LIKE/ILIKE patterns."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 class StudentRepository:
@@ -109,7 +121,31 @@ class EnrollmentRepository:
         )
         return list(result.scalars().all())
 
-    async def count_by_session(self, db: AsyncSession, session_id: UUID) -> int:
+    async def count_by_session(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        *,
+        search: str | None = None,
+    ) -> int:
+        if search and _search_words(search):
+            q = (
+                select(func.count())
+                .select_from(StudentEnrollment)
+                .join(Student, StudentEnrollment.student_id == Student.id)
+                .where(StudentEnrollment.session_id == session_id)
+            )
+            words = _search_words(search)
+            conditions = [
+                or_(
+                    Student.name.ilike(f"%{_escape_like(w)}%"),
+                    Student.student_id.ilike(f"%{_escape_like(w)}%"),
+                )
+                for w in words
+            ]
+            q = q.where(and_(*conditions))
+            result = await db.execute(q)
+            return result.scalar() or 0
         result = await db.execute(
             select(func.count())
             .select_from(StudentEnrollment)
@@ -124,18 +160,30 @@ class EnrollmentRepository:
         *,
         limit: int,
         offset: int,
+        search: str | None = None,
     ) -> list[StudentEnrollment]:
-        result = await db.execute(
-            select(StudentEnrollment)
-            .where(StudentEnrollment.session_id == session_id)
-            .order_by(StudentEnrollment.created_at.desc())
-            .limit(limit)
-            .offset(offset)
-            .options(
-                selectinload(StudentEnrollment.student),
-                selectinload(StudentEnrollment.payments),
+        words = _search_words(search) if search else []
+        if words:
+            q = (
+                select(StudentEnrollment)
+                .join(Student, StudentEnrollment.student_id == Student.id)
+                .where(StudentEnrollment.session_id == session_id)
             )
+            conditions = [
+                or_(
+                    Student.name.ilike(f"%{_escape_like(w)}%"),
+                    Student.student_id.ilike(f"%{_escape_like(w)}%"),
+                )
+                for w in words
+            ]
+            q = q.where(and_(*conditions))
+        else:
+            q = select(StudentEnrollment).where(StudentEnrollment.session_id == session_id)
+        q = q.order_by(StudentEnrollment.created_at.desc()).limit(limit).offset(offset).options(
+            selectinload(StudentEnrollment.student),
+            selectinload(StudentEnrollment.payments),
         )
+        result = await db.execute(q)
         return list(result.scalars().all())
 
     async def count_by_organization(self, db: AsyncSession, organization_id: UUID) -> int:

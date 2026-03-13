@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { studentsRepository, enrollmentsRepository } from '../lib/db/repositories';
 import type { Student, StudentEnrollment, FeePayment } from '../types';
@@ -154,13 +154,16 @@ export function useStudentsPaginated(
   });
 }
 
-/** Infinite list for Students list page: default 10 per page, 50 when filters applied. */
+/** Infinite list for Students list page: default 10 per page, 50 when filters applied. Search is sent to backend. */
 export function useStudentsBySessionInfinite(
   sessionId: string,
-  options?: { hasFilters?: boolean }
+  options?: { hasFilters?: boolean; search?: string }
 ) {
   const pageSize = options?.hasFilters ? FILTERED_PAGE_SIZE : DEFAULT_PAGE_SIZE;
-  const filters: StudentFilters = { sessionId };
+  const filters: StudentFilters = {
+    sessionId,
+    search: options?.search?.trim() || undefined,
+  };
 
   const q = useInfiniteQuery({
     queryKey: [QUERY_KEY, 'infinite', sessionId, pageSize, filters],
@@ -172,6 +175,7 @@ export function useStudentsBySessionInfinite(
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     enabled: !!sessionId,
+    placeholderData: keepPreviousData,
   });
 
   const students = q.data?.pages.flatMap((p) => p.data) ?? [];

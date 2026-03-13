@@ -220,10 +220,17 @@ class EnrollmentService:
         *,
         limit: int,
         offset: int,
+        search: str | None = None,
     ) -> tuple[list[StudentEnrollment], int]:
-        total = await enrollment_repository.count_by_session(db, session_id)
+        total = await enrollment_repository.count_by_session(
+            db, session_id, search=search
+        )
         items = await enrollment_repository.list_by_session_paginated(
-            db, session_id, limit=limit, offset=offset
+            db,
+            session_id,
+            limit=limit,
+            offset=offset,
+            search=search,
         )
         return items, total
 

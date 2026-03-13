@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { useStaffBySessionInfinite, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useAddSalaryPayment, useLeaveSummary } from "../hooks/useStaff";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -376,16 +377,22 @@ export function StaffPage() {
   // Staff form state for classes & subjects
   const [classesSubjects, setClassesSubjects] = useState<ClassSubject[]>([]);
 
-  const hasFilters = !!(roleFilter || searchQuery.trim() || classFilter || subjectFilter);
+  const debouncedSearch = useDebouncedValue(searchQuery.trim(), 300);
+  const hasFilters = !!(roleFilter || debouncedSearch || classFilter || subjectFilter);
   const {
     staffList,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading: isAppLoading,
-  } = useStaffBySessionInfinite(selectedSessionId ?? "", { hasFilters });
+  } = useStaffBySessionInfinite(selectedSessionId ?? "", {
+    hasFilters,
+    search: debouncedSearch || undefined,
+    role: roleFilter || undefined,
+  });
 
   const staff = staffList;
+  const isInitialLoading = isAppLoading && staffList.length === 0;
 
   const last12Months = useMemo(() => getLast12Months(), []);
   const currentMonth = useMemo(() => getCurrentMonth(), []);
@@ -393,7 +400,7 @@ export function StaffPage() {
 
   const list = staffList;
 
-  // Extract unique classes and subjects from all staff
+  // Extract unique classes and subjects from current list (for filter dropdowns)
   const { uniqueClasses, uniqueSubjects } = useMemo(() => {
     const classSet = new Set<string>();
     const subjectSet = new Set<string>();
@@ -411,19 +418,9 @@ export function StaffPage() {
     };
   }, [list]);
 
+  // Search and role are applied on backend; only class and subject filters on client
   const filteredList = useMemo(() => {
     let out = list;
-    const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      out = out.filter(
-        (s) =>
-          s.name.toLowerCase().includes(q) ||
-          (s.employeeId && s.employeeId.toLowerCase().includes(q))
-      );
-    }
-    if (roleFilter) {
-      out = out.filter((s) => s.role === roleFilter);
-    }
     if (classFilter) {
       out = out.filter((s) =>
         s.classesSubjects?.some((cs) => cs.className === classFilter)
@@ -435,7 +432,7 @@ export function StaffPage() {
       );
     }
     return out;
-  }, [list, searchQuery, roleFilter, classFilter, subjectFilter]);
+  }, [list, classFilter, subjectFilter]);
 
   // Reset classes/subjects form state when opening modal
   useEffect(() => {
@@ -634,7 +631,7 @@ export function StaffPage() {
             Select a school and session to view staff.
           </CardContent>
         </Card>
-      ) : isAppLoading ? (
+      ) : isInitialLoading ? (
         <div className="space-y-4">
           <Card>
             <CardHeader>
