@@ -99,6 +99,18 @@ class StaffRepository:
         await db.delete(staff)
         await db.flush()
 
+    async def has_salary_payment_for_month(
+        self, db: AsyncSession, staff_id: UUID, month: str
+    ) -> bool:
+        """Return True if this staff already has any payment record for the given month."""
+        result = await db.execute(
+            select(SalaryPayment.id).where(
+                SalaryPayment.staff_id == staff_id,
+                SalaryPayment.month == month,
+            ).limit(1)
+        )
+        return result.scalar_one_or_none() is not None
+
     async def add_salary_payment(
         self,
         db: AsyncSession,

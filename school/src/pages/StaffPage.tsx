@@ -134,6 +134,8 @@ function SalaryPaymentModalContent({
   const leaveDeduction = excessLeaves * perDay;
   const calculatedSalary = staff.monthlySalary - leaveDeduction - extraDeduction + extraAllowance;
 
+  const alreadyHasPaymentForMonth = staff.salaryPayments.some((p) => p.month === month);
+
   return (
     <Modal
       open={true}
@@ -276,6 +278,14 @@ function SalaryPaymentModalContent({
           </p>
         </div>
 
+        {/* Already paid warning */}
+        {alreadyHasPaymentForMonth && (
+          <div className="flex items-start gap-2 text-sm text-amber-800 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-200 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <span>This month already has a salary payment. Only one payment per employee per month is allowed.</span>
+          </div>
+        )}
+
         {/* Disclaimer */}
         <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 p-2 rounded">
           <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
@@ -310,7 +320,9 @@ function SalaryPaymentModalContent({
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Pay Salary</Button>
+          <Button type="submit" disabled={alreadyHasPaymentForMonth}>
+            Pay Salary
+          </Button>
         </div>
       </form>
     </Modal>
@@ -333,7 +345,10 @@ export function StaffPage() {
   const addStaff = (data: Omit<StaffType, "id" | "salaryPayments">) => createStaff.mutate(data);
   const updateStaff = (id: string, data: Partial<Omit<StaffType, "id" | "salaryPayments">>) => updateStaffMut.mutate({ id, updates: data });
   const deleteStaff = (id: string) => deleteStaffMut.mutate(id);
-  const addSalaryPayment = (staffId: string, payment: Omit<SalaryPayment, "id">) => addSalaryMut.mutate({ staffId, payment });
+  const addSalaryPayment = (staffId: string, payment: Omit<SalaryPayment, "id">) =>
+    addSalaryMut.mutate({ staffId, payment });
+  const addSalaryPaymentAsync = (staffId: string, payment: Omit<SalaryPayment, "id">) =>
+    addSalaryMut.mutateAsync({ staffId, payment });
 
   const selectedSession = useMemo(
     () => (selectedSessionId ? sessions.find((s) => s.id === selectedSessionId) : null),
@@ -489,7 +504,7 @@ export function StaffPage() {
     setClassesSubjects(updated);
   };
 
-  const handleSaveSalary = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveSalary = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!salaryModal) return;
     const form = e.currentTarget;
@@ -513,31 +528,34 @@ export function StaffPage() {
     const leaveDeduction = excessLeaves * perDay;
     const calculatedSalary = staff.monthlySalary - leaveDeduction - extraDeduction + extraAllowance;
 
-    addSalaryPayment(staff.id, {
-      month,
-      amount: calculatedSalary,
-      status,
-      paymentDate: paymentDate || undefined,
-      method: method || undefined,
-      dueDate,
-      daysWorked,
-      leavesTaken,
-      allowedLeaves,
-      excessLeaves,
-      leaveDeduction,
-      extraAllowance,
-      allowanceNote,
-      extraDeduction,
-      deductionNote,
-      calculatedSalary,
-    });
-    toast("Salary payment recorded");
-    
-    // If opened from salary history, reopen it to show updated payment
-    if (salaryModal.fromHistory) {
-      setSalaryHistoryModal(staff);
+    try {
+      await addSalaryPaymentAsync(staff.id, {
+        month,
+        amount: calculatedSalary,
+        status,
+        paymentDate: paymentDate || undefined,
+        method: method || undefined,
+        dueDate,
+        daysWorked,
+        leavesTaken,
+        allowedLeaves,
+        excessLeaves,
+        leaveDeduction,
+        extraAllowance,
+        allowanceNote,
+        extraDeduction,
+        deductionNote,
+        calculatedSalary,
+      });
+      toast("Salary payment recorded");
+      if (salaryModal.fromHistory) {
+        setSalaryHistoryModal(staff);
+      }
+      setSalaryModal(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to record payment";
+      toast(message);
     }
-    setSalaryModal(null);
   };
 
   const annualTotal = useMemo(
@@ -1096,18 +1114,22 @@ export function StaffPage() {
                           </td>
                           <td className="py-2">
                             <PermissionGate permission="salary:manage">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => {
-                                  setSalaryModal({ staff: historyStaff, month, fromHistory: true });
-                                }}
-                                title="Pay salary for this month"
-                              >
-                                <Banknote className="h-4 w-4 mr-1" />
-                                Pay
-                              </Button>
+                              {paymentsForMonth.length === 0 ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => {
+                                    setSalaryModal({ staff: historyStaff, month, fromHistory: true });
+                                  }}
+                                  title="Pay salary for this month"
+                                >
+                                  <Banknote className="h-4 w-4 mr-1" />
+                                  Pay
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-slate-400" title="Already paid for this month">—</span>
+                              )}
                             </PermissionGate>
                           </td>
                         </tr>

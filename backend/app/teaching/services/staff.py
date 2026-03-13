@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import ConflictError, NotFoundError
 from app.teaching.models.staff import Staff, SalaryPayment
 from app.teaching.models.leave import LeaveRequest
 from app.teaching.schemas.staff import (
@@ -176,7 +176,12 @@ class StaffService:
         self, db: AsyncSession, staff_id: UUID, data: SalaryPaymentCreate
     ) -> SalaryPayment:
         staff = await self.get_or_404(db, staff_id)
-        
+
+        if await staff_repository.has_salary_payment_for_month(db, staff_id, data.month):
+            raise ConflictError(
+                f"This employee already has a salary payment for {data.month}. Only one payment per employee per month is allowed."
+            )
+
         # Calculate salary breakdown
         per_day, leave_deduction, excess_leaves, calculated_salary = _calculate_salary_breakdown(
             monthly_salary=staff.monthly_salary,
@@ -240,11 +245,19 @@ class StaffService:
         for sid in {item.staff_id for item in items}:
             staff = await self.get_or_404(db, sid)
             staff_map[sid] = staff
-        
+
+        # Reject if any employee already has a payment for that month
+        for item in items:
+            if await staff_repository.has_salary_payment_for_month(db, item.staff_id, item.month):
+                staff = staff_map[item.staff_id]
+                raise ConflictError(
+                    f"Employee {staff.name} already has a salary payment for {item.month}. Only one payment per employee per month is allowed."
+                )
+
         out = []
         for item in items:
             staff = staff_map[item.staff_id]
-            
+
             # Calculate salary breakdown
             per_day, leave_deduction, excess_leaves, calculated_salary = _calculate_salary_breakdown(
                 monthly_salary=staff.monthly_salary,
