@@ -400,26 +400,29 @@ export function StudentsPage() {
             disabled={!selectedSessionId || allSessionStudents.length === 0}
             onClick={() => {
               const csv = exportStudentsToCSV(
-                allSessionStudents.map((s) => ({
-                  name: s.name,
-                  studentId: s.studentId,
-                  classId: s.classId,
-                  feeType: s.feeType,
-                  registrationFees: s.registrationFees,
-                  annualFund: s.annualFund,
-                  monthlyFees: s.monthlyFees,
-                  transportFees: s.transportFees,
-                  dueDayOfMonth: s.dueDayOfMonth,
-                  lateFeeAmount: s.lateFeeAmount,
-                  lateFeeFrequency: s.lateFeeFrequency,
-                  fatherName: s.fatherName,
-                  motherName: s.motherName,
-                  guardianPhone: s.guardianPhone,
-                  bloodGroup: s.bloodGroup,
-                  currentAddress: s.currentAddress,
-                  permanentAddress: s.permanentAddress,
-                  healthIssues: s.healthIssues,
-                })),
+                allSessionStudents.map((s) => {
+                  const pd = s.personalDetails;
+                  return {
+                    name: s.name,
+                    studentId: s.studentId,
+                    classId: s.classId,
+                    feeType: s.feeType,
+                    registrationFees: s.registrationFees,
+                    annualFund: s.annualFund,
+                    monthlyFees: s.monthlyFees,
+                    transportFees: s.transportFees,
+                    dueDayOfMonth: s.dueDayOfMonth,
+                    lateFeeAmount: s.lateFeeAmount,
+                    lateFeeFrequency: s.lateFeeFrequency,
+                    fatherName: pd?.fatherName ?? s.fatherName,
+                    motherName: pd?.motherName ?? s.motherName,
+                    guardianPhone: pd?.guardianPhone ?? s.guardianPhone,
+                    bloodGroup: pd?.bloodGroup ?? s.bloodGroup,
+                    currentAddress: pd?.currentAddress ?? s.currentAddress,
+                    permanentAddress: pd?.permanentAddress ?? s.permanentAddress,
+                    healthIssues: pd?.healthIssues ?? s.healthIssues,
+                  };
+                }),
                 sessionClasses.map((c) => ({ id: c.id, name: c.name }))
               );
               const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });

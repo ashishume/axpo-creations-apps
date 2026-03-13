@@ -233,6 +233,8 @@ export function getStudentSampleCSV(): string {
     "Priya Patel,STU-002,Class 2,Regular,3000,,1500,3500,,10,50,weekly,Mukesh Patel,Rani Patel,9876543211,B+,\"45 Park Ave\",,",
     "Rahul Kumar,STU-003,Class 5,Boarding,3500,,2000,5000,1000,10,100,weekly,,,9876543212,,,,\"Asthma - carry inhaler\"",
     "Ananya Singh,STU-004,Nursery,Regular,,,,,400,10,50,weekly,Raj Singh,Meera Singh,9876543213,O+,\"78 Hill Road\",,",
+    "Vikram Mehta,STU-005,Class 3,Day Scholar + Meals,2500,500,1200,3200,600,8,30,daily,Suresh Mehta,Lata Mehta,9876543214,B-,\"10 Hostel Rd\",,",
+    "Kavita Nair,STU-006,Class 4,Boarding + Meals,4000,,2500,5500,800,5,75,weekly,,,9876543215,O-,\"Block B\",\"Village address\",",
   ].join("\n");
 }
 
@@ -250,6 +252,10 @@ export function getStaffSampleCSV(): string {
     "Rajesh Driver,EMP-004,Bus Driver,28000,,2,,",
     "Meena Singh,EMP-005,Support Staff,18000,,2,,",
     "Arun Joshi,EMP-006,Accountant,38000,,2,,",
+    "Ramesh Iyer,EMP-007,Vice Principal,48000,,2,,",
+    "Sunita Reddy,EMP-008,Head of Department,42000,English,2,,\"Class 9:English;Class 10:English\"",
+    "Kiran Security,EMP-009,Security,22000,,2,,",
+    "Lata Cook,EMP-010,Cook,20000,,2,,",
   ].join("\n");
 }
 
