@@ -14,6 +14,7 @@ class LeaveTypeBase(BaseModel):
     code: str
     applicable_to: str  # staff, student, both
     max_days_per_year: int | None = None
+    max_days_by_role: dict[str, int] | None = None  # e.g. {"Teacher": 12, "Admin": 18}
     requires_document: bool = False
     is_active: bool = True
 
@@ -27,6 +28,7 @@ class LeaveTypeUpdate(BaseModel):
     code: str | None = None
     applicable_to: str | None = None
     max_days_per_year: int | None = None
+    max_days_by_role: dict[str, int] | None = None
     requires_document: bool | None = None
     is_active: bool | None = None
 

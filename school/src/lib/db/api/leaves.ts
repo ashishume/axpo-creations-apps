@@ -2,6 +2,7 @@ import type { LeaveType, LeaveBalance, LeaveRequest } from '../../../types';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
 
 function mapLeaveType(r: Record<string, unknown>): LeaveType {
+  const maxDaysByRole = r.max_days_by_role as Record<string, number> | null | undefined;
   return {
     id: String(r.id),
     sessionId: String(r.session_id ?? ''),
@@ -9,6 +10,14 @@ function mapLeaveType(r: Record<string, unknown>): LeaveType {
     code: String(r.code ?? ''),
     applicableTo: (r.applicable_to as LeaveType['applicableTo']) ?? 'both',
     maxDaysPerYear: r.max_days_per_year != null ? Number(r.max_days_per_year) : undefined,
+    maxDaysByRole:
+      maxDaysByRole && typeof maxDaysByRole === 'object' && !Array.isArray(maxDaysByRole)
+        ? (Object.fromEntries(
+            Object.entries(maxDaysByRole).filter(
+              ([, v]) => typeof v === 'number' && Number.isInteger(v)
+            )
+          ) as Record<string, number>)
+        : undefined,
     requiresDocument: Boolean(r.requires_document),
     isActive: Boolean(r.is_active),
     createdAt: r.created_at != null ? String(r.created_at) : undefined,
@@ -71,6 +80,7 @@ export const leavesRepositoryApi = {
       code: data.code,
       applicable_to: data.applicableTo,
       max_days_per_year: data.maxDaysPerYear ?? null,
+      max_days_by_role: data.maxDaysByRole ?? null,
       requires_document: data.requiresDocument ?? false,
       is_active: data.isActive ?? true,
     };
@@ -87,6 +97,7 @@ export const leavesRepositoryApi = {
     if (data.code !== undefined) body.code = data.code;
     if (data.applicableTo !== undefined) body.applicable_to = data.applicableTo;
     if (data.maxDaysPerYear !== undefined) body.max_days_per_year = data.maxDaysPerYear;
+    if (data.maxDaysByRole !== undefined) body.max_days_by_role = data.maxDaysByRole;
     if (data.requiresDocument !== undefined) body.requires_document = data.requiresDocument;
     if (data.isActive !== undefined) body.is_active = data.isActive;
     const r = await teachingFetchJson<Record<string, unknown>>(`/leaves/leave-types/${id}`, {

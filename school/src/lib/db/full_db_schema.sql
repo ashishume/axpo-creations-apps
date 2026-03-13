@@ -303,6 +303,7 @@ CREATE TABLE IF NOT EXISTS school_xx_leave_types (
   code VARCHAR(20) NOT NULL,
   applicable_to VARCHAR(10) NOT NULL CHECK (applicable_to IN ('staff', 'student', 'both')),
   max_days_per_year INTEGER,
+  max_days_by_role JSONB,
   requires_document BOOLEAN NOT NULL DEFAULT FALSE,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),

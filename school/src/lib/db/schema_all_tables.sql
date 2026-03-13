@@ -313,6 +313,7 @@ CREATE TABLE school_xx_leave_types (
   code VARCHAR(20) NOT NULL,
   applicable_to VARCHAR(10) NOT NULL CHECK (applicable_to IN ('staff', 'student', 'both')),
   max_days_per_year INTEGER,
+  max_days_by_role JSONB,
   requires_document BOOLEAN DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),

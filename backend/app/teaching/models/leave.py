@@ -5,7 +5,7 @@ import uuid
 from datetime import date, datetime, timezone
 
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import TeachingBase
@@ -24,6 +24,8 @@ class LeaveType(TeachingBase):
     code: Mapped[str] = mapped_column(String(20), nullable=False)
     applicable_to: Mapped[str] = mapped_column(String(10), nullable=False)  # staff, student, both
     max_days_per_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Optional max days per staff role, e.g. {"Teacher": 12, "Admin": 18}. Fallback: max_days_per_year.
+    max_days_by_role: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     requires_document: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

@@ -2,6 +2,7 @@ import { getSupabase } from '../supabase';
 import type { LeaveType, LeaveBalance, LeaveRequest } from '../../../types';
 
 function mapLeaveType(row: Record<string, unknown>): LeaveType {
+  const maxDaysByRole = row.max_days_by_role as Record<string, number> | null | undefined;
   return {
     id: row.id as string,
     sessionId: row.session_id as string,
@@ -9,6 +10,14 @@ function mapLeaveType(row: Record<string, unknown>): LeaveType {
     code: row.code as string,
     applicableTo: (row.applicable_to as LeaveType['applicableTo']) ?? 'both',
     maxDaysPerYear: row.max_days_per_year != null ? Number(row.max_days_per_year) : undefined,
+    maxDaysByRole:
+      maxDaysByRole && typeof maxDaysByRole === 'object' && !Array.isArray(maxDaysByRole)
+        ? (Object.fromEntries(
+            Object.entries(maxDaysByRole).filter(
+              ([, v]) => typeof v === 'number' && Number.isInteger(v)
+            )
+          ) as Record<string, number>)
+        : undefined,
     requiresDocument: Boolean(row.requires_document),
     isActive: Boolean(row.is_active),
     createdAt: row.created_at as string | undefined,
@@ -81,6 +90,7 @@ export const leavesRepositorySupabase = {
         code: data.code,
         applicable_to: data.applicableTo,
         max_days_per_year: data.maxDaysPerYear ?? null,
+        max_days_by_role: data.maxDaysByRole ?? null,
         requires_document: data.requiresDocument ?? false,
         is_active: data.isActive ?? true,
       })
@@ -97,6 +107,7 @@ export const leavesRepositorySupabase = {
     if (data.code !== undefined) body.code = data.code;
     if (data.applicableTo !== undefined) body.applicable_to = data.applicableTo;
     if (data.maxDaysPerYear !== undefined) body.max_days_per_year = data.maxDaysPerYear;
+    if (data.maxDaysByRole !== undefined) body.max_days_by_role = data.maxDaysByRole;
     if (data.requiresDocument !== undefined) body.requires_document = data.requiresDocument;
     if (data.isActive !== undefined) body.is_active = data.isActive;
     const { data: row, error } = await supabase
@@ -339,6 +350,21 @@ export const leavesRepositorySupabase = {
       );
     }
     const supabase = getSupabase();
+    let staffRole: string | null = null;
+    const { data: staffRow } = await supabase
+      .from('school_xx_staff')
+      .select('role')
+      .eq('id', staffId)
+      .single();
+    if (staffRow?.role) staffRole = staffRow.role as string;
+
+    function maxDaysForRole(lt: LeaveType): number {
+      if (staffRole && lt.maxDaysByRole && staffRole in lt.maxDaysByRole) {
+        return lt.maxDaysByRole[staffRole];
+      }
+      return lt.maxDaysPerYear ?? 0;
+    }
+
     const results: LeaveBalance[] = [];
     for (const lt of types) {
       const { data: existing } = await supabase
@@ -349,13 +375,14 @@ export const leavesRepositorySupabase = {
         .eq('year', year)
         .single();
       if (existing) continue;
+      const totalDays = maxDaysForRole(lt);
       const { data: row, error } = await supabase
         .from('school_xx_leave_balances')
         .insert({
           staff_id: staffId,
           leave_type_id: lt.id,
           year,
-          total_days: lt.maxDaysPerYear ?? 0,
+          total_days: totalDays,
           used_days: 0,
         })
         .select('*')

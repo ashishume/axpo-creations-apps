@@ -17,8 +17,10 @@ from app.teaching.schemas.leave import (
 )
 from app.teaching.repositories.leave import leave_repository
 from app.teaching.repositories.session import SessionRepository
+from app.teaching.repositories.staff import StaffRepository
 
 session_repository = SessionRepository()
+staff_repository = StaffRepository()
 
 
 def _days_between(from_date: date, to_date: date) -> int:
@@ -106,10 +108,19 @@ class LeaveService:
             setattr(balance, k, v)
         return await leave_repository.update_balance(db, balance)
 
+    def _max_days_for_staff_role(self, lt: LeaveType, staff_role: str | None) -> int:
+        """Resolve total days for a leave type and staff role: role-specific override, else default."""
+        if staff_role and lt.max_days_by_role and staff_role in lt.max_days_by_role:
+            return lt.max_days_by_role[staff_role]
+        return lt.max_days_per_year or 0
+
     async def initialize_balances_for_staff(
         self, db: AsyncSession, staff_id: UUID, session_id: UUID, year: str
     ) -> list[LeaveBalance]:
-        """Create balance rows for all staff-applicable leave types for the given year."""
+        """Create balance rows for all staff-applicable leave types for the given year.
+        Uses max_days_by_role[staff.role] when set, else max_days_per_year."""
+        staff = await staff_repository.get(db, staff_id)
+        staff_role = staff.role if staff else None
         leave_types = await leave_repository.list_leave_types(
             db, session_id, applicable_to="staff", active_only=True
         )
@@ -125,11 +136,12 @@ class LeaveService:
             if existing:
                 out.append(existing)
                 continue
+            total_days = self._max_days_for_staff_role(lt, staff_role)
             balance = LeaveBalance(
                 staff_id=staff_id,
                 leave_type_id=lt.id,
                 year=year,
-                total_days=lt.max_days_per_year or 0,
+                total_days=total_days,
                 used_days=0,
             )
             out.append(await leave_repository.add_balance(db, balance))
@@ -163,14 +175,10 @@ class LeaveService:
                     raise ValidationError(
                         "Insufficient leave balance for this leave type"
                     )
-                leave_type = await leave_repository.get_leave_type(
-                    db, data.leave_type_id
-                )
-                if leave_type and leave_type.max_days_per_year and balance:
-                    if balance.used_days + days_count > leave_type.max_days_per_year:
-                        raise ValidationError(
-                            "Leave request exceeds maximum days for this leave type"
-                        )
+                if balance and balance.used_days + days_count > balance.total_days:
+                    raise ValidationError(
+                        "Leave request exceeds maximum days for this leave type"
+                    )
 
         request = LeaveRequest(**data.model_dump(), status="pending")
         return await leave_repository.add_leave_request(db, request)

@@ -328,7 +328,10 @@ export interface LeaveType {
   name: string;
   code: string;
   applicableTo: "staff" | "student" | "both";
+  /** Default max days per year when no role override is set. */
   maxDaysPerYear?: number;
+  /** Optional max days per staff role, e.g. { Teacher: 12, Admin: 18 }. Falls back to maxDaysPerYear. */
+  maxDaysByRole?: Record<string, number>;
   requiresDocument: boolean;
   isActive: boolean;
   createdAt?: string;
