@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
+import { useAuth } from "../context/AuthContext";
 import { useStudentsBySessionInfinite, useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useDeleteAllStudentsBySession, useAddStudentPayment, useTransferStudentsToSession } from "../hooks/useStudents";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useClassesBySession, useCreateClass, useUpdateClass, useDeleteClass } from "../hooks/useClasses";
@@ -33,6 +34,7 @@ import { SearchableSelect } from "../components/ui/SearchableSelect";
 import { FormField } from "../components/ui/FormField";
 import { Badge } from "../components/ui/Badge";
 import { EmptyState } from "../components/ui/EmptyState";
+import { PermissionGate } from "../components/auth/PermissionGate";
 
 const statusBadgeVariant: Record<PaymentStatus, "success" | "warning" | "danger"> = {
   "Fully Paid": "success",
@@ -58,6 +60,9 @@ export function StudentsPage() {
     selectedSessionId,
     toast,
   } = useApp();
+  const { hasPermission, hasAnyPermission } = useAuth();
+  const canRecordFees = hasAnyPermission(["fees:record", "students:edit"]);
+  const canEditStudent = hasPermission("students:edit");
 
   const createStudent = useCreateStudent();
   const createStudentsBulk = useCreateStudentsBulk();
@@ -447,14 +452,16 @@ export function StudentsPage() {
             <Upload className="mr-1 h-4 w-4" />
             Import CSV
           </Button>
-          <Button
-            size="sm"
-            disabled={!selectedSessionId}
-            onClick={() => setStudentModal({ open: true })}
-          >
-            <Plus className="mr-1 h-4 w-4" />
-            Add student
-          </Button>
+          <PermissionGate anyPermission={["students:create", "students:edit"]}>
+            <Button
+              size="sm"
+              disabled={!selectedSessionId}
+              onClick={() => setStudentModal({ open: true })}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Add student
+            </Button>
+          </PermissionGate>
           <Button
             size="sm"
             variant="danger"
@@ -632,14 +639,16 @@ export function StudentsPage() {
                                 >
                                   <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setDetailsStudent({ student: s, initialTab: "payments" })}
-                                  title="Record payment"
-                                >
-                                  <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                </Button>
+                                <PermissionGate anyPermission={["fees:record", "students:edit"]}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setDetailsStudent({ student: s, initialTab: "payments" })}
+                                    title="Record payment"
+                                  >
+                                    <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                  </Button>
+                                </PermissionGate>
                                 <div className="relative">
                                   <Button
                                     variant="ghost"
@@ -656,26 +665,30 @@ export function StudentsPage() {
                                         onClick={() => setActionMenuOpen(null)}
                                       />
                                       <div className="absolute right-0 top-full mt-1 z-50 w-36 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg py-1">
-                                        <button
-                                          className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                                          onClick={() => {
-                                            setStudentModal({ open: true, student: s });
-                                            setActionMenuOpen(null);
-                                          }}
-                                        >
-                                          <Pencil className="h-4 w-4" />
-                                          Edit
-                                        </button>
-                                        <button
-                                          className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
-                                          onClick={() => {
-                                            setConfirmDelete({ id: s.id, name: s.name });
-                                            setActionMenuOpen(null);
-                                          }}
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                          Delete
-                                        </button>
+                                        <PermissionGate permission="students:edit">
+                                          <button
+                                            className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
+                                            onClick={() => {
+                                              setStudentModal({ open: true, student: s });
+                                              setActionMenuOpen(null);
+                                            }}
+                                          >
+                                            <Pencil className="h-4 w-4" />
+                                            Edit
+                                          </button>
+                                        </PermissionGate>
+                                        <PermissionGate permission="students:delete">
+                                          <button
+                                            className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
+                                            onClick={() => {
+                                              setConfirmDelete({ id: s.id, name: s.name });
+                                              setActionMenuOpen(null);
+                                            }}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                            Delete
+                                          </button>
+                                        </PermissionGate>
                                       </div>
                                     </>
                                   )}
@@ -1312,7 +1325,7 @@ export function StudentsPage() {
           studentClass={sessionClasses.find((c) => c.id === detailsStudent.student.classId)}
           session={sessions.find((s) => s.id === selectedSessionId)}
           initialTab={detailsStudent.initialTab}
-          onAddPayment={async (payment) => {
+          onAddPayment={canRecordFees ? async (payment) => {
             const student = detailsStudent.student;
             const studentClass = sessionClasses.find((c) => c.id === student.classId);
             const paidByCategory = getPaymentsByCategory(student);
@@ -1365,15 +1378,15 @@ export function StudentsPage() {
                 initialTab: "feeHistory",
               });
             }
-          }}
+          } : undefined}
           onPaymentSuccess={() => {
             setDetailsStudent((prev) => prev ? { ...prev, initialTab: "feeHistory" } : null);
           }}
-          onUpdateStudent={(data) => {
+          onUpdateStudent={canEditStudent ? (data) => {
             updateStudent(detailsStudent.student.id, data);
             toast("Student updated");
             setDetailsStudent({ student: { ...detailsStudent.student, ...data }, initialTab: detailsStudent.initialTab });
-          }}
+          } : undefined}
         />
       )}
 

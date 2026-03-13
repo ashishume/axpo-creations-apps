@@ -41,6 +41,7 @@ const ACTION_LABELS: Record<string, string> = {
   edit: 'Edit',
   delete: 'Delete',
   manage: 'Manage',
+  record: 'Record payments only',
   use: 'Use',
   approve: 'Approve',
   lock: 'Lock',

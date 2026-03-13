@@ -7,6 +7,8 @@ from app.teaching.dependencies import (
     get_teaching_db_session,
     get_current_teaching_user,
     require_active_org_subscription,
+    require_teaching_permission,
+    require_any_teaching_permission,
 )
 from app.teaching.pagination import DEFAULT_PAGE_SIZE_STUDENTS, FILTERED_PAGE_SIZE, MAX_PAGE_SIZE
 from app.teaching.schemas.pagination import PaginatedResponse
@@ -227,9 +229,9 @@ async def update_enrollment(
     id: UUID,
     data: EnrollmentUpdate,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
+    user: User = Depends(require_teaching_permission("students:edit")),
 ):
-    """Update enrollment fee structure or payment status."""
+    """Update enrollment fee structure or payment status. Requires students:edit (fees:record cannot change fee structure)."""
     existing = await enrollment_service.get_or_404(db, id)
     await enforce_session_access(db, user, existing.session_id)
     enrollment = await enrollment_service.update(db, id, data)
@@ -253,9 +255,9 @@ async def add_enrollment_payment(
     id: UUID,
     data: FeePaymentCreate,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
+    user: User = Depends(require_any_teaching_permission("fees:record", "students:edit")),
 ):
-    """Record a payment for an enrollment."""
+    """Record a payment for an enrollment. Allowed with fees:record or students:edit."""
     existing = await enrollment_service.get_or_404(db, id)
     await enforce_session_access(db, user, existing.session_id)
     payment = await enrollment_service.add_payment(db, id, data)
@@ -267,9 +269,9 @@ async def delete_enrollment_payment(
     id: UUID,
     payment_id: UUID,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
+    user: User = Depends(require_any_teaching_permission("fees:record", "students:edit")),
 ):
-    """Delete a payment from an enrollment."""
+    """Delete a payment from an enrollment. Allowed with fees:record or students:edit."""
     existing = await enrollment_service.get_or_404(db, id)
     await enforce_session_access(db, user, existing.session_id)
     deleted = await enrollment_service.delete_payment(db, id, payment_id)

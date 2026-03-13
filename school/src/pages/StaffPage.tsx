@@ -805,7 +805,7 @@ export function StaffPage() {
                           </td>
                           <td className="py-3">
                             <div className="flex gap-1">
-                              <PermissionGate permission="salary:manage">
+                              <PermissionGate anyPermission={["salary:manage", "salary:record"]}>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -1170,7 +1170,7 @@ export function StaffPage() {
                               : "—"}
                           </td>
                           <td className="py-2">
-                            <PermissionGate permission="salary:manage">
+                            <PermissionGate anyPermission={["salary:manage", "salary:record"]}>
                               {paymentsForMonth.length === 0 ? (
                                 <Button
                                   variant="ghost"

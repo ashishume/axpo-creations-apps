@@ -72,6 +72,24 @@ def require_teaching_permission(permission: str):
     return _require
 
 
+def require_any_teaching_permission(*permissions: str):
+    """Return a dependency that requires the current user to have at least one of the given permissions."""
+
+    async def _require(
+        db: AsyncSession = Depends(get_teaching_db_session),
+        user: User = Depends(get_current_teaching_user),
+    ) -> User:
+        from app.teaching.services.auth import auth_service
+        from app.core.exceptions import ForbiddenError
+
+        user_perms = await auth_service.get_permissions_for_user(db, user)
+        if not any(p in user_perms for p in permissions):
+            raise ForbiddenError("Insufficient permissions")
+        return user
+
+    return _require
+
+
 async def require_active_org_subscription(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),

@@ -8,6 +8,7 @@ from app.teaching.dependencies import (
     get_current_teaching_user,
     require_active_org_subscription,
     require_teaching_permission,
+    require_any_teaching_permission,
 )
 from app.teaching.pagination import DEFAULT_PAGE_SIZE_STAFF, FILTERED_PAGE_SIZE, MAX_PAGE_SIZE
 from app.teaching.schemas.pagination import PaginatedResponse
@@ -40,7 +41,7 @@ router = APIRouter(
 async def create_staff(
     data: StaffCreate,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
+    user: User = Depends(require_teaching_permission("staff:create")),
 ):
     await enforce_session_access(db, user, data.session_id)
     staff = await staff_service.create(db, data)
@@ -51,9 +52,9 @@ async def create_staff(
 async def delete_all_staff_by_session(
     session_id: UUID,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
+    user: User = Depends(require_teaching_permission("staff:delete")),
 ):
-    """Delete all staff in the given session. Requires session_id query param."""
+    """Delete all staff in the given session. Requires staff:delete."""
     await enforce_session_access(db, user, session_id)
     deleted = await staff_service.delete_all_by_session(db, session_id)
     return {"deleted": deleted}
@@ -115,9 +116,9 @@ async def create_staff_bulk(
 async def add_salary_payments_bulk(
     data: list[BulkSalaryPaymentItem],
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(require_teaching_permission("salary:manage")),
+    user: User = Depends(require_any_teaching_permission("salary:record", "salary:manage")),
 ):
-    """Add bulk salary payments. Requires salary:manage permission."""
+    """Add bulk salary payments. Allowed with salary:record or salary:manage."""
     staff_ids = {item.staff_id for item in data}
     for sid in staff_ids:
         staff = await staff_service.get_or_404(db, sid)
@@ -155,8 +156,9 @@ async def update_staff(
     id: UUID,
     data: StaffUpdate,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
+    user: User = Depends(require_teaching_permission("staff:edit")),
 ):
+    """Update staff details (e.g. monthly salary). Requires staff:edit (salary:record cannot change salary)."""
     existing = await staff_service.get_or_404(db, id)
     await enforce_session_access(db, user, existing.session_id)
     staff = await staff_service.update(db, id, data)
@@ -167,7 +169,7 @@ async def update_staff(
 async def delete_staff(
     id: UUID,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(get_current_teaching_user),
+    user: User = Depends(require_teaching_permission("staff:delete")),
 ):
     existing = await staff_service.get_or_404(db, id)
     await enforce_session_access(db, user, existing.session_id)
@@ -195,9 +197,9 @@ async def add_staff_salary_payment(
     id: UUID,
     data: SalaryPaymentCreate,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(require_teaching_permission("salary:manage")),
+    user: User = Depends(require_any_teaching_permission("salary:record", "salary:manage")),
 ):
-    """Add salary payment. Requires salary:manage permission."""
+    """Add salary payment. Allowed with salary:record or salary:manage."""
     existing = await staff_service.get_or_404(db, id)
     await enforce_session_access(db, user, existing.session_id)
     payment = await staff_service.add_salary_payment(db, id, data)
@@ -210,9 +212,9 @@ async def update_staff_salary_payment(
     payment_id: UUID,
     data: SalaryPaymentUpdate,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(require_teaching_permission("salary:manage")),
+    user: User = Depends(require_any_teaching_permission("salary:record", "salary:manage")),
 ):
-    """Update salary payment. Requires salary:manage permission."""
+    """Update salary payment record. Allowed with salary:record or salary:manage."""
     existing = await staff_service.get_or_404(db, id)
     await enforce_session_access(db, user, existing.session_id)
     payment = await staff_service.update_salary_payment(db, id, payment_id, data)
@@ -226,9 +228,9 @@ async def delete_staff_salary_payment(
     id: UUID,
     payment_id: UUID,
     db: AsyncSession = Depends(get_teaching_db_session),
-    user: User = Depends(require_teaching_permission("salary:manage")),
+    user: User = Depends(require_any_teaching_permission("salary:record", "salary:manage")),
 ):
-    """Delete salary payment. Requires salary:manage permission."""
+    """Delete salary payment. Allowed with salary:record or salary:manage."""
     existing = await staff_service.get_or_404(db, id)
     await enforce_session_access(db, user, existing.session_id)
     deleted = await staff_service.delete_salary_payment(db, id, payment_id)

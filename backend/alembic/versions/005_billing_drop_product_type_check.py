@@ -30,11 +30,9 @@ def _products_table_exists(connection) -> bool:
 def upgrade() -> None:
     connection = op.get_bind()
     if _products_table_exists(connection):
-        op.drop_constraint(
-            "products_product_type_check",
-            "products",
-            type_="check",
-            schema="public",
+        # Drop only if constraint exists (idempotent for DBs where it was never created or already dropped)
+        connection.execute(
+            sa.text("ALTER TABLE public.products DROP CONSTRAINT IF EXISTS products_product_type_check")
         )
 
 

@@ -28,13 +28,24 @@ def _products_table_exists(connection) -> bool:
     return result.scalar() is not None
 
 
+def _table_exists(connection, table_name: str) -> bool:
+    result = connection.execute(
+        sa.text(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = :name"
+        ),
+        {"name": table_name},
+    )
+    return result.scalar() is not None
+
+
 def upgrade() -> None:
     connection = op.get_bind()
     if not _products_table_exists(connection):
         return
 
-    op.create_table(
-        "suppliers",
+    if not _table_exists(connection, "suppliers"):
+        op.create_table(
+            "suppliers",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("name", sa.Text(), nullable=False),
         sa.Column("phone", sa.Text(), nullable=True),
@@ -45,10 +56,11 @@ def upgrade() -> None:
         sa.Column("credit_days", sa.Integer(), server_default="0", nullable=False),
         sa.Column("credit_limit", sa.Numeric(), server_default="0", nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-    )
+        )
 
-    op.create_table(
-        "purchase_invoices",
+    if not _table_exists(connection, "purchase_invoices"):
+        op.create_table(
+            "purchase_invoices",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("number", sa.Text(), nullable=False),
         sa.Column("date", sa.Date(), nullable=False),
@@ -64,11 +76,12 @@ def upgrade() -> None:
         sa.Column("total_in_words", sa.Text(), nullable=True),
         sa.Column("status", sa.String(20), server_default="final", nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-    )
-    op.create_unique_constraint("uq_purchase_invoices_number", "purchase_invoices", ["number"])
+        )
+        op.create_unique_constraint("uq_purchase_invoices_number", "purchase_invoices", ["number"])
 
-    op.create_table(
-        "purchase_invoice_items",
+    if not _table_exists(connection, "purchase_invoice_items"):
+        op.create_table(
+            "purchase_invoice_items",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("purchase_invoice_id", UUID(as_uuid=True), sa.ForeignKey("purchase_invoices.id", ondelete="CASCADE"), nullable=False),
         sa.Column("product_id", UUID(as_uuid=True), sa.ForeignKey("products.id"), nullable=True),
@@ -79,7 +92,7 @@ def upgrade() -> None:
         sa.Column("taxable_amount", sa.Numeric(), nullable=True),
         sa.Column("gst_amount", sa.Numeric(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-    )
+        )
 
 
 def downgrade() -> None:
