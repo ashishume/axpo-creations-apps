@@ -9,6 +9,7 @@ import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
 import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle, X, AlertTriangle, Banknote, Download } from "lucide-react";
 import { BulkImportModal, exportStaffToCSV } from "../components/import/BulkImportModal";
 import type { Staff as StaffType, StaffRole, SalaryPayment, ClassSubject } from "../types";
+import { STAFF_ROLES, STAFF_ROLE_FILTER_OPTIONS } from "../constants/staffRoles";
 import { formatCurrency, formatDate, formatMonthYear, cn } from "../lib/utils";
 import { SearchInput } from "../components/ui/SearchInput";
 import { FilterChips } from "../components/ui/FilterChips";
@@ -19,12 +20,18 @@ import { Badge } from "../components/ui/Badge";
 import { EmptyState } from "../components/ui/EmptyState";
 import { PermissionGate } from "../components/auth/PermissionGate";
 
-const roleBadgeVariant: Record<StaffType["role"], "info" | "neutral" | "warning"> = {
+const roleBadgeVariant: Record<string, "info" | "neutral" | "warning"> = {
   Teacher: "info",
   Administrative: "info",
   "Bus Driver": "warning",
   "Support Staff": "neutral",
+  Principal: "info",
+  "Vice Principal": "info",
+  Admin: "info",
 };
+function getRoleBadgeVariant(role: string): "info" | "neutral" | "warning" {
+  return roleBadgeVariant[role] ?? "neutral";
+}
 
 // Helper to calculate late days for a salary payment (uses payment.dueDate if set, else dueDay of month)
 function calculateLateDays(payment: SalaryPayment, dueDay: number = 5): number {
@@ -645,25 +652,27 @@ export function StaffPage() {
             <CardTitle>Staff ({filteredList.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search by name or ID..."
-                className="max-w-xs"
-              />
-              <FilterChips
-                options={[
-                  { value: "", label: "All Roles" },
-                  { value: "Teacher", label: "Teacher" },
-                  { value: "Administrative", label: "Administrative" },
-                  { value: "Bus Driver", label: "Bus Driver" },
-                  { value: "Support Staff", label: "Support Staff" },
-                ]}
-                value={roleFilter}
-                onChange={setRoleFilter}
-              />
-              {uniqueClasses.length > 0 && (
+            <div className="space-y-2">
+              <div className="overflow-x-auto">
+                <div className="flex items-center gap-3 flex-nowrap min-w-max pb-1">
+                  <SearchInput
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Search by name or ID..."
+                    className="max-w-xs shrink-0"
+                  />
+                  <Select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    className="w-40 shrink-0"
+                  >
+                    {STAFF_ROLE_FILTER_OPTIONS.map((opt) => (
+                      <option key={opt.value || "all"} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </Select>
+                  {uniqueClasses.length > 0 && (
                 <Select
                   value={classFilter}
                   onChange={(e) => setClassFilter(e.target.value)}
@@ -691,6 +700,16 @@ export function StaffPage() {
                   ))}
                 </Select>
               )}
+                </div>
+              </div>
+              <div className="overflow-x-auto max-h-16 overflow-y-hidden rounded-md">
+                <FilterChips
+                  options={STAFF_ROLE_FILTER_OPTIONS}
+                  value={roleFilter}
+                  onChange={setRoleFilter}
+                  className="flex-nowrap min-w-max"
+                />
+              </div>
             </div>
             {list.length === 0 ? (
               <EmptyState message="No staff in this session." />
@@ -722,7 +741,7 @@ export function StaffPage() {
                           <td className="py-3 pr-4 font-medium text-slate-900">{s.name}</td>
                           <td className="py-3 pr-4 text-slate-600">{s.employeeId}</td>
                           <td className="py-3 pr-4">
-                            <Badge variant={roleBadgeVariant[s.role]}>
+                            <Badge variant={getRoleBadgeVariant(s.role)}>
                               {s.role}
                               {s.subjectOrGrade && ` (${s.subjectOrGrade})`}
                             </Badge>
@@ -839,10 +858,11 @@ export function StaffPage() {
           </FormField>
           <FormField label="Role">
             <Select name="role" defaultValue={staffModal.staff?.role ?? "Teacher"}>
-              <option value="Teacher">Teacher</option>
-              <option value="Administrative">Administrative</option>
-              <option value="Bus Driver">Bus Driver</option>
-              <option value="Support Staff">Support Staff</option>
+              {STAFF_ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
             </Select>
           </FormField>
           {/* <FormField label="Subject / Grade (legacy, for display)">

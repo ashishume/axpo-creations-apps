@@ -66,7 +66,9 @@ async def compute_dashboard_stats(
     enrollments = list(enrollments_q.scalars().all())
 
     staff_q = await db.execute(
-        select(Staff).where(Staff.session_id == session_id)
+        select(Staff)
+        .where(Staff.session_id == session_id)
+        .options(selectinload(Staff.salary_payments))
     )
     staff_list = list(staff_q.scalars().all())
 
@@ -109,7 +111,16 @@ async def compute_dashboard_stats(
     # --- Expenses ---
     total_exp = sum(float(e.amount) for e in expenses)
     stock_purchase_exp = sum(float(e.amount) for e in expenses if e.category == "Stock Purchase")
-    salary_exp = sum(float(e.amount) for e in expenses if e.category == "Salary")
+    salary_exp_from_expenses = sum(float(e.amount) for e in expenses if e.category == "Salary")
+    # "From teachers" = actual salary payments from staff records (not just Expense entries)
+    salary_exp = sum(
+        float(sp.paid_amount)
+        for st in staff_list
+        for sp in st.salary_payments
+        if sp.status == "Paid"
+    )
+    # Total expenses: replace expense-based salary with actual salary payments
+    total_exp = total_exp - salary_exp_from_expenses + salary_exp
     fc_exp = sum(float(e.amount) for e in expenses if e.category == "Fixed Cost")
     other_exp = total_exp - stock_purchase_exp - salary_exp - fc_exp
 
@@ -138,6 +149,12 @@ async def compute_dashboard_stats(
     for e in expenses:
         m = str(e.date)[:7]
         by_month[m]["expenses"] += float(e.amount)
+    # Include salary payments in monthly expenses (use payment_date or month)
+    for st in staff_list:
+        for sp in st.salary_payments:
+            if sp.status == "Paid" and sp.paid_amount:
+                m = (sp.payment_date.isoformat()[:7] if sp.payment_date else sp.month)
+                by_month[m]["expenses"] += float(sp.paid_amount)
     monthly_data = sorted(
         [MonthlyDataPoint(month=k, income=v["income"], expenses=v["expenses"]) for k, v in by_month.items()],
         key=lambda x: x.month,
@@ -147,6 +164,8 @@ async def compute_dashboard_stats(
     cat_map: dict[str, float] = defaultdict(float)
     for e in expenses:
         cat_map[e.category] += float(e.amount)
+    # Use actual salary payments for Salary category (overwrite any expense-based Salary)
+    cat_map["Salary"] = salary_exp
     expense_by_cat = [CategoryAmount(name=k, value=v) for k, v in cat_map.items()]
 
     # --- Status distribution ---

@@ -4,7 +4,8 @@ import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Textarea } from "../ui/Textarea";
 import { Check, X, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import type { StudentClass, Staff, StaffRole, PaymentMethod, ExpenseCategory, FeeType } from "../../types";
+import type { StudentClass, Staff, PaymentMethod, ExpenseCategory, FeeType } from "../../types";
+import { STAFF_ROLES } from "../../constants/staffRoles";
 import type { IntentType } from "../../lib/axpoAssistantParser";
 import { cn } from "../../lib/utils";
 import { SkeletonForm } from "../ui/Skeleton";
@@ -27,7 +28,6 @@ interface InlineFormCardProps {
 }
 
 const FEE_TYPES: FeeType[] = ["Regular", "Boarding", "Day Scholar + Meals", "Boarding + Meals"];
-const STAFF_ROLES: StaffRole[] = ["Teacher", "Administrative", "Bus Driver", "Support Staff"];
 const PAYMENT_METHODS: PaymentMethod[] = ["Cash", "Cheque", "Online", "Bank Transfer"];
 const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   "Transportation",

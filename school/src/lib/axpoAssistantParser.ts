@@ -14,6 +14,7 @@ import type {
   ExpenseCategory,
   StudentPersonalDetails,
 } from "../types";
+import { STAFF_ROLES } from "../constants/staffRoles";
 
 // ============================================================================
 // Types
@@ -275,7 +276,7 @@ For add_class always set "entity": "class" and "operation": "add". Extract any f
 {
   "name": "string (required)",
   "employeeId": "string or null",
-  "role": "Teacher | Administrative | Bus Driver | Support Staff | null",
+  "role": "${STAFF_ROLES.join(" | ")} | null",
   "monthlySalary": "number or null",
   "subjectOrGrade": "string or null"
 }

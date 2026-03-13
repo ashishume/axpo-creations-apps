@@ -193,12 +193,8 @@ export type SessionStudent = Student & {
   };
 };
 
-// Staff
-export type StaffRole =
-  | "Teacher"
-  | "Administrative"
-  | "Bus Driver"
-  | "Support Staff";
+// Staff (roles from single source: constants/staffRoles.ts)
+export type { StaffRole } from "../constants/staffRoles";
 
 // Class and subjects mapping for a teacher
 export interface ClassSubject {

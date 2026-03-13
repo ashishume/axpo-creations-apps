@@ -6,6 +6,7 @@ import { FormField } from "../ui/FormField";
 import { parseCSV, getColumn } from "../../lib/csv";
 import type { FeeType } from "../../types";
 import type { StaffRole } from "../../types";
+import { STAFF_ROLES } from "../../constants/staffRoles";
 import { Upload, FileText, Download, Loader2 } from "lucide-react";
 
 const FEE_TYPES: FeeType[] = [
@@ -13,12 +14,6 @@ const FEE_TYPES: FeeType[] = [
   "Boarding",
   "Day Scholar + Meals",
   "Boarding + Meals",
-];
-const STAFF_ROLES: StaffRole[] = [
-  "Teacher",
-  "Administrative",
-  "Bus Driver",
-  "Support Staff",
 ];
 
 export type ImportType = "students" | "staff";
