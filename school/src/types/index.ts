@@ -1,3 +1,5 @@
+import { StaffRole } from "../constants/staffRoles";
+
 // Subscription plan IDs: Starter (base), Premium (Axpo Assistant)
 export type PlanId = "starter" | "premium" | "ai_assistant";
 
@@ -105,12 +107,12 @@ export interface FeePayment {
 export interface Student {
   id: string;
   schoolId: string;
-  
+
   // Basic info
   name: string;
   studentId: string; // display ID
   feeType: FeeType;
-  
+
   // Personal details (inline for backward compatibility)
   fatherName?: string;
   motherName?: string;
@@ -119,13 +121,13 @@ export interface Student {
   permanentAddress?: string;
   bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "";
   healthIssues?: string;
-  
+
   // Profile photo
   photoUrl?: string;
-  
+
   // Sibling concession - link to sibling student for 30% monthly fee discount
   siblingId?: string;
-  
+
   // Enrollments (if populated)
   enrollments?: StudentEnrollment[];
 }
@@ -136,28 +138,28 @@ export interface StudentEnrollment {
   studentId: string;
   sessionId: string;
   classId?: string; // Link to StudentClass
-  
+
   // Fee structure (per enrollment/session)
   registrationFees?: number; // Registration/Admission fees (one-time per session)
   annualFund?: number; // One-time per session
   monthlyFees?: number; // Monthly tuition (overrides class if set)
   transportFees?: number; // Optional, per month (varies by distance)
-  
+
   // Fee payment status flags
   registrationPaid?: boolean;
   annualFundPaid?: boolean;
-  
+
   // Due date config (can override class)
   dueDayOfMonth?: number; // 1-28
   lateFeeAmount?: number;
   lateFeeFrequency?: "daily" | "weekly";
-  
+
   // All payments for this enrollment
   payments: FeePayment[];
-  
+
   // Student info (if populated)
   student?: Student;
-  
+
   // Legacy fields for backward compatibility
   targetAmount?: number;
   finePerDay?: number;

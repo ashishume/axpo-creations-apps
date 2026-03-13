@@ -7,8 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card"
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
-import { Plus, Pencil, Trash2, DollarSign, Upload, BookOpen, Camera, X, User, Calendar, MoreVertical, ArrowRightLeft } from "lucide-react";
-import { BulkImportModal } from "../components/import/BulkImportModal";
+import { Plus, Pencil, Trash2, DollarSign, Upload, Download, BookOpen, Camera, X, User, Calendar, MoreVertical, ArrowRightLeft } from "lucide-react";
+import { BulkImportModal, exportStudentsToCSV } from "../components/import/BulkImportModal";
 import { PaymentReceiptModal } from "../components/receipt/PaymentReceiptModal";
 import { StudentDetailsModal } from "../components/students/StudentDetailsModal";
 import { AddStudentsVerifyModal, type PendingStudent } from "../components/students/AddStudentsVerifyModal";
@@ -393,6 +393,47 @@ export function StudentsPage() {
           >
             <BookOpen className="mr-1 h-4 w-4" />
             Manage classes
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!selectedSessionId || allSessionStudents.length === 0}
+            onClick={() => {
+              const csv = exportStudentsToCSV(
+                allSessionStudents.map((s) => ({
+                  name: s.name,
+                  studentId: s.studentId,
+                  classId: s.classId,
+                  feeType: s.feeType,
+                  registrationFees: s.registrationFees,
+                  annualFund: s.annualFund,
+                  monthlyFees: s.monthlyFees,
+                  transportFees: s.transportFees,
+                  dueDayOfMonth: s.dueDayOfMonth,
+                  lateFeeAmount: s.lateFeeAmount,
+                  lateFeeFrequency: s.lateFeeFrequency,
+                  fatherName: s.fatherName,
+                  motherName: s.motherName,
+                  guardianPhone: s.guardianPhone,
+                  bloodGroup: s.bloodGroup,
+                  currentAddress: s.currentAddress,
+                  permanentAddress: s.permanentAddress,
+                  healthIssues: s.healthIssues,
+                })),
+                sessionClasses.map((c) => ({ id: c.id, name: c.name }))
+              );
+              const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = `students_export_${new Date().toISOString().slice(0, 10)}.csv`;
+              link.click();
+              URL.revokeObjectURL(url);
+              toast("Students exported to CSV");
+            }}
+          >
+            <Download className="mr-1 h-4 w-4" />
+            Export CSV
           </Button>
           <Button
             size="sm"

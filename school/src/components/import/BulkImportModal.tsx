@@ -219,23 +219,37 @@ function validateStaffRow(
   };
 }
 
+/** Student CSV columns (must match import validation and export). */
+const STUDENT_CSV_HEADERS = [
+  "name", "studentId", "class", "feeType", "registrationFees", "admissionFees", "annualFund",
+  "monthlyFees", "transportFees", "dueDayOfMonth", "lateFeeAmount", "lateFeeFrequency",
+  "fatherName", "motherName", "guardianPhone", "bloodGroup", "currentAddress", "permanentAddress", "healthIssues",
+];
+
 export function getStudentSampleCSV(): string {
   return [
-    "name,studentId,class,feeType,registrationFees,annualFund,monthlyFees,transportFees,dueDayOfMonth,lateFeeAmount,lateFeeFrequency,fatherName,motherName,guardianPhone,bloodGroup,currentAddress,permanentAddress,healthIssues",
-    "Aarav Sharma,STU-001,Class 1,Regular,3000,1500,3000,500,10,50,weekly,Ramesh Sharma,Sunita Sharma,9876543210,A+,\"123 Main St, City\",\"Same as current\",",
-    "Priya Patel,STU-002,Class 2,Regular,3000,1500,3500,,10,50,weekly,Mukesh Patel,Rani Patel,9876543211,B+,\"45 Park Ave\",,",
-    "Rahul Kumar,STU-003,Class 5,Boarding,3500,2000,5000,1000,10,100,weekly,,,9876543212,,,,\"Asthma - carry inhaler\"",
-    "Ananya Singh,STU-004,Nursery,Regular,,,,400,10,50,weekly,Raj Singh,Meera Singh,9876543213,O+,\"78 Hill Road\",,",
+    STUDENT_CSV_HEADERS.join(","),
+    "Aarav Sharma,STU-001,Class 1,Regular,2000,1000,1500,3000,500,10,50,weekly,Ramesh Sharma,Sunita Sharma,9876543210,A+,\"123 Main St, City\",\"Same as current\",",
+    "Priya Patel,STU-002,Class 2,Regular,3000,,1500,3500,,10,50,weekly,Mukesh Patel,Rani Patel,9876543211,B+,\"45 Park Ave\",,",
+    "Rahul Kumar,STU-003,Class 5,Boarding,3500,,2000,5000,1000,10,100,weekly,,,9876543212,,,,\"Asthma - carry inhaler\"",
+    "Ananya Singh,STU-004,Nursery,Regular,,,,,400,10,50,weekly,Raj Singh,Meera Singh,9876543213,O+,\"78 Hill Road\",,",
   ].join("\n");
 }
 
+/** Staff CSV columns (must match import validation and export). */
+const STAFF_CSV_HEADERS = [
+  "name", "employeeId", "role", "monthlySalary", "subjectOrGrade", "allowedLeavesPerMonth", "perDaySalary", "classesSubjects",
+];
+
 export function getStaffSampleCSV(): string {
   return [
-    "name,employeeId,role,monthlySalary,subjectOrGrade,allowedLeavesPerMonth,perDaySalary,classesSubjects",
+    STAFF_CSV_HEADERS.join(","),
     "Suresh Kumar,EMP-001,Teacher,45000,Mathematics,2,,\"Class 5:Math,Algebra;Class 6:Math\"",
-    "Lakshmi Nair,EMP-002,Teacher,42000,Science,2,,\"Class 7:Science,Biology;Class 8:Physics\"",
+    "Lakshmi Nair,EMP-002,Principal,52000,Science,2,,\"Class 7:Science;Class 8:Physics\"",
     "Geeta Sharma,EMP-003,Administrative,35000,,3,1200,",
     "Rajesh Driver,EMP-004,Bus Driver,28000,,2,,",
+    "Meena Singh,EMP-005,Support Staff,18000,,2,,",
+    "Arun Joshi,EMP-006,Accountant,38000,,2,,",
   ].join("\n");
 }
 
@@ -249,7 +263,64 @@ function escapeCSV(value: string | number | undefined | null): string {
   return str;
 }
 
-// Export staff data to CSV format
+/** Session student / enrollment shape for export (class name resolved from classes). */
+export interface StudentExportRow {
+  name: string;
+  studentId: string;
+  classId?: string;
+  feeType: string;
+  registrationFees?: number;
+  annualFund?: number;
+  monthlyFees?: number;
+  transportFees?: number;
+  dueDayOfMonth?: number;
+  lateFeeAmount?: number;
+  lateFeeFrequency?: "daily" | "weekly";
+  fatherName?: string;
+  motherName?: string;
+  guardianPhone?: string;
+  bloodGroup?: string;
+  currentAddress?: string;
+  permanentAddress?: string;
+  healthIssues?: string;
+}
+
+/**
+ * Export students (enrollments) to CSV. Uses class names from classes array.
+ * Output columns match import format; admissionFees is left empty (import merges it with registrationFees).
+ */
+export function exportStudentsToCSV(
+  students: StudentExportRow[],
+  classes: Array<{ id: string; name: string }>
+): string {
+  const rows = students.map((s) => {
+    const className = s.classId ? (classes.find((c) => c.id === s.classId)?.name ?? "") : "";
+    return [
+      escapeCSV(s.name),
+      escapeCSV(s.studentId),
+      escapeCSV(className),
+      escapeCSV(s.feeType),
+      escapeCSV(s.registrationFees),
+      "", // admissionFees not stored separately; import merges with registrationFees
+      escapeCSV(s.annualFund),
+      escapeCSV(s.monthlyFees),
+      escapeCSV(s.transportFees),
+      escapeCSV(s.dueDayOfMonth),
+      escapeCSV(s.lateFeeAmount),
+      escapeCSV(s.lateFeeFrequency),
+      escapeCSV(s.fatherName),
+      escapeCSV(s.motherName),
+      escapeCSV(s.guardianPhone),
+      escapeCSV(s.bloodGroup),
+      escapeCSV(s.currentAddress),
+      escapeCSV(s.permanentAddress),
+      escapeCSV(s.healthIssues),
+    ].join(",");
+  });
+  return [STUDENT_CSV_HEADERS.join(","), ...rows].join("\n");
+}
+
+// Export staff data to CSV format (columns match import/sample)
 export function exportStaffToCSV(staffList: Array<{
   name: string;
   employeeId?: string;
@@ -260,23 +331,10 @@ export function exportStaffToCSV(staffList: Array<{
   perDaySalary?: number;
   classesSubjects?: Array<{ className: string; subjects: string[] }>;
 }>): string {
-  const headers = [
-    "name",
-    "employeeId",
-    "role",
-    "monthlySalary",
-    "subjectOrGrade",
-    "allowedLeavesPerMonth",
-    "perDaySalary",
-    "classesSubjects",
-  ];
-  
   const rows = staffList.map((s) => {
-    // Convert classesSubjects to string format: "Class1:Math,Science;Class2:English"
     const classesSubjectsStr = s.classesSubjects
       ?.map((cs) => `${cs.className}:${cs.subjects.join(",")}`)
       .join(";") ?? "";
-    
     return [
       escapeCSV(s.name),
       escapeCSV(s.employeeId),
@@ -288,8 +346,7 @@ export function exportStaffToCSV(staffList: Array<{
       escapeCSV(classesSubjectsStr),
     ].join(",");
   });
-  
-  return [headers.join(","), ...rows].join("\n");
+  return [STAFF_CSV_HEADERS.join(","), ...rows].join("\n");
 }
 
 export function BulkImportModal({
@@ -393,8 +450,8 @@ export function BulkImportModal({
       <div className="space-y-4">
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {type === "students"
-            ? "Upload a CSV with columns: name, studentId, class, feeType, registrationFees (Registration/Admission one-time), annualFund, monthlyFees, transportFees, dueDayOfMonth, lateFeeAmount, lateFeeFrequency, fatherName, motherName, guardianPhone, bloodGroup, currentAddress, permanentAddress, healthIssues. If class is provided, fees are auto-filled from class defaults. Download sample for full format."
-            : "Upload a CSV with columns: name, employeeId, role, monthlySalary, subjectOrGrade, allowedLeavesPerMonth, perDaySalary, classesSubjects. Classes format: \"Class1:Subject1,Subject2;Class2:Subject3\". Download sample for full format."}
+            ? "Upload a CSV with columns: name, studentId, class, feeType, registrationFees, admissionFees (optional; merged with registration on import), annualFund, monthlyFees, transportFees, dueDayOfMonth, lateFeeAmount, lateFeeFrequency, fatherName, motherName, guardianPhone, bloodGroup, currentAddress, permanentAddress, healthIssues. If class is provided, fees are auto-filled from class defaults. Download sample for full format."
+            : `Upload a CSV with columns: name, employeeId, role, monthlySalary, subjectOrGrade, allowedLeavesPerMonth, perDaySalary, classesSubjects. Role must be one of: ${STAFF_ROLES.join(", ")}. Classes format: "Class1:Subject1,Subject2;Class2:Subject3". Download sample for full format.`}
         </p>
         <div className="flex flex-wrap gap-2">
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700">
