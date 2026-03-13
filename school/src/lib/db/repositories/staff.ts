@@ -255,6 +255,42 @@ export const staffRepository = {
     if (error) throw new Error('Failed to delete staff member');
   },
 
+  /** Copy staff to another session; salary payment records are not copied. */
+  async transferToSession(params: {
+    fromSessionId: string;
+    staffIds: string[];
+    toSessionId: string;
+  }): Promise<number> {
+    const { staffIds, toSessionId } = params;
+    if (staffIds.length === 0) return 0;
+    const supabase = getSupabase();
+    const { data: rows, error: fetchError } = await supabase
+      .from('school_xx_staff')
+      .select('*')
+      .in('id', staffIds)
+      .eq('session_id', params.fromSessionId);
+    if (fetchError || !rows?.length) return 0;
+    const inserts = rows.map((row: Record<string, unknown>) => ({
+      id: crypto.randomUUID(),
+      session_id: toSessionId,
+      name: row.name,
+      employee_id: row.employee_id,
+      role: row.role,
+      monthly_salary: row.monthly_salary,
+      subject_or_grade: row.subject_or_grade ?? null,
+      phone: row.phone ?? null,
+      email: row.email ?? null,
+      address: row.address ?? null,
+      salary_due_day: row.salary_due_day ?? 5,
+      allowed_leaves_per_month: row.allowed_leaves_per_month ?? 2,
+      per_day_salary: row.per_day_salary ?? null,
+      classes_subjects: row.classes_subjects ?? null,
+    }));
+    const { error: insertError } = await supabase.from('school_xx_staff').insert(inserts);
+    if (insertError) throw new Error('Failed to transfer staff');
+    return inserts.length;
+  },
+
   async addSalaryPayment(staffId: string, payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'>): Promise<ExtendedSalaryPayment> {
     const supabase = getSupabase();
     const id = crypto.randomUUID();

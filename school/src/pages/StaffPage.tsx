@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { useStaffBySessionInfinite, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useAddSalaryPayment, useLeaveSummary } from "../hooks/useStaff";
+import { useStaffBySessionInfinite, useStaffBySession, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useAddSalaryPayment, useTransferStaffToSession, useLeaveSummary } from "../hooks/useStaff";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
-import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle, X, AlertTriangle, Banknote, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle, X, AlertTriangle, Banknote, Download, ArrowRightLeft } from "lucide-react";
 import { BulkImportModal, exportStaffToCSV } from "../components/import/BulkImportModal";
 import type { Staff as StaffType, StaffRole, SalaryPayment, ClassSubject } from "../types";
 import { STAFF_ROLES, STAFF_ROLE_FILTER_OPTIONS } from "../constants/staffRoles";
@@ -349,6 +349,8 @@ export function StaffPage() {
   const updateStaffMut = useUpdateStaff();
   const deleteStaffMut = useDeleteStaff();
   const addSalaryMut = useAddSalaryPayment();
+  const transferStaffMut = useTransferStaffToSession();
+  const { data: allSessionStaff = [] } = useStaffBySession(selectedSessionId ?? "");
 
   const addStaff = (data: Omit<StaffType, "id" | "salaryPayments">) => createStaff.mutate(data);
   const updateStaff = (id: string, data: Partial<Omit<StaffType, "id" | "salaryPayments">>) => updateStaffMut.mutate({ id, updates: data });
@@ -363,12 +365,21 @@ export function StaffPage() {
     [sessions, selectedSessionId]
   );
   const salaryDueDay = selectedSession?.salaryDueDay ?? 5;
+  const currentSession = sessions.find((s) => s.id === selectedSessionId);
+  const targetSessions = sessions.filter(
+    (s) => s.schoolId === currentSession?.schoolId && s.id !== selectedSessionId
+  );
 
   const [staffModal, setStaffModal] = useState<{ open: boolean; staff?: StaffType }>({ open: false });
   const [salaryModal, setSalaryModal] = useState<{ staff: StaffType; month: string; fromHistory?: boolean } | null>(null);
   const [salaryHistoryModal, setSalaryHistoryModal] = useState<StaffType | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [transferStep, setTransferStep] = useState<"select" | "preview">("select");
+  const [transferTargetSessionId, setTransferTargetSessionId] = useState<string | null>(null);
+  const [transferSelectedIds, setTransferSelectedIds] = useState<Set<string>>(new Set());
+  const [transferSubmitting, setTransferSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [classFilter, setClassFilter] = useState<string>("");
@@ -611,6 +622,20 @@ export function StaffPage() {
           >
             <Plus className="mr-1 h-4 w-4" />
             Add staff
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!selectedSessionId || allSessionStaff.length === 0}
+            onClick={() => {
+              setTransferModalOpen(true);
+              setTransferStep("select");
+              setTransferTargetSessionId(null);
+              setTransferSelectedIds(new Set());
+            }}
+          >
+            <ArrowRightLeft className="mr-1 h-4 w-4" />
+            Transfer to new session
           </Button>
         </div>
       </div>
@@ -1175,6 +1200,165 @@ export function StaffPage() {
           </Modal>
         );
       })()}
+
+      {/* Transfer to new session modal */}
+      <Modal
+        open={transferModalOpen}
+        onClose={() => {
+          setTransferModalOpen(false);
+          setTransferStep("select");
+          setTransferTargetSessionId(null);
+          setTransferSelectedIds(new Set());
+        }}
+        title={transferStep === "select" ? "Transfer staff to new session" : "Preview – Select staff to transfer"}
+      >
+        <div className="space-y-4">
+          {transferStep === "select" && (
+            <>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Select the target session to copy staff to. Salary and other details will be copied; salary payment records will not be copied.
+              </p>
+              <FormField label="Target session" required>
+                <Select
+                  value={transferTargetSessionId ?? ""}
+                  onChange={(e) => setTransferTargetSessionId(e.target.value || null)}
+                >
+                  <option value="">Select session</option>
+                  {targetSessions.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.year} ({s.startDate} – {s.endDate})
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+              {targetSessions.length === 0 && (
+                <p className="text-sm text-amber-600 dark:text-amber-400">
+                  No other session found for this school. Create a new session first.
+                </p>
+              )}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setTransferModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  disabled={!transferTargetSessionId}
+                  onClick={() => {
+                    setTransferStep("preview");
+                    setTransferSelectedIds(new Set(allSessionStaff.map((s) => s.id)));
+                  }}
+                >
+                  Next – Preview
+                </Button>
+              </div>
+            </>
+          )}
+
+          {transferStep === "preview" && (
+            <>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Uncheck any staff member you do not want to transfer. Salary payment history will not be copied.
+              </p>
+              {allSessionStaff.length === 0 ? (
+                <p className="text-sm text-slate-500">No staff in this session.</p>
+              ) : (
+                <div className="max-h-80 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-slate-50 dark:bg-slate-800">
+                      <tr className="border-b border-slate-200 dark:border-slate-700 text-left">
+                        <th className="w-10 px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={transferSelectedIds.size === allSessionStaff.length}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTransferSelectedIds(new Set(allSessionStaff.map((s) => s.id)));
+                              } else {
+                                setTransferSelectedIds(new Set());
+                              }
+                            }}
+                          />
+                        </th>
+                        <th className="px-3 py-2 font-medium">Name</th>
+                        <th className="px-3 py-2 font-medium">ID</th>
+                        <th className="px-3 py-2 font-medium">Role</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allSessionStaff.map((s) => (
+                        <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="w-10 px-3 py-2">
+                            <input
+                              type="checkbox"
+                              checked={transferSelectedIds.has(s.id)}
+                              onChange={(e) => {
+                                setTransferSelectedIds((prev) => {
+                                  const next = new Set(prev);
+                                  if (e.target.checked) next.add(s.id);
+                                  else next.delete(s.id);
+                                  return next;
+                                });
+                              }}
+                            />
+                          </td>
+                          <td className="px-3 py-2">{s.name}</td>
+                          <td className="px-3 py-2">{s.employeeId ?? "—"}</td>
+                          <td className="px-3 py-2">{s.role ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-700 pt-4">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  {transferSelectedIds.size} of {allSessionStaff.length} selected
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setTransferStep("select")}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={transferSelectedIds.size === 0 || transferSubmitting}
+                    onClick={async () => {
+                      if (!transferTargetSessionId) return;
+                      setTransferSubmitting(true);
+                      try {
+                        const staffIds = Array.from(transferSelectedIds);
+                        const count = await transferStaffMut.mutateAsync({
+                          fromSessionId: selectedSessionId ?? "",
+                          staffIds,
+                          toSessionId: transferTargetSessionId,
+                        });
+                        toast(`${count} staff member(s) transferred`);
+                        setTransferModalOpen(false);
+                        setTransferStep("select");
+                        setTransferTargetSessionId(null);
+                        setTransferSelectedIds(new Set());
+                      } catch (e) {
+                        toast(e instanceof Error ? e.message : "Transfer failed", "error");
+                      } finally {
+                        setTransferSubmitting(false);
+                      }
+                    }}
+                  >
+                    {transferSubmitting ? "Transferring…" : `Transfer ${transferSelectedIds.size} staff member(s)`}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

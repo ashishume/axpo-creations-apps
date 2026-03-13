@@ -235,7 +235,7 @@ export function StudentsPage() {
     const annualFundVal = (form.elements.namedItem("annualFund") as HTMLInputElement).value;
     const monthlyFeesVal = (form.elements.namedItem("monthlyFees") as HTMLInputElement).value;
     const transportFeesVal = (form.elements.namedItem("transportFees") as HTMLInputElement).value;
-    
+
     const registrationFees = registrationFeesVal !== "" ? Number(registrationFeesVal) : undefined;
     const annualFund = annualFundVal !== "" ? Number(annualFundVal) : undefined;
     const monthlyFees = monthlyFeesVal !== "" ? Number(monthlyFeesVal) : undefined;
@@ -297,12 +297,12 @@ export function StudentsPage() {
         ...studentData,
         studentId: (studentData.studentId as string) || `STU-${Date.now()}`,
       } as unknown as Omit<StudentType, "id" | "payments">);
-      
+
       // If sibling is assigned, update the sibling to point back to the new student
       if (siblingId && newStudent) {
         await updateStudentAsync(siblingId, { siblingId: newStudent.id });
       }
-      
+
       toast("Student added");
     }
     setStudentModal({ open: false });
@@ -454,15 +454,15 @@ export function StudentsPage() {
             <Plus className="mr-1 h-4 w-4" />
             Add student
           </Button>
-          <Button
+          {/* <Button
             size="sm"
-            variant="secondary"
+            variant="danger"
             disabled={!selectedSessionId}
             onClick={() => setConfirmDeleteAll(true)}
           >
             <Trash2 className="mr-1 h-4 w-4" />
-            Delete all
-          </Button>
+            Delete all students (Danger)
+          </Button> */}
           <Button
             size="sm"
             variant="secondary"
@@ -650,8 +650,8 @@ export function StudentsPage() {
                                   </Button>
                                   {actionMenuOpen === s.id && (
                                     <>
-                                      <div 
-                                        className="fixed inset-0 z-40" 
+                                      <div
+                                        className="fixed inset-0 z-40"
                                         onClick={() => setActionMenuOpen(null)}
                                       />
                                       <div className="absolute right-0 top-full mt-1 z-50 w-36 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg py-1">

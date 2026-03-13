@@ -17,6 +17,7 @@ from app.teaching.schemas.staff import (
     SalaryPaymentUpdate,
     BulkSalaryPaymentItem,
     LeaveSummaryResponse,
+    TransferStaffCreate,
 )
 from app.teaching.repositories.staff import staff_repository
 
@@ -98,6 +99,37 @@ class StaffService:
             role=role,
         )
         return items, total
+
+    async def transfer_to_session(
+        self, db: AsyncSession, data: TransferStaffCreate
+    ) -> int:
+        """Copy staff from one session to another. Copies salary and other details; does not copy salary payment records."""
+        from_session_id = data.from_session_id
+        to_session_id = data.to_session_id
+        count = 0
+        for staff_id in data.staff_ids:
+            staff = await staff_repository.get(db, staff_id)
+            if not staff or staff.session_id != from_session_id:
+                continue
+            new_staff = Staff(
+                session_id=to_session_id,
+                user_id=None,
+                name=staff.name,
+                employee_id=staff.employee_id,
+                role=staff.role,
+                monthly_salary=staff.monthly_salary,
+                subject_or_grade=staff.subject_or_grade,
+                phone=staff.phone,
+                email=staff.email,
+                address=staff.address,
+                salary_due_day=staff.salary_due_day,
+                allowed_leaves_per_month=staff.allowed_leaves_per_month,
+                per_day_salary=staff.per_day_salary,
+                classes_subjects=staff.classes_subjects,
+            )
+            await staff_repository.add(db, new_staff)
+            count += 1
+        return count
 
     async def list_by_organization_paginated(
         self,

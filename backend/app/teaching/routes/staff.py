@@ -20,6 +20,8 @@ from app.teaching.schemas.staff import (
     SalaryPaymentUpdate,
     BulkSalaryPaymentItem,
     LeaveSummaryResponse,
+    TransferStaffCreate,
+    TransferStaffResponse,
 )
 from app.teaching.services.staff import staff_service
 from app.teaching.models.user import User
@@ -110,6 +112,19 @@ async def add_salary_payments_bulk(
         await enforce_session_access(db, user, staff.session_id)
     payments = await staff_service.add_salary_payments_bulk(db, data)
     return [SalaryPaymentResponse.model_validate(p) for p in payments]
+
+
+@router.post("/transfer", response_model=TransferStaffResponse)
+async def transfer_staff_to_session(
+    data: TransferStaffCreate,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Copy staff from one session to another. Copies salary and other details; salary payment records are not copied."""
+    await enforce_session_access(db, user, data.from_session_id)
+    await enforce_session_access(db, user, data.to_session_id)
+    transferred = await staff_service.transfer_to_session(db, data)
+    return TransferStaffResponse(transferred=transferred)
 
 
 @router.get("/{id}", response_model=StaffResponse)

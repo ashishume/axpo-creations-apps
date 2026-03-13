@@ -295,4 +295,22 @@ export const staffRepositoryApi = {
     const found = staff?.salaryPayments?.find((p) => p.month === month);
     return found ? (found as ExtendedSalaryPayment) : null;
   },
+
+  async transferToSession(params: {
+    fromSessionId: string;
+    staffIds: string[];
+    toSessionId: string;
+  }): Promise<number> {
+    const { fromSessionId, staffIds, toSessionId } = params;
+    if (staffIds.length === 0) return 0;
+    const res = await teachingFetchJson<{ transferred: number }>('/staff/transfer', {
+      method: 'POST',
+      body: JSON.stringify({
+        from_session_id: fromSessionId,
+        to_session_id: toSessionId,
+        staff_ids: staffIds,
+      }),
+    });
+    return res?.transferred ?? 0;
+  },
 };

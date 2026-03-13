@@ -150,3 +150,14 @@ class StaffResponse(StaffBase):
     salary_payments: list[SalaryPaymentResponse] = []
 
     model_config = {"from_attributes": True}
+
+
+class TransferStaffCreate(BaseModel):
+    """Transfer (copy) staff from one session to another; salary payment records are not copied."""
+    from_session_id: UUID
+    to_session_id: UUID
+    staff_ids: list[UUID]
+
+
+class TransferStaffResponse(BaseModel):
+    transferred: int

@@ -141,6 +141,29 @@ export function useDeleteStaff() {
   });
 }
 
+export function useTransferStaffToSession() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      fromSessionId,
+      staffIds,
+      toSessionId,
+    }: {
+      fromSessionId: string;
+      staffIds: string[];
+      toSessionId: string;
+    }) =>
+      staffRepository.transferToSession({
+        fromSessionId,
+        staffIds,
+        toSessionId,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
 export function useAddSalaryPayment() {
   const queryClient = useQueryClient();
 
