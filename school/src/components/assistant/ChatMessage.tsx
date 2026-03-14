@@ -1,5 +1,6 @@
 import { Bot, User, AlertCircle } from "lucide-react";
 import { AnalyticsCard, type AnalyticsData } from "./AnalyticsCard";
+import { ListCard, type ListData } from "./ListCard";
 import { cn } from "../../lib/utils";
 
 export interface ChatMessageData {
@@ -9,6 +10,7 @@ export interface ChatMessageData {
   timestamp: Date;
   isError?: boolean;
   analytics?: AnalyticsData;
+  listData?: ListData;
 }
 
 interface ChatMessageProps {
@@ -62,6 +64,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
         {/* Analytics card if present */}
         {message.analytics && <AnalyticsCard data={message.analytics} />}
+
+        {/* List card if present */}
+        {message.listData && <ListCard data={message.listData} />}
 
         {/* Timestamp */}
         <span className="text-xs text-slate-400 dark:text-slate-500">

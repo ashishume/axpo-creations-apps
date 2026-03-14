@@ -17,6 +17,7 @@ export interface StoredChatMessage {
   timestamp: string; // ISO
   isError?: boolean;
   analytics?: unknown;
+  listData?: unknown;
 }
 
 export function getChatHistoryKey(sessionId: string): string {

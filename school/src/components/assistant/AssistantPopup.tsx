@@ -11,8 +11,10 @@ import { Textarea } from "../ui/Textarea";
 import { ChatMessage, type ChatMessageData } from "./ChatMessage";
 import { InlineFormCard } from "./InlineFormCard";
 import { type AnalyticsData } from "./AnalyticsCard";
+import { type ListData, type StaffListItem, type StudentListItem } from "./ListCard";
 import {
   parseAxpoIntent,
+  detectListIntent,
   isLLMAvailable,
   MAX_BATCH_SIZE,
   type IntentResult,
@@ -24,6 +26,7 @@ import {
   type ParsedFixedCostData,
   type ParsedClassData,
   type ParsedAnalyticsQuery,
+  type ParsedListQuery,
   isMultipleStudents,
   isMultipleStaff,
   isMultipleExpenses,
@@ -31,6 +34,7 @@ import {
   isMultipleFixedCosts,
   isMultipleClasses,
   isMultipleSalaryPayments,
+  isListQuery,
 } from "../../lib/axpoAssistantParser";
 import { resolveClassLabel } from "../../lib/studentChatParser";
 import { detectCSV, detectCSVType, parseStudentsCSV, parseStaffCSV, parseClassesCSV } from "../../lib/csvParser";
@@ -78,6 +82,7 @@ function toStoredMessage(m: ChatMessageData): StoredChatMessage {
     timestamp: m.timestamp.toISOString(),
     isError: m.isError,
     analytics: m.analytics,
+    listData: m.listData,
   };
 }
 
@@ -86,6 +91,7 @@ function fromStoredMessage(m: StoredChatMessage): ChatMessageData {
     ...m,
     timestamp: new Date(m.timestamp),
     analytics: m.analytics as ChatMessageData["analytics"],
+    listData: m.listData as ChatMessageData["listData"],
   };
 }
 
@@ -349,11 +355,141 @@ export function AssistantPopup() {
             ],
           };
         }
+        case "monthly_salary_report": {
+          const monthsSet = new Set<string>();
+          sessionStaff.forEach((s) => {
+            s.salaryPayments.forEach((p) => monthsSet.add(p.month));
+          });
+          const months = Array.from(monthsSet).sort().reverse().slice(0, 6);
+          
+          const monthlyData = months.map((month) => {
+            const paid = sessionStaff.reduce((sum, s) => {
+              const payment = s.salaryPayments.find((p) => p.month === month && p.status === "Paid");
+              return sum + (payment?.amount || 0);
+            }, 0);
+            const paidCount = sessionStaff.filter((s) => 
+              s.salaryPayments.some((p) => p.month === month && p.status === "Paid")
+            ).length;
+            return { name: month, value: paid, count: paidCount };
+          });
+
+          const totalPaidAllTime = sessionStaff.reduce((sum, s) => 
+            sum + s.salaryPayments.filter((p) => p.status === "Paid").reduce((ps, p) => ps + p.amount, 0), 0
+          );
+          
+          return {
+            type: "salary_summary",
+            title: "Monthly Salary Report",
+            metrics: [
+              { label: "Total Paid (All Time)", value: totalPaidAllTime, format: "currency" },
+              { label: "Staff Members", value: sessionStaff.length, format: "number" },
+              { label: "Monthly Obligation", value: sessionStaff.reduce((sum, s) => sum + s.monthlySalary, 0), format: "currency" },
+            ],
+            details: monthlyData.map((d) => ({
+              name: `${d.name} (${d.count} staff)`,
+              value: d.value,
+            })),
+          };
+        }
+        case "monthly_fee_report": {
+          const monthlyFees: Record<string, { collected: number; count: number }> = {};
+          sessionStudents.forEach((s) => {
+            s.payments.forEach((p) => {
+              const month = p.date.slice(0, 7);
+              if (!monthlyFees[month]) monthlyFees[month] = { collected: 0, count: 0 };
+              monthlyFees[month].collected += p.amount;
+              monthlyFees[month].count += 1;
+            });
+          });
+          
+          const months = Object.keys(monthlyFees).sort().reverse().slice(0, 6);
+          const totalCollected = sessionStudents.reduce((sum, s) => sum + getTotalPaid(s), 0);
+          const totalPending = sessionStudents.reduce((sum, s) => {
+            const studentClass = sessionClasses.find((c) => c.id === s.classId);
+            return sum + getRemaining(s, studentClass);
+          }, 0);
+          
+          return {
+            type: "fee_collection_summary",
+            title: "Monthly Fee Report",
+            metrics: [
+              { label: "Total Collected", value: totalCollected, format: "currency" },
+              { label: "Total Pending", value: totalPending, format: "currency" },
+              { label: "Students", value: sessionStudents.length, format: "number" },
+            ],
+            details: months.map((month) => ({
+              name: `${month} (${monthlyFees[month].count} payments)`,
+              value: monthlyFees[month].collected,
+            })),
+          };
+        }
         default:
           return null;
       }
     },
     [sessionStudents, sessionStaff, sessionExpenses, sessionStocks, sessionClasses]
+  );
+
+  // ============================================================================
+  // List Data Builder
+  // ============================================================================
+
+  const buildListData = useCallback(
+    (query: ParsedListQuery): ListData | null => {
+      if (query.listType === "staff") {
+        let filteredStaff = sessionStaff;
+        if (query.roleFilter) {
+          filteredStaff = sessionStaff.filter(
+            (s) => s.role?.toLowerCase().includes(query.roleFilter!.toLowerCase())
+          );
+        }
+        const items: StaffListItem[] = filteredStaff.map((s) => ({
+          id: s.id,
+          name: s.name,
+          employeeId: s.employeeId,
+          role: s.role,
+          monthlySalary: s.monthlySalary,
+          subjectOrGrade: s.subjectOrGrade,
+        }));
+        return {
+          type: "staff",
+          items,
+          totalCount: items.length,
+          title: query.roleFilter ? `${query.roleFilter} Staff` : "All Staff & Teachers",
+        };
+      } else if (query.listType === "students") {
+        let filteredStudents = sessionStudents;
+        if (query.classFilter) {
+          const targetClass = sessionClasses.find(
+            (c) => c.name.toLowerCase().includes(query.classFilter!.toLowerCase())
+          );
+          if (targetClass) {
+            filteredStudents = sessionStudents.filter((s) => s.classId === targetClass.id);
+          }
+        }
+        const items: StudentListItem[] = filteredStudents.map((s) => {
+          const studentClass = sessionClasses.find((c) => c.id === s.classId);
+          return {
+            id: s.id,
+            name: s.name,
+            studentId: s.studentId,
+            className: studentClass?.name,
+            feeType: s.feeType,
+            totalPaid: getTotalPaid(s),
+            remaining: getRemaining(s, studentClass),
+            guardianPhone: s.personalDetails?.guardianPhone,
+          };
+        });
+        return {
+          type: "students",
+          items,
+          totalCount: items.length,
+          title: query.classFilter ? `Students in ${query.classFilter}` : "All Students",
+        };
+      }
+      return null;
+    },
+    [sessionStudents, sessionStaff, sessionClasses]
   );
 
   // ============================================================================
@@ -797,7 +933,12 @@ export function AssistantPopup() {
         return;
       }
 
-      const result = await parseAxpoIntent(trimmed);
+      let result = await parseAxpoIntent(trimmed);
+      // Fallback: if backend returns "unknown", try client-side list detection (e.g. "list teachers")
+      const listFallback = detectListIntent(trimmed);
+      if (listFallback && (!result.success || result.intent === "unknown")) {
+        result = listFallback;
+      }
 
       if (!result.success || result.intent === "unknown") {
         const errorMessage: ChatMessageData = {
@@ -808,6 +949,24 @@ export function AssistantPopup() {
           isError: true,
         };
         setMessages((prev) => [...prev, errorMessage]);
+        return;
+      }
+
+      // Handle list queries directly
+      if (result.intent === "list_staff" || result.intent === "list_students") {
+        const listQuery: ParsedListQuery = isListQuery(result.data) 
+          ? result.data 
+          : { listType: result.intent === "list_staff" ? "staff" : "students" };
+        const listData = buildListData(listQuery);
+
+        const listMessage: ChatMessageData = {
+          id: generateId(),
+          role: "assistant",
+          content: result.message || `Here's the list of ${listQuery.listType}:`,
+          timestamp: new Date(),
+          listData: listData || undefined,
+        };
+        setMessages((prev) => [...prev, listMessage]);
         return;
       }
 

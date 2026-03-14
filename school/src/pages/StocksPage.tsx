@@ -439,7 +439,7 @@ export function StocksPage() {
                         ))}
                       </tbody>
                     </table>
-                  )
+                  )}
                 </>
               );
             })()}

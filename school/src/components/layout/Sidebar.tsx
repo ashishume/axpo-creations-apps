@@ -34,7 +34,7 @@ import { useApp } from "../../context/AppContext";
 import { useTheme } from "../../context/ThemeContext";
 import { planIncludesAssistant } from "../../lib/plans";
 import { SUPER_ADMIN_ROLE_NAME, type Permission } from "../../types/auth";
-
+import logo from "../../assets/logo.jpg";
 export type PageId =
   | "dashboard"
   | "organizations"
@@ -153,7 +153,8 @@ export function Sidebar({
   return (
     <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
       <div className="shrink-0 border-b border-slate-200 dark:border-slate-700 p-4">
-        <h1 className="text-lg font-bold text-indigo-700 dark:text-indigo-400">
+        <h1 className="flex items-center gap-2 text-lg font-bold text-indigo-700 dark:text-indigo-400">
+          <img src={logo} alt="Axpo" className="h-9 w-9 rounded-xl object-cover shrink-0" />
           Axpo Finance
         </h1>
         <p className="text-xs text-slate-500 dark:text-slate-400">Manage income & expenses</p>

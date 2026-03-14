@@ -45,6 +45,9 @@ export type IntentType =
   | "add_fixed_cost"
   | "update_fixed_cost"
   | "delete_fixed_cost"
+  // List queries
+  | "list_staff"
+  | "list_students"
   // Analytics
   | "query_analytics"
   // Unknown
@@ -57,6 +60,8 @@ export type AnalyticsQueryType =
   | "outstanding_fees"
   | "stock_balance"
   | "dashboard_overview"
+  | "monthly_salary_report"
+  | "monthly_fee_report"
   | "unknown";
 
 // Parsed student data (matches existing parser)
@@ -144,6 +149,13 @@ export interface ParsedAnalyticsQuery {
   category?: string; // For filtering
 }
 
+// List query data
+export interface ParsedListQuery {
+  listType: "staff" | "students";
+  classFilter?: string; // Filter students by class
+  roleFilter?: string; // Filter staff by role
+}
+
 // Filters for update/delete operations
 export interface EntityFilters {
   id?: string;
@@ -160,7 +172,7 @@ export interface IntentResult {
   success: boolean;
   intent: IntentType;
   entity?: "student" | "staff" | "expense" | "stock" | "fixedCost" | "salaryPayment" | "class";
-  operation?: "add" | "update" | "delete" | "query";
+  operation?: "add" | "update" | "delete" | "query" | "list";
   data?:
     | ParsedStudentData
     | ParsedStudentData[]
@@ -177,7 +189,8 @@ export interface IntentResult {
     | ParsedClassData
     | ParsedClassData[]
     | ParsedStockTransactionData
-    | ParsedAnalyticsQuery;
+    | ParsedAnalyticsQuery
+    | ParsedListQuery;
   filters?: EntityFilters;
   message?: string; // Assistant response message
   error?: string;
@@ -226,15 +239,19 @@ const SYSTEM_PROMPT = `You are Axpo Assistant, an AI for a school management app
 - update_fixed_cost: Modify fixed cost
 - delete_fixed_cost: Remove fixed cost
 
+### List Queries
+- list_staff: Show all staff/teachers in the session. Examples: "list all staff", "show teachers", "who are the teachers", "list all teachers and staff"
+- list_students: Show all students in the session. Examples: "list all students", "show students", "show me all students in class 5", "list students"
+
 ### Analytics Queries
-- query_analytics: Get dashboard metrics, summaries
+- query_analytics: Get dashboard metrics, summaries. For monthly reports use queryType: "monthly_salary_report" (e.g. "show monthly salary paid") or "monthly_fee_report" (e.g. "show monthly fees collected")
 
 ## Output JSON Schema
 
 {
-  "intent": "add_student | update_student | delete_student | add_class | add_staff | update_staff | delete_staff | pay_salary | add_expense | update_expense | delete_expense | add_stock | update_stock | delete_stock | record_stock_transaction | add_fixed_cost | update_fixed_cost | delete_fixed_cost | query_analytics | unknown",
+  "intent": "add_student | update_student | delete_student | add_class | add_staff | update_staff | delete_staff | pay_salary | add_expense | update_expense | delete_expense | add_stock | update_stock | delete_stock | record_stock_transaction | add_fixed_cost | update_fixed_cost | delete_fixed_cost | list_staff | list_students | query_analytics | unknown",
   "entity": "student | staff | expense | stock | fixedCost | salaryPayment | class | null",
-  "operation": "add | update | delete | query | null",
+  "operation": "add | update | delete | query | list | null",
   "data": {
     // Entity-specific fields - see below
   },
@@ -330,10 +347,17 @@ For add_class always set "entity": "class" and "operation": "add". Extract any f
 
 ### AnalyticsQuery
 {
-  "queryType": "salary_summary | fee_collection_summary | expenses_summary | outstanding_fees | stock_balance | dashboard_overview | unknown",
+  "queryType": "salary_summary | fee_collection_summary | expenses_summary | outstanding_fees | stock_balance | dashboard_overview | monthly_salary_report | monthly_fee_report | unknown",
   "period": "current_month | last_month | current_year | all_time | null",
   "month": "YYYY-MM or null (for specific month)",
   "category": "string or null (for filtering)"
+}
+
+### ListQuery (for list_staff / list_students)
+{
+  "listType": "staff | students",
+  "classFilter": "string or null (for filtering students by class)",
+  "roleFilter": "string or null (for filtering staff by role like Teacher, Peon, etc)"
 }
 
 ## Rules
@@ -428,6 +452,39 @@ async function parseAxpoIntentWithOpenRouter(trimmed: string): Promise<IntentRes
   }
 }
 
+/** List staff/teachers phrases (client-side fallback when backend returns unknown). */
+const LIST_STAFF_PATTERNS = /\b(list|show|who are|get|display)\s+(all\s+)?(teachers?|staff|faculty|employees?)\b/i;
+/** List students phrases. */
+const LIST_STUDENTS_PATTERNS = /\b(list|show|who are|get|display)\s+(all\s+)?(students?|pupils?)\b/i;
+
+/**
+ * When the backend returns "unknown", check if the user asked to list teachers/staff or students.
+ * Returns a synthetic IntentResult for list_staff or list_students, or null.
+ */
+export function detectListIntent(userInput: string): IntentResult | null {
+  const t = userInput.trim().toLowerCase();
+  if (!t) return null;
+  if (LIST_STAFF_PATTERNS.test(t)) {
+    return {
+      success: true,
+      intent: "list_staff",
+      operation: "list",
+      data: { listType: "staff" },
+      message: "Here are all teachers and staff for this session.",
+    };
+  }
+  if (LIST_STUDENTS_PATTERNS.test(t)) {
+    return {
+      success: true,
+      intent: "list_students",
+      operation: "list",
+      data: { listType: "students" },
+      message: "Here are all students for this session.",
+    };
+  }
+  return null;
+}
+
 export async function parseAxpoIntent(userInput: string): Promise<IntentResult> {
   const trimmed = userInput.trim();
   if (!trimmed) {
@@ -505,8 +562,14 @@ export function getIntentDescription(intent: IntentType): string {
     update_fixed_cost: "Update Fixed Cost",
     delete_fixed_cost: "Delete Fixed Cost",
     add_class: "Add Class",
+    list_staff: "List Staff",
+    list_students: "List Students",
     query_analytics: "Analytics Query",
     unknown: "Unknown",
   };
   return descriptions[intent] || intent;
+}
+
+export function isListQuery(data: IntentResult["data"]): data is ParsedListQuery {
+  return data != null && typeof data === "object" && "listType" in data;
 }
