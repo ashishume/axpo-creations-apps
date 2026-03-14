@@ -1,20 +1,20 @@
 -- ============================================
 -- Billing enhancements: replace tables from scratch
 -- Run this when there is no data to preserve.
--- Drops and recreates: school_xx_fee_payments, school_xx_students, school_xx_fixed_monthly_costs
+-- Drops and recreates: fee_payments, students, fixed_monthly_costs
 -- ============================================
 
 -- 1. Drop in order (respect foreign keys)
-DROP TABLE IF EXISTS school_xx_fee_payments CASCADE;
-DROP TABLE IF EXISTS school_xx_students CASCADE;
-DROP TABLE IF EXISTS school_xx_fixed_monthly_costs CASCADE;
+DROP TABLE IF EXISTS fee_payments CASCADE;
+DROP TABLE IF EXISTS students CASCADE;
+DROP TABLE IF EXISTS fixed_monthly_costs CASCADE;
 
--- 2. Recreate school_xx_students (with photo_url, sibling_id)
-CREATE TABLE school_xx_students (
+-- 2. Recreate students (with photo_url, sibling_id)
+CREATE TABLE students (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
-  class_id UUID REFERENCES school_xx_classes(id) ON DELETE SET NULL,
-  user_id UUID REFERENCES school_xx_users(id) ON DELETE SET NULL,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  class_id UUID REFERENCES classes(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
 
   name VARCHAR(255) NOT NULL,
   student_id VARCHAR(50) NOT NULL,
@@ -45,17 +45,17 @@ CREATE TABLE school_xx_students (
   due_frequency VARCHAR(20),
 
   photo_url TEXT,
-  sibling_id UUID REFERENCES school_xx_students(id) ON DELETE SET NULL,
+  sibling_id UUID REFERENCES students(id) ON DELETE SET NULL,
 
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(session_id, student_id)
 );
 
--- 3. Recreate school_xx_fee_payments (with receipt_photo_url)
-CREATE TABLE school_xx_fee_payments (
+-- 3. Recreate fee_payments (with receipt_photo_url)
+CREATE TABLE fee_payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id UUID NOT NULL REFERENCES school_xx_students(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
   method VARCHAR(50) NOT NULL,
@@ -68,10 +68,10 @@ CREATE TABLE school_xx_fee_payments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Create school_xx_fixed_monthly_costs
-CREATE TABLE school_xx_fixed_monthly_costs (
+-- 4. Create fixed_monthly_costs
+CREATE TABLE fixed_monthly_costs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
   category VARCHAR(50) NOT NULL,
@@ -81,28 +81,28 @@ CREATE TABLE school_xx_fixed_monthly_costs (
 );
 
 -- 5. Indexes
-CREATE INDEX idx_school_xx_students_session ON school_xx_students(session_id);
-CREATE INDEX idx_school_xx_students_class ON school_xx_students(class_id);
-CREATE INDEX idx_school_xx_students_sibling ON school_xx_students(sibling_id);
-CREATE INDEX idx_school_xx_fee_payments_student ON school_xx_fee_payments(student_id);
-CREATE INDEX idx_school_xx_fixed_monthly_costs_session ON school_xx_fixed_monthly_costs(session_id);
+CREATE INDEX idx_students_session ON students(session_id);
+CREATE INDEX idx_students_class ON students(class_id);
+CREATE INDEX idx_students_sibling ON students(sibling_id);
+CREATE INDEX idx_fee_payments_student ON fee_payments(student_id);
+CREATE INDEX idx_fixed_monthly_costs_session ON fixed_monthly_costs(session_id);
 
 -- 6. RLS
-ALTER TABLE school_xx_students ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_fee_payments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_fixed_monthly_costs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fee_payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fixed_monthly_costs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow all for authenticated" ON school_xx_students FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_fee_payments FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_fixed_monthly_costs FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON students FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON fee_payments FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON fixed_monthly_costs FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
-CREATE POLICY "Allow anon for dev" ON school_xx_students FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_fee_payments FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_fixed_monthly_costs FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON students FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON fee_payments FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON fixed_monthly_costs FOR ALL TO anon USING (true) WITH CHECK (true);
 
--- 7. updated_at trigger for fixed_monthly_costs (requires school_xx_update_updated_at() to exist from main schema)
-DROP TRIGGER IF EXISTS update_school_xx_fixed_monthly_costs_updated_at ON school_xx_fixed_monthly_costs;
-CREATE TRIGGER update_school_xx_fixed_monthly_costs_updated_at
-  BEFORE UPDATE ON school_xx_fixed_monthly_costs
+-- 7. updated_at trigger for fixed_monthly_costs (requires update_updated_at() to exist from main schema)
+DROP TRIGGER IF EXISTS update_fixed_monthly_costs_updated_at ON fixed_monthly_costs;
+CREATE TRIGGER update_fixed_monthly_costs_updated_at
+  BEFORE UPDATE ON fixed_monthly_costs
   FOR EACH ROW
-  EXECUTE FUNCTION school_xx_update_updated_at();
+  EXECUTE FUNCTION update_updated_at();

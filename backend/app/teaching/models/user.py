@@ -10,7 +10,7 @@ from app.core.database import TeachingBase
 
 
 class User(TeachingBase):
-    __tablename__ = "school_xx_users"
+    __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     auth_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), unique=True, nullable=True)
@@ -20,7 +20,7 @@ class User(TeachingBase):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     role_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_roles.id"),
+        ForeignKey("roles.id"),
         nullable=False,
     )
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)

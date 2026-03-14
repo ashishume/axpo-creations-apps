@@ -96,7 +96,7 @@ export const studentsRepository = {
   async getAll(): Promise<LegacyStudent[]> {
     const supabase = getSupabase();
       const { data, error } = await supabase
-        .from('school_xx_students')
+        .from('students')
         .select('*')
         .order('name');
 
@@ -105,7 +105,7 @@ export const studentsRepository = {
       // Get all payments
       const studentIds = (data || []).map(s => s.id);
       const { data: paymentsData } = await supabase
-        .from('school_xx_fee_payments')
+        .from('fee_payments')
         .select('*')
         .in('student_id', studentIds);
 
@@ -122,7 +122,7 @@ export const studentsRepository = {
   async getBySession(sessionId: string): Promise<LegacyStudent[]> {
     const supabase = getSupabase();
       const { data, error } = await supabase
-        .from('school_xx_students')
+        .from('students')
         .select('*')
         .eq('session_id', sessionId)
         .order('name');
@@ -131,7 +131,7 @@ export const studentsRepository = {
 
       const studentIds = (data || []).map(s => s.id);
       const { data: paymentsData } = await supabase
-        .from('school_xx_fee_payments')
+        .from('fee_payments')
         .select('*')
         .in('student_id', studentIds);
 
@@ -153,7 +153,7 @@ export const studentsRepository = {
     const supabase = getSupabase();
     const offset = (page - 1) * pageSize;
       let query = supabase
-        .from('school_xx_students')
+        .from('students')
         .select('*', { count: 'exact' })
         .order('name');
 
@@ -173,7 +173,7 @@ export const studentsRepository = {
 
       const studentIds = (data || []).map(s => s.id);
       const { data: paymentsData } = studentIds.length > 0 
-        ? await supabase.from('school_xx_fee_payments').select('*').in('student_id', studentIds)
+        ? await supabase.from('fee_payments').select('*').in('student_id', studentIds)
         : { data: [] };
 
       const paymentsByStudent: Record<string, FeePayment[]> = {};
@@ -197,7 +197,7 @@ export const studentsRepository = {
   async getById(id: string): Promise<LegacyStudent | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_students')
+      .from('students')
       .select('*')
       .eq('id', id)
       .single();
@@ -205,7 +205,7 @@ export const studentsRepository = {
     if (error || !data) return null;
 
     const { data: paymentsData } = await supabase
-      .from('school_xx_fee_payments')
+      .from('fee_payments')
       .select('*')
       .eq('student_id', id);
 
@@ -219,7 +219,7 @@ export const studentsRepository = {
     const id = crypto.randomUUID();
     const s = student as LegacyStudent;
     const { data, error } = await supabase
-        .from('school_xx_students')
+        .from('students')
         .insert({
           id,
           session_id: s.sessionId,
@@ -289,7 +289,7 @@ export const studentsRepository = {
       photo_url: s.photoUrl,
       sibling_id: s.siblingId,
     }));
-    const { data, error } = await supabase.from('school_xx_students').insert(rows).select();
+    const { data, error } = await supabase.from('students').insert(rows).select();
     if (error) throw new Error('Failed to create students');
     return (data || []).map((row) => dbRowToStudent(row, []));
   },
@@ -322,7 +322,7 @@ export const studentsRepository = {
       if (updates.siblingId !== undefined) dbUpdates.sibling_id = updates.siblingId;
 
       const { data, error } = await supabase
-        .from('school_xx_students')
+        .from('students')
         .update(dbUpdates)
         .eq('id', id)
         .select()
@@ -331,7 +331,7 @@ export const studentsRepository = {
       if (error) throw new Error('Failed to update student');
 
       const { data: paymentsData } = await supabase
-        .from('school_xx_fee_payments')
+        .from('fee_payments')
         .select('*')
         .eq('student_id', id);
 
@@ -343,7 +343,7 @@ export const studentsRepository = {
   async delete(id: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_students')
+      .from('students')
       .delete()
       .eq('id', id);
 
@@ -364,7 +364,7 @@ export const studentsRepository = {
     if (studentIds.length === 0) return 0;
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_students')
+      .from('students')
       .update({ session_id: toSessionId, class_id: null })
       .in('id', studentIds)
       .select('id');
@@ -376,7 +376,7 @@ export const studentsRepository = {
     const supabase = getSupabase();
     const id = crypto.randomUUID();
     const { data, error } = await supabase
-      .from('school_xx_fee_payments')
+      .from('fee_payments')
       .insert({
         id,
         student_id: studentId,
@@ -399,7 +399,7 @@ export const studentsRepository = {
   async deletePayment(_studentId: string, paymentId: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_fee_payments')
+      .from('fee_payments')
       .delete()
       .eq('id', paymentId);
 

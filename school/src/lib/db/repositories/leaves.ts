@@ -67,7 +67,7 @@ export const leavesRepositorySupabase = {
   async getLeaveTypes(sessionId: string, applicableTo?: string): Promise<LeaveType[]> {
     const supabase = getSupabase();
     let q = supabase
-      .from('school_xx_leave_types')
+      .from('leave_types')
       .select('*')
       .eq('session_id', sessionId)
       .eq('is_active', true)
@@ -83,7 +83,7 @@ export const leavesRepositorySupabase = {
   async createLeaveType(data: Omit<LeaveType, 'id' | 'createdAt' | 'updatedAt'>): Promise<LeaveType> {
     const supabase = getSupabase();
     const { data: row, error } = await supabase
-      .from('school_xx_leave_types')
+      .from('leave_types')
       .insert({
         session_id: data.sessionId,
         name: data.name,
@@ -111,7 +111,7 @@ export const leavesRepositorySupabase = {
     if (data.requiresDocument !== undefined) body.requires_document = data.requiresDocument;
     if (data.isActive !== undefined) body.is_active = data.isActive;
     const { data: row, error } = await supabase
-      .from('school_xx_leave_types')
+      .from('leave_types')
       .update(body)
       .eq('id', id)
       .select('*')
@@ -122,7 +122,7 @@ export const leavesRepositorySupabase = {
 
   async deleteLeaveType(id: string): Promise<void> {
     const supabase = getSupabase();
-    const { error } = await supabase.from('school_xx_leave_types').delete().eq('id', id);
+    const { error } = await supabase.from('leave_types').delete().eq('id', id);
     if (error) throw new Error('Failed to delete leave type');
   },
 
@@ -132,7 +132,7 @@ export const leavesRepositorySupabase = {
   ): Promise<LeaveRequest[]> {
     const supabase = getSupabase();
     let q = supabase
-      .from('school_xx_leave_requests')
+      .from('leave_requests')
       .select('*')
       .eq('session_id', sessionId)
       .order('applied_at', { ascending: false });
@@ -146,7 +146,7 @@ export const leavesRepositorySupabase = {
     const typesMap: Record<string, LeaveType> = {};
     if (typeIds.length > 0) {
       const { data: types } = await supabase
-        .from('school_xx_leave_types')
+        .from('leave_types')
         .select('*')
         .in('id', typeIds);
       (types || []).forEach((t: Record<string, unknown>) => {
@@ -180,7 +180,7 @@ export const leavesRepositorySupabase = {
   async getLeaveRequest(id: string): Promise<LeaveRequest | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_leave_requests')
+      .from('leave_requests')
       .select('*')
       .eq('id', id)
       .single();
@@ -188,7 +188,7 @@ export const leavesRepositorySupabase = {
     let leaveType: LeaveType | undefined;
     if (data.leave_type_id) {
       const { data: lt } = await supabase
-        .from('school_xx_leave_types')
+        .from('leave_types')
         .select('*')
         .eq('id', data.leave_type_id)
         .single();
@@ -201,7 +201,7 @@ export const leavesRepositorySupabase = {
     const supabase = getSupabase();
     const daysCount = data.daysCount;
     const { data: row, error } = await supabase
-      .from('school_xx_leave_requests')
+      .from('leave_requests')
       .insert({
         session_id: data.sessionId,
         leave_type_id: data.leaveTypeId ?? null,
@@ -221,7 +221,7 @@ export const leavesRepositorySupabase = {
     let leaveType: LeaveType | undefined;
     if (row.leave_type_id) {
       const { data: lt } = await supabase
-        .from('school_xx_leave_types')
+        .from('leave_types')
         .select('*')
         .eq('id', row.leave_type_id)
         .single();
@@ -233,13 +233,13 @@ export const leavesRepositorySupabase = {
   async approveLeave(id: string, remarks?: string, reviewedBy?: string): Promise<LeaveRequest> {
     const supabase = getSupabase();
     const { data: req, error: fetchErr } = await supabase
-      .from('school_xx_leave_requests')
+      .from('leave_requests')
       .select('*')
       .eq('id', id)
       .single();
     if (fetchErr || !req) throw new Error('Leave request not found');
     const { data: row, error } = await supabase
-      .from('school_xx_leave_requests')
+      .from('leave_requests')
       .update({
         status: 'approved',
         reviewed_by: reviewedBy ?? null,
@@ -253,14 +253,14 @@ export const leavesRepositorySupabase = {
     if (error) throw new Error('Failed to approve leave');
     if (req.staff_id && req.leave_type_id && req.session_id) {
       const { data: session } = await supabase
-        .from('school_xx_sessions')
+        .from('sessions')
         .select('year')
         .eq('id', req.session_id)
         .single();
       const year = session?.year as string | undefined;
       if (year) {
         const { data: bal } = await supabase
-          .from('school_xx_leave_balances')
+          .from('leave_balances')
           .select('id, used_days')
           .eq('staff_id', req.staff_id)
           .eq('leave_type_id', req.leave_type_id)
@@ -268,7 +268,7 @@ export const leavesRepositorySupabase = {
           .single();
         if (bal) {
           await supabase
-            .from('school_xx_leave_balances')
+            .from('leave_balances')
             .update({
               used_days: Number(bal.used_days ?? 0) + Number(req.days_count ?? 0),
               updated_at: new Date().toISOString(),
@@ -283,7 +283,7 @@ export const leavesRepositorySupabase = {
   async rejectLeave(id: string, remarks: string, reviewedBy?: string): Promise<LeaveRequest> {
     const supabase = getSupabase();
     const { data: row, error } = await supabase
-      .from('school_xx_leave_requests')
+      .from('leave_requests')
       .update({
         status: 'rejected',
         reviewed_by: reviewedBy ?? null,
@@ -301,7 +301,7 @@ export const leavesRepositorySupabase = {
   async cancelLeave(id: string): Promise<LeaveRequest> {
     const supabase = getSupabase();
     const { data: row, error } = await supabase
-      .from('school_xx_leave_requests')
+      .from('leave_requests')
       .update({
         status: 'cancelled',
         reviewed_by: null,
@@ -319,7 +319,7 @@ export const leavesRepositorySupabase = {
   async getLeaveBalances(staffId: string, year?: string): Promise<LeaveBalance[]> {
     const supabase = getSupabase();
     let q = supabase
-      .from('school_xx_leave_balances')
+      .from('leave_balances')
       .select('*')
       .eq('staff_id', staffId)
       .order('year', { ascending: false });
@@ -330,7 +330,7 @@ export const leavesRepositorySupabase = {
     const typesMap: Record<string, LeaveType> = {};
     if (typeIds.length > 0) {
       const { data: types } = await supabase
-        .from('school_xx_leave_types')
+        .from('leave_types')
         .select('*')
         .in('id', typeIds);
       (types || []).forEach((t: Record<string, unknown>) => {
@@ -352,7 +352,7 @@ export const leavesRepositorySupabase = {
     const supabase = getSupabase();
     let staffRole: string | null = null;
     const { data: staffRow } = await supabase
-      .from('school_xx_staff')
+      .from('staff')
       .select('role')
       .eq('id', staffId)
       .single();
@@ -368,7 +368,7 @@ export const leavesRepositorySupabase = {
     const results: LeaveBalance[] = [];
     for (const lt of types) {
       const { data: existing } = await supabase
-        .from('school_xx_leave_balances')
+        .from('leave_balances')
         .select('id')
         .eq('staff_id', staffId)
         .eq('leave_type_id', lt.id)
@@ -377,7 +377,7 @@ export const leavesRepositorySupabase = {
       if (existing) continue;
       const totalDays = maxDaysForRole(lt);
       const { data: row, error } = await supabase
-        .from('school_xx_leave_balances')
+        .from('leave_balances')
         .insert({
           staff_id: staffId,
           leave_type_id: lt.id,

@@ -219,25 +219,25 @@ The frontend supports two data backends:
 5. Data queries scoped by organization/school
 
 ### Database Tables (Supabase)
-Tables prefixed with `school_xx_`:
-- `school_xx_organizations`
-- `school_xx_schools`
-- `school_xx_sessions`
-- `school_xx_classes`
-- `school_xx_students`
-- `school_xx_student_payments`
-- `school_xx_staff`
-- `school_xx_salary_payments`
-- `school_xx_expenses`
-- `school_xx_stocks`
-- `school_xx_stock_transactions`
-- `school_xx_fixed_monthly_costs`
-- `school_xx_leave_types`
-- `school_xx_leave_balances`
-- `school_xx_leave_requests`
-- `school_xx_roles`
-- `school_xx_users`
-- `school_xx_assistant_chat_messages`
+Tables prefixed with ``:
+- `organizations`
+- `schools`
+- `sessions`
+- `classes`
+- `students`
+- `student_payments`
+- `staff`
+- `salary_payments`
+- `expenses`
+- `stocks`
+- `stock_transactions`
+- `fixed_monthly_costs`
+- `leave_types`
+- `leave_balances`
+- `leave_requests`
+- `roles`
+- `users`
+- `assistant_chat_messages`
 
 ---
 

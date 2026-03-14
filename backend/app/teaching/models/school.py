@@ -10,7 +10,7 @@ from app.core.database import TeachingBase
 
 
 class School(TeachingBase):
-    __tablename__ = "school_xx_schools"
+    __tablename__ = "schools"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
@@ -25,12 +25,12 @@ class School(TeachingBase):
 
 
 class Session(TeachingBase):
-    __tablename__ = "school_xx_sessions"
+    __tablename__ = "sessions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     school_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_schools.id", ondelete="CASCADE"),
+        ForeignKey("schools.id", ondelete="CASCADE"),
         nullable=False,
     )
     year: Mapped[str] = mapped_column(String(20), nullable=False)

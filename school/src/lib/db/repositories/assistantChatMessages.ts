@@ -29,7 +29,7 @@ export const assistantChatMessagesRepository = {
   async getBySession(sessionId: string): Promise<StoredChatMessageRow[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_assistant_chat_messages')
+      .from('assistant_chat_messages')
       .select('id, role, content, created_at, is_error, analytics')
       .eq('session_id', sessionId)
       .order('created_at', { ascending: true });
@@ -46,7 +46,7 @@ export const assistantChatMessagesRepository = {
     const id = message.id || crypto.randomUUID();
 
     const { data, error } = await supabase
-      .from('school_xx_assistant_chat_messages')
+      .from('assistant_chat_messages')
       .insert({
         id,
         session_id: sessionId,
@@ -67,7 +67,7 @@ export const assistantChatMessagesRepository = {
     const supabase = getSupabase();
 
     const { error: deleteError } = await supabase
-      .from('school_xx_assistant_chat_messages')
+      .from('assistant_chat_messages')
       .delete()
       .eq('session_id', sessionId);
 
@@ -86,7 +86,7 @@ export const assistantChatMessagesRepository = {
     }));
 
     const { error: insertError } = await supabase
-      .from('school_xx_assistant_chat_messages')
+      .from('assistant_chat_messages')
       .insert(rows);
 
     if (insertError) throw new Error('Failed to save chat history');

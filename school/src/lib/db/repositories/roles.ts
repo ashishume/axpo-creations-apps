@@ -6,14 +6,14 @@ export const rolesRepository = {
   async getAll(): Promise<Role[]> {
     const supabase = getSupabase();
     const { data: dbRoles, error } = await supabase
-      .from('school_xx_roles')
+      .from('roles')
       .select('*')
       .order('name');
 
     if (error) throw new Error('Failed to fetch roles');
 
     const { data: rolePerms } = await supabase
-      .from('school_xx_role_permissions')
+      .from('role_permissions')
       .select('role_id, permission_id');
 
     const permissionsByRole: Record<string, Permission[]> = {};
@@ -36,7 +36,7 @@ export const rolesRepository = {
   async getById(id: string): Promise<Role | null> {
     const supabase = getSupabase();
     const { data: dbRole, error } = await supabase
-      .from('school_xx_roles')
+      .from('roles')
       .select('*')
       .eq('id', id)
       .single();
@@ -44,7 +44,7 @@ export const rolesRepository = {
     if (error || !dbRole) return null;
 
     const { data: rolePerms } = await supabase
-      .from('school_xx_role_permissions')
+      .from('role_permissions')
       .select('permission_id')
       .eq('role_id', id);
 
@@ -70,7 +70,7 @@ export const rolesRepository = {
     const id = crypto.randomUUID();
 
     const { data, error } = await supabase
-      .from('school_xx_roles')
+      .from('roles')
       .insert({
         id,
         name: role.name,
@@ -84,7 +84,7 @@ export const rolesRepository = {
 
     if (role.permissions.length > 0) {
       const { error: permError } = await supabase
-        .from('school_xx_role_permissions')
+        .from('role_permissions')
         .insert(
           role.permissions.map(p => ({
             role_id: id,
@@ -93,7 +93,7 @@ export const rolesRepository = {
         );
 
       if (permError) {
-        await supabase.from('school_xx_roles').delete().eq('id', id);
+        await supabase.from('roles').delete().eq('id', id);
         throw new Error('Failed to assign permissions');
       }
     }
@@ -113,7 +113,7 @@ export const rolesRepository = {
     const supabase = getSupabase();
 
     const { data: existingRole } = await supabase
-      .from('school_xx_roles')
+      .from('roles')
       .select('is_system, name')
       .eq('id', id)
       .single();
@@ -131,7 +131,7 @@ export const rolesRepository = {
     if (updates.description !== undefined) dbUpdates.description = updates.description;
 
     const { data, error } = await supabase
-      .from('school_xx_roles')
+      .from('roles')
       .update(dbUpdates)
       .eq('id', id)
       .select()
@@ -141,13 +141,13 @@ export const rolesRepository = {
 
     if (updates.permissions !== undefined) {
       await supabase
-        .from('school_xx_role_permissions')
+        .from('role_permissions')
         .delete()
         .eq('role_id', id);
 
       if (updates.permissions.length > 0) {
         await supabase
-          .from('school_xx_role_permissions')
+          .from('role_permissions')
           .insert(
             updates.permissions.map(p => ({
               role_id: id,
@@ -158,7 +158,7 @@ export const rolesRepository = {
     }
 
     const { data: rolePerms } = await supabase
-      .from('school_xx_role_permissions')
+      .from('role_permissions')
       .select('permission_id')
       .eq('role_id', id);
 
@@ -179,7 +179,7 @@ export const rolesRepository = {
     const supabase = getSupabase();
 
     const { data: existingRole } = await supabase
-      .from('school_xx_roles')
+      .from('roles')
       .select('is_system')
       .eq('id', id)
       .single();
@@ -189,7 +189,7 @@ export const rolesRepository = {
     }
 
     const { error } = await supabase
-      .from('school_xx_roles')
+      .from('roles')
       .delete()
       .eq('id', id);
 

@@ -15,7 +15,7 @@ export const schoolsRepository = {
   async getAll(): Promise<School[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_schools')
+      .from('schools')
       .select('*')
       .order('name');
 
@@ -37,7 +37,7 @@ export const schoolsRepository = {
     const offset = (page - 1) * pageSize;
 
     const { data, error, count } = await supabase
-      .from('school_xx_schools')
+      .from('schools')
       .select('*', { count: 'exact' })
       .order('name')
       .range(offset, offset + pageSize - 1);
@@ -66,7 +66,7 @@ export const schoolsRepository = {
   async getById(id: string): Promise<School | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_schools')
+      .from('schools')
       .select('*')
       .eq('id', id)
       .single();
@@ -99,7 +99,7 @@ export const schoolsRepository = {
     if (school.organizationId != null) payload.organization_id = school.organizationId;
 
     const { data, error } = await supabase
-      .from('school_xx_schools')
+      .from('schools')
       .insert(payload)
       .select()
       .single();
@@ -128,7 +128,7 @@ export const schoolsRepository = {
     if (updates.organizationId !== undefined) dbUpdates.organization_id = updates.organizationId;
 
     const { data, error } = await supabase
-      .from('school_xx_schools')
+      .from('schools')
       .update(dbUpdates)
       .eq('id', id)
       .select()
@@ -150,7 +150,7 @@ export const schoolsRepository = {
   async delete(id: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_schools')
+      .from('schools')
       .delete()
       .eq('id', id);
 

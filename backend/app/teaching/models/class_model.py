@@ -11,12 +11,12 @@ from app.core.database import TeachingBase
 
 
 class Class(TeachingBase):
-    __tablename__ = "school_xx_classes"
+    __tablename__ = "classes"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_sessions.id", ondelete="CASCADE"),
+        ForeignKey("sessions.id", ondelete="CASCADE"),
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)

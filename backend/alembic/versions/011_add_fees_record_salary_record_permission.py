@@ -20,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.execute(
         """
-        INSERT INTO school_xx_permissions (id, module, action, description)
+        INSERT INTO permissions (id, module, action, description)
         VALUES
           ('fees:record', 'fees', 'record', 'Record fee payments only (cannot change fee structure)'),
           ('salary:record', 'salary', 'record', 'Record salary payments only (cannot change staff salary)')
@@ -32,11 +32,11 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.execute(
         """
-        DELETE FROM school_xx_role_permissions WHERE permission_id IN ('fees:record', 'salary:record')
+        DELETE FROM role_permissions WHERE permission_id IN ('fees:record', 'salary:record')
         """
     )
     op.execute(
         """
-        DELETE FROM school_xx_permissions WHERE id IN ('fees:record', 'salary:record')
+        DELETE FROM permissions WHERE id IN ('fees:record', 'salary:record')
         """
     )

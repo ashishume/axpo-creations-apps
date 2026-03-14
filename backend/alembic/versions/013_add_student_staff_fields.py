@@ -20,10 +20,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Add new fields to school_xx_students
+    # Add new fields to students
     op.execute(
         """
-        ALTER TABLE school_xx_students
+        ALTER TABLE students
           ADD COLUMN IF NOT EXISTS admission_number VARCHAR(50),
           ADD COLUMN IF NOT EXISTS aadhaar_number VARCHAR(12),
           ADD COLUMN IF NOT EXISTS date_of_birth DATE,
@@ -33,10 +33,10 @@ def upgrade() -> None:
         """
     )
     
-    # Add new fields to school_xx_staff
+    # Add new fields to staff
     op.execute(
         """
-        ALTER TABLE school_xx_staff
+        ALTER TABLE staff
           ADD COLUMN IF NOT EXISTS aadhaar_number VARCHAR(12),
           ADD COLUMN IF NOT EXISTS date_of_birth DATE
         """
@@ -45,7 +45,7 @@ def upgrade() -> None:
     # Update default allowed_leaves_per_month from 2 to 1 for staff
     op.execute(
         """
-        ALTER TABLE school_xx_staff
+        ALTER TABLE staff
           ALTER COLUMN allowed_leaves_per_month SET DEFAULT 1
         """
     )
@@ -53,17 +53,17 @@ def upgrade() -> None:
     # Update default allowed_leaves from 2 to 1 for salary_payments
     op.execute(
         """
-        ALTER TABLE school_xx_salary_payments
+        ALTER TABLE salary_payments
           ALTER COLUMN allowed_leaves SET DEFAULT 1
         """
     )
 
 
 def downgrade() -> None:
-    # Remove new fields from school_xx_students
+    # Remove new fields from students
     op.execute(
         """
-        ALTER TABLE school_xx_students
+        ALTER TABLE students
           DROP COLUMN IF EXISTS admission_number,
           DROP COLUMN IF EXISTS aadhaar_number,
           DROP COLUMN IF EXISTS date_of_birth,
@@ -73,10 +73,10 @@ def downgrade() -> None:
         """
     )
     
-    # Remove new fields from school_xx_staff
+    # Remove new fields from staff
     op.execute(
         """
-        ALTER TABLE school_xx_staff
+        ALTER TABLE staff
           DROP COLUMN IF EXISTS aadhaar_number,
           DROP COLUMN IF EXISTS date_of_birth
         """
@@ -85,7 +85,7 @@ def downgrade() -> None:
     # Revert default allowed_leaves_per_month back to 2
     op.execute(
         """
-        ALTER TABLE school_xx_staff
+        ALTER TABLE staff
           ALTER COLUMN allowed_leaves_per_month SET DEFAULT 2
         """
     )
@@ -93,7 +93,7 @@ def downgrade() -> None:
     # Revert default allowed_leaves back to 2
     op.execute(
         """
-        ALTER TABLE school_xx_salary_payments
+        ALTER TABLE salary_payments
           ALTER COLUMN allowed_leaves SET DEFAULT 2
         """
     )

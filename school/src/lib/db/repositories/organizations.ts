@@ -14,7 +14,7 @@ export const organizationsRepository = {
   async getAll(): Promise<Organization[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_organizations')
+      .from('organizations')
       .select('*')
       .order('name');
 
@@ -25,7 +25,7 @@ export const organizationsRepository = {
   async getById(id: string): Promise<Organization | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_organizations')
+      .from('organizations')
       .select('*')
       .eq('id', id)
       .single();
@@ -39,7 +39,7 @@ export const organizationsRepository = {
     const id = crypto.randomUUID();
 
     const { data, error } = await supabase
-      .from('school_xx_organizations')
+      .from('organizations')
       .insert({
         id,
         name: org.name,
@@ -61,7 +61,7 @@ export const organizationsRepository = {
     if (updates.billingEmail !== undefined) dbUpdates.billing_email = updates.billingEmail || null;
 
     const { data, error } = await supabase
-      .from('school_xx_organizations')
+      .from('organizations')
       .update(dbUpdates)
       .eq('id', id)
       .select()
@@ -74,7 +74,7 @@ export const organizationsRepository = {
   async delete(id: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_organizations')
+      .from('organizations')
       .delete()
       .eq('id', id);
 

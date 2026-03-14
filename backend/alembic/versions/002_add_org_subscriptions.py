@@ -19,12 +19,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     op.create_table(
-        "school_xx_org_subscriptions",
+        "org_subscriptions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column(
             "organization_id",
             postgresql.UUID(as_uuid=True),
-            sa.ForeignKey("school_xx_organizations.id"),
+            sa.ForeignKey("organizations.id"),
             nullable=False,
         ),
         sa.Column("plan_type", sa.String(20), nullable=False, server_default="starter"),
@@ -41,25 +41,25 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
     op.create_unique_constraint(
-        "uq_school_xx_org_subscriptions_organization_id",
-        "school_xx_org_subscriptions",
+        "uq_org_subscriptions_organization_id",
+        "org_subscriptions",
         ["organization_id"],
     )
     op.create_index(
-        "ix_school_xx_org_subscriptions_razorpay_subscription_id",
-        "school_xx_org_subscriptions",
+        "ix_org_subscriptions_razorpay_subscription_id",
+        "org_subscriptions",
         ["razorpay_subscription_id"],
     )
 
 
 def downgrade() -> None:
     op.drop_index(
-        "ix_school_xx_org_subscriptions_razorpay_subscription_id",
-        table_name="school_xx_org_subscriptions",
+        "ix_org_subscriptions_razorpay_subscription_id",
+        table_name="org_subscriptions",
     )
     op.drop_constraint(
-        "uq_school_xx_org_subscriptions_organization_id",
-        "school_xx_org_subscriptions",
+        "uq_org_subscriptions_organization_id",
+        "org_subscriptions",
         type_="unique",
     )
-    op.drop_table("school_xx_org_subscriptions")
+    op.drop_table("org_subscriptions")

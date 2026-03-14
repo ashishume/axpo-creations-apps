@@ -12,17 +12,17 @@ from app.core.database import TeachingBase
 
 
 class Staff(TeachingBase):
-    __tablename__ = "school_xx_staff"
+    __tablename__ = "staff"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_sessions.id", ondelete="CASCADE"),
+        ForeignKey("sessions.id", ondelete="CASCADE"),
         nullable=False,
     )
     user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_users.id", ondelete="SET NULL"),
+        ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -61,12 +61,12 @@ class Staff(TeachingBase):
 
 
 class SalaryPayment(TeachingBase):
-    __tablename__ = "school_xx_salary_payments"
+    __tablename__ = "salary_payments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     staff_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_staff.id", ondelete="CASCADE"),
+        ForeignKey("staff.id", ondelete="CASCADE"),
         nullable=False,
     )
     month: Mapped[str] = mapped_column(String(7), nullable=False)

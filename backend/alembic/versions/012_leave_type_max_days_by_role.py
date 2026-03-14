@@ -1,4 +1,4 @@
-"""add max_days_by_role to school_xx_leave_types (teaching)
+"""add max_days_by_role to leave_types (teaching)
 
 Revision ID: 012_leave_type_max_days_by_role
 Revises: 011_fees_salary_record
@@ -19,7 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.execute(
         """
-        ALTER TABLE school_xx_leave_types
+        ALTER TABLE leave_types
           ADD COLUMN IF NOT EXISTS max_days_by_role JSONB
         """
     )
@@ -28,7 +28,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.execute(
         """
-        ALTER TABLE school_xx_leave_types
+        ALTER TABLE leave_types
           DROP COLUMN IF EXISTS max_days_by_role
         """
     )

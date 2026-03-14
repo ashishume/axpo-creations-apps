@@ -23,14 +23,14 @@ ADMIN_ROLE_ID = "00000000-0000-0000-0000-000000000001"
 def upgrade() -> None:
     op.execute(
         """
-        INSERT INTO school_xx_permissions (id, module, action, description)
+        INSERT INTO permissions (id, module, action, description)
         VALUES ('sessions:create', 'sessions', 'create', 'Create sessions (school admins)')
         ON CONFLICT (id) DO NOTHING
         """
     )
     op.execute(
         f"""
-        INSERT INTO school_xx_role_permissions (role_id, permission_id)
+        INSERT INTO role_permissions (role_id, permission_id)
         VALUES
           ('{SUPER_ADMIN_ROLE_ID}', 'sessions:create'),
           ('{ADMIN_ROLE_ID}', 'sessions:create')
@@ -42,11 +42,11 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.execute(
         """
-        DELETE FROM school_xx_role_permissions WHERE permission_id = 'sessions:create'
+        DELETE FROM role_permissions WHERE permission_id = 'sessions:create'
         """
     )
     op.execute(
         """
-        DELETE FROM school_xx_permissions WHERE id = 'sessions:create'
+        DELETE FROM permissions WHERE id = 'sessions:create'
         """
     )

@@ -2,7 +2,7 @@
 -- Run this migration to fix or create the default super admin account.
 
 -- Update password for existing Super Admin by id (bcrypt hash of 'superadmin')
-UPDATE school_xx_users
+UPDATE users
 SET password_hash = '$2b$10$TWRDHvANAvjv3bJB72KOpOs1TdUqaGJhf/GA9M0cvcIqZ3z5d.ouG',
     username = 'superadmin',
     name = 'Super Administrator',
@@ -16,9 +16,9 @@ DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'school_xx_users' AND column_name = 'organization_id'
+    WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'organization_id'
   ) THEN
-    UPDATE school_xx_users
+    UPDATE users
     SET organization_id = NULL
     WHERE id = '00000000-0000-0000-0000-000000000010';
   END IF;

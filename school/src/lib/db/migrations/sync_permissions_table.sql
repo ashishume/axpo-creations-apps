@@ -1,12 +1,12 @@
 -- ============================================
--- Migration: Sync school_xx_permissions only
+-- Migration: Sync permissions only
 -- ============================================
 -- Run this to ensure all permission rows exist.
--- Does NOT touch school_xx_role_permissions or any other table.
+-- Does NOT touch role_permissions or any other table.
 -- Idempotent: safe to run multiple times (ON CONFLICT DO NOTHING).
 -- ============================================
 
-INSERT INTO school_xx_permissions (id, module, action, description) VALUES
+INSERT INTO permissions (id, module, action, description) VALUES
   ('dashboard:view', 'dashboard', 'view', 'View dashboard'),
   ('students:view', 'students', 'view', 'View students'),
   ('students:create', 'students', 'create', 'Create students'),

@@ -12,17 +12,17 @@ from app.core.database import TeachingBase
 
 class Student(TeachingBase):
     """Student identity - basic information that persists across sessions."""
-    __tablename__ = "school_xx_students"
+    __tablename__ = "students"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     school_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_schools.id", ondelete="CASCADE"),
+        ForeignKey("schools.id", ondelete="CASCADE"),
         nullable=False,
     )
     user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_users.id", ondelete="SET NULL"),
+        ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
     
@@ -47,7 +47,7 @@ class Student(TeachingBase):
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     sibling_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_students.id", ondelete="SET NULL"),
+        ForeignKey("students.id", ondelete="SET NULL"),
         nullable=True,
     )
     
@@ -72,22 +72,22 @@ class Student(TeachingBase):
 
 class StudentEnrollment(TeachingBase):
     """Session-specific enrollment with fee structure and payment tracking."""
-    __tablename__ = "school_xx_student_enrollments"
+    __tablename__ = "student_enrollments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     student_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_students.id", ondelete="CASCADE"),
+        ForeignKey("students.id", ondelete="CASCADE"),
         nullable=False,
     )
     session_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_sessions.id", ondelete="CASCADE"),
+        ForeignKey("sessions.id", ondelete="CASCADE"),
         nullable=False,
     )
     class_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_classes.id", ondelete="SET NULL"),
+        ForeignKey("classes.id", ondelete="SET NULL"),
         nullable=True,
     )
     
@@ -123,12 +123,12 @@ class StudentEnrollment(TeachingBase):
 
 class FeePayment(TeachingBase):
     """Fee payment record linked to enrollment."""
-    __tablename__ = "school_xx_fee_payments"
+    __tablename__ = "fee_payments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     enrollment_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_student_enrollments.id", ondelete="CASCADE"),
+        ForeignKey("student_enrollments.id", ondelete="CASCADE"),
         nullable=False,
     )
     # Keep student_id temporarily for backward compatibility during migration

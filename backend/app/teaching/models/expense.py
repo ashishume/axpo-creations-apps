@@ -11,12 +11,12 @@ from app.core.database import TeachingBase
 
 
 class Expense(TeachingBase):
-    __tablename__ = "school_xx_expenses"
+    __tablename__ = "expenses"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_sessions.id", ondelete="CASCADE"),
+        ForeignKey("sessions.id", ondelete="CASCADE"),
         nullable=False,
     )
     date: Mapped[date] = mapped_column(Date, nullable=False)

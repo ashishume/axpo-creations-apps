@@ -7,13 +7,13 @@ DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'school_xx_students' AND column_name = 'admission_fees'
+    WHERE table_schema = 'public' AND table_name = 'students' AND column_name = 'admission_fees'
   ) THEN
-    UPDATE school_xx_students
+    UPDATE students
     SET registration_fees = COALESCE(registration_fees, 0) + COALESCE(admission_fees, 0),
         registration_paid = registration_paid OR COALESCE(admission_paid, FALSE);
-    ALTER TABLE school_xx_students DROP COLUMN IF EXISTS admission_fees;
-    ALTER TABLE school_xx_students DROP COLUMN IF EXISTS admission_paid;
+    ALTER TABLE students DROP COLUMN IF EXISTS admission_fees;
+    ALTER TABLE students DROP COLUMN IF EXISTS admission_paid;
   END IF;
 END $$;
 
@@ -22,10 +22,10 @@ DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'school_xx_classes' AND column_name = 'admission_fees'
+    WHERE table_schema = 'public' AND table_name = 'classes' AND column_name = 'admission_fees'
   ) THEN
-    UPDATE school_xx_classes
+    UPDATE classes
     SET registration_fees = COALESCE(registration_fees, 0) + COALESCE(admission_fees, 0);
-    ALTER TABLE school_xx_classes DROP COLUMN IF EXISTS admission_fees;
+    ALTER TABLE classes DROP COLUMN IF EXISTS admission_fees;
   END IF;
 END $$;

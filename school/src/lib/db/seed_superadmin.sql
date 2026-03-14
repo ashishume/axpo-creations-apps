@@ -5,18 +5,18 @@
 -- ============================================
 
 -- 1. Insert Super Admin role (if not exists)
-INSERT INTO school_xx_roles (id, name, description, is_system) VALUES
+INSERT INTO roles (id, name, description, is_system) VALUES
   ('00000000-0000-0000-0000-000000000000', 'Super Admin', 'SaaS provider: add schools, lock/unlock app', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. Grant all permissions to Super Admin role (if not already granted)
-INSERT INTO school_xx_role_permissions (role_id, permission_id)
-SELECT '00000000-0000-0000-0000-000000000000', id FROM school_xx_permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT '00000000-0000-0000-0000-000000000000', id FROM permissions
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
 -- 3. Insert superadmin user (username: superadmin, password: superadmin)
 --    bcrypt hash of 'superadmin' (change password after first login)
-INSERT INTO school_xx_users (
+INSERT INTO users (
   id,
   username,
   name,

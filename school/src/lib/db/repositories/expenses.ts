@@ -20,7 +20,7 @@ export const expensesRepository = {
   async getAll(): Promise<Expense[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_expenses')
+      .from('expenses')
       .select('*')
       .order('date', { ascending: false });
 
@@ -31,7 +31,7 @@ export const expensesRepository = {
   async getBySession(sessionId: string): Promise<Expense[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_expenses')
+      .from('expenses')
       .select('*')
       .eq('session_id', sessionId)
       .order('date', { ascending: false });
@@ -49,7 +49,7 @@ export const expensesRepository = {
     const offset = (page - 1) * pageSize;
 
     let query = supabase
-      .from('school_xx_expenses')
+      .from('expenses')
       .select('*', { count: 'exact' })
       .order('date', { ascending: false });
 
@@ -75,7 +75,7 @@ export const expensesRepository = {
   async getById(id: string): Promise<Expense | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_expenses')
+      .from('expenses')
       .select('*')
       .eq('id', id)
       .single();
@@ -89,7 +89,7 @@ export const expensesRepository = {
     const id = crypto.randomUUID();
 
     const { data, error } = await supabase
-      .from('school_xx_expenses')
+      .from('expenses')
       .insert({
         id,
         session_id: expense.sessionId,
@@ -122,7 +122,7 @@ export const expensesRepository = {
       payment_method: e.paymentMethod,
       tags: e.tags,
     }));
-    const { data, error } = await supabase.from('school_xx_expenses').insert(rows).select();
+    const { data, error } = await supabase.from('expenses').insert(rows).select();
     if (error) throw new Error('Failed to create expenses');
     return (data || []).map(dbRowToExpense);
   },
@@ -140,7 +140,7 @@ export const expensesRepository = {
     if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
 
     const { data, error } = await supabase
-      .from('school_xx_expenses')
+      .from('expenses')
       .update(dbUpdates)
       .eq('id', id)
       .select()
@@ -153,7 +153,7 @@ export const expensesRepository = {
   async delete(id: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_expenses')
+      .from('expenses')
       .delete()
       .eq('id', id);
 

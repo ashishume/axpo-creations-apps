@@ -5,36 +5,36 @@
 -- ============================================
 
 -- Drop all tables in reverse dependency order (CASCADE removes dependent objects)
-DROP TABLE IF EXISTS school_xx_assistant_chat_messages CASCADE;
-DROP TABLE IF EXISTS school_xx_coupon_redemptions CASCADE;
-DROP TABLE IF EXISTS school_xx_user_subscriptions CASCADE;
-DROP TABLE IF EXISTS school_xx_premium_coupons CASCADE;
-DROP TABLE IF EXISTS school_xx_fixed_monthly_costs CASCADE;
-DROP TABLE IF EXISTS school_xx_stock_transactions CASCADE;
-DROP TABLE IF EXISTS school_xx_stocks CASCADE;
-DROP TABLE IF EXISTS school_xx_expenses CASCADE;
-DROP TABLE IF EXISTS school_xx_leave_requests CASCADE;
-DROP TABLE IF EXISTS school_xx_leave_balances CASCADE;
-DROP TABLE IF EXISTS school_xx_leave_types CASCADE;
-DROP TABLE IF EXISTS school_xx_salary_payments CASCADE;
-DROP TABLE IF EXISTS school_xx_staff CASCADE;
-DROP TABLE IF EXISTS school_xx_fee_payments CASCADE;
-DROP TABLE IF EXISTS school_xx_student_enrollments CASCADE;
-DROP TABLE IF EXISTS school_xx_students CASCADE;
-DROP TABLE IF EXISTS school_xx_classes CASCADE;
-DROP TABLE IF EXISTS school_xx_sessions CASCADE;
-DROP TABLE IF EXISTS school_xx_schools CASCADE;
-DROP TABLE IF EXISTS school_xx_org_subscriptions CASCADE;
-DROP TABLE IF EXISTS school_xx_role_permissions CASCADE;
-DROP TABLE IF EXISTS school_xx_permissions CASCADE;
-DROP TABLE IF EXISTS school_xx_users CASCADE;
-DROP TABLE IF EXISTS school_xx_roles CASCADE;
-DROP TABLE IF EXISTS school_xx_organizations CASCADE;
+DROP TABLE IF EXISTS assistant_chat_messages CASCADE;
+DROP TABLE IF EXISTS coupon_redemptions CASCADE;
+DROP TABLE IF EXISTS user_subscriptions CASCADE;
+DROP TABLE IF EXISTS premium_coupons CASCADE;
+DROP TABLE IF EXISTS fixed_monthly_costs CASCADE;
+DROP TABLE IF EXISTS stock_transactions CASCADE;
+DROP TABLE IF EXISTS stocks CASCADE;
+DROP TABLE IF EXISTS expenses CASCADE;
+DROP TABLE IF EXISTS leave_requests CASCADE;
+DROP TABLE IF EXISTS leave_balances CASCADE;
+DROP TABLE IF EXISTS leave_types CASCADE;
+DROP TABLE IF EXISTS salary_payments CASCADE;
+DROP TABLE IF EXISTS staff CASCADE;
+DROP TABLE IF EXISTS fee_payments CASCADE;
+DROP TABLE IF EXISTS student_enrollments CASCADE;
+DROP TABLE IF EXISTS students CASCADE;
+DROP TABLE IF EXISTS classes CASCADE;
+DROP TABLE IF EXISTS sessions CASCADE;
+DROP TABLE IF EXISTS schools CASCADE;
+DROP TABLE IF EXISTS org_subscriptions CASCADE;
+DROP TABLE IF EXISTS role_permissions CASCADE;
+DROP TABLE IF EXISTS permissions CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+DROP TABLE IF EXISTS organizations CASCADE;
 
 -- ============================================
 -- 1. Organizations
 -- ============================================
-CREATE TABLE school_xx_organizations (
+CREATE TABLE organizations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(100) UNIQUE,
@@ -46,7 +46,7 @@ CREATE TABLE school_xx_organizations (
 -- ============================================
 -- 2. Roles
 -- ============================================
-CREATE TABLE school_xx_roles (
+CREATE TABLE roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(100) NOT NULL UNIQUE,
   description TEXT,
@@ -58,7 +58,7 @@ CREATE TABLE school_xx_roles (
 -- ============================================
 -- 3. Permissions
 -- ============================================
-CREATE TABLE school_xx_permissions (
+CREATE TABLE permissions (
   id VARCHAR(50) PRIMARY KEY,
   module VARCHAR(50) NOT NULL,
   action VARCHAR(50) NOT NULL,
@@ -68,22 +68,22 @@ CREATE TABLE school_xx_permissions (
 -- ============================================
 -- 4. Role-Permissions (many-to-many)
 -- ============================================
-CREATE TABLE school_xx_role_permissions (
+CREATE TABLE role_permissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  role_id UUID NOT NULL REFERENCES school_xx_roles(id) ON DELETE CASCADE,
-  permission_id VARCHAR(50) NOT NULL REFERENCES school_xx_permissions(id) ON DELETE CASCADE,
+  role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+  permission_id VARCHAR(50) NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(role_id, permission_id)
 );
-CREATE INDEX idx_role_permissions_role ON school_xx_role_permissions(role_id);
-CREATE INDEX idx_role_permissions_permission ON school_xx_role_permissions(permission_id);
+CREATE INDEX idx_role_permissions_role ON role_permissions(role_id);
+CREATE INDEX idx_role_permissions_permission ON role_permissions(permission_id);
 
 -- ============================================
 -- 5. Org Subscriptions
 -- ============================================
-CREATE TABLE school_xx_org_subscriptions (
+CREATE TABLE org_subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id UUID NOT NULL UNIQUE REFERENCES school_xx_organizations(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL UNIQUE REFERENCES organizations(id) ON DELETE CASCADE,
   plan_type VARCHAR(20) NOT NULL DEFAULT 'starter',
   billing_interval VARCHAR(20) NOT NULL DEFAULT 'monthly',
   status VARCHAR(20) NOT NULL DEFAULT 'inactive',
@@ -97,14 +97,14 @@ CREATE TABLE school_xx_org_subscriptions (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_org_subscriptions_org ON school_xx_org_subscriptions(organization_id);
+CREATE INDEX idx_org_subscriptions_org ON org_subscriptions(organization_id);
 
 -- ============================================
 -- 6. Schools
 -- ============================================
-CREATE TABLE school_xx_schools (
+CREATE TABLE schools (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id UUID REFERENCES school_xx_organizations(id) ON DELETE SET NULL,
+  organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
   address TEXT,
   contact VARCHAR(100),
@@ -114,14 +114,14 @@ CREATE TABLE school_xx_schools (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_schools_organization ON school_xx_schools(organization_id);
+CREATE INDEX idx_schools_organization ON schools(organization_id);
 
 -- ============================================
 -- 7. Sessions
 -- ============================================
-CREATE TABLE school_xx_sessions (
+CREATE TABLE sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id UUID NOT NULL REFERENCES school_xx_schools(id) ON DELETE CASCADE,
+  school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
   year VARCHAR(20) NOT NULL,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
@@ -130,19 +130,19 @@ CREATE TABLE school_xx_sessions (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_sessions_school ON school_xx_sessions(school_id);
+CREATE INDEX idx_sessions_school ON sessions(school_id);
 
 -- ============================================
 -- 8. Users
 -- ============================================
-CREATE TABLE school_xx_users (
+CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   auth_user_id UUID UNIQUE,
   organization_id UUID,
   username VARCHAR(100) NOT NULL UNIQUE,
   email VARCHAR(255),
   name VARCHAR(255) NOT NULL,
-  role_id UUID NOT NULL REFERENCES school_xx_roles(id) ON DELETE RESTRICT,
+  role_id UUID NOT NULL REFERENCES roles(id) ON DELETE RESTRICT,
   password_hash VARCHAR(255),
   must_change_password BOOLEAN DEFAULT TRUE,
   is_active BOOLEAN DEFAULT TRUE,
@@ -152,16 +152,16 @@ CREATE TABLE school_xx_users (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_users_organization ON school_xx_users(organization_id);
-CREATE INDEX idx_users_role ON school_xx_users(role_id);
-CREATE INDEX idx_users_auth_user ON school_xx_users(auth_user_id);
+CREATE INDEX idx_users_organization ON users(organization_id);
+CREATE INDEX idx_users_role ON users(role_id);
+CREATE INDEX idx_users_auth_user ON users(auth_user_id);
 
 -- ============================================
 -- 9. Classes (academic class per session)
 -- ============================================
-CREATE TABLE school_xx_classes (
+CREATE TABLE classes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   registration_fees NUMERIC(10, 2) DEFAULT 0,
   annual_fund NUMERIC(10, 2) DEFAULT 0,
@@ -172,15 +172,15 @@ CREATE TABLE school_xx_classes (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_classes_session ON school_xx_classes(session_id);
+CREATE INDEX idx_classes_session ON classes(session_id);
 
 -- ============================================
 -- 10. Students (identity only; fees in enrollments)
 -- ============================================
-CREATE TABLE school_xx_students (
+CREATE TABLE students (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id UUID NOT NULL REFERENCES school_xx_schools(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES school_xx_users(id) ON DELETE SET NULL,
+  school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
   student_id VARCHAR(50) NOT NULL,
   fee_type VARCHAR(50) DEFAULT 'Regular',
@@ -192,22 +192,22 @@ CREATE TABLE school_xx_students (
   blood_group VARCHAR(10),
   health_issues TEXT,
   photo_url TEXT,
-  sibling_id UUID REFERENCES school_xx_students(id) ON DELETE SET NULL,
+  sibling_id UUID REFERENCES students(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_students_school ON school_xx_students(school_id);
-CREATE INDEX idx_students_user ON school_xx_students(user_id);
-CREATE UNIQUE INDEX idx_students_school_student_id ON school_xx_students(school_id, student_id);
+CREATE INDEX idx_students_school ON students(school_id);
+CREATE INDEX idx_students_user ON students(user_id);
+CREATE UNIQUE INDEX idx_students_school_student_id ON students(school_id, student_id);
 
 -- ============================================
 -- 11. Student Enrollments (per session; fee structure)
 -- ============================================
-CREATE TABLE school_xx_student_enrollments (
+CREATE TABLE student_enrollments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id UUID NOT NULL REFERENCES school_xx_students(id) ON DELETE CASCADE,
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
-  class_id UUID REFERENCES school_xx_classes(id) ON DELETE SET NULL,
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  class_id UUID REFERENCES classes(id) ON DELETE SET NULL,
   registration_fees NUMERIC(10, 2),
   annual_fund NUMERIC(10, 2),
   monthly_fees NUMERIC(10, 2),
@@ -224,16 +224,16 @@ CREATE TABLE school_xx_student_enrollments (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(student_id, session_id)
 );
-CREATE INDEX idx_enrollments_session ON school_xx_student_enrollments(session_id);
-CREATE INDEX idx_enrollments_student ON school_xx_student_enrollments(student_id);
-CREATE INDEX idx_enrollments_class ON school_xx_student_enrollments(class_id);
+CREATE INDEX idx_enrollments_session ON student_enrollments(session_id);
+CREATE INDEX idx_enrollments_student ON student_enrollments(student_id);
+CREATE INDEX idx_enrollments_class ON student_enrollments(class_id);
 
 -- ============================================
 -- 12. Fee Payments (per enrollment)
 -- ============================================
-CREATE TABLE school_xx_fee_payments (
+CREATE TABLE fee_payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  enrollment_id UUID NOT NULL REFERENCES school_xx_student_enrollments(id) ON DELETE CASCADE,
+  enrollment_id UUID NOT NULL REFERENCES student_enrollments(id) ON DELETE CASCADE,
   student_id UUID,
   date DATE NOT NULL,
   amount NUMERIC(10, 2) NOT NULL,
@@ -246,15 +246,15 @@ CREATE TABLE school_xx_fee_payments (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_fee_payments_enrollment ON school_xx_fee_payments(enrollment_id);
+CREATE INDEX idx_fee_payments_enrollment ON fee_payments(enrollment_id);
 
 -- ============================================
 -- 13. Staff
 -- ============================================
-CREATE TABLE school_xx_staff (
+CREATE TABLE staff (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES school_xx_users(id) ON DELETE SET NULL,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
   employee_id VARCHAR(50) NOT NULL,
   role VARCHAR(50) NOT NULL,
@@ -270,15 +270,15 @@ CREATE TABLE school_xx_staff (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_staff_session ON school_xx_staff(session_id);
-CREATE INDEX idx_staff_user ON school_xx_staff(user_id);
+CREATE INDEX idx_staff_session ON staff(session_id);
+CREATE INDEX idx_staff_user ON staff(user_id);
 
 -- ============================================
 -- 14. Salary Payments
 -- ============================================
-CREATE TABLE school_xx_salary_payments (
+CREATE TABLE salary_payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  staff_id UUID NOT NULL REFERENCES school_xx_staff(id) ON DELETE CASCADE,
+  staff_id UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
   month VARCHAR(7) NOT NULL,
   expected_amount NUMERIC(10, 2) NOT NULL,
   paid_amount NUMERIC(10, 2) DEFAULT 0,
@@ -301,14 +301,14 @@ CREATE TABLE school_xx_salary_payments (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_salary_payments_staff ON school_xx_salary_payments(staff_id);
+CREATE INDEX idx_salary_payments_staff ON salary_payments(staff_id);
 
 -- ============================================
 -- 15. Leave Types
 -- ============================================
-CREATE TABLE school_xx_leave_types (
+CREATE TABLE leave_types (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   code VARCHAR(20) NOT NULL,
   applicable_to VARCHAR(10) NOT NULL CHECK (applicable_to IN ('staff', 'student', 'both')),
@@ -319,15 +319,15 @@ CREATE TABLE school_xx_leave_types (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_leave_types_session ON school_xx_leave_types(session_id);
+CREATE INDEX idx_leave_types_session ON leave_types(session_id);
 
 -- ============================================
 -- 16. Leave Balances
 -- ============================================
-CREATE TABLE school_xx_leave_balances (
+CREATE TABLE leave_balances (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  staff_id UUID NOT NULL REFERENCES school_xx_staff(id) ON DELETE CASCADE,
-  leave_type_id UUID NOT NULL REFERENCES school_xx_leave_types(id) ON DELETE CASCADE,
+  staff_id UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  leave_type_id UUID NOT NULL REFERENCES leave_types(id) ON DELETE CASCADE,
   year VARCHAR(10) NOT NULL,
   total_days INTEGER NOT NULL DEFAULT 0,
   used_days INTEGER NOT NULL DEFAULT 0,
@@ -335,19 +335,19 @@ CREATE TABLE school_xx_leave_balances (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(staff_id, leave_type_id, year)
 );
-CREATE INDEX idx_leave_balances_staff ON school_xx_leave_balances(staff_id);
-CREATE INDEX idx_leave_balances_leave_type ON school_xx_leave_balances(leave_type_id);
+CREATE INDEX idx_leave_balances_staff ON leave_balances(staff_id);
+CREATE INDEX idx_leave_balances_leave_type ON leave_balances(leave_type_id);
 
 -- ============================================
 -- 17. Leave Requests
 -- ============================================
-CREATE TABLE school_xx_leave_requests (
+CREATE TABLE leave_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
-  leave_type_id UUID REFERENCES school_xx_leave_types(id) ON DELETE SET NULL,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  leave_type_id UUID REFERENCES leave_types(id) ON DELETE SET NULL,
   applicant_type VARCHAR(10) NOT NULL CHECK (applicant_type IN ('staff', 'student')),
-  staff_id UUID REFERENCES school_xx_staff(id) ON DELETE CASCADE,
-  student_id UUID REFERENCES school_xx_students(id) ON DELETE CASCADE,
+  staff_id UUID REFERENCES staff(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE,
   from_date DATE NOT NULL,
   to_date DATE NOT NULL,
   days_count INTEGER NOT NULL,
@@ -355,24 +355,24 @@ CREATE TABLE school_xx_leave_requests (
   document_url TEXT,
   status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
   applied_at TIMESTAMPTZ DEFAULT NOW(),
-  reviewed_by UUID REFERENCES school_xx_users(id) ON DELETE SET NULL,
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
   reviewed_at TIMESTAMPTZ,
   reviewer_remarks TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   CHECK (staff_id IS NOT NULL OR student_id IS NOT NULL)
 );
-CREATE INDEX idx_leave_requests_session ON school_xx_leave_requests(session_id);
-CREATE INDEX idx_leave_requests_staff ON school_xx_leave_requests(staff_id);
-CREATE INDEX idx_leave_requests_student ON school_xx_leave_requests(student_id);
-CREATE INDEX idx_leave_requests_leave_type ON school_xx_leave_requests(leave_type_id);
+CREATE INDEX idx_leave_requests_session ON leave_requests(session_id);
+CREATE INDEX idx_leave_requests_staff ON leave_requests(staff_id);
+CREATE INDEX idx_leave_requests_student ON leave_requests(student_id);
+CREATE INDEX idx_leave_requests_leave_type ON leave_requests(leave_type_id);
 
 -- ============================================
 -- 18. Expenses
 -- ============================================
-CREATE TABLE school_xx_expenses (
+CREATE TABLE expenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   amount NUMERIC(10, 2) NOT NULL,
   category VARCHAR(50) NOT NULL,
@@ -383,14 +383,14 @@ CREATE TABLE school_xx_expenses (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_expenses_session ON school_xx_expenses(session_id);
+CREATE INDEX idx_expenses_session ON expenses(session_id);
 
 -- ============================================
 -- 19. Stocks
 -- ============================================
-CREATE TABLE school_xx_stocks (
+CREATE TABLE stocks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   publisher_name VARCHAR(255) NOT NULL,
   description TEXT,
   purchase_date DATE NOT NULL,
@@ -402,14 +402,14 @@ CREATE TABLE school_xx_stocks (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_stocks_session ON school_xx_stocks(session_id);
+CREATE INDEX idx_stocks_session ON stocks(session_id);
 
 -- ============================================
 -- 20. Stock Transactions
 -- ============================================
-CREATE TABLE school_xx_stock_transactions (
+CREATE TABLE stock_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  stock_id UUID NOT NULL REFERENCES school_xx_stocks(id) ON DELETE CASCADE,
+  stock_id UUID NOT NULL REFERENCES stocks(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   type VARCHAR(20) NOT NULL,
   amount NUMERIC(10, 2) NOT NULL,
@@ -419,14 +419,14 @@ CREATE TABLE school_xx_stock_transactions (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_stock_transactions_stock ON school_xx_stock_transactions(stock_id);
+CREATE INDEX idx_stock_transactions_stock ON stock_transactions(stock_id);
 
 -- ============================================
 -- 21. Fixed Monthly Costs
 -- ============================================
-CREATE TABLE school_xx_fixed_monthly_costs (
+CREATE TABLE fixed_monthly_costs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   amount NUMERIC(10, 2) NOT NULL,
   category VARCHAR(50) NOT NULL,
@@ -434,14 +434,14 @@ CREATE TABLE school_xx_fixed_monthly_costs (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_fixed_costs_session ON school_xx_fixed_monthly_costs(session_id);
+CREATE INDEX idx_fixed_costs_session ON fixed_monthly_costs(session_id);
 
 -- ============================================
 -- 22. User Subscriptions
 -- ============================================
-CREATE TABLE school_xx_user_subscriptions (
+CREATE TABLE user_subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL UNIQUE REFERENCES school_xx_users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   razorpay_subscription_id TEXT,
   razorpay_payment_id TEXT,
   plan_type VARCHAR(20) NOT NULL DEFAULT 'free',
@@ -452,12 +452,12 @@ CREATE TABLE school_xx_user_subscriptions (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_user_subscriptions_user ON school_xx_user_subscriptions(user_id);
+CREATE INDEX idx_user_subscriptions_user ON user_subscriptions(user_id);
 
 -- ============================================
 -- 23. Premium Coupons
 -- ============================================
-CREATE TABLE school_xx_premium_coupons (
+CREATE TABLE premium_coupons (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code TEXT NOT NULL UNIQUE,
   max_uses INTEGER NOT NULL DEFAULT 1,
@@ -471,47 +471,47 @@ CREATE TABLE school_xx_premium_coupons (
 -- ============================================
 -- 24. Coupon Redemptions
 -- ============================================
-CREATE TABLE school_xx_coupon_redemptions (
+CREATE TABLE coupon_redemptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES school_xx_users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   user_email VARCHAR(255),
   coupon_code TEXT NOT NULL,
-  coupon_id UUID NOT NULL REFERENCES school_xx_premium_coupons(id) ON DELETE CASCADE,
+  coupon_id UUID NOT NULL REFERENCES premium_coupons(id) ON DELETE CASCADE,
   redeemed_at TIMESTAMPTZ DEFAULT NOW(),
   success BOOLEAN NOT NULL DEFAULT TRUE
 );
-CREATE INDEX idx_coupon_redemptions_user ON school_xx_coupon_redemptions(user_id);
-CREATE INDEX idx_coupon_redemptions_coupon ON school_xx_coupon_redemptions(coupon_id);
+CREATE INDEX idx_coupon_redemptions_user ON coupon_redemptions(user_id);
+CREATE INDEX idx_coupon_redemptions_coupon ON coupon_redemptions(coupon_id);
 
 -- ============================================
 -- 25. Assistant Chat Messages
 -- ============================================
-CREATE TABLE school_xx_assistant_chat_messages (
+CREATE TABLE assistant_chat_messages (
   id TEXT PRIMARY KEY,
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
-  organization_id UUID REFERENCES school_xx_organizations(id) ON DELETE SET NULL,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
   role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant')),
   content TEXT NOT NULL,
   is_error BOOLEAN DEFAULT FALSE,
   analytics JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_assistant_chat_messages_session ON school_xx_assistant_chat_messages(session_id);
-CREATE INDEX idx_assistant_chat_messages_org ON school_xx_assistant_chat_messages(organization_id);
-CREATE INDEX idx_assistant_chat_messages_created ON school_xx_assistant_chat_messages(session_id, created_at);
+CREATE INDEX idx_assistant_chat_messages_session ON assistant_chat_messages(session_id);
+CREATE INDEX idx_assistant_chat_messages_org ON assistant_chat_messages(organization_id);
+CREATE INDEX idx_assistant_chat_messages_created ON assistant_chat_messages(session_id, created_at);
 
 -- ============================================
 -- Optional: Add FK from users to staff/student (uncomment if desired)
 -- ============================================
--- ALTER TABLE school_xx_users ADD CONSTRAINT fk_users_staff
---   FOREIGN KEY (staff_id) REFERENCES school_xx_staff(id) ON DELETE SET NULL;
--- ALTER TABLE school_xx_users ADD CONSTRAINT fk_users_student
---   FOREIGN KEY (student_id) REFERENCES school_xx_students(id) ON DELETE SET NULL;
+-- ALTER TABLE users ADD CONSTRAINT fk_users_staff
+--   FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE SET NULL;
+-- ALTER TABLE users ADD CONSTRAINT fk_users_student
+--   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL;
 
 -- ============================================
 -- Seed permissions (idempotent)
 -- ============================================
-INSERT INTO school_xx_permissions (id, module, action, description) VALUES
+INSERT INTO permissions (id, module, action, description) VALUES
   ('dashboard:view', 'dashboard', 'view', 'View dashboard'),
   ('students:view', 'students', 'view', 'View students'),
   ('students:create', 'students', 'create', 'Create students'),

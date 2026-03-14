@@ -1,12 +1,12 @@
 -- School Management System Database Schema
--- All tables prefixed with school_xx_ to avoid conflicts with existing tables
+-- All tables use standard names (roles, users, schools, etc.)
 
 -- ============================================
 -- ROLES AND PERMISSIONS
 -- ============================================
 
 -- Roles table
-CREATE TABLE IF NOT EXISTS school_xx_roles (
+CREATE TABLE IF NOT EXISTS roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(100) NOT NULL UNIQUE,
   description TEXT,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS school_xx_roles (
 );
 
 -- Permissions lookup table
-CREATE TABLE IF NOT EXISTS school_xx_permissions (
+CREATE TABLE IF NOT EXISTS permissions (
   id VARCHAR(50) PRIMARY KEY, -- e.g., 'students:view', 'staff:edit'
   module VARCHAR(50) NOT NULL, -- e.g., 'students', 'staff', 'expenses'
   action VARCHAR(50) NOT NULL, -- e.g., 'view', 'create', 'edit', 'delete'
@@ -24,10 +24,10 @@ CREATE TABLE IF NOT EXISTS school_xx_permissions (
 );
 
 -- Role-Permission mapping
-CREATE TABLE IF NOT EXISTS school_xx_role_permissions (
+CREATE TABLE IF NOT EXISTS role_permissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  role_id UUID NOT NULL REFERENCES school_xx_roles(id) ON DELETE CASCADE,
-  permission_id VARCHAR(50) NOT NULL REFERENCES school_xx_permissions(id) ON DELETE CASCADE,
+  role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+  permission_id VARCHAR(50) NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(role_id, permission_id)
 );
@@ -37,13 +37,13 @@ CREATE TABLE IF NOT EXISTS school_xx_role_permissions (
 -- ============================================
 
 -- Users table (extends Supabase auth.users)
-CREATE TABLE IF NOT EXISTS school_xx_users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   auth_user_id UUID UNIQUE, -- Link to Supabase auth.users (nullable for local auth)
   username VARCHAR(100) NOT NULL UNIQUE,
   email VARCHAR(255),
   name VARCHAR(255) NOT NULL,
-  role_id UUID NOT NULL REFERENCES school_xx_roles(id),
+  role_id UUID NOT NULL REFERENCES roles(id),
   password_hash VARCHAR(255), -- For local auth (bcrypt hash)
   must_change_password BOOLEAN DEFAULT TRUE,
   is_active BOOLEAN DEFAULT TRUE,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS school_xx_users (
 -- ============================================
 
 -- Schools
-CREATE TABLE IF NOT EXISTS school_xx_schools (
+CREATE TABLE IF NOT EXISTS schools (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   address TEXT,
@@ -72,9 +72,9 @@ CREATE TABLE IF NOT EXISTS school_xx_schools (
 );
 
 -- Academic Sessions
-CREATE TABLE IF NOT EXISTS school_xx_sessions (
+CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id UUID NOT NULL REFERENCES school_xx_schools(id) ON DELETE CASCADE,
+  school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
   year VARCHAR(20) NOT NULL, -- e.g., "2024-2025"
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
@@ -90,9 +90,9 @@ CREATE TABLE IF NOT EXISTS school_xx_sessions (
 -- ============================================
 
 -- Student Classes
-CREATE TABLE IF NOT EXISTS school_xx_classes (
+CREATE TABLE IF NOT EXISTS classes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL, -- e.g., "Class 1", "Nursery"
   registration_fees DECIMAL(10,2) DEFAULT 0,  /* Registration/Admission fees (one-time) */
   annual_fund DECIMAL(10,2) DEFAULT 0,
@@ -110,11 +110,11 @@ CREATE TABLE IF NOT EXISTS school_xx_classes (
 -- ============================================
 
 -- Students
-CREATE TABLE IF NOT EXISTS school_xx_students (
+CREATE TABLE IF NOT EXISTS students (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
-  class_id UUID REFERENCES school_xx_classes(id) ON DELETE SET NULL,
-  user_id UUID REFERENCES school_xx_users(id) ON DELETE SET NULL, -- For student portal login
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  class_id UUID REFERENCES classes(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- For student portal login
   
   -- Basic Info
   name VARCHAR(255) NOT NULL,
@@ -156,9 +156,9 @@ CREATE TABLE IF NOT EXISTS school_xx_students (
 );
 
 -- Fee Payments (normalized from embedded array)
-CREATE TABLE IF NOT EXISTS school_xx_fee_payments (
+CREATE TABLE IF NOT EXISTS fee_payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id UUID NOT NULL REFERENCES school_xx_students(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
   method VARCHAR(50) NOT NULL, -- Cash, Cheque, Online, Bank Transfer
@@ -175,10 +175,10 @@ CREATE TABLE IF NOT EXISTS school_xx_fee_payments (
 -- ============================================
 
 -- Staff Members
-CREATE TABLE IF NOT EXISTS school_xx_staff (
+CREATE TABLE IF NOT EXISTS staff (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES school_xx_users(id) ON DELETE SET NULL, -- For staff portal login
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- For staff portal login
   
   name VARCHAR(255) NOT NULL,
   employee_id VARCHAR(50) NOT NULL, -- Display ID like EMP-001
@@ -200,9 +200,9 @@ CREATE TABLE IF NOT EXISTS school_xx_staff (
 );
 
 -- Salary Payments (normalized from embedded array)
-CREATE TABLE IF NOT EXISTS school_xx_salary_payments (
+CREATE TABLE IF NOT EXISTS salary_payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  staff_id UUID NOT NULL REFERENCES school_xx_staff(id) ON DELETE CASCADE,
+  staff_id UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
   month VARCHAR(7) NOT NULL, -- YYYY-MM
   expected_amount DECIMAL(10,2) NOT NULL,
   paid_amount DECIMAL(10,2) DEFAULT 0,
@@ -221,9 +221,9 @@ CREATE TABLE IF NOT EXISTS school_xx_salary_payments (
 -- EXPENSES
 -- ============================================
 
-CREATE TABLE IF NOT EXISTS school_xx_expenses (
+CREATE TABLE IF NOT EXISTS expenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
   category VARCHAR(50) NOT NULL, -- Transportation, Events, Utilities, Supplies, Infrastructure, Miscellaneous
@@ -239,9 +239,9 @@ CREATE TABLE IF NOT EXISTS school_xx_expenses (
 -- STOCKS
 -- ============================================
 
-CREATE TABLE IF NOT EXISTS school_xx_stocks (
+CREATE TABLE IF NOT EXISTS stocks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES school_xx_sessions(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   publisher_name VARCHAR(255) NOT NULL,
   description TEXT,
   purchase_date DATE NOT NULL,
@@ -255,9 +255,9 @@ CREATE TABLE IF NOT EXISTS school_xx_stocks (
 );
 
 -- Stock Transactions (normalized from embedded array)
-CREATE TABLE IF NOT EXISTS school_xx_stock_transactions (
+CREATE TABLE IF NOT EXISTS stock_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  stock_id UUID NOT NULL REFERENCES school_xx_stocks(id) ON DELETE CASCADE,
+  stock_id UUID NOT NULL REFERENCES stocks(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   type VARCHAR(20) NOT NULL, -- purchase, sale, return
   amount DECIMAL(10,2) NOT NULL,
@@ -272,76 +272,76 @@ CREATE TABLE IF NOT EXISTS school_xx_stock_transactions (
 -- INDEXES
 -- ============================================
 
-CREATE INDEX IF NOT EXISTS idx_school_xx_users_role ON school_xx_users(role_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_users_username ON school_xx_users(username);
-CREATE INDEX IF NOT EXISTS idx_school_xx_sessions_school ON school_xx_sessions(school_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_classes_session ON school_xx_classes(session_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_students_session ON school_xx_students(session_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_students_class ON school_xx_students(class_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_fee_payments_student ON school_xx_fee_payments(student_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_staff_session ON school_xx_staff(session_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_salary_payments_staff ON school_xx_salary_payments(staff_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_salary_payments_month ON school_xx_salary_payments(month);
-CREATE INDEX IF NOT EXISTS idx_school_xx_expenses_session ON school_xx_expenses(session_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_stocks_session ON school_xx_stocks(session_id);
-CREATE INDEX IF NOT EXISTS idx_school_xx_stock_transactions_stock ON school_xx_stock_transactions(stock_id);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role_id);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_sessions_school ON sessions(school_id);
+CREATE INDEX IF NOT EXISTS idx_classes_session ON classes(session_id);
+CREATE INDEX IF NOT EXISTS idx_students_session ON students(session_id);
+CREATE INDEX IF NOT EXISTS idx_students_class ON students(class_id);
+CREATE INDEX IF NOT EXISTS idx_fee_payments_student ON fee_payments(student_id);
+CREATE INDEX IF NOT EXISTS idx_staff_session ON staff(session_id);
+CREATE INDEX IF NOT EXISTS idx_salary_payments_staff ON salary_payments(staff_id);
+CREATE INDEX IF NOT EXISTS idx_salary_payments_month ON salary_payments(month);
+CREATE INDEX IF NOT EXISTS idx_expenses_session ON expenses(session_id);
+CREATE INDEX IF NOT EXISTS idx_stocks_session ON stocks(session_id);
+CREATE INDEX IF NOT EXISTS idx_stock_transactions_stock ON stock_transactions(stock_id);
 
 -- ============================================
 -- ROW LEVEL SECURITY
 -- ============================================
 
-ALTER TABLE school_xx_roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_permissions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_role_permissions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_schools ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_classes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_students ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_fee_payments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_staff ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_salary_payments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_expenses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_stocks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE school_xx_stock_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE permissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE role_permissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fee_payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
+ALTER TABLE salary_payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stock_transactions ENABLE ROW LEVEL SECURITY;
 
 -- Allow all operations for authenticated users (can be restricted later)
-CREATE POLICY "Allow all for authenticated" ON school_xx_roles FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_permissions FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_role_permissions FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_users FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_schools FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_sessions FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_classes FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_students FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_fee_payments FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_staff FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_salary_payments FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_expenses FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_stocks FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for authenticated" ON school_xx_stock_transactions FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON roles FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON permissions FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON role_permissions FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON users FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON schools FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON sessions FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON classes FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON students FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON fee_payments FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON staff FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON salary_payments FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON expenses FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON stocks FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for authenticated" ON stock_transactions FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- Allow anon access for development (remove in production)
-CREATE POLICY "Allow anon for dev" ON school_xx_roles FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_permissions FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_role_permissions FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_users FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_schools FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_sessions FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_classes FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_students FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_fee_payments FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_staff FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_salary_payments FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_expenses FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_stocks FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon for dev" ON school_xx_stock_transactions FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON roles FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON permissions FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON role_permissions FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON users FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON schools FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON sessions FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON classes FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON students FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON fee_payments FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON staff FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON salary_payments FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON expenses FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON stocks FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon for dev" ON stock_transactions FOR ALL TO anon USING (true) WITH CHECK (true);
 
 -- ============================================
 -- SEED DATA: Default Permissions
 -- ============================================
 
-INSERT INTO school_xx_permissions (id, module, action, description) VALUES
+INSERT INTO permissions (id, module, action, description) VALUES
   ('dashboard:view', 'dashboard', 'view', 'View dashboard'),
   ('students:view', 'students', 'view', 'View students'),
   ('students:create', 'students', 'create', 'Create students'),
@@ -383,7 +383,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Super Admin: SaaS provider, can add schools and lock app. Highest role.
 -- Admin: Full access except add schools and lock (stays below Super Admin)
-INSERT INTO school_xx_roles (id, name, description, is_system) VALUES
+INSERT INTO roles (id, name, description, is_system) VALUES
   ('00000000-0000-0000-0000-000000000000', 'Super Admin', 'SaaS provider: add schools, lock/unlock app', TRUE),
   ('00000000-0000-0000-0000-000000000001', 'Admin', 'Full system access (no add school / lock)', TRUE),
   ('00000000-0000-0000-0000-000000000002', 'Manager', 'School management access', FALSE),
@@ -392,24 +392,24 @@ INSERT INTO school_xx_roles (id, name, description, is_system) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Super Admin: all permissions (schools:create, app:lock, plans:manage, everything)
-INSERT INTO school_xx_role_permissions (role_id, permission_id)
-SELECT '00000000-0000-0000-0000-000000000000', id FROM school_xx_permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT '00000000-0000-0000-0000-000000000000', id FROM permissions
 ON CONFLICT DO NOTHING;
 
 -- Admin: all permissions EXCEPT schools:create, app:lock, and plans:manage (Admin has assistant:use)
-INSERT INTO school_xx_role_permissions (role_id, permission_id)
-SELECT '00000000-0000-0000-0000-000000000001', id FROM school_xx_permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT '00000000-0000-0000-0000-000000000001', id FROM permissions
 WHERE id NOT IN ('schools:create', 'app:lock', 'plans:manage')
 ON CONFLICT DO NOTHING;
 
 -- Manager permissions (most except roles:manage)
-INSERT INTO school_xx_role_permissions (role_id, permission_id)
-SELECT '00000000-0000-0000-0000-000000000002', id FROM school_xx_permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT '00000000-0000-0000-0000-000000000002', id FROM permissions
 WHERE id NOT IN ('roles:manage', 'users:delete')
 ON CONFLICT DO NOTHING;
 
 -- Teacher permissions (limited)
-INSERT INTO school_xx_role_permissions (role_id, permission_id) VALUES
+INSERT INTO role_permissions (role_id, permission_id) VALUES
   ('00000000-0000-0000-0000-000000000003', 'dashboard:view'),
   ('00000000-0000-0000-0000-000000000003', 'students:view'),
   ('00000000-0000-0000-0000-000000000003', 'staff:view'),
@@ -417,7 +417,7 @@ INSERT INTO school_xx_role_permissions (role_id, permission_id) VALUES
 ON CONFLICT DO NOTHING;
 
 -- Student permissions (view own only - handled in app logic)
-INSERT INTO school_xx_role_permissions (role_id, permission_id) VALUES
+INSERT INTO role_permissions (role_id, permission_id) VALUES
   ('00000000-0000-0000-0000-000000000004', 'dashboard:view')
 ON CONFLICT DO NOTHING;
 
@@ -427,13 +427,13 @@ ON CONFLICT DO NOTHING;
 
 -- Default Super Admin (username: superadmin, password: superadmin) - only this account can add schools and lock app. Cannot create more Super Admins.
 -- Password hash is bcrypt of 'superadmin'
-INSERT INTO school_xx_users (id, username, name, email, role_id, password_hash, must_change_password) VALUES
+INSERT INTO users (id, username, name, email, role_id, password_hash, must_change_password) VALUES
   ('00000000-0000-0000-0000-000000000010', 'superadmin', 'Super Administrator', 'superadmin@school.local', '00000000-0000-0000-0000-000000000000', '$2b$10$TWRDHvANAvjv3bJB72KOpOs1TdUqaGJhf/GA9M0cvcIqZ3z5d.ouG', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- Default admin user (username: admin, password: admin - should be changed on first login)
 -- Password hash is bcrypt of 'admin'
-INSERT INTO school_xx_users (id, username, name, email, role_id, password_hash, must_change_password) VALUES
+INSERT INTO users (id, username, name, email, role_id, password_hash, must_change_password) VALUES
   ('00000000-0000-0000-0000-000000000001', 'admin', 'Administrator', 'admin@school.local', '00000000-0000-0000-0000-000000000001', '$2a$10$X7UrE2J5PQb.4rCwVLi.s.7.Dh8L2Yx5z5b5b5b5b5b5b5b5b5b5b', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
@@ -442,7 +442,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================
 
 -- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION school_xx_update_updated_at()
+CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -457,10 +457,10 @@ DECLARE
 BEGIN
   FOR tbl IN 
     SELECT unnest(ARRAY[
-      'school_xx_roles', 'school_xx_users', 'school_xx_schools', 
-      'school_xx_sessions', 'school_xx_classes', 'school_xx_students',
-      'school_xx_fee_payments', 'school_xx_staff', 'school_xx_salary_payments',
-      'school_xx_expenses', 'school_xx_stocks', 'school_xx_stock_transactions'
+      'roles', 'users', 'schools', 
+      'sessions', 'classes', 'students',
+      'fee_payments', 'staff', 'salary_payments',
+      'expenses', 'stocks', 'stock_transactions'
     ])
   LOOP
     EXECUTE format('
@@ -468,14 +468,14 @@ BEGIN
       CREATE TRIGGER update_%s_updated_at
         BEFORE UPDATE ON %s
         FOR EACH ROW
-        EXECUTE FUNCTION school_xx_update_updated_at();
+        EXECUTE FUNCTION update_updated_at();
     ', tbl, tbl, tbl, tbl);
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
 -- Function to calculate late days for salary payments
-CREATE OR REPLACE FUNCTION school_xx_calculate_salary_late_days()
+CREATE OR REPLACE FUNCTION calculate_salary_late_days()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.payment_date IS NOT NULL AND NEW.due_date IS NOT NULL THEN
@@ -488,6 +488,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER calculate_salary_late_days
-  BEFORE INSERT OR UPDATE ON school_xx_salary_payments
+  BEFORE INSERT OR UPDATE ON salary_payments
   FOR EACH ROW
-  EXECUTE FUNCTION school_xx_calculate_salary_late_days();
+  EXECUTE FUNCTION calculate_salary_late_days();

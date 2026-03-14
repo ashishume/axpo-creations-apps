@@ -54,7 +54,7 @@ export const authRepository = {
   async signIn(credentials: LoginCredentials): Promise<{ user: User; permissions: Permission[] }> {
     const supabase = getSupabase();
     const { data: dbUser, error: userError } = await supabase
-      .from('school_xx_users')
+      .from('users')
       .select('*')
       .eq('username', credentials.username)
       .eq('is_active', true)
@@ -72,7 +72,7 @@ export const authRepository = {
     const { role, permissions } = await this.getRoleWithPermissions(dbUser.role_id);
 
     await supabase
-      .from('school_xx_users')
+      .from('users')
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', dbUser.id);
 
@@ -111,7 +111,7 @@ export const authRepository = {
     const newHash = await bcrypt.hash(request.newPassword, SALT_ROUNDS);
 
     const { data: dbUser, error } = await supabase
-      .from('school_xx_users')
+      .from('users')
       .select('password_hash')
       .eq('id', userId)
       .single();
@@ -126,7 +126,7 @@ export const authRepository = {
     }
 
     const { error: updateError } = await supabase
-      .from('school_xx_users')
+      .from('users')
       .update({
         password_hash: newHash,
         must_change_password: false,
@@ -148,7 +148,7 @@ export const authRepository = {
   async getRoleWithPermissions(roleId: string): Promise<{ role: Role; permissions: Permission[] }> {
     const supabase = getSupabase();
     const { data: dbRole, error: roleError } = await supabase
-      .from('school_xx_roles')
+      .from('roles')
       .select('*')
       .eq('id', roleId)
       .single();
@@ -158,7 +158,7 @@ export const authRepository = {
     }
 
     const { data: rolePerms } = await supabase
-      .from('school_xx_role_permissions')
+      .from('role_permissions')
       .select('permission_id')
       .eq('role_id', roleId);
 
@@ -203,7 +203,7 @@ export const authRepository = {
     };
     if (request.organizationId !== undefined) insert.organization_id = request.organizationId;
     const { data, error } = await supabase
-      .from('school_xx_users')
+      .from('users')
       .insert(insert)
       .select()
       .single();
@@ -241,7 +241,7 @@ export const authRepository = {
     const offset = (page - 1) * pageSize;
 
     let query = supabase
-      .from('school_xx_users')
+      .from('users')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
     if (organizationId) {
@@ -282,7 +282,7 @@ export const authRepository = {
   async getRoles(): Promise<Role[]> {
     const supabase = getSupabase();
     const { data: dbRoles, error } = await supabase
-      .from('school_xx_roles')
+      .from('roles')
       .select('*')
       .order('name');
 
@@ -319,7 +319,7 @@ export const authRepository = {
     if (request.studentId !== undefined) updates.student_id = request.studentId;
 
     const { data, error } = await supabase
-      .from('school_xx_users')
+      .from('users')
       .update(updates)
       .eq('id', userId)
       .select()
@@ -353,7 +353,7 @@ export const authRepository = {
   async deleteUser(userId: string): Promise<void> {
     const supabase = getSupabase();
     const { data: user } = await supabase
-      .from('school_xx_users')
+      .from('users')
       .select('role_id')
       .eq('id', userId)
       .single();
@@ -362,7 +362,7 @@ export const authRepository = {
       throw new Error('Cannot delete a Super Admin user.');
     }
 
-    const { error } = await supabase.from('school_xx_users').delete().eq('id', userId);
+    const { error } = await supabase.from('users').delete().eq('id', userId);
 
     if (error) {
       throw new Error('Failed to delete user');
@@ -374,7 +374,7 @@ export const authRepository = {
     const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
     const { error } = await supabase
-      .from('school_xx_users')
+      .from('users')
       .update({
         password_hash: passwordHash,
         must_change_password: true,

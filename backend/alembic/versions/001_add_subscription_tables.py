@@ -20,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     op.create_table(
-        "school_xx_premium_coupons",
+        "premium_coupons",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("code", sa.Text(), nullable=False),
         sa.Column("max_uses", sa.Integer(), nullable=False, server_default="1"),
@@ -31,15 +31,15 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
     op.create_unique_constraint(
-        "uq_school_xx_premium_coupons_code",
-        "school_xx_premium_coupons",
+        "uq_premium_coupons_code",
+        "premium_coupons",
         ["code"],
     )
 
     op.create_table(
-        "school_xx_user_subscriptions",
+        "user_subscriptions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("school_xx_users.id"), nullable=False),
+        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=False),
         sa.Column("razorpay_subscription_id", sa.Text(), nullable=True),
         sa.Column("razorpay_payment_id", sa.Text(), nullable=True),
         sa.Column("plan_type", sa.String(20), nullable=False, server_default="free"),
@@ -51,29 +51,29 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
     op.create_unique_constraint(
-        "uq_school_xx_user_subscriptions_user_id",
-        "school_xx_user_subscriptions",
+        "uq_user_subscriptions_user_id",
+        "user_subscriptions",
         ["user_id"],
     )
     op.create_index(
-        "ix_school_xx_user_subscriptions_razorpay_subscription_id",
-        "school_xx_user_subscriptions",
+        "ix_user_subscriptions_razorpay_subscription_id",
+        "user_subscriptions",
         ["razorpay_subscription_id"],
     )
 
     op.create_table(
-        "school_xx_coupon_redemptions",
+        "coupon_redemptions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("school_xx_users.id"), nullable=False),
+        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=False),
         sa.Column("user_email", sa.String(255), nullable=True),
         sa.Column("coupon_code", sa.Text(), nullable=False),
-        sa.Column("coupon_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("school_xx_premium_coupons.id"), nullable=False),
+        sa.Column("coupon_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("premium_coupons.id"), nullable=False),
         sa.Column("redeemed_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("success", sa.Boolean(), nullable=False, server_default="true"),
     )
 
 
 def downgrade() -> None:
-    op.drop_table("school_xx_coupon_redemptions")
-    op.drop_table("school_xx_user_subscriptions")
-    op.drop_table("school_xx_premium_coupons")
+    op.drop_table("coupon_redemptions")
+    op.drop_table("user_subscriptions")
+    op.drop_table("premium_coupons")

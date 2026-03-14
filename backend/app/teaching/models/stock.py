@@ -11,12 +11,12 @@ from app.core.database import TeachingBase
 
 
 class Stock(TeachingBase):
-    __tablename__ = "school_xx_stocks"
+    __tablename__ = "stocks"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_sessions.id", ondelete="CASCADE"),
+        ForeignKey("sessions.id", ondelete="CASCADE"),
         nullable=False,
     )
     publisher_name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -36,12 +36,12 @@ class Stock(TeachingBase):
 
 
 class StockTransaction(TeachingBase):
-    __tablename__ = "school_xx_stock_transactions"
+    __tablename__ = "stock_transactions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     stock_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_stocks.id", ondelete="CASCADE"),
+        ForeignKey("stocks.id", ondelete="CASCADE"),
         nullable=False,
     )
     date: Mapped[date] = mapped_column(Date, nullable=False)

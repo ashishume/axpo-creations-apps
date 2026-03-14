@@ -15,12 +15,12 @@ from app.core.database import TeachingBase
 class OrgSubscription(TeachingBase):
     """Per-organization subscription (Razorpay recurring or manual grant)."""
 
-    __tablename__ = "school_xx_org_subscriptions"
+    __tablename__ = "org_subscriptions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_organizations.id"),
+        ForeignKey("organizations.id"),
         nullable=False,
         unique=True,
     )
@@ -41,12 +41,12 @@ class OrgSubscription(TeachingBase):
 class UserSubscription(TeachingBase):
     """Per-user subscription state for premium plan (Razorpay)."""
 
-    __tablename__ = "school_xx_user_subscriptions"
+    __tablename__ = "user_subscriptions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_users.id"),
+        ForeignKey("users.id"),
         nullable=False,
         unique=True,
     )
@@ -64,7 +64,7 @@ class UserSubscription(TeachingBase):
 class PremiumCoupon(TeachingBase):
     """Coupon codes that grant Premium access when redeemed."""
 
-    __tablename__ = "school_xx_premium_coupons"
+    __tablename__ = "premium_coupons"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     code: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
@@ -79,19 +79,19 @@ class PremiumCoupon(TeachingBase):
 class CouponRedemption(TeachingBase):
     """Log of coupon redemptions."""
 
-    __tablename__ = "school_xx_coupon_redemptions"
+    __tablename__ = "coupon_redemptions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_users.id"),
+        ForeignKey("users.id"),
         nullable=False,
     )
     user_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     coupon_code: Mapped[str] = mapped_column(Text, nullable=False)
     coupon_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_premium_coupons.id"),
+        ForeignKey("premium_coupons.id"),
         nullable=False,
     )
     redeemed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

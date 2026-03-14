@@ -12,12 +12,12 @@ from app.core.database import TeachingBase
 
 
 class LeaveType(TeachingBase):
-    __tablename__ = "school_xx_leave_types"
+    __tablename__ = "leave_types"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_sessions.id", ondelete="CASCADE"),
+        ForeignKey("sessions.id", ondelete="CASCADE"),
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -40,17 +40,17 @@ class LeaveType(TeachingBase):
 
 
 class LeaveBalance(TeachingBase):
-    __tablename__ = "school_xx_leave_balances"
+    __tablename__ = "leave_balances"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     staff_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_staff.id", ondelete="CASCADE"),
+        ForeignKey("staff.id", ondelete="CASCADE"),
         nullable=False,
     )
     leave_type_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_leave_types.id", ondelete="CASCADE"),
+        ForeignKey("leave_types.id", ondelete="CASCADE"),
         nullable=False,
     )
     year: Mapped[str] = mapped_column(String(10), nullable=False)
@@ -64,28 +64,28 @@ class LeaveBalance(TeachingBase):
 
 
 class LeaveRequest(TeachingBase):
-    __tablename__ = "school_xx_leave_requests"
+    __tablename__ = "leave_requests"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_sessions.id", ondelete="CASCADE"),
+        ForeignKey("sessions.id", ondelete="CASCADE"),
         nullable=False,
     )
     leave_type_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_leave_types.id", ondelete="SET NULL"),
+        ForeignKey("leave_types.id", ondelete="SET NULL"),
         nullable=True,
     )
     applicant_type: Mapped[str] = mapped_column(String(10), nullable=False)  # staff, student
     staff_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_staff.id", ondelete="CASCADE"),
+        ForeignKey("staff.id", ondelete="CASCADE"),
         nullable=True,
     )
     student_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_students.id", ondelete="CASCADE"),
+        ForeignKey("students.id", ondelete="CASCADE"),
         nullable=True,
     )
     from_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -97,7 +97,7 @@ class LeaveRequest(TeachingBase):
     applied_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     reviewed_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_users.id", ondelete="SET NULL"),
+        ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

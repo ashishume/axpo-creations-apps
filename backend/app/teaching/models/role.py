@@ -10,7 +10,7 @@ from app.core.database import TeachingBase
 
 
 class Role(TeachingBase):
-    __tablename__ = "school_xx_roles"
+    __tablename__ = "roles"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
@@ -21,7 +21,7 @@ class Role(TeachingBase):
 
 
 class Permission(TeachingBase):
-    __tablename__ = "school_xx_permissions"
+    __tablename__ = "permissions"
 
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
     module: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -30,17 +30,17 @@ class Permission(TeachingBase):
 
 
 class RolePermission(TeachingBase):
-    __tablename__ = "school_xx_role_permissions"
+    __tablename__ = "role_permissions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     role_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("school_xx_roles.id", ondelete="CASCADE"),
+        ForeignKey("roles.id", ondelete="CASCADE"),
         nullable=False,
     )
     permission_id: Mapped[str] = mapped_column(
         String(50),
-        ForeignKey("school_xx_permissions.id", ondelete="CASCADE"),
+        ForeignKey("permissions.id", ondelete="CASCADE"),
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

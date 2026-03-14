@@ -22,7 +22,7 @@ export const stocksRepository = {
   async getAll(): Promise<Stock[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_stocks')
+      .from('stocks')
       .select('*')
       .order('purchase_date', { ascending: false });
 
@@ -30,7 +30,7 @@ export const stocksRepository = {
 
     const stockIds = (data || []).map((s: { id: string }) => s.id);
     const { data: transactionsData } = stockIds.length > 0
-      ? await supabase.from('school_xx_stock_transactions').select('*').in('stock_id', stockIds)
+      ? await supabase.from('stock_transactions').select('*').in('stock_id', stockIds)
       : { data: [] };
 
     const transactionsByStock: Record<string, StockTransaction[]> = {};
@@ -54,7 +54,7 @@ export const stocksRepository = {
   async getBySession(sessionId: string): Promise<Stock[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_stocks')
+      .from('stocks')
       .select('*')
       .eq('session_id', sessionId)
       .order('purchase_date', { ascending: false });
@@ -63,7 +63,7 @@ export const stocksRepository = {
 
     const stockIds = (data || []).map((s: { id: string }) => s.id);
     const { data: transactionsData } = stockIds.length > 0
-      ? await supabase.from('school_xx_stock_transactions').select('*').in('stock_id', stockIds)
+      ? await supabase.from('stock_transactions').select('*').in('stock_id', stockIds)
       : { data: [] };
 
     const transactionsByStock: Record<string, StockTransaction[]> = {};
@@ -93,7 +93,7 @@ export const stocksRepository = {
     const offset = (page - 1) * pageSize;
 
     let query = supabase
-      .from('school_xx_stocks')
+      .from('stocks')
       .select('*', { count: 'exact' })
       .order('purchase_date', { ascending: false });
 
@@ -107,7 +107,7 @@ export const stocksRepository = {
 
     const stockIds = (data || []).map((s: { id: string }) => s.id);
     const { data: transactionsData } = stockIds.length > 0
-      ? await supabase.from('school_xx_stock_transactions').select('*').in('stock_id', stockIds)
+      ? await supabase.from('stock_transactions').select('*').in('stock_id', stockIds)
       : { data: [] };
 
     const transactionsByStock: Record<string, StockTransaction[]> = {};
@@ -139,7 +139,7 @@ export const stocksRepository = {
   async getById(id: string): Promise<Stock | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_stocks')
+      .from('stocks')
       .select('*')
       .eq('id', id)
       .single();
@@ -147,7 +147,7 @@ export const stocksRepository = {
     if (error || !data) return null;
 
     const { data: transactionsData } = await supabase
-      .from('school_xx_stock_transactions')
+      .from('stock_transactions')
       .select('*')
       .eq('stock_id', id);
 
@@ -169,7 +169,7 @@ export const stocksRepository = {
     const id = crypto.randomUUID();
 
     const { data, error } = await supabase
-      .from('school_xx_stocks')
+      .from('stocks')
       .insert({
         id,
         session_id: stock.sessionId,
@@ -204,7 +204,7 @@ export const stocksRepository = {
       settled_amount: s.settledAmount,
       notes: s.notes,
     }));
-    const { data, error } = await supabase.from('school_xx_stocks').insert(rows).select();
+    const { data, error } = await supabase.from('stocks').insert(rows).select();
     if (error) throw new Error('Failed to create stocks');
     return (data || []).map((row: Record<string, unknown>) => dbRowToStock(row, []));
   },
@@ -223,7 +223,7 @@ export const stocksRepository = {
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
 
     const { data, error } = await supabase
-      .from('school_xx_stocks')
+      .from('stocks')
       .update(dbUpdates)
       .eq('id', id)
       .select()
@@ -232,7 +232,7 @@ export const stocksRepository = {
     if (error) throw new Error('Failed to update stock');
 
     const { data: transactionsData } = await supabase
-      .from('school_xx_stock_transactions')
+      .from('stock_transactions')
       .select('*')
       .eq('stock_id', id);
 
@@ -252,7 +252,7 @@ export const stocksRepository = {
   async delete(id: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_stocks')
+      .from('stocks')
       .delete()
       .eq('id', id);
 
@@ -264,7 +264,7 @@ export const stocksRepository = {
     const id = crypto.randomUUID();
 
     const { data, error } = await supabase
-      .from('school_xx_stock_transactions')
+      .from('stock_transactions')
       .insert({
         id,
         stock_id: stockId,
@@ -294,7 +294,7 @@ export const stocksRepository = {
   async deleteTransaction(_stockId: string, transactionId: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_stock_transactions')
+      .from('stock_transactions')
       .delete()
       .eq('id', transactionId);
 

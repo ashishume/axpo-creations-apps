@@ -6,7 +6,7 @@ export const sessionsRepository = {
   async getAll(): Promise<Session[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_sessions')
+      .from('sessions')
       .select('*')
       .order('start_date', { ascending: false });
 
@@ -25,7 +25,7 @@ export const sessionsRepository = {
   async getBySchool(schoolId: string): Promise<Session[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_sessions')
+      .from('sessions')
       .select('*')
       .eq('school_id', schoolId)
       .order('start_date', { ascending: false });
@@ -47,7 +47,7 @@ export const sessionsRepository = {
     const offset = (page - 1) * pageSize;
 
     let query = supabase
-      .from('school_xx_sessions')
+      .from('sessions')
       .select('*', { count: 'exact' })
       .order('start_date', { ascending: false });
 
@@ -80,7 +80,7 @@ export const sessionsRepository = {
   async getById(id: string): Promise<Session | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_sessions')
+      .from('sessions')
       .select('*')
       .eq('id', id)
       .single();
@@ -102,7 +102,7 @@ export const sessionsRepository = {
     const id = crypto.randomUUID();
 
     const { data, error } = await supabase
-      .from('school_xx_sessions')
+      .from('sessions')
       .insert({
         id,
         school_id: session.schoolId,
@@ -136,7 +136,7 @@ export const sessionsRepository = {
     if (updates.salaryDueDay !== undefined) dbUpdates.salary_due_day = updates.salaryDueDay;
 
     const { data, error } = await supabase
-      .from('school_xx_sessions')
+      .from('sessions')
       .update(dbUpdates)
       .eq('id', id)
       .select()
@@ -157,7 +157,7 @@ export const sessionsRepository = {
   async delete(id: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_sessions')
+      .from('sessions')
       .delete()
       .eq('id', id);
 

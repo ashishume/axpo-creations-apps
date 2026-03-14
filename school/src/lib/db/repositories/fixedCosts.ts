@@ -16,7 +16,7 @@ export const fixedCostsRepository = {
   async getAll(): Promise<FixedMonthlyCost[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_fixed_monthly_costs')
+      .from('fixed_monthly_costs')
       .select('*')
       .order('name', { ascending: true });
 
@@ -27,7 +27,7 @@ export const fixedCostsRepository = {
   async getBySession(sessionId: string): Promise<FixedMonthlyCost[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_fixed_monthly_costs')
+      .from('fixed_monthly_costs')
       .select('*')
       .eq('session_id', sessionId)
       .order('name', { ascending: true });
@@ -39,7 +39,7 @@ export const fixedCostsRepository = {
   async getById(id: string): Promise<FixedMonthlyCost | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_fixed_monthly_costs')
+      .from('fixed_monthly_costs')
       .select('*')
       .eq('id', id)
       .single();
@@ -53,7 +53,7 @@ export const fixedCostsRepository = {
     const id = crypto.randomUUID();
 
     const { data, error } = await supabase
-      .from('school_xx_fixed_monthly_costs')
+      .from('fixed_monthly_costs')
       .insert({
         id,
         session_id: cost.sessionId,
@@ -80,7 +80,7 @@ export const fixedCostsRepository = {
       category: c.category,
       is_active: c.isActive ?? true,
     }));
-    const { data, error } = await supabase.from('school_xx_fixed_monthly_costs').insert(rows).select();
+    const { data, error } = await supabase.from('fixed_monthly_costs').insert(rows).select();
     if (error) throw new Error('Failed to create fixed costs');
     return (data || []).map(dbRowToFixedCost);
   },
@@ -95,7 +95,7 @@ export const fixedCostsRepository = {
     if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
 
     const { data, error } = await supabase
-      .from('school_xx_fixed_monthly_costs')
+      .from('fixed_monthly_costs')
       .update(dbUpdates)
       .eq('id', id)
       .select()
@@ -108,7 +108,7 @@ export const fixedCostsRepository = {
   async delete(id: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_fixed_monthly_costs')
+      .from('fixed_monthly_costs')
       .delete()
       .eq('id', id);
 

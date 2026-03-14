@@ -70,7 +70,7 @@ export const staffRepository = {
   async getAll(): Promise<Staff[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_staff')
+      .from('staff')
       .select('*')
       .order('name');
 
@@ -78,7 +78,7 @@ export const staffRepository = {
 
     const staffIds = (data || []).map((s: { id: string }) => s.id);
     const { data: salaryData } = await supabase
-      .from('school_xx_salary_payments')
+      .from('salary_payments')
       .select('*')
       .in('staff_id', staffIds);
 
@@ -95,7 +95,7 @@ export const staffRepository = {
   async getBySession(sessionId: string): Promise<Staff[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_staff')
+      .from('staff')
       .select('*')
       .eq('session_id', sessionId)
       .order('name');
@@ -104,7 +104,7 @@ export const staffRepository = {
 
     const staffIds = (data || []).map((s: { id: string }) => s.id);
     const { data: salaryData } = staffIds.length > 0
-      ? await supabase.from('school_xx_salary_payments').select('*').in('staff_id', staffIds)
+      ? await supabase.from('salary_payments').select('*').in('staff_id', staffIds)
       : { data: [] };
 
     const salaryByStaff: Record<string, ExtendedSalaryPayment[]> = {};
@@ -126,7 +126,7 @@ export const staffRepository = {
     const offset = (page - 1) * pageSize;
 
     let query = supabase
-      .from('school_xx_staff')
+      .from('staff')
       .select('*', { count: 'exact' })
       .order('name');
 
@@ -140,7 +140,7 @@ export const staffRepository = {
 
     const staffIds = (data || []).map((s: { id: string }) => s.id);
     const { data: salaryData } = staffIds.length > 0
-      ? await supabase.from('school_xx_salary_payments').select('*').in('staff_id', staffIds)
+      ? await supabase.from('salary_payments').select('*').in('staff_id', staffIds)
       : { data: [] };
 
     const salaryByStaff: Record<string, ExtendedSalaryPayment[]> = {};
@@ -164,7 +164,7 @@ export const staffRepository = {
   async getById(id: string): Promise<Staff | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_staff')
+      .from('staff')
       .select('*')
       .eq('id', id)
       .single();
@@ -172,7 +172,7 @@ export const staffRepository = {
     if (error || !data) return null;
 
     const { data: salaryData } = await supabase
-      .from('school_xx_salary_payments')
+      .from('salary_payments')
       .select('*')
       .eq('staff_id', id);
 
@@ -204,7 +204,7 @@ export const staffRepository = {
     }
 
     const { data, error } = await supabase
-      .from('school_xx_staff')
+      .from('staff')
       .insert(row)
       .select()
       .single();
@@ -236,7 +236,7 @@ export const staffRepository = {
       }
       return row;
     });
-    const { data, error } = await supabase.from('school_xx_staff').insert(rows).select();
+    const { data, error } = await supabase.from('staff').insert(rows).select();
     if (error) throw new Error(error.message || 'Failed to create staff members');
     return (data || []).map((row: Record<string, unknown>) => dbRowToStaff(row, []));
   },
@@ -252,7 +252,7 @@ export const staffRepository = {
     if (updates.subjectOrGrade !== undefined) dbUpdates.subject_or_grade = updates.subjectOrGrade;
 
     const { data, error } = await supabase
-      .from('school_xx_staff')
+      .from('staff')
       .update(dbUpdates)
       .eq('id', id)
       .select()
@@ -261,7 +261,7 @@ export const staffRepository = {
     if (error) throw new Error('Failed to update staff member');
 
     const { data: salaryData } = await supabase
-      .from('school_xx_salary_payments')
+      .from('salary_payments')
       .select('*')
       .eq('staff_id', id);
 
@@ -273,7 +273,7 @@ export const staffRepository = {
   async delete(id: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_staff')
+      .from('staff')
       .delete()
       .eq('id', id);
 
@@ -284,7 +284,7 @@ export const staffRepository = {
   async deleteAllBySession(sessionId: string): Promise<number> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_staff')
+      .from('staff')
       .delete()
       .eq('session_id', sessionId)
       .select('id');
@@ -302,7 +302,7 @@ export const staffRepository = {
     if (staffIds.length === 0) return 0;
     const supabase = getSupabase();
     const { data: rows, error: fetchError } = await supabase
-      .from('school_xx_staff')
+      .from('staff')
       .select('*')
       .in('id', staffIds)
       .eq('session_id', params.fromSessionId);
@@ -323,7 +323,7 @@ export const staffRepository = {
       per_day_salary: row.per_day_salary ?? null,
       classes_subjects: row.classes_subjects ?? null,
     }));
-    const { error: insertError } = await supabase.from('school_xx_staff').insert(inserts);
+    const { error: insertError } = await supabase.from('staff').insert(inserts);
     if (insertError) throw new Error('Failed to transfer staff');
     return inserts.length;
   },
@@ -334,7 +334,7 @@ export const staffRepository = {
     
     // Check if a payment already exists for this month (for partial payment continuation)
     const { data: existing } = await supabase
-      .from('school_xx_salary_payments')
+      .from('salary_payments')
       .select('id')
       .eq('staff_id', staffId)
       .eq('month', payment.month)
@@ -370,7 +370,7 @@ export const staffRepository = {
     if (existing) {
       // Update existing payment (partial payment scenario)
       const result = await supabase
-        .from('school_xx_salary_payments')
+        .from('salary_payments')
         .update(paymentData)
         .eq('id', existing.id)
         .select()
@@ -380,7 +380,7 @@ export const staffRepository = {
     } else {
       // Insert new payment
       const result = await supabase
-        .from('school_xx_salary_payments')
+        .from('salary_payments')
         .insert({ id: crypto.randomUUID(), ...paymentData })
         .select()
         .single();
@@ -430,7 +430,7 @@ export const staffRepository = {
       payment_date: payment.paymentDate,
       method: payment.method,
     }));
-    const { error } = await supabase.from('school_xx_salary_payments').insert(rows);
+    const { error } = await supabase.from('salary_payments').insert(rows);
     if (error) throw new Error('Failed to add salary payments');
   },
 
@@ -446,7 +446,7 @@ export const staffRepository = {
     if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
 
     const { data, error } = await supabase
-      .from('school_xx_salary_payments')
+      .from('salary_payments')
       .update(dbUpdates)
       .eq('id', paymentId)
       .select()
@@ -478,7 +478,7 @@ export const staffRepository = {
   async deleteSalaryPayment(_staffId: string, paymentId: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_salary_payments')
+      .from('salary_payments')
       .delete()
       .eq('id', paymentId);
 

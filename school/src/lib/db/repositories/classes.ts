@@ -20,7 +20,7 @@ export const classesRepository = {
   async getAll(): Promise<StudentClass[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_classes')
+      .from('classes')
       .select('*')
       .order('name');
 
@@ -31,7 +31,7 @@ export const classesRepository = {
   async getBySession(sessionId: string): Promise<StudentClass[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_classes')
+      .from('classes')
       .select('*')
       .eq('session_id', sessionId)
       .order('name');
@@ -45,7 +45,7 @@ export const classesRepository = {
     const offset = (page - 1) * pageSize;
 
     let query = supabase
-      .from('school_xx_classes')
+      .from('classes')
       .select('*', { count: 'exact' })
       .order('name');
 
@@ -69,7 +69,7 @@ export const classesRepository = {
   async getById(id: string): Promise<StudentClass | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
-      .from('school_xx_classes')
+      .from('classes')
       .select('*')
       .eq('id', id)
       .single();
@@ -83,7 +83,7 @@ export const classesRepository = {
     const id = crypto.randomUUID();
 
     const { data, error } = await supabase
-      .from('school_xx_classes')
+      .from('classes')
       .insert({
         id,
         session_id: studentClass.sessionId,
@@ -116,7 +116,7 @@ export const classesRepository = {
       late_fee_frequency: c.lateFeeFrequency,
       due_day_of_month: c.dueDayOfMonth,
     }));
-    const { data, error } = await supabase.from('school_xx_classes').insert(rows).select();
+    const { data, error } = await supabase.from('classes').insert(rows).select();
     if (error) throw new Error('Failed to create classes');
     return (data || []).map(mapRow);
   },
@@ -134,7 +134,7 @@ export const classesRepository = {
     if (updates.dueDayOfMonth !== undefined) dbUpdates.due_day_of_month = updates.dueDayOfMonth;
 
     const { data, error } = await supabase
-      .from('school_xx_classes')
+      .from('classes')
       .update(dbUpdates)
       .eq('id', id)
       .select()
@@ -147,7 +147,7 @@ export const classesRepository = {
   async delete(id: string): Promise<void> {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('school_xx_classes')
+      .from('classes')
       .delete()
       .eq('id', id);
 
