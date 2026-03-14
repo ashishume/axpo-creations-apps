@@ -31,18 +31,35 @@ def _f(v: Decimal | float) -> float:
     return float(v) if v else 0.0
 
 
+# Match frontend: 20% sibling discount, applied when has_sibling_discount or sibling_id is set
+_SIBLING_DISCOUNT_RATE = 0.2
+
+
+def _has_sibling_discount(enrollment: StudentEnrollment) -> bool:
+    if not enrollment.student:
+        return False
+    s = enrollment.student
+    return bool(s.has_sibling_discount or s.sibling_id)
+
+
 def _calc_total_annual_fees(enrollment: StudentEnrollment, class_map: dict[UUID, Class]) -> float:
     cls = class_map.get(enrollment.class_id) if enrollment.class_id else None
     reg = float(enrollment.registration_fees or (cls.registration_fees if cls else _ZERO))
     ann = float(enrollment.annual_fund or (cls.annual_fund if cls else _ZERO))
     monthly = float(enrollment.monthly_fees or (cls.monthly_fees if cls else _ZERO))
     transport = float(enrollment.transport_fees or _ZERO)
-    sibling_disc = 0.3 if (enrollment.student and enrollment.student.sibling_id) else 0
+    sibling_disc = _SIBLING_DISCOUNT_RATE if _has_sibling_discount(enrollment) else 0
     discounted = monthly * (1 - sibling_disc)
     return reg + ann + (discounted * 12) + (transport * 12)
 
 
+def _is_frozen(enrollment: StudentEnrollment) -> bool:
+    return bool(enrollment.student and enrollment.student.is_frozen)
+
+
 def _get_target(enrollment: StudentEnrollment, class_map: dict[UUID, Class]) -> float:
+    if _is_frozen(enrollment):
+        return 0.0
     if enrollment.target_amount and float(enrollment.target_amount) > 0:
         return float(enrollment.target_amount)
     return _calc_total_annual_fees(enrollment, class_map)
@@ -112,22 +129,24 @@ async def compute_dashboard_stats(
     total_exp = sum(float(e.amount) for e in expenses)
     stock_purchase_exp = sum(float(e.amount) for e in expenses if e.category == "Stock Purchase")
     salary_exp_from_expenses = sum(float(e.amount) for e in expenses if e.category == "Salary")
-    # "From teachers" = actual salary payments from staff records (not just Expense entries)
+    # "From teachers" = actual salary paid (include Partially Paid so two partials = full month count)
     salary_exp = sum(
         float(sp.paid_amount)
         for st in staff_list
         for sp in st.salary_payments
-        if sp.status == "Paid"
+        if sp.paid_amount and sp.status in ("Paid", "Partially Paid")
     )
     # Total expenses: replace expense-based salary with actual salary payments
     total_exp = total_exp - salary_exp_from_expenses + salary_exp
     fc_exp = sum(float(e.amount) for e in expenses if e.category == "Fixed Cost")
     other_exp = total_exp - stock_purchase_exp - salary_exp - fc_exp
 
-    # --- Pending / Expected ---
-    total_expected = sum(_calc_total_annual_fees(e, class_map) for e in enrollments)
+    # --- Pending / Expected (exclude frozen students; match frontend getTargetAmount) ---
+    total_expected = sum(
+        _calc_total_annual_fees(e, class_map) for e in enrollments if not _is_frozen(e)
+    )
     pending_amount = sum(max(0.0, _get_target(e, class_map) - _total_paid(e)) for e in enrollments)
-    pending_count = sum(1 for e in enrollments if _total_paid(e) < _get_target(e, class_map))
+    pending_count = sum(1 for e in enrollments if _get_target(e, class_map) > 0 and _total_paid(e) < _get_target(e, class_map))
 
     # --- Obligations ---
     monthly_fc = sum(float(fc.amount) for fc in fixed_costs)
@@ -152,7 +171,7 @@ async def compute_dashboard_stats(
     # Include salary payments in monthly expenses (use payment_date or month)
     for st in staff_list:
         for sp in st.salary_payments:
-            if sp.status == "Paid" and sp.paid_amount:
+            if sp.paid_amount and sp.status in ("Paid", "Partially Paid"):
                 m = (sp.payment_date.isoformat()[:7] if sp.payment_date else sp.month)
                 by_month[m]["expenses"] += float(sp.paid_amount)
     monthly_data = sorted(
@@ -168,11 +187,15 @@ async def compute_dashboard_stats(
     cat_map["Salary"] = salary_exp
     expense_by_cat = [CategoryAmount(name=k, value=v) for k, v in cat_map.items()]
 
-    # --- Status distribution ---
+    # --- Status distribution (exclude frozen so they are not counted as "Fully Paid") ---
     fully = partially = not_paid = 0
     for e in enrollments:
+        if _is_frozen(e):
+            continue
         paid = _total_paid(e)
         target = _get_target(e, class_map)
+        if target <= 0:
+            continue
         if paid >= target:
             fully += 1
         elif paid > 0:
