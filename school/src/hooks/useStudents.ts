@@ -37,6 +37,32 @@ export async function refetchEnrollmentAndMergeIntoCache(
   );
 }
 
+/** Merge an updated session-student (from PATCH response) into bySession and infinite caches without refetching. */
+function mergeUpdatedStudentIntoSessionCache(
+  queryClient: QueryClient,
+  sessionId: string,
+  flattened: SessionStudentLike
+) {
+  const studentId = flattened.id;
+  const mergeInList = (list: SessionStudentLike[] | undefined) =>
+    Array.isArray(list) ? list.map((s) => (s.id === studentId ? flattened : s)) : list;
+
+  queryClient.setQueryData([QUERY_KEY, 'bySession', sessionId], mergeInList);
+  queryClient.setQueriesData<{ pages: { data: SessionStudentLike[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          data: mergeInList(page.data) ?? page.data,
+        })),
+      };
+    }
+  );
+}
+
 /** Invalidate session-scoped student list with minimal refetches: bySession once, infinite reset to page 1 then refetch once. */
 function invalidateSessionStudentList(queryClient: QueryClient, sessionId?: string | null) {
   if (sessionId) {
@@ -288,10 +314,16 @@ export function useUpdateStudent() {
       id: string;
       updates: Partial<Omit<Student, 'id' | 'payments'>>;
       sessionId?: string;
-    }) => studentsRepository.update(id, updates),
-    onSuccess: (_, { id, sessionId }) => {
-      invalidateSessionStudentList(queryClient, sessionId);
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, id] });
+    }) => studentsRepository.update(id, { ...updates, ...(sessionId != null && { sessionId }) }),
+    onSuccess: (data, { id, sessionId }) => {
+      if (sessionId && data && typeof data === 'object' && 'id' in data && 'payments' in data) {
+        mergeUpdatedStudentIntoSessionCache(queryClient, sessionId, data as SessionStudentLike);
+        queryClient.setQueryData([QUERY_KEY, id], data);
+      } else {
+        invalidateSessionStudentList(queryClient, sessionId);
+        if (data) queryClient.setQueryData([QUERY_KEY, id], data);
+        else queryClient.invalidateQueries({ queryKey: [QUERY_KEY, id] });
+      }
     },
   });
 }

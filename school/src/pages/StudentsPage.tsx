@@ -1516,7 +1516,8 @@ export function StudentsPage() {
             setDetailsStudent((prev) => prev ? { ...prev, initialTab: "feeHistory" } : null);
           }}
           onUpdateStudent={canEditStudent ? (data) => {
-            updateStudent(detailsStudent.student.id, data);
+            const s = detailsStudent.student as { enrollmentId?: string; sessionId?: string };
+            updateStudent(detailsStudent.student.id, { ...data, ...(s.enrollmentId && { enrollmentId: s.enrollmentId }) });
             toast("Student updated");
             setDetailsStudent({ student: { ...detailsStudent.student, ...data }, initialTab: detailsStudent.initialTab });
           } : undefined}
@@ -1524,7 +1525,8 @@ export function StudentsPage() {
             const frozenData = freeze
               ? { isFrozen: true, frozenAt: new Date().toISOString() }
               : { isFrozen: false, frozenAt: undefined };
-            updateStudent(detailsStudent.student.id, frozenData);
+            const s = detailsStudent.student as { enrollmentId?: string };
+            updateStudent(detailsStudent.student.id, { ...frozenData, ...(s.enrollmentId && { enrollmentId: s.enrollmentId }) });
             toast(freeze ? "Student account frozen" : "Student account unfrozen");
             setDetailsStudent({
               student: { ...detailsStudent.student, ...frozenData },

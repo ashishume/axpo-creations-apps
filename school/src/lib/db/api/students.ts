@@ -272,32 +272,50 @@ export const studentsRepositoryApi = {
     if (updates.lateFeeAmount !== undefined) enrollmentUpdates.late_fee_amount = updates.lateFeeAmount;
     if (updates.lateFeeFrequency !== undefined) enrollmentUpdates.late_fee_frequency = updates.lateFeeFrequency;
 
+    let patchStudentRes: Record<string, unknown> | null = null;
+    let patchEnrollmentRes: StudentEnrollment | null = null;
+
     // Update student identity if there are student-specific changes
     if (Object.keys(studentUpdates).length > 0) {
       const r = await teachingFetchJson<Record<string, unknown>>(`/students/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify(studentUpdates)
+        body: JSON.stringify(studentUpdates),
       });
+      patchStudentRes = r;
     }
 
-    // Update enrollment if there are enrollment-specific changes
-    if (Object.keys(enrollmentUpdates).length > 0) {
-      const enrollmentId =
-        updates.enrollmentId ??
-        (updates.sessionId
-          ? (await enrollmentsRepositoryApi.getByStudent(id)).find((e) => e.sessionId === updates.sessionId)?.id
-          : undefined);
-      if (enrollmentId) {
-        await teachingFetchJson<Record<string, unknown>>(`/students/enrollments/${enrollmentId}`, {
-          method: 'PATCH',
-          body: JSON.stringify(enrollmentUpdates),
-        });
+    // Resolve enrollmentId when we have sessionId (for PATCH enrollment or for building list-item result). Prefer updates.enrollmentId to avoid getByStudent.
+    const enrollmentId =
+      updates.enrollmentId ??
+      (updates.sessionId
+        ? (await enrollmentsRepositoryApi.getByStudent(id)).find((e) => e.sessionId === updates.sessionId)?.id
+        : undefined);
+    if (Object.keys(enrollmentUpdates).length > 0 && enrollmentId) {
+      const r = await teachingFetchJson<Record<string, unknown>>(`/students/enrollments/${enrollmentId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(enrollmentUpdates),
+      });
+      patchEnrollmentRes = mapEnrollment(r);
+    }
+
+    // Build updated list-item shape from PATCH responses (no extra GET)
+    const sessionId = updates.sessionId ?? patchEnrollmentRes?.sessionId;
+    if (sessionId && (patchEnrollmentRes || enrollmentId)) {
+      let enrollment: StudentEnrollment;
+      if (patchEnrollmentRes) {
+        enrollment = patchEnrollmentRes;
+        if (patchStudentRes) {
+          enrollment = { ...enrollment, student: mapStudent(patchStudentRes) as Student };
+        }
+      } else {
+        const e = await enrollmentsRepositoryApi.getById(enrollmentId!);
+        if (!e) return mapStudent(patchStudentRes || { id });
+        enrollment = patchStudentRes ? { ...e, student: mapStudent(patchStudentRes) as Student } : e;
       }
+      return flattenEnrollmentToStudentLike(enrollment) as unknown as Student;
     }
 
-    // Fetch and return the updated student
-    const r = await teachingFetchJson<Record<string, unknown>>(`/students/${id}`);
-    return mapStudent(r);
+    return mapStudent(patchStudentRes || { id });
   },
 
   async delete(id: string): Promise<void> {
