@@ -1,9 +1,13 @@
 import { cn } from "../../lib/utils";
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";
+  loading?: boolean;
+  loadingText?: string;
+  children?: ReactNode;
 }
 
 export function Button({
@@ -11,6 +15,9 @@ export function Button({
   variant = "primary",
   size = "md",
   disabled,
+  loading = false,
+  loadingText,
+  children,
   ...props
 }: ButtonProps) {
   return (
@@ -30,8 +37,17 @@ export function Button({
         size === "lg" && "px-6 py-3 text-base",
         className
       )}
-      disabled={disabled}
+      disabled={disabled || loading}
       {...props}
-    />
+    >
+      {loading ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          {loadingText || children}
+        </>
+      ) : (
+        children
+      )}
+    </button>
   );
 }

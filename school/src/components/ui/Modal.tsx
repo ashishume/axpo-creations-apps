@@ -1,8 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useId } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 import { cn } from "../../lib/utils";
+
+const activeModals = new Set<string>();
 
 interface ModalProps {
   open: boolean;
@@ -13,6 +15,30 @@ interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
+  const modalId = useId();
+  const isRegistered = useRef(false);
+  
+  useEffect(() => {
+    if (open) {
+      if (activeModals.size > 0 && !activeModals.has(modalId)) {
+        onClose();
+        return;
+      }
+      activeModals.add(modalId);
+      isRegistered.current = true;
+    } else {
+      if (isRegistered.current) {
+        activeModals.delete(modalId);
+        isRegistered.current = false;
+      }
+    }
+    
+    return () => {
+      activeModals.delete(modalId);
+      isRegistered.current = false;
+    };
+  }, [open, modalId, onClose]);
+  
   useEffect(() => {
     if (!open) return;
     const handle = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -25,6 +51,10 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
   }, [open, onClose]);
 
   if (!open) return null;
+  
+  if (activeModals.size > 0 && !activeModals.has(modalId)) {
+    return null;
+  }
 
   return createPortal(
     <div

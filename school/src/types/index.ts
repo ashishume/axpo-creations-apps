@@ -88,6 +88,8 @@ export interface StudentPersonalDetails {
   permanentAddress?: string;
   bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "";
   healthIssues?: string; // Optional health-related notes
+  aadhaarNumber?: string; // 12-digit Aadhaar number (optional)
+  dateOfBirth?: string; // ISO date string (optional)
 }
 
 // Fee payment tracking for different fee types
@@ -111,6 +113,7 @@ export interface Student {
   // Basic info
   name: string;
   studentId: string; // display ID
+  admissionNumber?: string; // Mandatory admission number (unique per session)
   feeType: FeeType;
 
   // Personal details (inline for backward compatibility)
@@ -121,12 +124,20 @@ export interface Student {
   permanentAddress?: string;
   bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "";
   healthIssues?: string;
+  aadhaarNumber?: string; // 12-digit Aadhaar number (optional)
+  dateOfBirth?: string; // ISO date string (optional)
 
   // Profile photo
   photoUrl?: string;
 
-  // Sibling concession - link to sibling student for 30% monthly fee discount
-  siblingId?: string;
+  // Sibling concession - 20% monthly fee discount applied to ONE sibling only
+  siblingId?: string; // Legacy single sibling link
+  siblingIds?: string[]; // Multiple siblings support
+  hasSiblingDiscount?: boolean; // Whether this student receives the 20% sibling discount
+
+  // Account status
+  isFrozen?: boolean; // If true, student left mid-session, exclude from fee calculations
+  frozenAt?: string; // ISO date when account was frozen
 
   // Enrollments (if populated)
   enrollments?: StudentEnrollment[];
@@ -192,6 +203,8 @@ export type SessionStudent = Student & {
     permanentAddress?: string;
     bloodGroup?: string;
     healthIssues?: string;
+    aadhaarNumber?: string;
+    dateOfBirth?: string;
   };
 };
 
@@ -208,6 +221,7 @@ export interface SalaryPayment {
   id: string;
   month: string; // YYYY-MM
   amount: number;
+  paidAmount?: number; // Actual amount paid (for partial payments)
   status: "Paid" | "Pending" | "Partially Paid";
   paymentDate?: string;
   method?: PaymentMethod;
@@ -255,6 +269,9 @@ export interface Staff {
   // Classes & subjects (dynamic array)
   classesSubjects?: ClassSubject[];
   salaryPayments: SalaryPayment[];
+  // Personal details (optional)
+  aadhaarNumber?: string; // 12-digit Aadhaar number
+  dateOfBirth?: string; // ISO date string
 }
 
 // Expenses

@@ -113,7 +113,7 @@ function mapStaff(row: Record<string, unknown>): Staff {
     role: row.role as Staff['role'],
     monthlySalary: Number(row.monthly_salary) || 0,
     subjectOrGrade: row.subject_or_grade as string | undefined,
-    allowedLeavesPerMonth: (row.allowed_leaves_per_month as number) ?? 2,
+    allowedLeavesPerMonth: (row.allowed_leaves_per_month as number) ?? 1,
     salaryPayments,
   };
 }

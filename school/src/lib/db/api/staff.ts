@@ -8,6 +8,7 @@ function mapSalaryPayment(p: Record<string, unknown>): ExtendedSalaryPayment {
     id: String(p.id),
     month: String(p.month ?? ''),
     amount: Number(p.paid_amount ?? p.amount ?? 0),
+    paidAmount: Number(p.paid_amount ?? 0),
     status: (p.status as SalaryPayment['status']) ?? 'Paid',
     paymentDate: p.payment_date != null ? String(p.payment_date) : undefined,
     method: (p.method as SalaryPayment['method']) ?? undefined,
@@ -17,7 +18,7 @@ function mapSalaryPayment(p: Record<string, unknown>): ExtendedSalaryPayment {
     // Leave tracking fields
     daysWorked: Number(p.days_worked ?? 30),
     leavesTaken: Number(p.leaves_taken ?? 0),
-    allowedLeaves: Number(p.allowed_leaves ?? 2),
+    allowedLeaves: Number(p.allowed_leaves ?? 1),
     excessLeaves: Number(p.excess_leaves ?? 0),
     leaveDeduction: Number(p.leave_deduction ?? 0),
     // Extra allowance/deduction
@@ -52,10 +53,13 @@ function mapStaff(r: Record<string, unknown>): Staff {
     monthlySalary: Number(r.monthly_salary ?? 0),
     subjectOrGrade: r.subject_or_grade != null ? String(r.subject_or_grade) : undefined,
     // Leave & salary deduction configuration
-    allowedLeavesPerMonth: Number(r.allowed_leaves_per_month ?? 2),
+    allowedLeavesPerMonth: Number(r.allowed_leaves_per_month ?? 1),
     perDaySalary: r.per_day_salary != null ? Number(r.per_day_salary) : undefined,
     // Classes & subjects
     classesSubjects: mapClassesSubjects(r.classes_subjects),
+    // Personal details
+    aadhaarNumber: r.aadhaar_number != null ? String(r.aadhaar_number) : undefined,
+    dateOfBirth: r.date_of_birth != null ? String(r.date_of_birth) : undefined,
     salaryPayments,
   };
 }
@@ -107,13 +111,16 @@ export const staffRepositoryApi = {
       address: null,
       salary_due_day: 5,
       // Leave & salary deduction configuration
-      allowed_leaves_per_month: data.allowedLeavesPerMonth ?? 2,
+      allowed_leaves_per_month: data.allowedLeavesPerMonth ?? 1,
       per_day_salary: data.perDaySalary ?? null,
       // Classes & subjects
       classes_subjects: data.classesSubjects?.map(cs => ({
         class_name: cs.className,
         subjects: cs.subjects,
       })) ?? null,
+      // Personal details
+      aadhaar_number: data.aadhaarNumber ?? null,
+      date_of_birth: data.dateOfBirth ?? null,
     };
     const r = await teachingFetchJson<Record<string, unknown>>('/staff', { method: 'POST', body: JSON.stringify(body) });
     return mapStaff(r);
@@ -134,6 +141,8 @@ export const staffRepositoryApi = {
         subjects: cs.subjects,
       })) ?? null;
     }
+    if (updates.aadhaarNumber !== undefined) body.aadhaar_number = updates.aadhaarNumber;
+    if (updates.dateOfBirth !== undefined) body.date_of_birth = updates.dateOfBirth;
     const r = await teachingFetchJson<Record<string, unknown>>(`/staff/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
     return mapStaff(r);
   },
@@ -164,7 +173,7 @@ export const staffRepositoryApi = {
       email: null,
       address: null,
       salary_due_day: 5,
-      allowed_leaves_per_month: data.allowedLeavesPerMonth ?? 2,
+      allowed_leaves_per_month: data.allowedLeavesPerMonth ?? 1,
       per_day_salary: data.perDaySalary ?? null,
       classes_subjects: data.classesSubjects?.map(cs => ({
         class_name: cs.className,
@@ -193,10 +202,11 @@ export const staffRepositoryApi = {
     };
   },
 
-  async addSalaryPayment(staffId: string, payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'>): Promise<ExtendedSalaryPayment> {
+  async addSalaryPayment(staffId: string, payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'> & { paidAmount?: number }): Promise<ExtendedSalaryPayment> {
     const body = {
       month: payment.month,
       amount: payment.amount,
+      paid_amount: payment.paidAmount ?? payment.amount,
       status: payment.status ?? 'Paid',
       payment_date: payment.paymentDate ?? null,
       method: payment.method ?? null,

@@ -22,6 +22,7 @@ function mapStudent(r: Record<string, unknown>): Student {
     schoolId: String(r.school_id ?? ''),
     name: String(r.name ?? ''),
     studentId: String(r.student_id ?? ''),
+    admissionNumber: r.admission_number != null ? String(r.admission_number) : undefined,
     feeType: (r.fee_type as Student['feeType']) ?? 'Regular',
     fatherName: r.father_name != null ? String(r.father_name) : undefined,
     motherName: r.mother_name != null ? String(r.mother_name) : undefined,
@@ -30,8 +31,13 @@ function mapStudent(r: Record<string, unknown>): Student {
     permanentAddress: r.permanent_address != null ? String(r.permanent_address) : undefined,
     bloodGroup: (r.blood_group as Student['bloodGroup']) ?? undefined,
     healthIssues: r.health_issues != null ? String(r.health_issues) : undefined,
+    aadhaarNumber: r.aadhaar_number != null ? String(r.aadhaar_number) : undefined,
+    dateOfBirth: r.date_of_birth != null ? String(r.date_of_birth) : undefined,
     photoUrl: r.photo_url != null ? String(r.photo_url) : undefined,
     siblingId: r.sibling_id != null ? String(r.sibling_id) : undefined,
+    hasSiblingDiscount: r.has_sibling_discount as boolean | undefined,
+    isFrozen: r.is_frozen as boolean | undefined,
+    frozenAt: r.frozen_at != null ? String(r.frozen_at) : undefined,
   };
 }
 
@@ -103,6 +109,8 @@ function flattenEnrollmentToStudentLike(e: StudentEnrollment): Record<string, un
           permanentAddress: s.permanentAddress,
           bloodGroup: s.bloodGroup,
           healthIssues: s.healthIssues,
+          aadhaarNumber: s.aadhaarNumber,
+          dateOfBirth: s.dateOfBirth,
         }
       : undefined,
   };
@@ -170,6 +178,7 @@ export const studentsRepositoryApi = {
           school_id: schoolId,
           name: data.name,
           student_id: data.studentId,
+          admission_number: data.admissionNumber || null,
           fee_type: data.feeType || 'Regular',
           father_name: personalDetails.fatherName || data.fatherName || null,
           mother_name: personalDetails.motherName || data.motherName || null,
@@ -178,8 +187,11 @@ export const studentsRepositoryApi = {
           permanent_address: personalDetails.permanentAddress || data.permanentAddress || null,
           blood_group: personalDetails.bloodGroup || data.bloodGroup || null,
           health_issues: personalDetails.healthIssues || data.healthIssues || null,
+          aadhaar_number: personalDetails.aadhaarNumber || data.aadhaarNumber || null,
+          date_of_birth: personalDetails.dateOfBirth || data.dateOfBirth || null,
           photo_url: data.photoUrl || null,
           sibling_id: data.siblingId || null,
+          has_sibling_discount: data.hasSiblingDiscount || false,
         };
         const r = await teachingFetchJson<Record<string, unknown>>('/students', { method: 'POST', body: JSON.stringify(body) });
         const student = mapStudent(r);
@@ -212,6 +224,7 @@ export const studentsRepositoryApi = {
       school_id: data.schoolId,
       name: data.name,
       student_id: data.studentId,
+      admission_number: data.admissionNumber ?? null,
       fee_type: data.feeType,
       father_name: data.fatherName ?? null,
       mother_name: data.motherName ?? null,
@@ -220,8 +233,11 @@ export const studentsRepositoryApi = {
       permanent_address: data.permanentAddress ?? null,
       blood_group: data.bloodGroup ?? null,
       health_issues: data.healthIssues ?? null,
+      aadhaar_number: data.aadhaarNumber ?? null,
+      date_of_birth: data.dateOfBirth ?? null,
       photo_url: data.photoUrl ?? null,
       sibling_id: data.siblingId ?? null,
+      has_sibling_discount: data.hasSiblingDiscount ?? false,
     };
     const r = await teachingFetchJson<Record<string, unknown>>('/students', { method: 'POST', body: JSON.stringify(body) });
     return mapStudent(r);
@@ -237,6 +253,7 @@ export const studentsRepositoryApi = {
     // Separate student identity updates from enrollment updates
     if (updates.name !== undefined) studentUpdates.name = updates.name;
     if (updates.studentId !== undefined) studentUpdates.student_id = updates.studentId;
+    if (updates.admissionNumber !== undefined) studentUpdates.admission_number = updates.admissionNumber;
     if (updates.feeType !== undefined) studentUpdates.fee_type = updates.feeType;
     if (updates.fatherName !== undefined) studentUpdates.father_name = updates.fatherName;
     if (updates.motherName !== undefined) studentUpdates.mother_name = updates.motherName;
@@ -245,8 +262,13 @@ export const studentsRepositoryApi = {
     if (updates.permanentAddress !== undefined) studentUpdates.permanent_address = updates.permanentAddress;
     if (updates.bloodGroup !== undefined) studentUpdates.blood_group = updates.bloodGroup;
     if (updates.healthIssues !== undefined) studentUpdates.health_issues = updates.healthIssues;
+    if (updates.aadhaarNumber !== undefined) studentUpdates.aadhaar_number = updates.aadhaarNumber;
+    if (updates.dateOfBirth !== undefined) studentUpdates.date_of_birth = updates.dateOfBirth;
     if (updates.photoUrl !== undefined) studentUpdates.photo_url = updates.photoUrl;
     if (updates.siblingId !== undefined) studentUpdates.sibling_id = updates.siblingId;
+    if (updates.hasSiblingDiscount !== undefined) studentUpdates.has_sibling_discount = updates.hasSiblingDiscount;
+    if (updates.isFrozen !== undefined) studentUpdates.is_frozen = updates.isFrozen;
+    if (updates.frozenAt !== undefined) studentUpdates.frozen_at = updates.frozenAt;
 
     // Handle old personalDetails structure
     if (updates.personalDetails) {
@@ -257,6 +279,8 @@ export const studentsRepositoryApi = {
       studentUpdates.permanent_address = updates.personalDetails.permanentAddress;
       studentUpdates.blood_group = updates.personalDetails.bloodGroup;
       studentUpdates.health_issues = updates.personalDetails.healthIssues;
+      if (updates.personalDetails.aadhaarNumber !== undefined) studentUpdates.aadhaar_number = updates.personalDetails.aadhaarNumber;
+      if (updates.personalDetails.dateOfBirth !== undefined) studentUpdates.date_of_birth = updates.personalDetails.dateOfBirth;
     }
 
     // Enrollment-specific updates
@@ -338,6 +362,7 @@ export const studentsRepositoryApi = {
         school_id: schoolId,
         name: data.name,
         student_id: data.studentId,
+        admission_number: data.admissionNumber ?? null,
         fee_type: data.feeType || 'Regular',
         father_name: pd.fatherName ?? data.fatherName ?? null,
         mother_name: pd.motherName ?? data.motherName ?? null,
@@ -346,8 +371,11 @@ export const studentsRepositoryApi = {
         permanent_address: pd.permanentAddress ?? data.permanentAddress ?? null,
         blood_group: pd.bloodGroup ?? data.bloodGroup ?? null,
         health_issues: pd.healthIssues ?? data.healthIssues ?? null,
+        aadhaar_number: pd.aadhaarNumber ?? data.aadhaarNumber ?? null,
+        date_of_birth: pd.dateOfBirth ?? data.dateOfBirth ?? null,
         photo_url: data.photoUrl ?? null,
         sibling_id: data.siblingId ?? null,
+        has_sibling_discount: data.hasSiblingDiscount ?? false,
       };
     });
 

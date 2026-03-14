@@ -24,8 +24,24 @@ import {
   getOtherPayments,
 } from "../../lib/studentUtils";
 import { cn } from "../../lib/utils";
-import { User, Phone, MapPin, Heart, AlertTriangle, DollarSign, Camera, X, Image, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { User, Phone, MapPin, Heart, AlertTriangle, DollarSign, Camera, X, Image, CheckCircle, XCircle, AlertCircle, Plus, Trash2, Loader2, Snowflake, Lock } from "lucide-react";
 import type { Session } from "../../types";
+
+interface PaymentEntry {
+  date: string;
+  amount: number;
+  method: PaymentMethod;
+  receiptNumber: string;
+  feeCategory: "registration" | "admission" | "annualFund" | "monthly" | "transport" | "other";
+  month?: string;
+  receiptPhotoUrl?: string;
+}
+
+interface SplitPaymentEntry {
+  id: string;
+  amount: number;
+  method: PaymentMethod;
+}
 
 interface StudentDetailsModalProps {
   open: boolean;
@@ -34,17 +50,10 @@ interface StudentDetailsModalProps {
   studentClass?: StudentClass;
   session?: Session;
   initialTab?: "overview" | "fees" | "personal" | "payments" | "feeHistory";
-  onAddPayment?: (payment: { 
-    date: string; 
-    amount: number; 
-    method: PaymentMethod; 
-    receiptNumber: string;
-    feeCategory: "registration" | "admission" | "annualFund" | "monthly" | "transport" | "other";
-    month?: string;
-    receiptPhotoUrl?: string;
-  }) => void | Promise<void>;
+  onAddPayment?: (payment: PaymentEntry) => void | Promise<void>;
   onUpdateStudent?: (data: Partial<SessionStudent>) => void;
   onPaymentSuccess?: () => void;
+  onFreezeAccount?: (freeze: boolean) => void | Promise<void>;
 }
 
 const statusColors = {
@@ -64,7 +73,8 @@ export function StudentDetailsModal({
   initialTab = "overview",
   onAddPayment,
   onUpdateStudent,
-  onPaymentSuccess
+  onPaymentSuccess,
+  onFreezeAccount,
 }: StudentDetailsModalProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "fees" | "personal" | "payments" | "feeHistory">(initialTab);
   const [showPaymentForm, setShowPaymentForm] = useState(initialTab === "payments");
@@ -72,6 +82,12 @@ export function StudentDetailsModal({
   const [receiptPhotoPreview, setReceiptPhotoPreview] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("monthly");
   const [paymentMonth, setPaymentMonth] = useState<string>(() => getNextUnpaidMonth(student, "monthly"));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSplitPayment, setIsSplitPayment] = useState(false);
+  const [splitPayments, setSplitPayments] = useState<SplitPaymentEntry[]>([
+    { id: "1", amount: 0, method: "Cash" },
+    { id: "2", amount: 0, method: "Online" },
+  ]);
   const amountInputRef = useRef<HTMLInputElement>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
   
@@ -219,42 +235,85 @@ export function StudentDetailsModal({
 
   const handlePaymentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!onAddPayment) return;
+    if (!onAddPayment || isSubmitting) return;
+    
     const form = e.currentTarget;
     const date = (form.elements.namedItem("date") as HTMLInputElement).value;
-    const amount = Number((form.elements.namedItem("amount") as HTMLInputElement).value);
-    const method = (form.elements.namedItem("method") as HTMLSelectElement).value as PaymentMethod;
     const receiptNumber = (form.elements.namedItem("receiptNumber") as HTMLInputElement).value.trim();
     const feeCategory = (form.elements.namedItem("feeCategory") as HTMLSelectElement).value as "registration" | "admission" | "annualFund" | "monthly" | "transport" | "other";
     const month = (form.elements.namedItem("month") as HTMLInputElement)?.value;
-    
-    if (!date || amount <= 0) return;
-    
-    // TODO: Upload receipt photo and get URL (currently using base64 preview for demo)
     const receiptPhotoUrl = receiptPhotoPreview || undefined;
     
-    await onAddPayment({ 
-      date, 
-      amount, 
-      method, 
-      receiptNumber: receiptNumber || "-",
-      feeCategory,
-      month: (feeCategory === "monthly" || feeCategory === "transport") ? month : undefined,
-      receiptPhotoUrl
-    });
-    setShowPaymentForm(false);
-    setReceiptPhotoPreview(null);
+    if (!date) return;
     
-    if (onPaymentSuccess) {
-      onPaymentSuccess();
+    setIsSubmitting(true);
+    
+    try {
+      if (isSplitPayment) {
+        const validSplitPayments = splitPayments.filter(sp => sp.amount > 0);
+        if (validSplitPayments.length === 0) {
+          setIsSubmitting(false);
+          return;
+        }
+        
+        for (const sp of validSplitPayments) {
+          await onAddPayment({
+            date,
+            amount: sp.amount,
+            method: sp.method,
+            receiptNumber: receiptNumber || "-",
+            feeCategory,
+            month: (feeCategory === "monthly" || feeCategory === "transport") ? month : undefined,
+            receiptPhotoUrl,
+          });
+        }
+      } else {
+        const amount = Number((form.elements.namedItem("amount") as HTMLInputElement).value);
+        const method = (form.elements.namedItem("method") as HTMLSelectElement).value as PaymentMethod;
+        
+        if (amount <= 0) {
+          setIsSubmitting(false);
+          return;
+        }
+        
+        await onAddPayment({
+          date,
+          amount,
+          method,
+          receiptNumber: receiptNumber || "-",
+          feeCategory,
+          month: (feeCategory === "monthly" || feeCategory === "transport") ? month : undefined,
+          receiptPhotoUrl,
+        });
+      }
+      
+      setShowPaymentForm(false);
+      setReceiptPhotoPreview(null);
+      setIsSplitPayment(false);
+      setSplitPayments([
+        { id: "1", amount: 0, method: "Cash" },
+        { id: "2", amount: 0, method: "Online" },
+      ]);
+      
+      if (onPaymentSuccess) {
+        onPaymentSuccess();
+      }
+      setSelectedCategory("monthly");
+    } finally {
+      setIsSubmitting(false);
     }
-    setSelectedCategory("monthly");
   };
 
   const handlePersonalSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!onUpdateStudent) return;
     const form = e.currentTarget;
+    
+    const aadhaarValue = (form.elements.namedItem("aadhaarNumber") as HTMLInputElement).value.trim();
+    if (aadhaarValue && !/^\d{12}$/.test(aadhaarValue)) {
+      alert("Aadhaar number must be exactly 12 digits");
+      return;
+    }
     
     onUpdateStudent({
       personalDetails: {
@@ -265,6 +324,8 @@ export function StudentDetailsModal({
         permanentAddress: (form.elements.namedItem("permanentAddress") as HTMLTextAreaElement).value.trim() || undefined,
         bloodGroup: (form.elements.namedItem("bloodGroup") as HTMLSelectElement).value as StudentPersonalDetails["bloodGroup"] || "",
         healthIssues: (form.elements.namedItem("healthIssues") as HTMLTextAreaElement).value.trim() || undefined,
+        aadhaarNumber: aadhaarValue || undefined,
+        dateOfBirth: (form.elements.namedItem("dateOfBirth") as HTMLInputElement).value || undefined,
       }
     });
     setEditingPersonal(false);
@@ -278,13 +339,38 @@ export function StudentDetailsModal({
     { id: "payments", label: "Payments" },
   ] as const;
 
+  const handleFreezeToggle = async () => {
+    if (!onFreezeAccount) return;
+    const newFrozenState = !student.isFrozen;
+    await onFreezeAccount(newFrozenState);
+  };
+
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={`Student Details – ${student.name}`}
+      title={`Student Details – ${student.name}${student.isFrozen ? " (Frozen)" : ""}`}
     >
       <div className="space-y-4">
+        {/* Frozen Account Banner */}
+        {student.isFrozen && (
+          <div className="rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-3 flex items-center gap-3">
+            <Snowflake className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Account Frozen</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">
+                Student left mid-session. Fees are excluded from calculations.
+                {student.frozenAt && ` Frozen on ${formatDate(student.frozenAt)}`}
+              </p>
+            </div>
+            {onFreezeAccount && (
+              <Button size="sm" variant="secondary" onClick={handleFreezeToggle}>
+                Unfreeze
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* Tab Navigation */}
         <div className="flex gap-1 border-b border-slate-200">
           {tabs.map((tab) => (
@@ -321,6 +407,10 @@ export function StudentDetailsModal({
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4 text-sm flex-1">
+                <div>
+                  <span className="text-slate-500">Admission No:</span>
+                  <p className="font-medium text-indigo-600">{student.admissionNumber || "—"}</p>
+                </div>
                 <div>
                   <span className="text-slate-500">Student ID:</span>
                   <p className="font-medium">{student.studentId}</p>
@@ -397,6 +487,26 @@ export function StudentDetailsModal({
                 )}
               </div>
             )}
+
+            {/* Freeze Account Action */}
+            {onFreezeAccount && !student.isFrozen && (
+              <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                      <Lock className="h-4 w-4" /> Freeze Account
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      If student leaves mid-session, freeze to exclude from fee calculations
+                    </p>
+                  </div>
+                  <Button size="sm" variant="secondary" onClick={handleFreezeToggle}>
+                    <Snowflake className="h-4 w-4 mr-1" />
+                    Freeze
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -436,7 +546,7 @@ export function StudentDetailsModal({
                       Monthly Tuition (× 12)
                       {siblingDiscount > 0 && (
                         <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                          30% sibling discount
+                          20% sibling discount
                         </span>
                       )}
                     </td>
@@ -521,6 +631,25 @@ export function StudentDetailsModal({
                     placeholder="Any allergies, medical conditions, etc."
                   />
                 </FormField>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField label="Aadhaar Number" helperText="12-digit Aadhaar (optional)">
+                    <Input 
+                      name="aadhaarNumber" 
+                      type="text" 
+                      maxLength={12}
+                      pattern="[0-9]{12}"
+                      defaultValue={student.personalDetails?.aadhaarNumber}
+                      placeholder="123456789012"
+                    />
+                  </FormField>
+                  <FormField label="Date of Birth" helperText="Optional">
+                    <Input 
+                      name="dateOfBirth" 
+                      type="date" 
+                      defaultValue={student.personalDetails?.dateOfBirth}
+                    />
+                  </FormField>
+                </div>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="secondary" onClick={() => setEditingPersonal(false)}>
                     Cancel
@@ -588,6 +717,21 @@ export function StudentDetailsModal({
                       </div>
                     </div>
                   )}
+                  
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200">
+                    <div>
+                      <span className="text-slate-500">Aadhaar Number:</span>
+                      <p className="font-medium font-mono">{student.personalDetails?.aadhaarNumber || "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Date of Birth:</span>
+                      <p className="font-medium">
+                        {student.personalDetails?.dateOfBirth 
+                          ? formatDate(student.personalDetails.dateOfBirth) 
+                          : "—"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -624,7 +768,7 @@ export function StudentDetailsModal({
                   <div className="text-right">
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                       Monthly: <strong>{formatCurrency(monthlyFees)}</strong>
-                      {student.siblingId && <span className="text-xs text-green-600 ml-1">(30% off)</span>}
+                      {student.hasSiblingDiscount && <span className="text-xs text-green-600 ml-1">(20% off)</span>}
                     </p>
                     {transportFees > 0 && (
                       <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -889,7 +1033,7 @@ export function StudentDetailsModal({
                       className="rounded px-2 py-1.5 text-sm"
                     >
                       {availableMonthOptions.length > 0 && (
-                        <option value="monthly">Monthly Tuition ({formatCurrency(monthlyFees)}{siblingDiscount > 0 ? " - 30% off" : ""})</option>
+                        <option value="monthly">Monthly Tuition ({formatCurrency(monthlyFees)}{siblingDiscount > 0 ? " - 20% off" : ""})</option>
                       )}
                       {!isRegistrationPaid && registrationFees > 0 && (
                         <option value="registration">Registration/Admission fees ({formatCurrency(registrationFees)})</option>
@@ -945,19 +1089,115 @@ export function StudentDetailsModal({
                   </FormField>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Method">
-                    <Select name="method" className="rounded px-2 py-1.5 text-sm">
-                      <option value="Cash">Cash</option>
-                      <option value="Online">Online</option>
-                      <option value="Cheque">Cheque</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
-                    </Select>
-                  </FormField>
+                
+                {/* Split Payment Toggle */}
+                <div className="flex items-center gap-2 py-2 border-t border-slate-100">
+                  <input
+                    type="checkbox"
+                    id="splitPayment"
+                    checked={isSplitPayment}
+                    onChange={(e) => {
+                      setIsSplitPayment(e.target.checked);
+                      if (e.target.checked) {
+                        const currentAmount = Number(amountInputRef.current?.value) || 0;
+                        setSplitPayments([
+                          { id: "1", amount: Math.floor(currentAmount / 2), method: "Cash" },
+                          { id: "2", amount: currentAmount - Math.floor(currentAmount / 2), method: "Online" },
+                        ]);
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <label htmlFor="splitPayment" className="text-sm text-slate-700 dark:text-slate-300">
+                    Split payment (pay via multiple methods)
+                  </label>
+                </div>
+                
+                {isSplitPayment ? (
+                  <div className="space-y-3 rounded-lg bg-slate-50 dark:bg-slate-800 p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Payment Methods</span>
+                      <span className="text-xs text-slate-500">
+                        Total: {formatCurrency(splitPayments.reduce((sum, sp) => sum + sp.amount, 0))}
+                      </span>
+                    </div>
+                    {splitPayments.map((sp, idx) => (
+                      <div key={sp.id} className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <Input
+                            type="number"
+                            min={0}
+                            value={sp.amount}
+                            onChange={(e) => {
+                              const newPayments = [...splitPayments];
+                              newPayments[idx] = { ...sp, amount: Number(e.target.value) || 0 };
+                              setSplitPayments(newPayments);
+                            }}
+                            placeholder="Amount"
+                            className="rounded px-2 py-1.5 text-sm"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Select
+                            value={sp.method}
+                            onChange={(e) => {
+                              const newPayments = [...splitPayments];
+                              newPayments[idx] = { ...sp, method: e.target.value as PaymentMethod };
+                              setSplitPayments(newPayments);
+                            }}
+                            className="rounded px-2 py-1.5 text-sm"
+                          >
+                            <option value="Cash">Cash</option>
+                            <option value="Online">Online</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                          </Select>
+                        </div>
+                        {splitPayments.length > 2 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSplitPayments(splitPayments.filter((_, i) => i !== idx))}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSplitPayments([...splitPayments, { id: String(Date.now()), amount: 0, method: "Cash" }])}
+                      className="text-indigo-600"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Payment Method
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label="Method">
+                      <Select name="method" className="rounded px-2 py-1.5 text-sm">
+                        <option value="Cash">Cash</option>
+                        <option value="Online">Online</option>
+                        <option value="Cheque">Cheque</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                      </Select>
+                    </FormField>
+                    <FormField label="Receipt #">
+                      <Input name="receiptNumber" type="text" className="rounded px-2 py-1.5 text-sm" />
+                    </FormField>
+                  </div>
+                )}
+                
+                {isSplitPayment && (
                   <FormField label="Receipt #">
                     <Input name="receiptNumber" type="text" className="rounded px-2 py-1.5 text-sm" />
                   </FormField>
-                </div>
+                )}
                 
                 {/* Receipt Photo Upload */}
                 <div>
@@ -1002,13 +1242,29 @@ export function StudentDetailsModal({
                 </div>
                 
                 <div className="flex justify-end gap-2">
-                  <Button type="button" size="sm" variant="secondary" onClick={() => {
-                    setShowPaymentForm(false);
-                    setReceiptPhotoPreview(null);
-                  }}>
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    variant="secondary" 
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      setShowPaymentForm(false);
+                      setReceiptPhotoPreview(null);
+                      setIsSplitPayment(false);
+                    }}
+                  >
                     Cancel
                   </Button>
-                  <Button type="submit" size="sm">Record Payment</Button>
+                  <Button type="submit" size="sm" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                        Recording...
+                      </>
+                    ) : (
+                      "Record Payment"
+                    )}
+                  </Button>
                 </div>
               </form>
                 );

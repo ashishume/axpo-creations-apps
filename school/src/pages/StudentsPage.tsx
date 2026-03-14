@@ -129,6 +129,7 @@ export function StudentsPage() {
   const [transferTargetSessionId, setTransferTargetSessionId] = useState<string | null>(null);
   const [transferSelectedIds, setTransferSelectedIds] = useState<Set<string>>(new Set());
   const [transferSubmitting, setTransferSubmitting] = useState(false);
+  const [isStudentSubmitting, setIsStudentSubmitting] = useState(false);
 
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 300);
   const hasFilters = !!(statusFilter || classFilter || feeTypeFilter || debouncedSearch);
@@ -233,6 +234,7 @@ export function StudentsPage() {
     const form = e.currentTarget;
     const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
     const studentId = (form.elements.namedItem("studentId") as HTMLInputElement).value.trim();
+    const admissionNumber = (form.elements.namedItem("admissionNumber") as HTMLInputElement).value.trim();
     const feeType = (form.elements.namedItem("feeType") as HTMLSelectElement).value as FeeType;
     const classId = (form.elements.namedItem("classId") as HTMLSelectElement).value || undefined;
 
@@ -255,8 +257,14 @@ export function StudentsPage() {
 
     // Sibling - uses controlled state from SearchableSelect
     const siblingId = selectedSiblingId || undefined;
+    const hasSiblingDiscount = siblingId
+      ? (form.elements.namedItem("hasSiblingDiscount") as HTMLInputElement)?.checked ?? false
+      : undefined;
 
-    if (!selectedSessionId || !name) return;
+    if (!selectedSessionId || !name || !admissionNumber) {
+      if (!admissionNumber) toast("Admission number is required", "error");
+      return;
+    }
 
     // TODO: Upload photo and get URL (currently using base64 preview for demo)
     const photoUrl = studentPhotoPreview || studentModal.student?.photoUrl;
@@ -264,6 +272,7 @@ export function StudentsPage() {
     const studentData: Record<string, unknown> = {
       name,
       studentId: studentId || undefined,
+      admissionNumber,
       feeType,
       classId: classId || undefined,
       registrationFees,
@@ -275,6 +284,7 @@ export function StudentsPage() {
       lateFeeFrequency: lateFeeFrequency || undefined,
       photoUrl,
       siblingId,
+      hasSiblingDiscount,
     };
     const studentWithEnrollment = studentModal.student as unknown as { enrollmentId?: string; sessionId?: string };
     if (studentModal.student && studentWithEnrollment.enrollmentId) {
@@ -282,38 +292,43 @@ export function StudentsPage() {
       studentData.sessionId = studentWithEnrollment.sessionId;
     }
 
-    if (studentModal.student) {
-      updateStudent(studentModal.student.id, studentData as Partial<StudentType>);
+    setIsStudentSubmitting(true);
+    try {
+      if (studentModal.student) {
+        updateStudent(studentModal.student.id, studentData as Partial<StudentType>);
 
-      // If sibling is assigned, update the sibling to point back
-      if (siblingId) {
-        updateStudent(siblingId, { siblingId: studentModal.student.id });
+        // If sibling is assigned, update the sibling to point back
+        if (siblingId) {
+          updateStudent(siblingId, { siblingId: studentModal.student.id });
+        }
+
+        // If sibling was removed, clear the reverse link
+        const oldSiblingId = studentModal.student.siblingId;
+        if (oldSiblingId && oldSiblingId !== siblingId) {
+          updateStudent(oldSiblingId, { siblingId: undefined });
+        }
+
+        toast("Student updated");
+      } else {
+        const newStudent = await addStudentAsync({
+          sessionId: selectedSessionId,
+          ...studentData,
+          studentId: (studentData.studentId as string) || `STU-${Date.now()}`,
+        } as unknown as Omit<StudentType, "id" | "payments">);
+
+        // If sibling is assigned, update the sibling to point back to the new student
+        if (siblingId && newStudent) {
+          await updateStudentAsync(siblingId, { siblingId: newStudent.id });
+        }
+
+        toast("Student added");
       }
-
-      // If sibling was removed, clear the reverse link
-      const oldSiblingId = studentModal.student.siblingId;
-      if (oldSiblingId && oldSiblingId !== siblingId) {
-        updateStudent(oldSiblingId, { siblingId: undefined });
-      }
-
-      toast("Student updated");
-    } else {
-      const newStudent = await addStudentAsync({
-        sessionId: selectedSessionId,
-        ...studentData,
-        studentId: (studentData.studentId as string) || `STU-${Date.now()}`,
-      } as unknown as Omit<StudentType, "id" | "payments">);
-
-      // If sibling is assigned, update the sibling to point back to the new student
-      if (siblingId && newStudent) {
-        await updateStudentAsync(siblingId, { siblingId: newStudent.id });
-      }
-
-      toast("Student added");
+      setStudentModal({ open: false });
+      setStudentPhotoPreview(null);
+      setSelectedSiblingId("");
+    } finally {
+      setIsStudentSubmitting(false);
     }
-    setStudentModal({ open: false });
-    setStudentPhotoPreview(null);
-    setSelectedSiblingId("");
   };
 
   const handleSaveClass = (e: React.FormEvent<HTMLFormElement>) => {
@@ -462,7 +477,7 @@ export function StudentsPage() {
               Add student
             </Button>
           </PermissionGate>
-          {/* <Button
+          <Button
             size="sm"
             variant="danger"
             disabled={!selectedSessionId}
@@ -470,7 +485,7 @@ export function StudentsPage() {
           >
             <Trash2 className="mr-1 h-4 w-4" />
             Delete all students (Danger)
-          </Button> */}
+          </Button>
           <Button
             size="sm"
             variant="secondary"
@@ -833,6 +848,15 @@ export function StudentsPage() {
                 />
               </FormField>
             </div>
+            <FormField label="Admission Number *" required helperText="Unique admission number for this student">
+              <Input
+                name="admissionNumber"
+                type="text"
+                required
+                defaultValue={studentModal.student?.admissionNumber ?? ""}
+                placeholder="e.g., ADM-2024-001"
+              />
+            </FormField>
             <div className="grid grid-cols-2 gap-3">
               <FormField label="Class *" required>
                 <Select
@@ -863,7 +887,7 @@ export function StudentsPage() {
             </div>
 
             {/* Sibling Selection */}
-            <FormField label="Sibling (30% monthly fee discount)" helperText="Both siblings will get 30% discount on monthly fees">
+            <FormField label="Sibling" helperText="Link to sibling student (20% discount applied to ONE sibling only)">
               <SearchableSelect
                 name="siblingId"
                 value={selectedSiblingId}
@@ -879,6 +903,25 @@ export function StudentsPage() {
                   }))}
               />
             </FormField>
+
+            {/* Sibling Discount Toggle */}
+            {selectedSiblingId && (
+              <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <input
+                  type="checkbox"
+                  id="hasSiblingDiscount"
+                  name="hasSiblingDiscount"
+                  defaultChecked={studentModal.student?.hasSiblingDiscount ?? true}
+                  className="h-4 w-4 rounded border-slate-300 text-green-600 focus:ring-green-500"
+                />
+                <label htmlFor="hasSiblingDiscount" className="text-sm text-green-800 dark:text-green-200">
+                  Apply 20% sibling discount to THIS student
+                </label>
+                <span className="text-xs text-green-600 dark:text-green-400 ml-auto">
+                  (Only one sibling should have this enabled)
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Fee Structure */}
@@ -961,10 +1004,12 @@ export function StudentsPage() {
           </div>
 
           <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-            <Button type="button" variant="secondary" onClick={() => setStudentModal({ open: false })}>
+            <Button type="button" variant="secondary" onClick={() => setStudentModal({ open: false })} disabled={isStudentSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!selectedSessionId}>Save</Button>
+            <Button type="submit" disabled={!selectedSessionId || isStudentSubmitting} loading={isStudentSubmitting} loadingText="Saving...">
+              Save
+            </Button>
           </div>
         </form>
       </Modal>
@@ -1386,6 +1431,17 @@ export function StudentsPage() {
             updateStudent(detailsStudent.student.id, data);
             toast("Student updated");
             setDetailsStudent({ student: { ...detailsStudent.student, ...data }, initialTab: detailsStudent.initialTab });
+          } : undefined}
+          onFreezeAccount={canEditStudent ? async (freeze) => {
+            const frozenData = freeze
+              ? { isFrozen: true, frozenAt: new Date().toISOString() }
+              : { isFrozen: false, frozenAt: undefined };
+            updateStudent(detailsStudent.student.id, frozenData);
+            toast(freeze ? "Student account frozen" : "Student account unfrozen");
+            setDetailsStudent({
+              student: { ...detailsStudent.student, ...frozenData },
+              initialTab: detailsStudent.initialTab
+            });
           } : undefined}
         />
       )}

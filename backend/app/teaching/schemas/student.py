@@ -5,7 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class FeePaymentCreate(BaseModel):
@@ -39,6 +39,7 @@ class StudentBase(BaseModel):
     school_id: UUID
     name: str
     student_id: str
+    admission_number: str | None = None
     fee_type: str = "Regular"
     father_name: str | None = None
     mother_name: str | None = None
@@ -47,8 +48,13 @@ class StudentBase(BaseModel):
     permanent_address: str | None = None
     blood_group: str | None = None
     health_issues: str | None = None
+    aadhaar_number: str | None = Field(None, max_length=12, pattern=r"^\d{12}$")
+    date_of_birth: date | None = None
     photo_url: str | None = None
     sibling_id: UUID | None = None
+    has_sibling_discount: bool = False
+    is_frozen: bool = False
+    frozen_at: datetime | None = None
 
 
 class StudentCreate(StudentBase):
@@ -62,6 +68,7 @@ class BulkStudentCreate(BaseModel):
 class StudentUpdate(BaseModel):
     name: str | None = None
     student_id: str | None = None
+    admission_number: str | None = None
     fee_type: str | None = None
     father_name: str | None = None
     mother_name: str | None = None
@@ -70,8 +77,13 @@ class StudentUpdate(BaseModel):
     permanent_address: str | None = None
     blood_group: str | None = None
     health_issues: str | None = None
+    aadhaar_number: str | None = Field(None, max_length=12, pattern=r"^\d{12}$")
+    date_of_birth: date | None = None
     photo_url: str | None = None
     sibling_id: UUID | None = None
+    has_sibling_discount: bool | None = None
+    is_frozen: bool | None = None
+    frozen_at: datetime | None = None
 
 
 class StudentResponse(StudentBase):

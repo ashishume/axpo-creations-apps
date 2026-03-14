@@ -347,7 +347,7 @@ export function exportStaffToCSV(staffList: Array<{
       escapeCSV(s.role),
       escapeCSV(s.monthlySalary),
       escapeCSV(s.subjectOrGrade),
-      escapeCSV(s.allowedLeavesPerMonth ?? 2),
+      escapeCSV(s.allowedLeavesPerMonth ?? 1),
       escapeCSV(s.perDaySalary),
       escapeCSV(classesSubjectsStr),
     ].join(",");

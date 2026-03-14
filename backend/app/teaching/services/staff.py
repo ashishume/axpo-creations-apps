@@ -222,11 +222,9 @@ class StaffService:
     ) -> SalaryPayment:
         staff = await self.get_or_404(db, staff_id)
 
-        if await staff_repository.has_salary_payment_for_month(db, staff_id, data.month):
-            raise ConflictError(
-                f"This employee already has a salary payment for {data.month}. Only one payment per employee per month is allowed."
-            )
-
+        # Check if there's an existing payment for this month
+        existing_payment = await staff_repository.get_salary_payment_for_month(db, staff_id, data.month)
+        
         # Calculate salary breakdown
         per_day, leave_deduction, excess_leaves, calculated_salary = _calculate_salary_breakdown(
             monthly_salary=staff.monthly_salary,
@@ -238,11 +236,23 @@ class StaffService:
             extra_deduction=data.extra_deduction,
         )
         
+        # Use provided paid_amount or fall back to expected amount
+        paid_amount = data.paid_amount if data.paid_amount is not None else data.amount
+        
+        if existing_payment:
+            # Update existing payment for partial payment scenario
+            existing_payment.paid_amount = paid_amount
+            existing_payment.status = data.status
+            existing_payment.payment_date = data.payment_date
+            existing_payment.method = data.method
+            return await staff_repository.update(db, existing_payment)
+        
         return await staff_repository.add_salary_payment(
             db,
             staff_id,
             month=data.month,
             amount=data.amount,
+            paid_amount=paid_amount,
             status=data.status,
             payment_date=data.payment_date,
             method=data.method,

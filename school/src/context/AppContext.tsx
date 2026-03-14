@@ -748,7 +748,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           role: s.role,
           monthlySalary: s.monthlySalary,
           subjectOrGrade: s.subjectOrGrade,
-          allowedLeavesPerMonth: s.allowedLeavesPerMonth ?? 2,
+          allowedLeavesPerMonth: s.allowedLeavesPerMonth ?? 1,
         });
       }
       const sampleExpensesList = createSampleExpenses();
@@ -932,7 +932,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         role: s.role,
         monthlySalary: s.monthlySalary,
         subjectOrGrade: s.subjectOrGrade,
-        allowedLeavesPerMonth: s.allowedLeavesPerMonth ?? 2,
+        allowedLeavesPerMonth: s.allowedLeavesPerMonth ?? 1,
       });
     }
     for (const e of data.expenses) {

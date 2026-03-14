@@ -33,13 +33,17 @@ export function YearReportPage() {
   );
 
   const report = useMemo(() => {
-    // --- Student Fee Analysis ---
-    const incomeCollected = sessionStudents.reduce((s, st) => s + getTotalPaid(st), 0);
-    const incomeTarget = sessionStudents.reduce((s, st) => s + getTotalAnnualFees(st), 0);
+    // Filter out frozen students for fee calculations
+    const activeStudents = sessionStudents.filter((st) => !st.isFrozen);
+    const frozenStudents = sessionStudents.filter((st) => st.isFrozen);
+    
+    // --- Student Fee Analysis (excluding frozen students) ---
+    const incomeCollected = activeStudents.reduce((s, st) => s + getTotalPaid(st), 0);
+    const incomeTarget = activeStudents.reduce((s, st) => s + getTotalAnnualFees(st), 0);
 
-    // Fee breakdown by category
+    // Fee breakdown by category (active students only)
     const feeByCategory = { registration: 0, admission: 0, annualFund: 0, monthly: 0, transport: 0, other: 0 };
-    sessionStudents.forEach((st) => {
+    activeStudents.forEach((st) => {
       const cats = getPaymentsByCategory(st);
       feeByCategory.registration += cats.registration;
       feeByCategory.admission += cats.admission;
@@ -49,15 +53,15 @@ export function YearReportPage() {
       feeByCategory.other += cats.other;
     });
 
-    // Sibling discounts
-    const totalSiblingDiscount = sessionStudents.reduce((s, st) => s + getSiblingDiscount(st), 0);
-    const studentsWithSiblingDiscount = sessionStudents.filter((st) => st.siblingId).length;
+    // Sibling discounts (active students only)
+    const totalSiblingDiscount = activeStudents.reduce((s, st) => s + getSiblingDiscount(st), 0);
+    const studentsWithSiblingDiscount = activeStudents.filter((st) => st.hasSiblingDiscount).length;
 
-    // Payment status breakdown
-    const fullyPaid = sessionStudents.filter((st) => getPaymentStatus(st) === "Fully Paid").length;
-    const partiallyPaid = sessionStudents.filter((st) => getPaymentStatus(st) === "Partially Paid").length;
-    const notPaid = sessionStudents.filter((st) => getPaymentStatus(st) === "Not Paid").length;
-    const completionRate = sessionStudents.length > 0 ? (fullyPaid / sessionStudents.length) * 100 : 0;
+    // Payment status breakdown (active students only)
+    const fullyPaid = activeStudents.filter((st) => getPaymentStatus(st) === "Fully Paid").length;
+    const partiallyPaid = activeStudents.filter((st) => getPaymentStatus(st) === "Partially Paid").length;
+    const notPaid = activeStudents.filter((st) => getPaymentStatus(st) === "Not Paid").length;
+    const completionRate = activeStudents.length > 0 ? (fullyPaid / activeStudents.length) * 100 : 0;
 
     // --- Expense Analysis ---
     const totalExpenses = sessionExpenses.reduce((s, e) => s + e.amount, 0);
@@ -99,7 +103,8 @@ export function YearReportPage() {
       feeByCategory,
       totalSiblingDiscount,
       studentsWithSiblingDiscount,
-      studentCount: sessionStudents.length,
+      studentCount: activeStudents.length,
+      frozenStudentCount: frozenStudents.length,
       fullyPaid,
       partiallyPaid,
       notPaid,

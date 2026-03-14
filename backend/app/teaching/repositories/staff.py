@@ -161,6 +161,18 @@ class StaffRepository:
         )
         return result.scalar_one_or_none() is not None
 
+    async def get_salary_payment_for_month(
+        self, db: AsyncSession, staff_id: UUID, month: str
+    ) -> SalaryPayment | None:
+        """Return the salary payment record for a given month if it exists."""
+        result = await db.execute(
+            select(SalaryPayment).where(
+                SalaryPayment.staff_id == staff_id,
+                SalaryPayment.month == month,
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def add_salary_payment(
         self,
         db: AsyncSession,
@@ -168,6 +180,7 @@ class StaffRepository:
         *,
         month: str,
         amount,
+        paid_amount=None,
         status: str = "Paid",
         payment_date: date | None = None,
         method: str | None = None,
@@ -175,7 +188,7 @@ class StaffRepository:
         # Leave tracking fields
         days_worked: int = 30,
         leaves_taken: int = 0,
-        allowed_leaves: int = 2,
+        allowed_leaves: int = 1,
         excess_leaves: int = 0,
         leave_deduction=0,
         # Extra allowance/deduction
@@ -193,14 +206,15 @@ class StaffRepository:
         except (TypeError, ValueError):
             due_parsed = date.fromisoformat(f"{month}-05")
         
-        paid_amount = Decimal(str(amount))
-        calc_salary = Decimal(str(calculated_salary)) if calculated_salary is not None else paid_amount
+        expected_amount = Decimal(str(amount))
+        actual_paid = Decimal(str(paid_amount)) if paid_amount is not None else expected_amount
+        calc_salary = Decimal(str(calculated_salary)) if calculated_salary is not None else expected_amount
         
         payment = SalaryPayment(
             staff_id=staff_id,
             month=month,
-            expected_amount=paid_amount,
-            paid_amount=paid_amount,
+            expected_amount=expected_amount,
+            paid_amount=actual_paid,
             status=status,
             due_date=due_parsed,
             payment_date=payment_date,

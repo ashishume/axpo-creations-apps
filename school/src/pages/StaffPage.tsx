@@ -83,7 +83,7 @@ function getSalaryHistoryMonths(sessionMonths: string[], paymentMonths: string[]
   return Array.from(set).sort((a, b) => b.localeCompare(a));
 }
 
-// Salary Payment Modal Component with leave calculations
+// Salary Payment Modal Component with leave calculations and partial payment support
 function SalaryPaymentModalContent({
   staff,
   month,
@@ -99,28 +99,59 @@ function SalaryPaymentModalContent({
 }) {
   const { data: leaveSummary, isLoading: leaveSummaryLoading } = useLeaveSummary(staff.id, month);
 
+  // Get existing payment for this month (for partial payment continuation)
+  const existingPayment = staff.salaryPayments.find((p) => p.month === month);
+  const previouslyPaidAmount = existingPayment?.paidAmount ?? (existingPayment?.status === "Paid" ? existingPayment?.calculatedSalary ?? 0 : 0);
+  
   // Local state for form values
-  const [daysWorked, setDaysWorked] = useState(30);
-  const [leavesTaken, setLeavesTaken] = useState(0);
-  const [extraAllowance, setExtraAllowance] = useState(0);
-  const [extraDeduction, setExtraDeduction] = useState(0);
+  const [daysWorked, setDaysWorked] = useState(existingPayment?.daysWorked ?? 30);
+  const [leavesTaken, setLeavesTaken] = useState(existingPayment?.leavesTaken ?? 0);
+  const [extraAllowance, setExtraAllowance] = useState(existingPayment?.extraAllowance ?? 0);
+  const [extraDeduction, setExtraDeduction] = useState(existingPayment?.extraDeduction ?? 0);
+  const [payAmount, setPayAmount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Update form values when leave summary loads
   useEffect(() => {
-    if (leaveSummary) {
+    if (leaveSummary && !existingPayment) {
       setDaysWorked(leaveSummary.daysWorked);
       setLeavesTaken(leaveSummary.leavesTaken);
     }
-  }, [leaveSummary]);
+  }, [leaveSummary, existingPayment]);
 
   // Calculate salary breakdown
   const perDay = staff.perDaySalary ?? staff.monthlySalary / 30;
-  const allowedLeaves = staff.allowedLeavesPerMonth ?? 2;
+  const allowedLeaves = staff.allowedLeavesPerMonth ?? 1;
   const excessLeaves = Math.max(0, leavesTaken - allowedLeaves);
   const leaveDeduction = excessLeaves * perDay;
   const calculatedSalary = staff.monthlySalary - leaveDeduction - extraDeduction + extraAllowance;
+  
+  // Calculate remaining amount for partial payments
+  const remainingAmount = Math.max(0, calculatedSalary - previouslyPaidAmount);
+  const isPartiallyPaid = existingPayment?.status === "Partially Paid";
+  const isFullyPaid = existingPayment?.status === "Paid";
+  
+  // Set default pay amount when calculated salary changes
+  useEffect(() => {
+    setPayAmount(remainingAmount);
+  }, [remainingAmount]);
+  
+  // Validate pay amount doesn't exceed remaining
+  const validatePayAmount = (value: number) => {
+    return Math.min(Math.max(0, value), remainingAmount);
+  };
 
-  const alreadyHasPaymentForMonth = staff.salaryPayments.some((p) => p.month === month);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (isSubmitting || payAmount <= 0 || payAmount > remainingAmount) return;
+    
+    setIsSubmitting(true);
+    try {
+      await onSubmit(e);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Modal
@@ -128,7 +159,12 @@ function SalaryPaymentModalContent({
       onClose={onClose}
       title={`Salary Payment – ${staff.name}`}
     >
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Hidden fields for form data */}
+        <input type="hidden" name="calculatedSalary" value={calculatedSalary} />
+        <input type="hidden" name="previouslyPaidAmount" value={previouslyPaidAmount} />
+        <input type="hidden" name="remainingAmount" value={remainingAmount} />
+        
         {/* Salary Info Header */}
         <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
           <div className="flex justify-between items-center">
@@ -146,6 +182,37 @@ function SalaryPaymentModalContent({
             </div>
           </div>
         </div>
+
+        {/* Partial Payment Status */}
+        {isPartiallyPaid && (
+          <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3 border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>Continuing partial payment</strong>
+            </p>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <span className="text-blue-600">Total Salary:</span>
+                <p className="font-medium text-blue-800 dark:text-blue-200">{formatCurrency(calculatedSalary)}</p>
+              </div>
+              <div>
+                <span className="text-blue-600">Already Paid:</span>
+                <p className="font-medium text-green-600">{formatCurrency(previouslyPaidAmount)}</p>
+              </div>
+              <div>
+                <span className="text-blue-600">Remaining:</span>
+                <p className="font-medium text-amber-600">{formatCurrency(remainingAmount)}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {isFullyPaid && (
+          <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-3 border border-green-200 dark:border-green-800">
+            <p className="text-sm text-green-800 dark:text-green-200">
+              Salary for this month is fully paid ({formatCurrency(existingPayment?.calculatedSalary ?? 0)})
+            </p>
+          </div>
+        )}
 
         {/* Leave Summary from System */}
         {leaveSummaryLoading ? (
@@ -167,147 +234,170 @@ function SalaryPaymentModalContent({
           </div>
         ) : null}
 
-        {/* Days Worked & Leaves */}
-        <div className="grid grid-cols-2 gap-4">
-          <FormField label="Days Worked" helperText="Verify before paying">
-            <Input
-              name="daysWorked"
-              type="number"
-              min={0}
-              max={31}
-              value={daysWorked}
-              onChange={(e) => setDaysWorked(Number(e.target.value))}
-            />
-          </FormField>
-          <FormField label="Leaves Taken" helperText={`Allowed: ${allowedLeaves}`}>
-            <Input
-              name="leavesTaken"
-              type="number"
-              min={0}
-              max={31}
-              value={leavesTaken}
-              onChange={(e) => setLeavesTaken(Number(e.target.value))}
-            />
-          </FormField>
-        </div>
-
-        {/* Leave Deduction Display */}
-        {excessLeaves > 0 && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3">
-            <p className="text-sm text-red-800 dark:text-red-200">
-              <strong>Excess Leaves:</strong> {excessLeaves} day(s) beyond allowed limit
-            </p>
-            <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-              <strong>Leave Deduction:</strong> {formatCurrency(leaveDeduction)}
-            </p>
-          </div>
-        )}
-
-        {/* Extra Allowance */}
-        <div className="border-t border-slate-200 pt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label="Extra Allowance (₹)" helperText="Bonus, advance, etc.">
-              <Input
-                name="extraAllowance"
-                type="number"
-                min={0}
-                value={extraAllowance}
-                onChange={(e) => setExtraAllowance(Number(e.target.value))}
-              />
-            </FormField>
-            <FormField label="Allowance Note">
-              <Input
-                name="allowanceNote"
-                type="text"
-                placeholder="e.g., Bonus, Advance"
-              />
-            </FormField>
-          </div>
-        </div>
-
-        {/* Extra Deduction */}
-        <div className="grid grid-cols-2 gap-4">
-          <FormField label="Extra Deduction (₹)" helperText="Other deductions">
-            <Input
-              name="extraDeduction"
-              type="number"
-              min={0}
-              value={extraDeduction}
-              onChange={(e) => setExtraDeduction(Number(e.target.value))}
-            />
-          </FormField>
-          <FormField label="Deduction Note">
-            <Input
-              name="deductionNote"
-              type="text"
-              placeholder="e.g., Loan EMI"
-            />
-          </FormField>
-        </div>
-
-        {/* Calculated Salary */}
-        <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4 border border-green-200 dark:border-green-800">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Banknote className="h-5 w-5 text-green-600" />
-              <span className="font-medium text-green-800 dark:text-green-200">Final Salary</span>
+        {!isFullyPaid && (
+          <>
+            {/* Days Worked & Leaves */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Days Worked" helperText="Verify before paying">
+                <Input
+                  name="daysWorked"
+                  type="number"
+                  min={0}
+                  max={31}
+                  value={daysWorked}
+                  onChange={(e) => setDaysWorked(Number(e.target.value))}
+                />
+              </FormField>
+              <FormField label="Leaves Taken" helperText={`Allowed: ${allowedLeaves}`}>
+                <Input
+                  name="leavesTaken"
+                  type="number"
+                  min={0}
+                  max={31}
+                  value={leavesTaken}
+                  onChange={(e) => setLeavesTaken(Number(e.target.value))}
+                />
+              </FormField>
             </div>
-            <span className="text-2xl font-bold text-green-700 dark:text-green-300">
-              {formatCurrency(calculatedSalary)}
-            </span>
-          </div>
-          <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-            = {formatCurrency(staff.monthlySalary)}
-            {leaveDeduction > 0 && ` - ${formatCurrency(leaveDeduction)} (leave)`}
-            {extraDeduction > 0 && ` - ${formatCurrency(extraDeduction)} (deduction)`}
-            {extraAllowance > 0 && ` + ${formatCurrency(extraAllowance)} (allowance)`}
-          </p>
-        </div>
 
-        {/* Already paid warning */}
-        {alreadyHasPaymentForMonth && (
-          <div className="flex items-start gap-2 text-sm text-amber-800 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-200 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
-            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-            <span>This month already has a salary payment. Only one payment per employee per month is allowed.</span>
-          </div>
+            {/* Leave Deduction Display */}
+            {excessLeaves > 0 && (
+              <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3">
+                <p className="text-sm text-red-800 dark:text-red-200">
+                  <strong>Excess Leaves:</strong> {excessLeaves} day(s) beyond allowed limit
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                  <strong>Leave Deduction:</strong> {formatCurrency(leaveDeduction)}
+                </p>
+              </div>
+            )}
+
+            {/* Extra Allowance */}
+            <div className="border-t border-slate-200 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField label="Extra Allowance (₹)" helperText="Bonus, advance, etc.">
+                  <Input
+                    name="extraAllowance"
+                    type="number"
+                    min={0}
+                    value={extraAllowance}
+                    onChange={(e) => setExtraAllowance(Number(e.target.value))}
+                  />
+                </FormField>
+                <FormField label="Allowance Note">
+                  <Input
+                    name="allowanceNote"
+                    type="text"
+                    placeholder="e.g., Bonus, Advance"
+                    defaultValue={existingPayment?.allowanceNote}
+                  />
+                </FormField>
+              </div>
+            </div>
+
+            {/* Extra Deduction */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Extra Deduction (₹)" helperText="Other deductions">
+                <Input
+                  name="extraDeduction"
+                  type="number"
+                  min={0}
+                  value={extraDeduction}
+                  onChange={(e) => setExtraDeduction(Number(e.target.value))}
+                />
+              </FormField>
+              <FormField label="Deduction Note">
+                <Input
+                  name="deductionNote"
+                  type="text"
+                  placeholder="e.g., Loan EMI"
+                  defaultValue={existingPayment?.deductionNote}
+                />
+              </FormField>
+            </div>
+
+            {/* Calculated Salary */}
+            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4 border border-green-200 dark:border-green-800">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Banknote className="h-5 w-5 text-green-600" />
+                  <span className="font-medium text-green-800 dark:text-green-200">
+                    {isPartiallyPaid ? "Remaining to Pay" : "Total Salary"}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold text-green-700 dark:text-green-300">
+                  {formatCurrency(isPartiallyPaid ? remainingAmount : calculatedSalary)}
+                </span>
+              </div>
+              {!isPartiallyPaid && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                  = {formatCurrency(staff.monthlySalary)}
+                  {leaveDeduction > 0 && ` - ${formatCurrency(leaveDeduction)} (leave)`}
+                  {extraDeduction > 0 && ` - ${formatCurrency(extraDeduction)} (deduction)`}
+                  {extraAllowance > 0 && ` + ${formatCurrency(extraAllowance)} (allowance)`}
+                </p>
+              )}
+            </div>
+
+            {/* Amount to Pay */}
+            <div className="border-t border-slate-200 pt-4">
+              <FormField 
+                label="Amount to Pay (₹)" 
+                helperText={`Max: ${formatCurrency(remainingAmount)}`}
+                required
+              >
+                <Input
+                  name="payAmount"
+                  type="number"
+                  min={1}
+                  max={remainingAmount}
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(validatePayAmount(Number(e.target.value)))}
+                  className="text-lg font-semibold"
+                />
+              </FormField>
+              {payAmount > remainingAmount && (
+                <p className="text-xs text-red-600 mt-1">
+                  Amount cannot exceed {formatCurrency(remainingAmount)}
+                </p>
+              )}
+            </div>
+
+            {/* Disclaimer */}
+            <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 p-2 rounded">
+              <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+              <span>Please verify the days worked and leaves before confirming payment.</span>
+            </div>
+
+            {/* Payment Details */}
+            <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4">
+              <FormField label="Payment Date">
+                <Input name="paymentDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+              </FormField>
+              <FormField label="Method">
+                <Select name="method" defaultValue="Bank Transfer">
+                  <option value="">—</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="Online">Online</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </Select>
+              </FormField>
+            </div>
+          </>
         )}
-
-        {/* Disclaimer */}
-        <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 p-2 rounded">
-          <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-          <span>Please verify the days worked and leaves before confirming payment.</span>
-        </div>
-
-        {/* Payment Details */}
-        <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4">
-          <FormField label="Payment Date">
-            <Input name="paymentDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
-          </FormField>
-          <FormField label="Method">
-            <Select name="method" defaultValue="Bank Transfer">
-              <option value="">—</option>
-              <option value="Cash">Cash</option>
-              <option value="Cheque">Cheque</option>
-              <option value="Online">Online</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-            </Select>
-          </FormField>
-        </div>
-
-        <FormField label="Status">
-          <Select name="status" defaultValue="Paid">
-            <option value="Paid">Paid</option>
-            <option value="Partially Paid">Partially Paid</option>
-            <option value="Pending">Pending</option>
-          </Select>
-        </FormField>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit" disabled={alreadyHasPaymentForMonth}>
-            Pay Salary
+          <Button 
+            type="submit" 
+            disabled={isFullyPaid || payAmount <= 0 || payAmount > remainingAmount || isSubmitting}
+            loading={isSubmitting}
+            loadingText="Processing..."
+          >
+            {payAmount < remainingAmount ? "Pay Partial" : "Pay Full Salary"}
           </Button>
         </div>
       </form>
@@ -360,6 +450,7 @@ export function StaffPage() {
   const [transferSelectedIds, setTransferSelectedIds] = useState<Set<string>>(new Set());
   const [transferSubmitting, setTransferSubmitting] = useState(false);
   const [confirmDeleteAllStaff, setConfirmDeleteAllStaff] = useState(false);
+  const [isStaffSubmitting, setIsStaffSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [classFilter, setClassFilter] = useState<string>("");
@@ -444,13 +535,20 @@ export function StaffPage() {
     const employeeId = (form.elements.namedItem("employeeId") as HTMLInputElement).value.trim();
     const role = (form.elements.namedItem("role") as HTMLSelectElement).value as StaffRole;
     const monthlySalary = Number((form.elements.namedItem("monthlySalary") as HTMLInputElement).value);
-    const subjectOrGrade = (form.elements.namedItem("subjectOrGrade") as HTMLInputElement).value.trim();
-    const allowedLeavesPerMonth = Number((form.elements.namedItem("allowedLeavesPerMonth") as HTMLInputElement).value) || 2;
+    const subjectOrGrade = (form.elements.namedItem("subjectOrGrade") as HTMLInputElement)?.value?.trim() ?? "";
+    const allowedLeavesPerMonth = Number((form.elements.namedItem("allowedLeavesPerMonth") as HTMLInputElement).value) || 1;
     const perDaySalaryInput = (form.elements.namedItem("perDaySalary") as HTMLInputElement).value;
     const perDaySalary = perDaySalaryInput ? Number(perDaySalaryInput) : undefined;
+    const aadhaarNumber = (form.elements.namedItem("aadhaarNumber") as HTMLInputElement).value.trim();
+    const dateOfBirth = (form.elements.namedItem("dateOfBirth") as HTMLInputElement).value;
 
     if (!selectedSessionId || !name || monthlySalary <= 0) {
       if (!selectedSessionId) toast("Please select a session first.", "error");
+      return;
+    }
+
+    if (aadhaarNumber && !/^\d{12}$/.test(aadhaarNumber)) {
+      toast("Aadhaar number must be exactly 12 digits", "error");
       return;
     }
 
@@ -469,8 +567,11 @@ export function StaffPage() {
       allowedLeavesPerMonth,
       perDaySalary,
       classesSubjects: validClassesSubjects.length > 0 ? validClassesSubjects : undefined,
+      aadhaarNumber: aadhaarNumber || undefined,
+      dateOfBirth: dateOfBirth || undefined,
     };
 
+    setIsStaffSubmitting(true);
     try {
       if (staffModal.staff) {
         await updateStaffMut.mutateAsync({
@@ -484,6 +585,8 @@ export function StaffPage() {
             allowedLeavesPerMonth: payload.allowedLeavesPerMonth,
             perDaySalary: payload.perDaySalary,
             classesSubjects: payload.classesSubjects,
+            aadhaarNumber: payload.aadhaarNumber,
+            dateOfBirth: payload.dateOfBirth,
           },
         });
         toast("Staff updated");
@@ -495,6 +598,8 @@ export function StaffPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to save staff.";
       toast(message, "error");
+    } finally {
+      setIsStaffSubmitting(false);
     }
   };
 
@@ -522,7 +627,6 @@ export function StaffPage() {
     if (!salaryModal) return;
     const form = e.currentTarget;
     const month = salaryModal.month;
-    const status = (form.elements.namedItem("status") as HTMLSelectElement).value as "Paid" | "Pending" | "Partially Paid";
     const daysWorked = Number((form.elements.namedItem("daysWorked") as HTMLInputElement).value) || 30;
     const leavesTaken = Number((form.elements.namedItem("leavesTaken") as HTMLInputElement).value) || 0;
     const extraAllowance = Number((form.elements.namedItem("extraAllowance") as HTMLInputElement).value) || 0;
@@ -531,20 +635,36 @@ export function StaffPage() {
     const deductionNote = (form.elements.namedItem("deductionNote") as HTMLInputElement).value.trim() || undefined;
     const paymentDate = (form.elements.namedItem("paymentDate") as HTMLInputElement).value || undefined;
     const method = (form.elements.namedItem("method") as HTMLSelectElement).value as "Cash" | "Cheque" | "Online" | "Bank Transfer" | "";
+    const payAmount = Number((form.elements.namedItem("payAmount") as HTMLInputElement).value) || 0;
+    const previouslyPaidAmount = Number((form.elements.namedItem("previouslyPaidAmount") as HTMLInputElement)?.value) || 0;
     const dueDate = `${month}-${String(salaryDueDay).padStart(2, "0")}`;
 
     // Calculate final amount based on deductions
     const staff = salaryModal.staff;
     const perDay = staff.perDaySalary ?? staff.monthlySalary / 30;
-    const allowedLeaves = staff.allowedLeavesPerMonth ?? 2;
+    const allowedLeaves = staff.allowedLeavesPerMonth ?? 1;
     const excessLeaves = Math.max(0, leavesTaken - allowedLeaves);
     const leaveDeduction = excessLeaves * perDay;
     const calculatedSalary = staff.monthlySalary - leaveDeduction - extraDeduction + extraAllowance;
+    
+    // Calculate total paid including this payment
+    const totalPaidAmount = previouslyPaidAmount + payAmount;
+    
+    // Determine status based on amount paid
+    let status: "Paid" | "Pending" | "Partially Paid";
+    if (totalPaidAmount >= calculatedSalary) {
+      status = "Paid";
+    } else if (totalPaidAmount > 0) {
+      status = "Partially Paid";
+    } else {
+      status = "Pending";
+    }
 
     try {
       await addSalaryPaymentAsync(staff.id, {
         month,
         amount: calculatedSalary,
+        paidAmount: totalPaidAmount,
         status,
         paymentDate: paymentDate || undefined,
         method: method || undefined,
@@ -560,7 +680,7 @@ export function StaffPage() {
         deductionNote,
         calculatedSalary,
       });
-      toast("Salary payment recorded");
+      toast(`Salary payment of ${formatCurrency(payAmount)} recorded`);
       if (salaryModal.fromHistory) {
         setSalaryHistoryModal(staff);
       }
@@ -907,6 +1027,30 @@ export function StaffPage() {
             />
           </FormField>
 
+          {/* Personal Details (Optional) */}
+          <div className="border-t border-slate-200 pt-4 mt-4">
+            <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Personal Details (Optional)</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Aadhaar Number" helperText="12-digit Aadhaar">
+                <Input
+                  name="aadhaarNumber"
+                  type="text"
+                  maxLength={12}
+                  pattern="[0-9]{12}"
+                  defaultValue={staffModal.staff?.aadhaarNumber ?? ""}
+                  placeholder="123456789012"
+                />
+              </FormField>
+              <FormField label="Date of Birth">
+                <Input
+                  name="dateOfBirth"
+                  type="date"
+                  defaultValue={staffModal.staff?.dateOfBirth ?? ""}
+                />
+              </FormField>
+            </div>
+          </div>
+
           {/* Leave & Salary Configuration */}
           <div className="border-t border-slate-200 pt-4 mt-4">
             <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Leave & Salary Configuration</h4>
@@ -917,7 +1061,7 @@ export function StaffPage() {
                   type="number"
                   min={0}
                   max={30}
-                  defaultValue={staffModal.staff?.allowedLeavesPerMonth ?? 2}
+                  defaultValue={staffModal.staff?.allowedLeavesPerMonth ?? 1}
                 />
               </FormField>
               <FormField label="Per Day Salary (₹)" helperText="Leave empty for monthly/30">
@@ -984,10 +1128,12 @@ export function StaffPage() {
           </div>
 
           <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
-            <Button type="button" variant="secondary" onClick={() => setStaffModal({ open: false })}>
+            <Button type="button" variant="secondary" onClick={() => setStaffModal({ open: false })} disabled={isStaffSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!selectedSessionId}>Save</Button>
+            <Button type="submit" disabled={!selectedSessionId || isStaffSubmitting} loading={isStaffSubmitting} loadingText="Saving...">
+              Save
+            </Button>
           </div>
         </form>
       </Modal>
@@ -1069,7 +1215,7 @@ export function StaffPage() {
               role: r.role,
               monthlySalary: r.monthlySalary,
               subjectOrGrade: r.subjectOrGrade,
-              allowedLeavesPerMonth: r.allowedLeavesPerMonth ?? 2,
+              allowedLeavesPerMonth: r.allowedLeavesPerMonth ?? 1,
               perDaySalary: r.perDaySalary,
               classesSubjects,
             };
@@ -1101,7 +1247,7 @@ export function StaffPage() {
                       Monthly Salary: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(historyStaff.monthlySalary)}</strong>
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Allowed Leaves: {historyStaff.allowedLeavesPerMonth ?? 2}/month
+                      Allowed Leaves: {historyStaff.allowedLeavesPerMonth ?? 1}/month
                     </p>
                   </div>
                 </div>
@@ -1184,22 +1330,29 @@ export function StaffPage() {
                           </td>
                           <td className="py-2">
                             <PermissionGate anyPermission={["salary:manage", "salary:record"]}>
-                              {paymentsForMonth.length === 0 ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => {
-                                    setSalaryModal({ staff: historyStaff, month, fromHistory: true });
-                                  }}
-                                  title="Pay salary for this month"
-                                >
-                                  <Banknote className="h-4 w-4 mr-1" />
-                                  Pay
-                                </Button>
-                              ) : (
-                                <span className="text-xs text-slate-400" title="Already paid for this month">—</span>
-                              )}
+                              {(() => {
+                                const isPartiallyPaid = firstPayment?.status === "Partially Paid";
+                                const isNotPaid = paymentsForMonth.length === 0;
+                                const canPay = isNotPaid || isPartiallyPaid;
+                                
+                                if (canPay) {
+                                  return (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={() => {
+                                        setSalaryModal({ staff: historyStaff, month, fromHistory: true });
+                                      }}
+                                      title={isPartiallyPaid ? "Continue paying remaining amount" : "Pay salary for this month"}
+                                    >
+                                      <Banknote className="h-4 w-4 mr-1" />
+                                      {isPartiallyPaid ? "Pay Rest" : "Pay"}
+                                    </Button>
+                                  );
+                                }
+                                return <span className="text-xs text-slate-400" title="Already paid for this month">—</span>;
+                              })()}
                             </PermissionGate>
                           </td>
                         </tr>

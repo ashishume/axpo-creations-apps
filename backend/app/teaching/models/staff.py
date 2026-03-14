@@ -36,11 +36,15 @@ class Staff(TeachingBase):
     salary_due_day: Mapped[int] = mapped_column(Integer, default=5)
 
     # Leave & Salary Deduction Configuration (per teacher)
-    allowed_leaves_per_month: Mapped[int] = mapped_column(Integer, default=2)
+    allowed_leaves_per_month: Mapped[int] = mapped_column(Integer, default=1)
     per_day_salary: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
 
     # Classes & Subjects (dynamic array) - [{className: string, subjects: string[]}]
     classes_subjects: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
+    
+    # Personal details (optional)
+    aadhaar_number: Mapped[str | None] = mapped_column(String(12), nullable=True)
+    date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
@@ -78,7 +82,7 @@ class SalaryPayment(TeachingBase):
     # Leave tracking fields
     days_worked: Mapped[int] = mapped_column(Integer, default=30)
     leaves_taken: Mapped[int] = mapped_column(Integer, default=0)
-    allowed_leaves: Mapped[int] = mapped_column(Integer, default=2)
+    allowed_leaves: Mapped[int] = mapped_column(Integer, default=1)
     excess_leaves: Mapped[int] = mapped_column(Integer, default=0)
     leave_deduction: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
 

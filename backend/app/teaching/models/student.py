@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import TeachingBase
@@ -29,6 +29,7 @@ class Student(TeachingBase):
     # Basic info
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     student_id: Mapped[str] = mapped_column(String(50), nullable=False)
+    admission_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
     fee_type: Mapped[str] = mapped_column(String(50), default="Regular")
     
     # Personal details
@@ -39,6 +40,8 @@ class Student(TeachingBase):
     permanent_address: Mapped[str | None] = mapped_column(Text, nullable=True)
     blood_group: Mapped[str | None] = mapped_column(String(10), nullable=True)
     health_issues: Mapped[str | None] = mapped_column(Text, nullable=True)
+    aadhaar_number: Mapped[str | None] = mapped_column(String(12), nullable=True)
+    date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
     
     # Profile
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -47,6 +50,13 @@ class Student(TeachingBase):
         ForeignKey("school_xx_students.id", ondelete="SET NULL"),
         nullable=True,
     )
+    
+    # Sibling discount - 20% discount applied to only ONE sibling
+    has_sibling_discount: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # Account freeze - for students who leave mid-session
+    is_frozen: Mapped[bool] = mapped_column(Boolean, default=False)
+    frozen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

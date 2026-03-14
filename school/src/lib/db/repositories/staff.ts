@@ -27,10 +27,13 @@ function dbRowToStaff(row: Record<string, unknown>, salaryPayments: ExtendedSala
     monthlySalary: Number(row.monthly_salary) || 0,
     subjectOrGrade: row.subject_or_grade as string | undefined,
     // Leave & salary deduction configuration
-    allowedLeavesPerMonth: Number(row.allowed_leaves_per_month) || 2,
+    allowedLeavesPerMonth: Number(row.allowed_leaves_per_month) || 1,
     perDaySalary: row.per_day_salary != null ? Number(row.per_day_salary) : undefined,
     // Classes & subjects
     classesSubjects: mapClassesSubjects(row.classes_subjects),
+    // Personal details
+    aadhaarNumber: row.aadhaar_number as string | undefined,
+    dateOfBirth: row.date_of_birth as string | undefined,
     salaryPayments,
   };
 }
@@ -40,6 +43,7 @@ function mapSalaryPaymentFromDb(p: Record<string, unknown>): ExtendedSalaryPayme
     id: p.id as string,
     month: p.month as string,
     amount: Number(p.paid_amount) || 0,
+    paidAmount: Number(p.paid_amount) || 0,
     status: (p.status as string) as SalaryStatus,
     paymentDate: p.payment_date as string | undefined,
     method: (p.method as string | undefined) as PaymentMethod | undefined,
@@ -49,7 +53,7 @@ function mapSalaryPaymentFromDb(p: Record<string, unknown>): ExtendedSalaryPayme
     // Leave tracking fields
     daysWorked: Number(p.days_worked) || 30,
     leavesTaken: Number(p.leaves_taken) || 0,
-    allowedLeaves: Number(p.allowed_leaves) || 2,
+    allowedLeaves: Number(p.allowed_leaves) || 1,
     excessLeaves: Number(p.excess_leaves) || 0,
     leaveDeduction: Number(p.leave_deduction) || 0,
     // Extra allowance/deduction
@@ -189,7 +193,7 @@ export const staffRepository = {
       role: staffMember.role,
       monthly_salary: staffMember.monthlySalary,
       subject_or_grade: staffMember.subjectOrGrade ?? null,
-      allowed_leaves_per_month: staffMember.allowedLeavesPerMonth ?? 2,
+      allowed_leaves_per_month: staffMember.allowedLeavesPerMonth ?? 1,
       per_day_salary: staffMember.perDaySalary ?? null,
     };
     if (staffMember.classesSubjects?.length) {
@@ -221,7 +225,7 @@ export const staffRepository = {
         role: s.role,
         monthly_salary: s.monthlySalary,
         subject_or_grade: s.subjectOrGrade ?? null,
-        allowed_leaves_per_month: s.allowedLeavesPerMonth ?? 2,
+        allowed_leaves_per_month: s.allowedLeavesPerMonth ?? 1,
         per_day_salary: s.perDaySalary ?? null,
       };
       if (s.classesSubjects?.length) {
@@ -324,26 +328,65 @@ export const staffRepository = {
     return inserts.length;
   },
 
-  async addSalaryPayment(staffId: string, payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'>): Promise<ExtendedSalaryPayment> {
+  async addSalaryPayment(staffId: string, payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'> & { paidAmount?: number }): Promise<ExtendedSalaryPayment> {
     const supabase = getSupabase();
-    const id = crypto.randomUUID();
     const dueDate = payment.dueDate || `${payment.month}-05`;
-
-    const { data, error } = await supabase
+    
+    // Check if a payment already exists for this month (for partial payment continuation)
+    const { data: existing } = await supabase
       .from('school_xx_salary_payments')
-      .insert({
-        id,
-        staff_id: staffId,
-        month: payment.month,
-        expected_amount: payment.expectedAmount ?? payment.amount,
-        paid_amount: payment.amount,
-        status: payment.status,
-        due_date: dueDate,
-        payment_date: payment.paymentDate,
-        method: payment.method,
-      })
-      .select()
+      .select('id')
+      .eq('staff_id', staffId)
+      .eq('month', payment.month)
       .single();
+
+    const paidAmount = payment.paidAmount ?? payment.amount;
+    const calculatedSalary = payment.calculatedSalary ?? payment.amount;
+
+    const paymentData = {
+      staff_id: staffId,
+      month: payment.month,
+      expected_amount: calculatedSalary,
+      paid_amount: paidAmount,
+      status: payment.status,
+      due_date: dueDate,
+      payment_date: payment.paymentDate,
+      method: payment.method,
+      days_worked: payment.daysWorked ?? 30,
+      leaves_taken: payment.leavesTaken ?? 0,
+      allowed_leaves: payment.allowedLeaves ?? 1,
+      excess_leaves: payment.excessLeaves ?? 0,
+      leave_deduction: payment.leaveDeduction ?? 0,
+      extra_allowance: payment.extraAllowance ?? 0,
+      allowance_note: payment.allowanceNote,
+      extra_deduction: payment.extraDeduction ?? 0,
+      deduction_note: payment.deductionNote,
+      calculated_salary: calculatedSalary,
+    };
+
+    let data;
+    let error;
+
+    if (existing) {
+      // Update existing payment (partial payment scenario)
+      const result = await supabase
+        .from('school_xx_salary_payments')
+        .update(paymentData)
+        .eq('id', existing.id)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    } else {
+      // Insert new payment
+      const result = await supabase
+        .from('school_xx_salary_payments')
+        .insert({ id: crypto.randomUUID(), ...paymentData })
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) throw new Error('Failed to add salary payment');
 
@@ -351,6 +394,7 @@ export const staffRepository = {
       id: data.id,
       month: data.month,
       amount: Number(data.paid_amount),
+      paidAmount: Number(data.paid_amount),
       status: data.status as SalaryStatus,
       paymentDate: data.payment_date,
       method: data.method as PaymentMethod | undefined,
@@ -359,11 +403,13 @@ export const staffRepository = {
       lateDays: data.late_days,
       daysWorked: Number(data.days_worked) || 30,
       leavesTaken: Number(data.leaves_taken) || 0,
-      allowedLeaves: Number(data.allowed_leaves) || 2,
+      allowedLeaves: Number(data.allowed_leaves) || 1,
       excessLeaves: Number(data.excess_leaves) || 0,
       leaveDeduction: Number(data.leave_deduction) || 0,
       extraAllowance: Number(data.extra_allowance) || 0,
+      allowanceNote: data.allowance_note,
       extraDeduction: Number(data.extra_deduction) || 0,
+      deductionNote: data.deduction_note,
       calculatedSalary: Number(data.calculated_salary) || Number(data.paid_amount) || 0,
     };
   },

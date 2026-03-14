@@ -3,17 +3,24 @@ import { differenceInDays, differenceInWeeks, isAfter } from "date-fns";
 
 type StudentLike = SessionStudent;
 
+const SIBLING_DISCOUNT_RATE = 0.2;
+
+export function hasSiblingDiscountEligibility(student: StudentLike): boolean {
+  return student.hasSiblingDiscount === true || 
+    (student.siblingId != null && student.hasSiblingDiscount !== false);
+}
+
 export function getSiblingDiscount(student: StudentLike, studentClass?: StudentClass): number {
-  if (!student.siblingId) return 0;
+  if (!hasSiblingDiscountEligibility(student)) return 0;
 
   const monthlyFee = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
-  return monthlyFee * 12 * 0.3;
+  return monthlyFee * 12 * SIBLING_DISCOUNT_RATE;
 }
 
 export function getDiscountedMonthlyFees(student: StudentLike, studentClass?: StudentClass): number {
   const monthlyFee = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
-  if (!student.siblingId) return monthlyFee;
-  return monthlyFee * 0.7;
+  if (!hasSiblingDiscountEligibility(student)) return monthlyFee;
+  return monthlyFee * (1 - SIBLING_DISCOUNT_RATE);
 }
 
 export function getTotalAnnualFees(student: StudentLike, studentClass?: StudentClass): number {
@@ -22,8 +29,8 @@ export function getTotalAnnualFees(student: StudentLike, studentClass?: StudentC
   const monthlyFee = student.monthlyFees ?? studentClass?.monthlyFees ?? 0;
   const transportFee = student.transportFees ?? 0;
 
-  // Apply sibling discount (30% off monthly fees if sibling exists)
-  const siblingDiscount = student.siblingId ? 0.3 : 0;
+  // Apply 20% sibling discount if student has discount eligibility
+  const siblingDiscount = hasSiblingDiscountEligibility(student) ? SIBLING_DISCOUNT_RATE : 0;
   const discountedMonthlyFee = monthlyFee * (1 - siblingDiscount);
 
   // Annual total: one-time fees + 12 months of discounted monthly + transport
@@ -32,11 +39,19 @@ export function getTotalAnnualFees(student: StudentLike, studentClass?: StudentC
 
 // Get target amount (for backward compatibility or calculated)
 export function getTargetAmount(student: StudentLike, studentClass?: StudentClass): number {
+  // Frozen students have 0 target (excluded from calculations)
+  if (student.isFrozen) return 0;
+  
   // Use legacy targetAmount if set, otherwise calculate
   if (student.targetAmount && student.targetAmount > 0) {
     return student.targetAmount;
   }
   return getTotalAnnualFees(student, studentClass);
+}
+
+// Check if student is frozen (left mid-session)
+export function isStudentFrozen(student: StudentLike): boolean {
+  return student.isFrozen === true;
 }
 
 export function getTotalPaid(student: StudentLike): number {

@@ -551,7 +551,7 @@ export function AssistantPopup() {
               role: (staffData.role as string) || "Teacher",
               monthlySalary: (staffData.monthlySalary as number) || 0,
               subjectOrGrade: staffData.subjectOrGrade as string | undefined,
-              allowedLeavesPerMonth: (staffData.allowedLeavesPerMonth as number) || 2,
+              allowedLeavesPerMonth: (staffData.allowedLeavesPerMonth as number) || 1,
               salaryPayments: [],
             }));
             await addStaffBatch(staffPayload as never[]);
@@ -590,7 +590,7 @@ export function AssistantPopup() {
                 method: (p.method || "Cash") as import("../../types").PaymentMethod | undefined,
                 daysWorked: 30,
                 leavesTaken: 0,
-                allowedLeaves: staffMember.allowedLeavesPerMonth ?? 2,
+                allowedLeaves: staffMember.allowedLeavesPerMonth ?? 1,
                 excessLeaves: 0,
                 leaveDeduction: 0,
                 extraAllowance: 0,

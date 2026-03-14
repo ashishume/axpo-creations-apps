@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ClassSubject(BaseModel):
@@ -16,6 +16,7 @@ class ClassSubject(BaseModel):
 class SalaryPaymentCreate(BaseModel):
     month: str
     amount: Decimal
+    paid_amount: Decimal | None = None
     status: str = "Paid"
     payment_date: date | None = None
     method: str | None = None
@@ -43,7 +44,7 @@ class SalaryPaymentResponse(BaseModel):
     # Leave tracking fields
     days_worked: int = 30
     leaves_taken: int = 0
-    allowed_leaves: int = 2
+    allowed_leaves: int = 1
     excess_leaves: int = 0
     leave_deduction: Decimal = Decimal("0")
     # Extra allowance/deduction
@@ -115,10 +116,13 @@ class StaffBase(BaseModel):
     address: str | None = None
     salary_due_day: int = 5
     # Leave & salary deduction configuration
-    allowed_leaves_per_month: int = 2
+    allowed_leaves_per_month: int = 1
     per_day_salary: Decimal | None = None
     # Classes & subjects (dynamic array)
     classes_subjects: list[dict[str, Any]] | None = None
+    # Personal details (optional)
+    aadhaar_number: str | None = Field(None, max_length=12, pattern=r"^\d{12}$")
+    date_of_birth: date | None = None
 
 
 class StaffCreate(StaffBase):
@@ -140,6 +144,9 @@ class StaffUpdate(BaseModel):
     per_day_salary: Decimal | None = None
     # Classes & subjects (dynamic array)
     classes_subjects: list[dict[str, Any]] | None = None
+    # Personal details (optional)
+    aadhaar_number: str | None = Field(None, max_length=12, pattern=r"^\d{12}$")
+    date_of_birth: date | None = None
 
 
 class StaffResponse(StaffBase):

@@ -236,7 +236,7 @@ export function createSampleStaff(): Staff[] {
         employeeId: `EMP-${sessionId.slice(-1)}-${100 + i}`,
         role,
         monthlySalary: salaries[i],
-        allowedLeavesPerMonth: 2,
+        allowedLeavesPerMonth: 1,
         subjectOrGrade: role === "Teacher" ? (i === 0 ? "Mathematics" : i === 1 ? "Science" : "English") : undefined,
         salaryPayments: months.map((month, mi) => ({
           id: generateId(),

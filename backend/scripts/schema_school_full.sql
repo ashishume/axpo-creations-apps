@@ -433,6 +433,36 @@ INSERT INTO school_xx_users (id, username, name, email, role_id, password_hash, 
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================================================
+-- Migration: Add new fields for students and staff (idempotent)
+-- =============================================================================
+-- Students: aadhaar, DOB, admission_number, sibling discount, frozen account
+ALTER TABLE school_xx_students ADD COLUMN IF NOT EXISTS admission_number VARCHAR(50);
+ALTER TABLE school_xx_students ADD COLUMN IF NOT EXISTS aadhaar_number VARCHAR(12);
+ALTER TABLE school_xx_students ADD COLUMN IF NOT EXISTS date_of_birth DATE;
+ALTER TABLE school_xx_students ADD COLUMN IF NOT EXISTS has_sibling_discount BOOLEAN DEFAULT FALSE;
+ALTER TABLE school_xx_students ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE;
+ALTER TABLE school_xx_students ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMPTZ;
+
+-- Staff: aadhaar, DOB, allowed_leaves default to 1
+ALTER TABLE school_xx_staff ADD COLUMN IF NOT EXISTS aadhaar_number VARCHAR(12);
+ALTER TABLE school_xx_staff ADD COLUMN IF NOT EXISTS date_of_birth DATE;
+ALTER TABLE school_xx_staff ADD COLUMN IF NOT EXISTS allowed_leaves_per_month INTEGER DEFAULT 1;
+ALTER TABLE school_xx_staff ADD COLUMN IF NOT EXISTS per_day_salary NUMERIC(10, 2);
+ALTER TABLE school_xx_staff ADD COLUMN IF NOT EXISTS classes_subjects JSONB;
+
+-- Salary payments: leave tracking, extra allowance/deduction, calculated salary
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS days_worked INTEGER DEFAULT 30;
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS leaves_taken INTEGER DEFAULT 0;
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS allowed_leaves INTEGER DEFAULT 1;
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS excess_leaves INTEGER DEFAULT 0;
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS leave_deduction NUMERIC(10, 2) DEFAULT 0;
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS extra_allowance NUMERIC(10, 2) DEFAULT 0;
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS allowance_note TEXT;
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS extra_deduction NUMERIC(10, 2) DEFAULT 0;
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS deduction_note TEXT;
+ALTER TABLE school_xx_salary_payments ADD COLUMN IF NOT EXISTS calculated_salary NUMERIC(10, 2) DEFAULT 0;
+
+-- =============================================================================
 -- Optional: Row Level Security (enable if using Supabase auth)
 -- =============================================================================
 -- ALTER TABLE school_xx_roles ENABLE ROW LEVEL SECURITY;
