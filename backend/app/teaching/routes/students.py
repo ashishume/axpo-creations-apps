@@ -16,6 +16,7 @@ from app.teaching.schemas.student import (
     StudentCreate,
     StudentCreateWithEnrollment,
     StudentUpdate,
+    StudentUpdateWithEnrollment,
     StudentResponse,
     BulkStudentCreate,
     BulkStudentResponse,
@@ -326,6 +327,21 @@ async def update_student(
     await enforce_school_access(db, user, existing.school_id)
     student = await student_service.update(db, id, data)
     return StudentResponse.model_validate(student)
+
+
+@router.patch("/{id}/with-enrollment", response_model=EnrollmentResponse)
+async def update_student_with_enrollment(
+    id: UUID,
+    data: StudentUpdateWithEnrollment,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Update both student identity and the given enrollment in one request. Returns the updated enrollment (with student and payments)."""
+    existing = await student_service.get_or_404(db, id)
+    await enforce_school_access(db, user, existing.school_id)
+    enrollment = await student_service.update_student_and_enrollment(db, id, data)
+    await enforce_session_access(db, user, enrollment.session_id)
+    return EnrollmentResponse.model_validate(enrollment)
 
 
 @router.delete("/{id}", status_code=204)

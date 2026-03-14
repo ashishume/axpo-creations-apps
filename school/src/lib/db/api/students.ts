@@ -221,13 +221,67 @@ export const studentsRepositoryApi = {
   },
 
   async update(id: string, updates: any): Promise<Student> {
-    // Handle backward compatibility for updates
-    // If sessionId or fee fields are provided, we need to update the enrollment too
+    const sessionId = updates.sessionId as string | undefined;
+    let enrollmentId = updates.enrollmentId as string | undefined;
+    if (sessionId && !enrollmentId) {
+      const enrollments = await enrollmentsRepositoryApi.getByStudent(id);
+      enrollmentId = enrollments.find((e) => e.sessionId === sessionId)?.id;
+    }
 
+    // Single API call when we have session context: PATCH /students/{id}/with-enrollment
+    if (sessionId && enrollmentId) {
+      const body: Record<string, unknown> = { enrollment_id: enrollmentId };
+      if (updates.name !== undefined) body.name = updates.name;
+      if (updates.studentId !== undefined) body.student_id = updates.studentId;
+      if (updates.admissionNumber !== undefined) body.admission_number = updates.admissionNumber;
+      if (updates.feeType !== undefined) body.fee_type = updates.feeType;
+      if (updates.fatherName !== undefined) body.father_name = updates.fatherName;
+      if (updates.motherName !== undefined) body.mother_name = updates.motherName;
+      if (updates.guardianPhone !== undefined) body.guardian_phone = updates.guardianPhone;
+      if (updates.currentAddress !== undefined) body.current_address = updates.currentAddress;
+      if (updates.permanentAddress !== undefined) body.permanent_address = updates.permanentAddress;
+      if (updates.bloodGroup !== undefined) body.blood_group = updates.bloodGroup;
+      if (updates.healthIssues !== undefined) body.health_issues = updates.healthIssues;
+      if (updates.aadhaarNumber !== undefined) body.aadhaar_number = updates.aadhaarNumber;
+      if (updates.dateOfBirth !== undefined) body.date_of_birth = updates.dateOfBirth;
+      if (updates.photoUrl !== undefined) body.photo_url = updates.photoUrl;
+      if (updates.siblingId !== undefined) body.sibling_id = updates.siblingId;
+      if (updates.hasSiblingDiscount !== undefined) body.has_sibling_discount = updates.hasSiblingDiscount;
+      if (updates.isFrozen !== undefined) body.is_frozen = updates.isFrozen;
+      if (updates.frozenAt !== undefined) body.frozen_at = updates.frozenAt;
+      if (updates.personalDetails) {
+        const pd = updates.personalDetails;
+        if (pd.fatherName !== undefined) body.father_name = pd.fatherName;
+        if (pd.motherName !== undefined) body.mother_name = pd.motherName;
+        if (pd.guardianPhone !== undefined) body.guardian_phone = pd.guardianPhone;
+        if (pd.currentAddress !== undefined) body.current_address = pd.currentAddress;
+        if (pd.permanentAddress !== undefined) body.permanent_address = pd.permanentAddress;
+        if (pd.bloodGroup !== undefined) body.blood_group = pd.bloodGroup;
+        if (pd.healthIssues !== undefined) body.health_issues = pd.healthIssues;
+        if (pd.aadhaarNumber !== undefined) body.aadhaar_number = pd.aadhaarNumber;
+        if (pd.dateOfBirth !== undefined) body.date_of_birth = pd.dateOfBirth;
+      }
+      if (updates.classId !== undefined) body.class_id = updates.classId;
+      if (updates.registrationFees !== undefined) body.registration_fees = updates.registrationFees;
+      if (updates.annualFund !== undefined) body.annual_fund = updates.annualFund;
+      if (updates.monthlyFees !== undefined) body.monthly_fees = updates.monthlyFees;
+      if (updates.transportFees !== undefined) body.transport_fees = updates.transportFees;
+      if (updates.registrationPaid !== undefined) body.registration_paid = updates.registrationPaid;
+      if (updates.annualFundPaid !== undefined) body.annual_fund_paid = updates.annualFundPaid;
+      if (updates.dueDayOfMonth !== undefined) body.due_day_of_month = updates.dueDayOfMonth;
+      if (updates.lateFeeAmount !== undefined) body.late_fee_amount = updates.lateFeeAmount;
+      if (updates.lateFeeFrequency !== undefined) body.late_fee_frequency = updates.lateFeeFrequency;
+
+      const r = await teachingFetchJson<Record<string, unknown>>(`/students/${id}/with-enrollment`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      });
+      const enrollment = mapEnrollment(r);
+      return flattenEnrollmentToStudentLike(enrollment) as unknown as Student;
+    }
+
+    // Fallback: no session/enrollment context – update student identity only
     const studentUpdates: Record<string, unknown> = {};
-    const enrollmentUpdates: Record<string, unknown> = {};
-
-    // Separate student identity updates from enrollment updates
     if (updates.name !== undefined) studentUpdates.name = updates.name;
     if (updates.studentId !== undefined) studentUpdates.student_id = updates.studentId;
     if (updates.admissionNumber !== undefined) studentUpdates.admission_number = updates.admissionNumber;
@@ -246,76 +300,23 @@ export const studentsRepositoryApi = {
     if (updates.hasSiblingDiscount !== undefined) studentUpdates.has_sibling_discount = updates.hasSiblingDiscount;
     if (updates.isFrozen !== undefined) studentUpdates.is_frozen = updates.isFrozen;
     if (updates.frozenAt !== undefined) studentUpdates.frozen_at = updates.frozenAt;
-
-    // Handle old personalDetails structure
     if (updates.personalDetails) {
-      studentUpdates.father_name = updates.personalDetails.fatherName;
-      studentUpdates.mother_name = updates.personalDetails.motherName;
-      studentUpdates.guardian_phone = updates.personalDetails.guardianPhone;
-      studentUpdates.current_address = updates.personalDetails.currentAddress;
-      studentUpdates.permanent_address = updates.personalDetails.permanentAddress;
-      studentUpdates.blood_group = updates.personalDetails.bloodGroup;
-      studentUpdates.health_issues = updates.personalDetails.healthIssues;
-      if (updates.personalDetails.aadhaarNumber !== undefined) studentUpdates.aadhaar_number = updates.personalDetails.aadhaarNumber;
-      if (updates.personalDetails.dateOfBirth !== undefined) studentUpdates.date_of_birth = updates.personalDetails.dateOfBirth;
+      const pd = updates.personalDetails;
+      if (pd.fatherName !== undefined) studentUpdates.father_name = pd.fatherName;
+      if (pd.motherName !== undefined) studentUpdates.mother_name = pd.motherName;
+      if (pd.guardianPhone !== undefined) studentUpdates.guardian_phone = pd.guardianPhone;
+      if (pd.currentAddress !== undefined) studentUpdates.current_address = pd.currentAddress;
+      if (pd.permanentAddress !== undefined) studentUpdates.permanent_address = pd.permanentAddress;
+      if (pd.bloodGroup !== undefined) studentUpdates.blood_group = pd.bloodGroup;
+      if (pd.healthIssues !== undefined) studentUpdates.health_issues = pd.healthIssues;
+      if (pd.aadhaarNumber !== undefined) studentUpdates.aadhaar_number = pd.aadhaarNumber;
+      if (pd.dateOfBirth !== undefined) studentUpdates.date_of_birth = pd.dateOfBirth;
     }
-
-    // Enrollment-specific updates
-    if (updates.classId !== undefined) enrollmentUpdates.class_id = updates.classId;
-    if (updates.registrationFees !== undefined) enrollmentUpdates.registration_fees = updates.registrationFees;
-    if (updates.annualFund !== undefined) enrollmentUpdates.annual_fund = updates.annualFund;
-    if (updates.monthlyFees !== undefined) enrollmentUpdates.monthly_fees = updates.monthlyFees;
-    if (updates.transportFees !== undefined) enrollmentUpdates.transport_fees = updates.transportFees;
-    if (updates.registrationPaid !== undefined) enrollmentUpdates.registration_paid = updates.registrationPaid;
-    if (updates.annualFundPaid !== undefined) enrollmentUpdates.annual_fund_paid = updates.annualFundPaid;
-    if (updates.dueDayOfMonth !== undefined) enrollmentUpdates.due_day_of_month = updates.dueDayOfMonth;
-    if (updates.lateFeeAmount !== undefined) enrollmentUpdates.late_fee_amount = updates.lateFeeAmount;
-    if (updates.lateFeeFrequency !== undefined) enrollmentUpdates.late_fee_frequency = updates.lateFeeFrequency;
-
-    let patchStudentRes: Record<string, unknown> | null = null;
-    let patchEnrollmentRes: StudentEnrollment | null = null;
-
-    // Update student identity if there are student-specific changes
-    if (Object.keys(studentUpdates).length > 0) {
-      const r = await teachingFetchJson<Record<string, unknown>>(`/students/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(studentUpdates),
-      });
-      patchStudentRes = r;
-    }
-
-    // Resolve enrollmentId when we have sessionId (for PATCH enrollment or for building list-item result). Prefer updates.enrollmentId to avoid getByStudent.
-    const enrollmentId =
-      updates.enrollmentId ??
-      (updates.sessionId
-        ? (await enrollmentsRepositoryApi.getByStudent(id)).find((e) => e.sessionId === updates.sessionId)?.id
-        : undefined);
-    if (Object.keys(enrollmentUpdates).length > 0 && enrollmentId) {
-      const r = await teachingFetchJson<Record<string, unknown>>(`/students/enrollments/${enrollmentId}`, {
-        method: 'PATCH',
-        body: JSON.stringify(enrollmentUpdates),
-      });
-      patchEnrollmentRes = mapEnrollment(r);
-    }
-
-    // Build updated list-item shape from PATCH responses (no extra GET)
-    const sessionId = updates.sessionId ?? patchEnrollmentRes?.sessionId;
-    if (sessionId && (patchEnrollmentRes || enrollmentId)) {
-      let enrollment: StudentEnrollment;
-      if (patchEnrollmentRes) {
-        enrollment = patchEnrollmentRes;
-        if (patchStudentRes) {
-          enrollment = { ...enrollment, student: mapStudent(patchStudentRes) as Student };
-        }
-      } else {
-        const e = await enrollmentsRepositoryApi.getById(enrollmentId!);
-        if (!e) return mapStudent(patchStudentRes || { id });
-        enrollment = patchStudentRes ? { ...e, student: mapStudent(patchStudentRes) as Student } : e;
-      }
-      return flattenEnrollmentToStudentLike(enrollment) as unknown as Student;
-    }
-
-    return mapStudent(patchStudentRes || { id });
+    const r = await teachingFetchJson<Record<string, unknown>>(`/students/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(studentUpdates),
+    });
+    return mapStudent(r);
   },
 
   async delete(id: string): Promise<void> {

@@ -108,6 +108,41 @@ class StudentUpdate(BaseModel):
     frozen_at: datetime | None = None
 
 
+class StudentUpdateWithEnrollment(BaseModel):
+    """Update both student identity and one enrollment in one request. Returns the updated enrollment (with student and payments)."""
+    enrollment_id: UUID  # Which enrollment to update (required so we know the session)
+    # Student (identity) fields – optional
+    name: str | None = None
+    student_id: str | None = None
+    admission_number: str | None = None
+    fee_type: str | None = None
+    father_name: str | None = None
+    mother_name: str | None = None
+    guardian_phone: str | None = None
+    current_address: str | None = None
+    permanent_address: str | None = None
+    blood_group: str | None = None
+    health_issues: str | None = None
+    aadhaar_number: str | None = Field(None, max_length=12, pattern=r"^\d{12}$")
+    date_of_birth: date | None = None
+    photo_url: str | None = None
+    sibling_id: UUID | None = None
+    has_sibling_discount: bool | None = None
+    is_frozen: bool | None = None
+    frozen_at: datetime | None = None
+    # Enrollment (session/fee) fields – optional
+    class_id: UUID | None = None
+    registration_fees: Decimal | None = None
+    annual_fund: Decimal | None = None
+    monthly_fees: Decimal | None = None
+    transport_fees: Decimal | None = None
+    registration_paid: bool | None = None
+    annual_fund_paid: bool | None = None
+    due_day_of_month: int | None = None
+    late_fee_amount: Decimal | None = None
+    late_fee_frequency: str | None = None
+
+
 class StudentResponse(StudentBase):
     id: UUID
     user_id: UUID | None

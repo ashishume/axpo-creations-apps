@@ -12,6 +12,7 @@ from app.teaching.schemas.student import (
     StudentCreate,
     StudentCreateWithEnrollment,
     StudentUpdate,
+    StudentUpdateWithEnrollment,
     BulkStudentCreate,
     EnrollmentCreate,
     EnrollmentUpdate,
@@ -111,6 +112,35 @@ class StudentService:
         for k, v in data.model_dump(exclude_unset=True).items():
             setattr(student, k, v)
         return await student_repository.update(db, student)
+
+    async def update_student_and_enrollment(
+        self, db: AsyncSession, student_id: UUID, data: StudentUpdateWithEnrollment
+    ) -> StudentEnrollment:
+        """Update both student identity and the given enrollment in one transaction. Returns the enrollment (with student and payments loaded)."""
+        student = await self.get_or_404(db, student_id)
+        enrollment = await enrollment_repository.get(db, data.enrollment_id)
+        if not enrollment:
+            raise NotFoundError("Enrollment not found")
+        if enrollment.student_id != student_id:
+            raise NotFoundError("Enrollment does not belong to this student")
+        dump = data.model_dump(exclude_unset=True)
+        enrollment_id = dump.pop("enrollment_id", None)
+        enrollment_field_names = {
+            "class_id", "registration_fees", "annual_fund", "monthly_fees", "transport_fees",
+            "registration_paid", "annual_fund_paid", "due_day_of_month", "late_fee_amount", "late_fee_frequency",
+        }
+        student_updates = {k: v for k, v in dump.items() if k not in enrollment_field_names}
+        enrollment_updates = {k: v for k, v in dump.items() if k in enrollment_field_names}
+        if student_updates:
+            for k, v in student_updates.items():
+                setattr(student, k, v)
+            await student_repository.update(db, student)
+        if enrollment_updates:
+            for k, v in enrollment_updates.items():
+                setattr(enrollment, k, v)
+            await enrollment_repository.update(db, enrollment)
+        await db.refresh(enrollment)
+        return enrollment
 
     async def delete(self, db: AsyncSession, id: UUID) -> None:
         student = await self.get_or_404(db, id)
