@@ -2,6 +2,9 @@
 -- When any financial change is made (payments, expenses, salaries, etc.), the next
 -- call to this RPC returns fresh data from the live tables (no separate cache).
 --
+-- Note: Uses SELECT * for simplicity. For very large datasets consider explicit
+-- column lists or adding LIMITs and pagination (would require client changes).
+--
 -- Consolidated fetches (replaces 11 client calls with 1):
 --  1. schools           (schools)
 --  2. sessions          (sessions)

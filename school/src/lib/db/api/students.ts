@@ -1,6 +1,7 @@
 import type { Student, StudentEnrollment, FeePayment } from '../../../types';
 import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
+import { fetchAllPages } from '../../api/pagination';
 
 function mapPayment(p: Record<string, unknown>): FeePayment {
   return {
@@ -140,9 +141,7 @@ interface PaginatedApiResponse {
 // ============================================
 export const studentsRepositoryApi = {
   async getAll(): Promise<Student[]> {
-    const res = await teachingFetchJson<PaginatedApiResponse>(`/students?limit=${LARGE_PAGE_SIZE}&offset=0`);
-    const list = res?.items ?? [];
-    return Array.isArray(list) ? list.map(mapStudent) : [];
+    return fetchAllPages<Record<string, unknown>, Student>('/students', mapStudent);
   },
 
   async getById(id: string): Promise<Student | null> {
@@ -485,19 +484,17 @@ export const studentsRepositoryApi = {
 // ============================================
 export const enrollmentsRepositoryApi = {
   async getBySession(sessionId: string): Promise<StudentEnrollment[]> {
-    const res = await teachingFetchJson<PaginatedApiResponse>(
-      `/students/enrollments?session_id=${sessionId}&limit=${LARGE_PAGE_SIZE}&offset=0`
+    return fetchAllPages<Record<string, unknown>, StudentEnrollment>(
+      `/students/enrollments?session_id=${sessionId}`,
+      mapEnrollment
     );
-    const list = res?.items ?? [];
-    return Array.isArray(list) ? list.map(mapEnrollment) : [];
   },
 
   async getByStudent(studentId: string): Promise<StudentEnrollment[]> {
-    const res = await teachingFetchJson<PaginatedApiResponse>(
-      `/students/enrollments?student_id=${studentId}&limit=${LARGE_PAGE_SIZE}&offset=0`
+    return fetchAllPages<Record<string, unknown>, StudentEnrollment>(
+      `/students/enrollments?student_id=${studentId}`,
+      mapEnrollment
     );
-    const list = res?.items ?? [];
-    return Array.isArray(list) ? list.map(mapEnrollment) : [];
   },
 
   async getById(id: string): Promise<StudentEnrollment | null> {

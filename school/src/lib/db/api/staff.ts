@@ -2,6 +2,7 @@ import type { Staff, StaffRole, SalaryPayment, ClassSubject, LeaveSummary } from
 import type { ExtendedSalaryPayment } from '../repositories/staff';
 import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
+import { fetchAllPages } from '../../api/pagination';
 
 function mapSalaryPayment(p: Record<string, unknown>): ExtendedSalaryPayment {
   return {
@@ -76,17 +77,14 @@ interface PaginatedApiResponse {
 
 export const staffRepositoryApi = {
   async getAll(): Promise<Staff[]> {
-    const res = await teachingFetchJson<PaginatedApiResponse>(`/staff?limit=${LARGE_PAGE_SIZE}&offset=0`);
-    const list = res?.items ?? [];
-    return Array.isArray(list) ? list.map(mapStaff) : [];
+    return fetchAllPages<Record<string, unknown>, Staff>('/staff', mapStaff);
   },
 
   async getBySession(sessionId: string): Promise<Staff[]> {
-    const res = await teachingFetchJson<PaginatedApiResponse>(
-      `/staff?session_id=${sessionId}&limit=${LARGE_PAGE_SIZE}&offset=0`
+    return fetchAllPages<Record<string, unknown>, Staff>(
+      `/staff?session_id=${sessionId}`,
+      mapStaff
     );
-    const list = res?.items ?? [];
-    return Array.isArray(list) ? list.map(mapStaff) : [];
   },
 
   async getById(id: string): Promise<Staff | null> {

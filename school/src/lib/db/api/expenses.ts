@@ -1,6 +1,7 @@
 import type { Expense, ExpenseCategory } from '../../../types';
 import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
+import { fetchAllPages } from '../../api/pagination';
 
 function mapExpense(r: Record<string, unknown>): Expense {
   return {
@@ -28,17 +29,14 @@ interface PaginatedApiResponse {
 
 export const expensesRepositoryApi = {
   async getAll(): Promise<Expense[]> {
-    const res = await teachingFetchJson<PaginatedApiResponse>(`/expenses?limit=${LARGE_PAGE_SIZE}&offset=0`);
-    const list = res?.items ?? [];
-    return Array.isArray(list) ? list.map(mapExpense) : [];
+    return fetchAllPages<Record<string, unknown>, Expense>('/expenses', mapExpense);
   },
 
   async getBySession(sessionId: string): Promise<Expense[]> {
-    const res = await teachingFetchJson<PaginatedApiResponse>(
-      `/expenses?session_id=${sessionId}&limit=${LARGE_PAGE_SIZE}&offset=0`
+    return fetchAllPages<Record<string, unknown>, Expense>(
+      `/expenses?session_id=${sessionId}`,
+      mapExpense
     );
-    const list = res?.items ?? [];
-    return Array.isArray(list) ? list.map(mapExpense) : [];
   },
 
   async getById(id: string): Promise<Expense | null> {

@@ -1,6 +1,7 @@
 import type { Stock, StockTransaction } from '../../../types';
 import type { PaginatedResult } from '../repositories/schools';
 import { teachingFetch, teachingFetchJson } from '../../api/client';
+import { fetchAllPages } from '../../api/pagination';
 
 function mapTransaction(t: Record<string, unknown>): StockTransaction {
   return {
@@ -46,17 +47,14 @@ interface PaginatedApiResponse {
 
 export const stocksRepositoryApi = {
   async getAll(): Promise<Stock[]> {
-    const res = await teachingFetchJson<PaginatedApiResponse>(`/stocks?limit=${LARGE_PAGE_SIZE}&offset=0`);
-    const list = res?.items ?? [];
-    return Array.isArray(list) ? list.map(mapStock) : [];
+    return fetchAllPages<Record<string, unknown>, Stock>('/stocks', mapStock);
   },
 
   async getBySession(sessionId: string): Promise<Stock[]> {
-    const res = await teachingFetchJson<PaginatedApiResponse>(
-      `/stocks?session_id=${sessionId}&limit=${LARGE_PAGE_SIZE}&offset=0`
+    return fetchAllPages<Record<string, unknown>, Stock>(
+      `/stocks?session_id=${sessionId}`,
+      mapStock
     );
-    const list = res?.items ?? [];
-    return Array.isArray(list) ? list.map(mapStock) : [];
   },
 
   async getById(id: string): Promise<Stock | null> {
