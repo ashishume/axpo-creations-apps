@@ -90,7 +90,7 @@ export function AddStudentsVerifyModal({
 
   return (
     <Modal open={open} onClose={onClose} title="Verify & add students">
-      <p className="text-sm text-slate-600 mb-4">
+      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
         Review the details below. Edit any field if needed, then confirm to add
         {students.length === 1 ? " this student" : ` ${students.length} students`}.
       </p>
@@ -98,32 +98,32 @@ export function AddStudentsVerifyModal({
         {students.map((s, index) => (
           <div
             key={index}
-            className="rounded-lg border border-slate-200 bg-slate-50/50 overflow-hidden"
+            className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden"
           >
             <button
               type="button"
               onClick={() =>
                 setExpandedIndex((prev) => (prev === index ? null : index))
               }
-              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-100/80"
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-100/80 dark:hover:bg-slate-700/80"
             >
-              <span className="font-medium text-slate-900 flex items-center gap-2">
-                <User className="h-4 w-4 text-slate-500" />
+              <span className="font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <User className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                 {s.name || "(No name)"}
                 {s.classId && (
-                  <span className="text-slate-500 font-normal text-sm">
+                  <span className="text-slate-500 dark:text-slate-400 font-normal text-sm">
                     – {sessionClasses.find((c) => c.id === s.classId)?.name}
                   </span>
                 )}
               </span>
               {expandedIndex === index ? (
-                <ChevronUp className="h-4 w-4 text-slate-500" />
+                <ChevronUp className="h-4 w-4 text-slate-500 dark:text-slate-400" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-slate-500" />
+                <ChevronDown className="h-4 w-4 text-slate-500 dark:text-slate-400" />
               )}
             </button>
             {expandedIndex === index && (
-              <div className="px-4 pb-4 pt-0 space-y-4 border-t border-slate-100 bg-white dark:bg-slate-900">
+              <div className="px-4 pb-4 pt-0 space-y-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900">
                 <div className="grid grid-cols-2 gap-3 pt-3">
                   <FormField label="Name *" required>
                     <Input
@@ -182,7 +182,7 @@ export function AddStudentsVerifyModal({
                     </Select>
                   </FormField>
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-xs text-slate-600">
+                <div className="grid grid-cols-3 gap-2 text-xs text-slate-600 dark:text-slate-400">
                   <div>
                     <span className="font-medium">Reg/Adm:</span>{" "}
                     {formatCurrency(s.registrationFees ?? 0)}
@@ -193,7 +193,7 @@ export function AddStudentsVerifyModal({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h5 className="text-xs font-semibold text-slate-700 border-b pb-1">
+                  <h5 className="text-xs font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 pb-1">
                     Personal details (optional)
                   </h5>
                   <div className="grid grid-cols-2 gap-2">

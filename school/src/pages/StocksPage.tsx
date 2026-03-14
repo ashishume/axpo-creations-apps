@@ -163,7 +163,7 @@ export function StocksPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-slate-600">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                       <th className="pb-2 pr-4 font-medium">Publisher</th>
                       <th className="pb-2 pr-4 font-medium">Description</th>
                       <th className="pb-2 pr-4 font-medium">Date</th>
@@ -179,14 +179,14 @@ export function StocksPage() {
                     {sessionStocks.map((s) => {
                       const { totalSold, totalReturned, remainingCredit } = getStockSummary(s);
                       return (
-                        <tr key={s.id} className="border-b border-slate-100">
-                          <td className="py-3 pr-4 font-medium text-slate-900">{s.publisherName}</td>
-                          <td className="py-3 pr-4 text-slate-600 max-w-[200px] truncate">{s.description}</td>
-                          <td className="py-3 pr-4 text-slate-600">{formatDate(s.purchaseDate)}</td>
-                          <td className="py-3 pr-4">{formatCurrency(s.totalCreditAmount)}</td>
-                          <td className="py-3 pr-4 text-green-600">{formatCurrency(totalSold)}</td>
-                          <td className="py-3 pr-4 text-amber-600">{formatCurrency(totalReturned)}</td>
-                          <td className="py-3 pr-4 font-medium">{formatCurrency(remainingCredit)}</td>
+                        <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700">
+                          <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{s.publisherName}</td>
+                          <td className="py-3 pr-4 text-slate-600 dark:text-slate-400 max-w-[200px] truncate">{s.description}</td>
+                          <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{formatDate(s.purchaseDate)}</td>
+                          <td className="py-3 pr-4 text-slate-900 dark:text-slate-100">{formatCurrency(s.totalCreditAmount)}</td>
+                          <td className="py-3 pr-4 text-green-600 dark:text-green-400">{formatCurrency(totalSold)}</td>
+                          <td className="py-3 pr-4 text-amber-600 dark:text-amber-400">{formatCurrency(totalReturned)}</td>
+                          <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{formatCurrency(remainingCredit)}</td>
                           <td className="py-3 pr-4">
                             <Badge variant={s.status === "open" ? "warning" : "success"}>
                               {s.status === "open" ? "Open" : "Cleared"}
@@ -402,24 +402,24 @@ export function StocksPage() {
               const { totalSold, totalReturned, remainingCredit } = getStockSummary(detailsStock);
               return (
                 <>
-                  <div className="rounded-lg bg-slate-50 p-4 text-sm space-y-1">
-                    <p><strong>Publisher:</strong> {detailsStock.publisherName}</p>
-                    <p><strong>Description:</strong> {detailsStock.description || "—"}</p>
-                    <p><strong>Purchase date:</strong> {formatDate(detailsStock.purchaseDate)}</p>
-                    <p><strong>Credit amount:</strong> {formatCurrency(detailsStock.totalCreditAmount)}</p>
-                    <p><strong>Total sold:</strong> <span className="text-green-600">{formatCurrency(totalSold)}</span></p>
-                    <p><strong>Total returned:</strong> <span className="text-amber-600">{formatCurrency(totalReturned)}</span></p>
-                    <p><strong>Remaining:</strong> {formatCurrency(remainingCredit)}</p>
-                    <p><strong>Status:</strong> {detailsStock.status === "open" ? "Open" : `Cleared (₹${detailsStock.settledAmount?.toLocaleString()} on ${formatDate(detailsStock.settledDate!)})`}</p>
-                    {detailsStock.notes && <p><strong>Notes:</strong> {detailsStock.notes}</p>}
+                  <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-4 text-sm space-y-1 text-slate-700 dark:text-slate-300">
+                    <p><strong className="text-slate-900 dark:text-slate-100">Publisher:</strong> {detailsStock.publisherName}</p>
+                    <p><strong className="text-slate-900 dark:text-slate-100">Description:</strong> {detailsStock.description || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-slate-100">Purchase date:</strong> {formatDate(detailsStock.purchaseDate)}</p>
+                    <p><strong className="text-slate-900 dark:text-slate-100">Credit amount:</strong> {formatCurrency(detailsStock.totalCreditAmount)}</p>
+                    <p><strong className="text-slate-900 dark:text-slate-100">Total sold:</strong> <span className="text-green-600 dark:text-green-400">{formatCurrency(totalSold)}</span></p>
+                    <p><strong className="text-slate-900 dark:text-slate-100">Total returned:</strong> <span className="text-amber-600 dark:text-amber-400">{formatCurrency(totalReturned)}</span></p>
+                    <p><strong className="text-slate-900 dark:text-slate-100">Remaining:</strong> {formatCurrency(remainingCredit)}</p>
+                    <p><strong className="text-slate-900 dark:text-slate-100">Status:</strong> {detailsStock.status === "open" ? "Open" : `Cleared (₹${detailsStock.settledAmount?.toLocaleString()} on ${formatDate(detailsStock.settledDate!)})`}</p>
+                    {detailsStock.notes && <p><strong className="text-slate-900 dark:text-slate-100">Notes:</strong> {detailsStock.notes}</p>}
                   </div>
-                  <h4 className="font-medium text-slate-900">Transactions</h4>
+                  <h4 className="font-medium text-slate-900 dark:text-slate-100">Transactions</h4>
                   {detailsStock.transactions.length === 0 ? (
-                    <p className="text-sm text-slate-500">No transactions yet.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">No transactions yet.</p>
                   ) : (
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b text-left text-slate-600">
+                        <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                           <th className="pb-1 pr-2 font-medium">Date</th>
                           <th className="pb-1 pr-2 font-medium">Type</th>
                           <th className="pb-1 pr-2 font-medium">Amount</th>
@@ -428,18 +428,18 @@ export function StocksPage() {
                       </thead>
                       <tbody>
                         {detailsStock.transactions.map((t) => (
-                          <tr key={t.id} className="border-b border-slate-100">
-                            <td className="py-1.5 pr-2">{formatDate(t.date)}</td>
-                            <td className={cn("py-1.5 pr-2 capitalize", t.type === "sale" ? "text-green-600" : "text-amber-600")}>
+                          <tr key={t.id} className="border-b border-slate-100 dark:border-slate-700">
+                            <td className="py-1.5 pr-2 text-slate-700 dark:text-slate-300">{formatDate(t.date)}</td>
+                            <td className={cn("py-1.5 pr-2 capitalize", t.type === "sale" ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400")}>
                               {t.type}
                             </td>
-                            <td className="py-1.5 pr-2">{formatCurrency(t.amount)}</td>
-                            <td className="py-1.5">{t.description || "—"}</td>
+                            <td className="py-1.5 pr-2 text-slate-700 dark:text-slate-300">{formatCurrency(t.amount)}</td>
+                            <td className="py-1.5 text-slate-700 dark:text-slate-300">{t.description || "—"}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                  )}
+                  )
                 </>
               );
             })()}

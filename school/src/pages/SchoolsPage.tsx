@@ -460,8 +460,8 @@ export function SchoolsPage() {
             }}
             className="space-y-4"
           >
-            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
-              <p className="text-sm text-amber-800">
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
                 <strong>Note:</strong> Students will be automatically promoted to the next class 
                 (e.g., Class 1 → Class 2, Nursery → LKG). Students in Class 12 will be marked as graduated 
                 and won't be promoted.
@@ -469,10 +469,10 @@ export function SchoolsPage() {
             </div>
             
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                 From Session
               </label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 {promoteModal.fromSession.year} ({getStudentCount(promoteModal.fromSession.id)} students)
               </p>
             </div>

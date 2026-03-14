@@ -1085,7 +1085,7 @@ export function AxpoAssistantPage() {
         <Card className="max-w-md p-8 text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
           <h2 className="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-50">Access Restricted</h2>
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-400">
             Axpo Assistant is available only to users with the highest level of access. Contact your administrator to request the &quot;Use Axpo Assistant&quot; permission.
           </p>
         </Card>
@@ -1100,7 +1100,7 @@ export function AxpoAssistantPage() {
         <Card className="max-w-md p-8 text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-amber-500" />
           <h2 className="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-50">No Session Selected</h2>
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-400">
             Please select a school and session from the sidebar to use Axpo Assistant.
           </p>
         </Card>
@@ -1122,12 +1122,12 @@ export function AxpoAssistantPage() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50">Axpo Assistant</h1>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               {selectedSession?.year} • {sessionClasses.length} classes • {sessionStudents.length} students
             </p>
           </div>
           {useLLM && (
-            <span className="ml-auto flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm">
+            <span className="ml-auto flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300 shadow-sm">
               <Sparkles className="h-3.5 w-3.5" />
               AI Powered
             </span>
@@ -1181,8 +1181,8 @@ export function AxpoAssistantPage() {
                 <span className="h-2 w-2 animate-bounce rounded-full bg-purple-500 [animation-delay:150ms]" />
                 <span className="h-2 w-2 animate-bounce rounded-full bg-violet-500 [animation-delay:300ms]" />
               </div>
-              <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
-              <span className="text-sm text-slate-600">Thinking...</span>
+              <Loader2 className="h-4 w-4 animate-spin text-indigo-500 dark:text-indigo-400" />
+              <span className="text-sm text-slate-600 dark:text-slate-300">Thinking...</span>
             </div>
           )}
 
@@ -1203,7 +1203,7 @@ export function AxpoAssistantPage() {
                 disabled={isProcessing || !!pendingAction}
                 className="flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 dark:hover:border-indigo-600 dark:hover:bg-indigo-900/50 dark:hover:text-indigo-300 disabled:opacity-50"
               >
-                <span className="text-slate-400">{suggestion.icon}</span>
+                <span className="text-slate-400 dark:text-slate-500">{suggestion.icon}</span>
                 {suggestion.label}
               </button>
             ))}

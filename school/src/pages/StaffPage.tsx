@@ -568,7 +568,7 @@ export function StaffPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Staff & Salary</h2>
-          <p className="text-slate-600">Manage staff and salary payments</p>
+          <p className="text-slate-600 dark:text-slate-400">Manage staff and salary payments</p>
         </div>
         <div className="flex items-center gap-2">
           {list.length > 0 && (
@@ -637,8 +637,8 @@ export function StaffPage() {
       {list.length > 0 && (
         <Card>
           <CardContent className="py-4">
-            <p className="text-sm text-slate-600">
-              Annual salary obligation: <strong>{formatCurrency(annualTotal)}</strong>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Annual salary obligation: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(annualTotal)}</strong>
             </p>
           </CardContent>
         </Card>
@@ -646,7 +646,7 @@ export function StaffPage() {
 
       {!selectedSessionId ? (
         <Card>
-          <CardContent className="py-12 text-center text-slate-500">
+          <CardContent className="py-12 text-center text-slate-500 dark:text-slate-400">
             Select a school and session to view staff.
           </CardContent>
         </Card>
@@ -735,7 +735,7 @@ export function StaffPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-slate-600">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                       <th className="pb-2 pr-4 font-medium">Name</th>
                       <th className="pb-2 pr-4 font-medium">ID</th>
                       <th className="pb-2 pr-4 font-medium">Role</th>
@@ -753,23 +753,23 @@ export function StaffPage() {
                       const currentMonthPaidCount = currentMonthPayments.filter(p => p.status === "Paid").length;
 
                       return (
-                        <tr key={s.id} className="border-b border-slate-100">
-                          <td className="py-3 pr-4 font-medium text-slate-900">{s.name}</td>
-                          <td className="py-3 pr-4 text-slate-600">{s.employeeId}</td>
+                        <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700">
+                          <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{s.name}</td>
+                          <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{s.employeeId}</td>
                           <td className="py-3 pr-4">
                             <Badge variant={getRoleBadgeVariant(s.role)}>
                               {s.role}
                               {s.subjectOrGrade && ` (${s.subjectOrGrade})`}
                             </Badge>
                           </td>
-                          <td className="py-3 pr-4">{formatCurrency(s.monthlySalary)}</td>
+                          <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{formatCurrency(s.monthlySalary)}</td>
                           <td className="py-3 pr-4">
                             {lastPaid.date ? (
                               <div className="flex flex-col">
-                                <span className="text-slate-900">
+                                <span className="text-slate-900 dark:text-slate-100">
                                   {formatDate(lastPaid.date)}
                                 </span>
-                                <span className="text-xs text-slate-500">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
                                   {formatMonthYear(lastPaid.month ?? '')}
                                 </span>
                                 {lastPaid.lateDays > 0 && (
@@ -780,16 +780,16 @@ export function StaffPage() {
                                 )}
                               </div>
                             ) : (
-                              <span className="text-slate-400">Never</span>
+                              <span className="text-slate-400 dark:text-slate-500">Never</span>
                             )}
                           </td>
                           <td className="py-3 pr-4">
                             {currentMonthPayment ? (
                               <span className={cn(
                                 "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                                currentMonthPaidCount > 0 ? "bg-green-100 text-green-800" :
-                                  currentMonthPayment.status === "Partially Paid" ? "bg-amber-100 text-amber-800" :
-                                    "bg-red-100 text-red-800"
+                                currentMonthPaidCount > 0 ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200" :
+                                  currentMonthPayment.status === "Partially Paid" ? "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200" :
+                                    "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200"
                               )}>
                                 {currentMonthPaidCount > 0 && <CheckCircle className="h-3 w-3" />}
                                 {currentMonthPaidCount === 0 && currentMonthPayment.status === "Pending" && <XCircle className="h-3 w-3" />}
@@ -797,7 +797,7 @@ export function StaffPage() {
                                 {currentMonthPaidCount > 0 ? (currentMonthPaidCount > 1 ? `Paid (${currentMonthPaidCount})` : "Paid") : currentMonthPayment.status}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-slate-300">
                                 <XCircle className="h-3 w-3" />
                                 Pending
                               </span>
@@ -896,7 +896,7 @@ export function StaffPage() {
 
           {/* Leave & Salary Configuration */}
           <div className="border-t border-slate-200 pt-4 mt-4">
-            <h4 className="text-sm font-medium text-slate-700 mb-3">Leave & Salary Configuration</h4>
+            <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Leave & Salary Configuration</h4>
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Allowed Leaves/Month" helperText="Leaves without salary deduction">
                 <Input
@@ -923,18 +923,18 @@ export function StaffPage() {
           {/* Classes & Subjects */}
           <div className="border-t border-slate-200 pt-4 mt-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-medium text-slate-700">Classes & Subjects</h4>
+              <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">Classes & Subjects</h4>
               <Button type="button" variant="secondary" size="sm" onClick={addClassSubject}>
                 <Plus className="h-3 w-3 mr-1" />
                 Add Class
               </Button>
             </div>
             {classesSubjects.length === 0 ? (
-              <p className="text-sm text-slate-500">No classes assigned. Click "Add Class" to assign classes and subjects.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No classes assigned. Click "Add Class" to assign classes and subjects.</p>
             ) : (
               <div className="space-y-3">
                 {classesSubjects.map((cs, index) => (
-                  <div key={index} className="flex gap-2 items-start p-3 bg-slate-50 rounded-lg">
+                  <div key={index} className="flex gap-2 items-start p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                     <div className="flex-1 space-y-2">
                       <Input
                         type="text"
@@ -1081,13 +1081,13 @@ export function StaffPage() {
             title={`Salary History – ${historyStaff.name}`}
           >
             <div className="space-y-4">
-              <div className="rounded-lg bg-slate-50 p-3">
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-slate-600">
-                      Monthly Salary: <strong>{formatCurrency(historyStaff.monthlySalary)}</strong>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      Monthly Salary: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(historyStaff.monthlySalary)}</strong>
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Allowed Leaves: {historyStaff.allowedLeavesPerMonth ?? 2}/month
                     </p>
                   </div>
@@ -1097,7 +1097,7 @@ export function StaffPage() {
               <div className="max-h-96 overflow-y-auto">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-white dark:bg-slate-900">
-                    <tr className="border-b border-slate-200 text-left text-slate-600">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                       <th className="pb-2 pr-4 font-medium">Month</th>
                       <th className="pb-2 pr-4 font-medium">Status</th>
                       <th className="pb-2 pr-4 font-medium">Amount</th>
@@ -1198,9 +1198,9 @@ export function StaffPage() {
 
               <div className="flex justify-between border-t border-slate-200 pt-4">
                 <div>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
                     Total Paid (this session):{" "}
-                    <strong>
+                    <strong className="text-slate-900 dark:text-slate-100">
                       {formatCurrency(
                         historyStaff.salaryPayments
                           .filter((p: SalaryPayment) => sessionMonths.includes(p.month) && p.status === "Paid")

@@ -75,19 +75,19 @@ function formatValue(value: number, format: AnalyticsMetric["format"]): string {
 function getBackgroundClass(type: AnalyticsData["type"]): string {
   switch (type) {
     case "salary_summary":
-      return "from-green-50 to-emerald-50 border-green-200";
+      return "from-green-50 to-emerald-50 border-green-200 dark:from-green-950/30 dark:to-emerald-950/30 dark:border-green-800";
     case "fee_collection_summary":
-      return "from-blue-50 to-sky-50 border-blue-200";
+      return "from-blue-50 to-sky-50 border-blue-200 dark:from-blue-950/30 dark:to-sky-950/30 dark:border-blue-800";
     case "expenses_summary":
-      return "from-red-50 to-rose-50 border-red-200";
+      return "from-red-50 to-rose-50 border-red-200 dark:from-red-950/30 dark:to-rose-950/30 dark:border-red-800";
     case "outstanding_fees":
-      return "from-amber-50 to-yellow-50 border-amber-200";
+      return "from-amber-50 to-yellow-50 border-amber-200 dark:from-amber-950/30 dark:to-yellow-950/30 dark:border-amber-800";
     case "stock_balance":
-      return "from-purple-50 to-violet-50 border-purple-200";
+      return "from-purple-50 to-violet-50 border-purple-200 dark:from-purple-950/30 dark:to-violet-950/30 dark:border-purple-800";
     case "dashboard_overview":
-      return "from-indigo-50 to-blue-50 border-indigo-200";
+      return "from-indigo-50 to-blue-50 border-indigo-200 dark:from-indigo-950/30 dark:to-blue-950/30 dark:border-indigo-800";
     default:
-      return "from-slate-50 to-gray-50 border-slate-200";
+      return "from-slate-50 to-gray-50 border-slate-200 dark:from-slate-950/30 dark:to-gray-950/30 dark:border-slate-700";
   }
 }
 
@@ -105,10 +105,10 @@ export function AnalyticsCard({ data }: AnalyticsCardProps) {
     >
       {/* Header */}
       <div className="mb-3 flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white dark:bg-slate-800 shadow-sm">
           <MetricIcon type={data.type} />
         </div>
-        <h4 className="text-sm font-semibold text-slate-800">{data.title}</h4>
+        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{data.title}</h4>
       </div>
 
       {/* Metrics Grid */}
@@ -117,19 +117,19 @@ export function AnalyticsCard({ data }: AnalyticsCardProps) {
           <div
             key={idx}
             className={cn(
-              "rounded-lg bg-white/80 p-3 backdrop-blur-sm",
+              "rounded-lg bg-white/80 dark:bg-slate-800/80 p-3 backdrop-blur-sm",
               idx === 0 && "col-span-2 sm:col-span-1"
             )}
           >
-            <p className="mb-0.5 text-xs text-slate-500">{metric.label}</p>
+            <p className="mb-0.5 text-xs text-slate-500 dark:text-slate-400">{metric.label}</p>
             <p
               className={cn(
                 "text-lg font-bold",
                 metric.format === "currency" && metric.value >= 0
-                  ? "text-slate-900"
+                  ? "text-slate-900 dark:text-slate-100"
                   : metric.format === "currency" && metric.value < 0
-                  ? "text-red-600"
-                  : "text-slate-900"
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-slate-900 dark:text-slate-100"
               )}
             >
               {formatValue(metric.value, metric.format)}
@@ -145,10 +145,10 @@ export function AnalyticsCard({ data }: AnalyticsCardProps) {
                   className={cn(
                     "text-xs",
                     metric.trend === "up"
-                      ? "text-green-600"
+                      ? "text-green-600 dark:text-green-400"
                       : metric.trend === "down"
-                      ? "text-red-600"
-                      : "text-slate-500"
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-slate-500 dark:text-slate-400"
                   )}
                 >
                   {metric.trend === "up" ? "Increased" : metric.trend === "down" ? "Decreased" : "No change"}
@@ -161,13 +161,13 @@ export function AnalyticsCard({ data }: AnalyticsCardProps) {
 
       {/* Details List (if any) */}
       {data.details && data.details.length > 0 && (
-        <div className="rounded-lg bg-white/60 p-3">
-          <p className="mb-2 text-xs font-medium text-slate-600">Details</p>
+        <div className="rounded-lg bg-white/60 dark:bg-slate-800/60 p-3">
+          <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-300">Details</p>
           <div className="space-y-1.5">
             {data.details.map((detail, idx) => (
               <div key={idx} className="flex items-center justify-between text-sm">
-                <span className="text-slate-700">{detail.name}</span>
-                <span className="font-medium text-slate-900">{formatCurrency(detail.value)}</span>
+                <span className="text-slate-700 dark:text-slate-300">{detail.name}</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">{formatCurrency(detail.value)}</span>
               </div>
             ))}
           </div>

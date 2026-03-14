@@ -228,7 +228,7 @@ export function LeavesPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-slate-600">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                       <th className="pb-2 pr-4 font-medium">Applicant</th>
                       <th className="pb-2 pr-4 font-medium">Type</th>
                       <th className="pb-2 pr-4 font-medium">From</th>
@@ -240,21 +240,21 @@ export function LeavesPage() {
                   </thead>
                   <tbody>
                     {filteredRequests.map((r) => (
-                      <tr key={r.id} className="border-b border-slate-100">
+                      <tr key={r.id} className="border-b border-slate-100 dark:border-slate-700">
                         <td className="py-3 pr-4">
-                          <span className="inline-flex items-center gap-1 text-slate-900">
+                          <span className="inline-flex items-center gap-1 text-slate-900 dark:text-slate-100">
                             {r.applicantType === "staff" ? (
-                              <UserCog className="h-4 w-4 text-slate-400" />
+                              <UserCog className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                             ) : (
-                              <User className="h-4 w-4 text-slate-400" />
+                              <User className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                             )}
                             {getApplicantName(r)}
                           </span>
                         </td>
                         <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{r.leaveType?.name ?? "—"}</td>
-                        <td className="py-3 pr-4">{formatDate(r.fromDate)}</td>
-                        <td className="py-3 pr-4">{formatDate(r.toDate)}</td>
-                        <td className="py-3 pr-4">{r.daysCount}</td>
+                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{formatDate(r.fromDate)}</td>
+                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{formatDate(r.toDate)}</td>
+                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{r.daysCount}</td>
                         <td className="py-3 pr-4">
                           <span
                             className={cn(

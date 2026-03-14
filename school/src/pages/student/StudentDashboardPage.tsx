@@ -16,7 +16,7 @@ export function StudentDashboardPage() {
 
   if (error || !rawStudent) {
     return (
-      <div className="rounded-lg bg-red-50 p-6 text-center text-red-600">
+      <div className="rounded-lg bg-red-50 dark:bg-red-950/30 p-6 text-center text-red-600 dark:text-red-400">
         <AlertCircle className="mx-auto mb-2 h-8 w-8" />
         <p>Unable to load your student information.</p>
         <p className="text-sm">Please contact the school administrator.</p>
@@ -48,12 +48,12 @@ export function StudentDashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
-          <GraduationCap className="h-8 w-8 text-indigo-600" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50">
+          <GraduationCap className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Welcome, {student.name}</h1>
-          <p className="text-slate-600">Student ID: {student.studentId}</p>
+          <p className="text-slate-600 dark:text-slate-400">Student ID: {student.studentId}</p>
         </div>
       </div>
 
@@ -62,10 +62,10 @@ export function StudentDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total Fees</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Total Fees</p>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{formatCurrency(totalFees)}</p>
               </div>
-              <CreditCard className="h-8 w-8 text-slate-300" />
+              <CreditCard className="h-8 w-8 text-slate-300 dark:text-slate-600" />
             </div>
           </CardContent>
         </Card>
@@ -74,19 +74,19 @@ export function StudentDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Amount Paid</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(totalPaid)}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Amount Paid</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(totalPaid)}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-300" />
+              <CheckCircle className="h-8 w-8 text-green-300 dark:text-green-600" />
             </div>
             <div className="mt-2">
-              <div className="h-2 w-full rounded-full bg-slate-200">
+              <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700">
                 <div 
                   className="h-2 rounded-full bg-green-500"
                   style={{ width: `${paidPercentage}%` }}
                 />
               </div>
-              <p className="mt-1 text-xs text-slate-500">{paidPercentage}% paid</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{paidPercentage}% paid</p>
             </div>
           </CardContent>
         </Card>
@@ -95,15 +95,15 @@ export function StudentDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Balance Due</p>
-                <p className={`text-2xl font-bold ${balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Balance Due</p>
+                <p className={`text-2xl font-bold ${balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                   {formatCurrency(balance)}
                 </p>
               </div>
               {balance > 0 ? (
-                <Clock className="h-8 w-8 text-red-300" />
+                <Clock className="h-8 w-8 text-red-300 dark:text-red-600" />
               ) : (
-                <CheckCircle className="h-8 w-8 text-green-300" />
+                <CheckCircle className="h-8 w-8 text-green-300 dark:text-green-600" />
               )}
             </div>
           </CardContent>
@@ -118,32 +118,32 @@ export function StudentDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-600">Registration/Admission fees</span>
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-2">
+                <span className="text-slate-600 dark:text-slate-400">Registration/Admission fees</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{formatCurrency(student.registrationFees || 0)}</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-100">{formatCurrency(student.registrationFees || 0)}</span>
                   {student.registrationPaid && (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   )}
                 </div>
               </div>
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-600">Annual Fund</span>
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-2">
+                <span className="text-slate-600 dark:text-slate-400">Annual Fund</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{formatCurrency(student.annualFund || 0)}</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-100">{formatCurrency(student.annualFund || 0)}</span>
                   {student.annualFundPaid && (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   )}
                 </div>
               </div>
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-600">Monthly Fees</span>
-                <span className="font-medium">{formatCurrency(student.monthlyFees || 0)}/month</span>
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-2">
+                <span className="text-slate-600 dark:text-slate-400">Monthly Fees</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">{formatCurrency(student.monthlyFees || 0)}/month</span>
               </div>
               {student.transportFees && student.transportFees > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Transport Fees</span>
-                  <span className="font-medium">{formatCurrency(student.transportFees)}/month</span>
+                  <span className="text-slate-600 dark:text-slate-400">Transport Fees</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-100">{formatCurrency(student.transportFees)}/month</span>
                 </div>
               )}
             </div>
@@ -156,54 +156,54 @@ export function StudentDashboardPage() {
             <CardTitle>Current Month Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg bg-slate-50 p-4">
+            <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-4">
               <div className="flex items-center justify-between">
-                <span className="text-slate-600">{currentMonth}</span>
+                <span className="text-slate-600 dark:text-slate-400">{currentMonth}</span>
                 {isCurrentMonthPaid ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/50 px-3 py-1 text-sm font-medium text-green-800 dark:text-green-200">
                     <CheckCircle className="h-4 w-4" />
                     Paid
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/50 px-3 py-1 text-sm font-medium text-amber-800 dark:text-amber-200">
                     <Clock className="h-4 w-4" />
                     Pending
                   </span>
                 )}
               </div>
               {!isCurrentMonthPaid && (
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                   Due by {student.dueDayOfMonth || 10}th of this month
                 </p>
               )}
             </div>
 
             <div className="mt-4">
-              <h4 className="mb-2 text-sm font-medium text-slate-700">Recent Payments</h4>
+              <h4 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Recent Payments</h4>
               {recentPayments.length > 0 ? (
                 <div className="space-y-2">
                   {recentPayments.map((payment: FeePayment) => (
                     <div 
                       key={payment.id} 
-                      className="flex items-center justify-between rounded-lg border border-slate-100 p-2"
+                      className="flex items-center justify-between rounded-lg border border-slate-100 dark:border-slate-700 p-2"
                     >
                       <div>
-                        <p className="text-sm font-medium text-slate-900">
+                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                           {formatCurrency(payment.amount)}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {formatDate(payment.date)} · {payment.method}
                         </p>
                       </div>
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                      <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs text-slate-600 dark:text-slate-300">
                         {payment.feeCategory}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">No payments recorded yet.</p>
-              )}
+                <p className="text-sm text-slate-500 dark:text-slate-400">No payments recorded yet.</p>
+              )
             </div>
           </CardContent>
         </Card>

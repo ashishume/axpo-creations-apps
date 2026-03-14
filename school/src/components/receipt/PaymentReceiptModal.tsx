@@ -68,41 +68,41 @@ export function PaymentReceiptModal({
       <div className="space-y-4">
         <div
           ref={printRef}
-          className="rounded-lg border border-slate-200 bg-slate-50 p-6 print:border-0 print:bg-white dark:bg-slate-900"
+          className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-6 print:border-0 print:bg-white"
         >
-          <h1 className="text-lg font-bold text-slate-900">Payment Receipt</h1>
-          <p className="text-xs text-slate-500">{schoolName} · Session {sessionYear}</p>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-slate-50">Payment Receipt</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{schoolName} · Session {sessionYear}</p>
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-500">Student</span>
-              <span className="font-medium text-slate-900">{studentName}</span>
+              <span className="text-slate-500 dark:text-slate-400">Student</span>
+              <span className="font-medium text-slate-900 dark:text-slate-50">{studentName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Student ID</span>
-              <span className="text-slate-700">{studentId}</span>
+              <span className="text-slate-500 dark:text-slate-400">Student ID</span>
+              <span className="text-slate-700 dark:text-slate-300">{studentId}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Date</span>
-              <span className="text-slate-700">{formatDate(payment.date)}</span>
+              <span className="text-slate-500 dark:text-slate-400">Date</span>
+              <span className="text-slate-700 dark:text-slate-300">{formatDate(payment.date)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Amount</span>
-              <span className="text-xl font-bold text-slate-900">{formatCurrency(payment.amount)}</span>
+              <span className="text-slate-500 dark:text-slate-400">Amount</span>
+              <span className="text-xl font-bold text-slate-900 dark:text-slate-50">{formatCurrency(payment.amount)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Method</span>
-              <span className="text-slate-700">{payment.method}</span>
+              <span className="text-slate-500 dark:text-slate-400">Method</span>
+              <span className="text-slate-700 dark:text-slate-300">{payment.method}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Receipt no.</span>
-              <span className="text-slate-700">{payment.receiptNumber}</span>
+              <span className="text-slate-500 dark:text-slate-400">Receipt no.</span>
+              <span className="text-slate-700 dark:text-slate-300">{payment.receiptNumber}</span>
             </div>
-            <div className="flex justify-between border-t border-slate-200 pt-2 mt-2">
-              <span className="text-slate-500">Balance after payment</span>
-              <span className="font-medium text-slate-900">{formatCurrency(remainingAfter)}</span>
+            <div className="flex justify-between border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
+              <span className="text-slate-500 dark:text-slate-400">Balance after payment</span>
+              <span className="font-medium text-slate-900 dark:text-slate-50">{formatCurrency(remainingAfter)}</span>
             </div>
           </div>
-          <p className="mt-6 text-center text-xs text-slate-500">Thank you for your payment.</p>
+          <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">Thank you for your payment.</p>
         </div>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>

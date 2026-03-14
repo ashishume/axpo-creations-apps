@@ -133,7 +133,7 @@ export function SubscriptionPage() {
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Subscription & Plans</h2>
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-400">
             As Super Admin, manage all organizations and their subscriptions from the admin panel.
           </p>
         </div>
@@ -157,24 +157,24 @@ export function SubscriptionPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Organization subscription</h2>
-        <p className="text-slate-600">
+        <p className="text-slate-600 dark:text-slate-400">
           View and manage your organization's subscription plan.
         </p>
       </div>
 
-      <Card className="border-indigo-200 bg-indigo-50/30">
+      <Card className="border-indigo-200 dark:border-indigo-800 bg-indigo-50/30 dark:bg-indigo-950/30">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <CreditCard className="h-5 w-5 text-indigo-600" />
+            <CreditCard className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
             Current subscription
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
-          <p className="font-medium text-slate-900">
+          <p className="font-medium text-slate-900 dark:text-slate-100">
             Plan: {SUBSCRIPTION_PLANS.find((p) => p.id === planType)?.name ?? planType}
             {billingInterval && ` · ${billingInterval}`}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Status: <span className="font-medium">{status ?? "inactive"}</span>
             {currentPeriodEnd && isActive && (
               <> · Renews: {formatDate(currentPeriodEnd)}</>
@@ -211,7 +211,7 @@ export function SubscriptionPage() {
                   }`}
                 >
                   {isCurrent && (
-                    <div className="absolute right-3 top-3 flex items-center gap-1 rounded bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
+                    <div className="absolute right-3 top-3 flex items-center gap-1 rounded bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 text-xs font-medium text-indigo-800 dark:text-indigo-200">
                       <Check className="h-3 w-3" /> Current
                     </div>
                   )}
@@ -219,13 +219,13 @@ export function SubscriptionPage() {
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
                     <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                       ₹{price}
-                      <span className="text-sm font-normal text-slate-500">
+                      <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
                         /{billingIntervalChoice === "monthly" ? "month" : billingIntervalChoice === "quarterly" ? "3 months" : "year"}
                       </span>
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <ul className="space-y-1.5 text-sm text-slate-600">
+                    <ul className="space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
                       {plan.features.map((f, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
@@ -255,7 +255,7 @@ export function SubscriptionPage() {
           </div>
 
           {isActive && (
-            <Card className="border-amber-200 bg-amber-50/30">
+            <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/30">
               <CardContent className="pt-6">
                 <Button size="sm" variant="secondary" onClick={handleCancel}>
                   Cancel subscription
@@ -267,7 +267,7 @@ export function SubscriptionPage() {
       )}
 
       {!showRazorpay && canManagePlans && (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Payment is not configured. Contact your administrator to activate your organization's subscription.
         </p>
       )}

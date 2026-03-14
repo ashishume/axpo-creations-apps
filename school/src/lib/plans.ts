@@ -1,7 +1,9 @@
 import type { SubscriptionPlanInfo } from "../types";
 
 // Annual plan disabled for now; uncomment "annual" to enable.
-export const BILLING_INTERVALS = ["monthly", "quarterly" /* , "annual" */] as const;
+export const BILLING_INTERVALS = ["monthly",
+  // "quarterly" 
+  /* , "annual" */] as const;
 export type BillingInterval = (typeof BILLING_INTERVALS)[number];
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
@@ -9,7 +11,10 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanInfo[] = [
     id: "starter",
     name: "Starter",
     price: 2000,
-    pricing: { monthly: 2000, quarterly: 5500 /* , annual: 19200 */ },
+    pricing: {
+      monthly: 2000,
+      quarterly: 5500 /* , annual: 19200 */
+    },
     features: [
       "Dashboard & reports",
       "Students & fees",

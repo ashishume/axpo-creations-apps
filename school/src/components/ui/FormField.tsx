@@ -28,7 +28,7 @@ export function FormField({
     <div className={cn("space-y-0", className)}>
       <label htmlFor={htmlFor} className={labelClasses}>
         {label}
-        {required && <span className="text-red-500 ml-0.5" aria-hidden>*</span>}
+        {required && <span className="text-red-500 dark:text-red-400 ml-0.5" aria-hidden>*</span>}
       </label>
       {children}
       {error != null && <p className={errorClasses} role="alert">{error}</p>}

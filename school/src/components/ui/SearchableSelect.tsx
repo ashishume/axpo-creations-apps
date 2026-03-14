@@ -147,7 +147,7 @@ export function SearchableSelect({
       >
         {isOpen ? (
           <>
-            <Search className="h-4 w-4 text-slate-400 shrink-0" />
+            <Search className="h-4 w-4 text-slate-400 dark:text-slate-500 shrink-0" />
             <input
               ref={inputRef}
               type="text"
@@ -170,10 +170,10 @@ export function SearchableSelect({
                 onClick={handleClear}
                 className="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
               >
-                <X className="h-3.5 w-3.5 text-slate-400" />
+                <X className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
               </button>
             )}
-            <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <ChevronDown className="h-4 w-4 text-slate-400 dark:text-slate-500 shrink-0" />
           </>
         )}
       </div>

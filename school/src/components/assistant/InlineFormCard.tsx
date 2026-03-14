@@ -101,7 +101,7 @@ export function InlineFormCard({
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Name</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Name</label>
           <Input
             type="text"
             value={(row.name as string) || ""}
@@ -111,7 +111,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Student ID</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Student ID</label>
           <Input
             type="text"
             value={(row.studentId as string) || ""}
@@ -123,7 +123,7 @@ export function InlineFormCard({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Class</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Class</label>
           <Select
             value={(row.classId as string) || ""}
             onChange={(e) => {
@@ -152,7 +152,7 @@ export function InlineFormCard({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Fee Type</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Fee Type</label>
           <Select
             value={(row.feeType as string) || "Regular"}
             onChange={(e) => upd("feeType", e.target.value)}
@@ -172,16 +172,16 @@ export function InlineFormCard({
       <button
         type="button"
         onClick={() => setShowDetails(!showDetails)}
-        className="flex w-full items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
+        className="flex w-full items-center justify-between rounded-lg bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
       >
         <span>Personal Details</span>
         {showDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
       {showDetails && (
-        <div className="space-y-3 rounded-lg border border-slate-100 bg-slate-50/50 p-3">
+        <div className="space-y-3 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Father's Name</label>
+              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Father's Name</label>
               <Input
                 type="text"
                 value={(row.personalDetails as Record<string, string>)?.fatherName || ""}
@@ -196,7 +196,7 @@ export function InlineFormCard({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Mother's Name</label>
+              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Mother's Name</label>
               <Input
                 type="text"
                 value={(row.personalDetails as Record<string, string>)?.motherName || ""}
@@ -212,7 +212,7 @@ export function InlineFormCard({
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Guardian Phone</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Guardian Phone</label>
             <Input
               type="text"
               value={(row.personalDetails as Record<string, string>)?.guardianPhone || ""}
@@ -239,7 +239,7 @@ export function InlineFormCard({
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Class name *</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Class name *</label>
           <Input
             type="text"
             value={(row.name as string) || ""}
@@ -250,7 +250,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Due day (1–28)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Due day (1–28)</label>
           <Input
             type="number"
             min={1}
@@ -264,7 +264,7 @@ export function InlineFormCard({
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Registration/Admission (₹)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Registration/Admission (₹)</label>
           <Input
             type="number"
             min={0}
@@ -276,7 +276,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Annual Fund (₹)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Annual Fund (₹)</label>
           <Input
             type="number"
             min={0}
@@ -288,7 +288,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Monthly Fee (₹)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Monthly Fee (₹)</label>
           <Input
             type="number"
             min={0}
@@ -302,7 +302,7 @@ export function InlineFormCard({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Late fee amount (₹)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Late fee amount (₹)</label>
           <Input
             type="number"
             min={0}
@@ -314,7 +314,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Late fee frequency</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Late fee frequency</label>
           <Select
             value={(row.lateFeeFrequency as string) || "weekly"}
             onChange={(e) => upd("lateFeeFrequency", e.target.value as "daily" | "weekly")}
@@ -337,7 +337,7 @@ export function InlineFormCard({
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Name</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Name</label>
           <Input
             type="text"
             value={(row.name as string) || ""}
@@ -347,7 +347,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Employee ID</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Employee ID</label>
           <Input
             type="text"
             value={(row.employeeId as string) || ""}
@@ -359,7 +359,7 @@ export function InlineFormCard({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Role</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Role</label>
           <Select
             value={(row.role as string) || "Teacher"}
             onChange={(e) => upd("role", e.target.value)}
@@ -374,7 +374,7 @@ export function InlineFormCard({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Monthly Salary</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Monthly Salary</label>
           <Input
             type="number"
             value={(row.monthlySalary as number) || ""}
@@ -385,7 +385,7 @@ export function InlineFormCard({
         </div>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Subject/Grade (for teachers)</label>
+        <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Subject/Grade (for teachers)</label>
         <Input
           type="text"
           value={(row.subjectOrGrade as string) || ""}
@@ -405,7 +405,7 @@ export function InlineFormCard({
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Staff Member</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Staff Member</label>
           <Select
             value={(row.staffId as string) || ""}
             onChange={(e) => {
@@ -428,7 +428,7 @@ export function InlineFormCard({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Month</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Month</label>
           <Input
             type="month"
             value={(row.month as string) || ""}
@@ -439,7 +439,7 @@ export function InlineFormCard({
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Amount</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Amount</label>
           <Input
             type="number"
             value={(row.amount as number) || ""}
@@ -448,7 +448,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Status</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Status</label>
           <Select
             value={(row.status as string) || "Paid"}
             onChange={(e) => upd("status", e.target.value)}
@@ -462,7 +462,7 @@ export function InlineFormCard({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Payment Method</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Payment Method</label>
           <Select
             value={(row.method as string) || "Cash"}
             onChange={(e) => upd("method", e.target.value)}
@@ -477,7 +477,7 @@ export function InlineFormCard({
         </div>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Payment Date</label>
+        <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Payment Date</label>
         <Input
           type="date"
           value={(row.paymentDate as string) || ""}
@@ -496,7 +496,7 @@ export function InlineFormCard({
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Amount</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Amount</label>
           <Input
             type="number"
             value={(row.amount as number) || ""}
@@ -506,7 +506,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Date</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Date</label>
           <Input
             type="date"
             value={(row.date as string) || ""}
@@ -517,7 +517,7 @@ export function InlineFormCard({
         </div>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Description</label>
+        <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Description</label>
         <Input
           type="text"
           value={(row.description as string) || ""}
@@ -528,7 +528,7 @@ export function InlineFormCard({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Category</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Category</label>
           <Select
             value={(row.category as string) || "Miscellaneous"}
             onChange={(e) => upd("category", e.target.value)}
@@ -543,7 +543,7 @@ export function InlineFormCard({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Payment Method</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Payment Method</label>
           <Select
             value={(row.paymentMethod as string) || "Cash"}
             onChange={(e) => upd("paymentMethod", e.target.value)}
@@ -559,7 +559,7 @@ export function InlineFormCard({
         </div>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Vendor/Payee</label>
+        <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Vendor/Payee</label>
         <Input
           type="text"
           value={(row.vendorPayee as string) || ""}
@@ -579,7 +579,7 @@ export function InlineFormCard({
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Publisher Name</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Publisher Name</label>
           <Input
             type="text"
             value={(row.publisherName as string) || ""}
@@ -589,7 +589,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Credit Amount</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Credit Amount</label>
           <Input
             type="number"
             value={(row.totalCreditAmount as number) || ""}
@@ -600,7 +600,7 @@ export function InlineFormCard({
         </div>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Description</label>
+        <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Description</label>
         <Input
           type="text"
           value={(row.description as string) || ""}
@@ -610,7 +610,7 @@ export function InlineFormCard({
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Purchase Date</label>
+        <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Purchase Date</label>
         <Input
           type="date"
           value={(row.purchaseDate as string) || ""}
@@ -630,7 +630,7 @@ export function InlineFormCard({
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Name</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Name</label>
           <Input
             type="text"
             value={(row.name as string) || ""}
@@ -641,7 +641,7 @@ export function InlineFormCard({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Monthly Amount</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Monthly Amount</label>
           <Input
             type="number"
             value={(row.amount as number) || ""}
@@ -653,7 +653,7 @@ export function InlineFormCard({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Category</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Category</label>
           <Select
             value={(row.category as string) || "Miscellaneous"}
             onChange={(e) => upd("category", e.target.value)}
@@ -676,7 +676,7 @@ export function InlineFormCard({
             disabled={isDelete}
             className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
           />
-          <label htmlFor={`isActive-${itemIndex}`} className="text-sm text-slate-600">
+          <label htmlFor={`isActive-${itemIndex}`} className="text-sm text-slate-600 dark:text-slate-300">
             Active
           </label>
         </div>
@@ -711,19 +711,19 @@ export function InlineFormCard({
   // ============================================================================
 
   return (
-    <div className="ml-11 rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="ml-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
       {/* Header */}
       <div
         className={cn(
-          "flex items-center justify-between rounded-t-xl border-b border-slate-100 px-4 py-3",
-          isDelete ? "bg-red-50" : "bg-slate-50"
+          "flex items-center justify-between rounded-t-xl border-b border-slate-100 dark:border-slate-700 px-4 py-3",
+          isDelete ? "bg-red-50 dark:bg-red-950/30" : "bg-slate-50 dark:bg-slate-800"
         )}
       >
-        <h3 className={cn("text-sm font-semibold", isDelete ? "text-red-800" : "text-slate-800")}>
+        <h3 className={cn("text-sm font-semibold", isDelete ? "text-red-800 dark:text-red-200" : "text-slate-800 dark:text-slate-100")}>
           {getTitle()}
         </h3>
         {isDelete && (
-          <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+          <span className="rounded bg-red-100 dark:bg-red-900/50 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-200">
             This action cannot be undone
           </span>
         )}
@@ -736,8 +736,8 @@ export function InlineFormCard({
         ) : isBatch && formDataList.length > 1 ? (
           <div className="space-y-6">
             {formDataList.map((_, i) => (
-              <div key={i} className="rounded-lg border border-slate-100 bg-slate-50/50 p-4">
-                <p className="mb-3 text-xs font-medium text-slate-500">Item {i + 1} of {formDataList.length}</p>
+              <div key={i} className="rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-4">
+                <p className="mb-3 text-xs font-medium text-slate-500 dark:text-slate-400">Item {i + 1} of {formDataList.length}</p>
                 {renderFormFields(i)}
               </div>
             ))}
@@ -748,7 +748,7 @@ export function InlineFormCard({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-4 py-3">
+      <div className="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-700 px-4 py-3">
         <Button variant="ghost" size="sm" onClick={onCancel} disabled={isSubmitting}>
           <X className="mr-1 h-4 w-4" />
           Cancel

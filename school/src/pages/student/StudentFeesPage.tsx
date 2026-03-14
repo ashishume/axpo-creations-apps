@@ -29,11 +29,11 @@ export function StudentFeesPage() {
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-4 w-72" />
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6">
           <Skeleton className="h-5 w-32 mb-4" />
           <SkeletonTable rows={4} columns={3} />
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6">
           <Skeleton className="h-5 w-32 mb-4" />
           <SkeletonTable rows={12} columns={4} />
         </div>
@@ -43,7 +43,7 @@ export function StudentFeesPage() {
 
   if (error || !rawStudent) {
     return (
-      <div className="rounded-lg bg-red-50 p-6 text-center text-red-600">
+      <div className="rounded-lg bg-red-50 dark:bg-red-950/30 p-6 text-center text-red-600 dark:text-red-400">
         <AlertCircle className="mx-auto mb-2 h-8 w-8" />
         <p>Unable to load your fee information.</p>
       </div>
@@ -85,7 +85,7 @@ export function StudentFeesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Fee Details</h1>
-        <p className="text-slate-600">View your complete fee structure and payment status</p>
+        <p className="text-slate-600 dark:text-slate-400">View your complete fee structure and payment status</p>
       </div>
 
       {/* One-time Fees */}
@@ -97,7 +97,7 @@ export function StudentFeesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-600">
+                <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                   <th className="pb-2 pr-4 font-medium">Fee Type</th>
                   <th className="pb-2 pr-4 font-medium text-right">Amount</th>
                   <th className="pb-2 font-medium text-center">Status</th>
@@ -105,17 +105,17 @@ export function StudentFeesPage() {
               </thead>
               <tbody>
                 {oneTimeFees.map((fee) => (
-                  <tr key={fee.category} className="border-b border-slate-100">
-                    <td className="py-3 pr-4 font-medium text-slate-900">{fee.name}</td>
+                  <tr key={fee.category} className="border-b border-slate-100 dark:border-slate-700">
+                    <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{fee.name}</td>
                     <td className="py-3 pr-4 text-right">{formatCurrency(fee.amount)}</td>
                     <td className="py-3 text-center">
                       {fee.paid ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-200">
                           <CheckCircle className="h-3 w-3" />
                           Paid
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/50 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-200">
                           <Clock className="h-3 w-3" />
                           Pending
                         </span>
@@ -125,13 +125,13 @@ export function StudentFeesPage() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-slate-50">
-                  <td className="py-3 pr-4 font-semibold text-slate-900">Total</td>
-                  <td className="py-3 pr-4 text-right font-semibold">
+                <tr className="bg-slate-50 dark:bg-slate-800">
+                  <td className="py-3 pr-4 font-semibold text-slate-900 dark:text-slate-100">Total</td>
+                  <td className="py-3 pr-4 text-right font-semibold text-slate-900 dark:text-slate-100">
                     {formatCurrency(oneTimeFees.reduce((sum, f) => sum + f.amount, 0))}
                   </td>
                   <td className="py-3 text-center">
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       {oneTimeFees.filter(f => f.paid).length}/{oneTimeFees.length} paid
                     </span>
                   </td>
@@ -148,25 +148,25 @@ export function StudentFeesPage() {
           <CardTitle>Monthly Fees</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 rounded-lg bg-slate-50 p-4">
+          <div className="mb-4 rounded-lg bg-slate-50 dark:bg-slate-800 p-4">
             <div className="flex flex-wrap gap-4">
               <div>
-                <p className="text-sm text-slate-500">Tuition Fee</p>
-                <p className="text-lg font-semibold text-slate-900">{formatCurrency(monthlyFee)}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Tuition Fee</p>
+                <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(monthlyFee)}</p>
               </div>
               {transportFee > 0 && (
                 <div>
-                  <p className="text-sm text-slate-500">Transport Fee</p>
-                  <p className="text-lg font-semibold text-slate-900">{formatCurrency(transportFee)}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Transport Fee</p>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(transportFee)}</p>
                 </div>
               )}
-              <div className="border-l border-slate-200 pl-4">
-                <p className="text-sm text-slate-500">Total Monthly</p>
-                <p className="text-lg font-semibold text-indigo-600">{formatCurrency(totalMonthly)}</p>
+              <div className="border-l border-slate-200 dark:border-slate-700 pl-4">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Total Monthly</p>
+                <p className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">{formatCurrency(totalMonthly)}</p>
               </div>
-              <div className="border-l border-slate-200 pl-4">
-                <p className="text-sm text-slate-500">Due Date</p>
-                <p className="text-lg font-semibold text-slate-900">{(student.dueDayOfMonth) || 10}th of each month</p>
+              <div className="border-l border-slate-200 dark:border-slate-700 pl-4">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Due Date</p>
+                <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{(student.dueDayOfMonth) || 10}th of each month</p>
               </div>
             </div>
           </div>
@@ -174,7 +174,7 @@ export function StudentFeesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-600">
+                <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                   <th className="pb-2 pr-4 font-medium">Month</th>
                   <th className="pb-2 pr-4 font-medium text-right">Due</th>
                   <th className="pb-2 pr-4 font-medium text-right">Paid</th>
@@ -192,23 +192,23 @@ export function StudentFeesPage() {
                   const isPartial = paidAmount > 0 && paidAmount < totalMonthly;
 
                   return (
-                    <tr key={month} className="border-b border-slate-100">
-                      <td className="py-3 pr-4 font-medium text-slate-900">{formatMonthYear(month)}</td>
+                    <tr key={month} className="border-b border-slate-100 dark:border-slate-700">
+                      <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{formatMonthYear(month)}</td>
                       <td className="py-3 pr-4 text-right">{formatCurrency(totalMonthly)}</td>
                       <td className="py-3 pr-4 text-right">{formatCurrency(paidAmount)}</td>
                       <td className="py-3 text-center">
                         {isPaid ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-200">
                             <CheckCircle className="h-3 w-3" />
                             Paid
                           </span>
                         ) : isPartial ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/50 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-200">
                             <AlertCircle className="h-3 w-3" />
                             Partial
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/50 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:text-red-200">
                             <Clock className="h-3 w-3" />
                             Pending
                           </span>
@@ -230,8 +230,8 @@ export function StudentFeesPage() {
             <CardTitle>Late Fee Policy</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg bg-amber-50 p-4">
-              <p className="text-sm text-amber-800">
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-900/30 p-4">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
                 <strong>Late Fee:</strong> {formatCurrency(student.lateFeeAmount ?? 0)} applied{' '}
                 {(student.lateFeeFrequency) === 'daily' ? 'per day' : 'per week'} after the due date.
               </p>

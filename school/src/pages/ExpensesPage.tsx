@@ -309,11 +309,11 @@ export function ExpensesPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Fixed Monthly Costs</CardTitle>
-              <p className="text-sm text-slate-500 mt-1">Recurring monthly expenses like rent, internet, etc.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Recurring monthly expenses like rent, internet, etc.</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600">
-                Monthly total: <strong className="text-slate-900">{formatCurrency(totalFixedMonthly)}</strong>
+              <span className="text-sm text-slate-600 dark:text-slate-400">
+                Monthly total: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(totalFixedMonthly)}</strong>
               </span>
               <Button
                 size="sm"
@@ -331,7 +331,7 @@ export function ExpensesPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-slate-600">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
                       <th className="pb-2 pr-4 font-medium">Name</th>
                       <th className="pb-2 pr-4 font-medium">Category</th>
                       <th className="pb-2 pr-4 font-medium">Monthly Amount</th>
@@ -341,10 +341,10 @@ export function ExpensesPage() {
                   </thead>
                   <tbody>
                     {sessionFixedCosts.map((fc) => (
-                      <tr key={fc.id} className="border-b border-slate-100">
-                        <td className="py-3 pr-4 font-medium text-slate-900">{fc.name}</td>
-                        <td className="py-3 pr-4 text-slate-600">{fc.category}</td>
-                        <td className="py-3 pr-4 font-medium">{formatCurrency(fc.amount)}</td>
+                      <tr key={fc.id} className="border-b border-slate-100 dark:border-slate-700">
+                        <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{fc.name}</td>
+                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{fc.category}</td>
+                        <td className="py-3 pr-4 font-medium text-slate-700 dark:text-slate-300">{formatCurrency(fc.amount)}</td>
                         <td className="py-3 pr-4">
                           <Badge variant={fc.isActive ? "success" : "neutral"}>
                             {fc.isActive ? "Active" : "Inactive"}
