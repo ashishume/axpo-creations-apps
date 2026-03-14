@@ -524,9 +524,14 @@ export function AssistantPopup() {
           }
 
           case "update_student": {
-            const studentData = items[0] as Partial<Student> & { id: string };
+            const studentData = items[0] as Partial<Student> & { id: string; sessionId?: string; enrollmentId?: string };
             if (!studentData?.id) return { success: false, message: "Student ID required for update." };
-            updateStudent(studentData.id, studentData);
+            const updates = {
+              ...studentData,
+              sessionId: studentData.sessionId ?? selectedSessionId ?? undefined,
+              enrollmentId: studentData.enrollmentId,
+            };
+            updateStudent(studentData.id, updates as Partial<Student>);
             return { success: true, message: `Student updated successfully!` };
           }
 
@@ -988,6 +993,28 @@ export function AssistantPopup() {
       // Resolve data
       const resolvedData = resolveIntentData(result);
 
+      // Direct execute (no form): pay_salary and add_expense – run immediately
+      const directExecuteIntents = ["pay_salary", "add_expense"];
+      if (directExecuteIntents.includes(result.intent)) {
+        const action: PendingAction = {
+          id: generateId(),
+          intentResult: result,
+          resolvedData,
+        };
+        const execResult = await executeAction(action);
+        const resultMessage: ChatMessageData = {
+          id: generateId(),
+          role: "assistant",
+          content: execResult.message,
+          timestamp: new Date(),
+          isError: !execResult.success,
+        };
+        setMessages((prev) => [...prev, resultMessage]);
+        if (execResult.success) toast(execResult.message, "success");
+        else toast(execResult.message, "error");
+        return;
+      }
+
       // Check for negative flows (e.g. class doesn't exist)
       if (result.intent === "add_student") {
         const studentData = result.data as ParsedStudentData;
@@ -1065,11 +1092,16 @@ export function AssistantPopup() {
         const list = isMultipleStudents(data) ? data : [data as ParsedStudentData];
         const baseId = `STU-${Date.now()}`;
         return list.slice(0, MAX_BATCH_SIZE).map((studentData, i) => {
-          const resolved = resolveClassLabel(studentData?.classLabel, sessionClasses);
+          const raw = studentData as unknown as Record<string, unknown>;
+          const classLabel = raw?.classLabel ?? raw?.class ?? raw?.className;
+          const resolved = resolveClassLabel(
+            typeof classLabel === "string" ? classLabel : undefined,
+            sessionClasses
+          );
           return {
             name: studentData?.name || "",
             classId: resolved.classId,
-            classLabel: studentData?.classLabel,
+            classLabel: typeof classLabel === "string" ? classLabel : studentData?.classLabel,
             feeType: studentData?.feeType || "Regular",
             studentId: studentData?.studentId || (list.length > 1 ? `${baseId}-${i + 1}` : baseId),
             personalDetails: studentData?.personalDetails,
@@ -1093,10 +1125,13 @@ export function AssistantPopup() {
             (filters?.name && s.name.toLowerCase().includes(filters.name.toLowerCase())) ||
             (studentData?.name && s.name.toLowerCase().includes(studentData.name.toLowerCase()))
         );
+        const sessionStudent = found as { id: string; name?: string; enrollmentId?: string } | undefined;
         return {
           ...studentData,
-          id: found?.id,
-          name: studentData?.name || found?.name,
+          id: sessionStudent?.id,
+          name: studentData?.name || sessionStudent?.name,
+          sessionId: selectedSessionId ?? undefined,
+          enrollmentId: sessionStudent?.enrollmentId,
         };
       }
 

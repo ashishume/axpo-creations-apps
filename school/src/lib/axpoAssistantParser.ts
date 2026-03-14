@@ -210,7 +210,7 @@ const SYSTEM_PROMPT = `You are Axpo Assistant, an AI for a school management app
 ## Supported Intents
 
 ### Student Operations
-- add_student: Add one or more students. For multiple (e.g. "add Rahul, Priya and Amit to class 2") return data as an array. Max ${MAX_BATCH_SIZE} items.
+- add_student: Add one or more students. Always set classLabel when the user mentions a class (e.g. "to class 1", "class 2" → classLabel: "1" or "2"). For multiple (e.g. "add Rahul, Priya and Amit to class 2") return data as an array. Max ${MAX_BATCH_SIZE} items.
 - update_student: Modify existing student details
 - delete_student: Remove a student
 
@@ -218,7 +218,7 @@ const SYSTEM_PROMPT = `You are Axpo Assistant, an AI for a school management app
 - add_class: Add one or more new classes. For multiple (e.g. "add Class 1, Class 2 and Nursery") return data as an array. Max ${MAX_BATCH_SIZE} items. Each class can have optional fee structure.
 
 ### Staff Operations
-- add_staff: Add one or more staff. For multiple (e.g. "add staff John, Mary and Raj as teachers") return data as an array. Max ${MAX_BATCH_SIZE} items.
+- add_staff: Add one or more staff. Extract name, role (e.g. Teacher), and monthlySalary when the user says "salary X" or "X rupees". For multiple (e.g. "add staff John, Mary and Raj as teachers") return data as an array. Max ${MAX_BATCH_SIZE} items.
 - update_staff: Modify staff details
 - delete_staff: Remove staff
 - pay_salary: Record salary payment for one or more staff. For multiple (e.g. "pay salary to all teachers for this month" or "pay John and Mary for February") return data as an array. Max ${MAX_BATCH_SIZE} items.
@@ -280,9 +280,10 @@ const SYSTEM_PROMPT = `You are Axpo Assistant, an AI for a school management app
 For add_class always set "entity": "class" and "operation": "add". Extract any fees the user mentions (annual fees, admission fees, monthly fees, etc).
 
 ### Student (add_student: single object OR array of up to ${MAX_BATCH_SIZE} students)
+When the user says "add student X to class Y" or "add Rahul to class 1", set classLabel to the class name or number (e.g. "1", "Class 1", "2", "Nursery").
 {
   "name": "string (required)",
-  "classLabel": "string or null (just the number/name: 1, 2, nursery)",
+  "classLabel": "string (required when user mentions a class; e.g. 1, 2, Class 1, Nursery)",
   "sessionYear": "string or null (e.g. 2024-2025)",
   "feeType": "Regular | Boarding | Day Scholar + Meals | Boarding + Meals | null",
   "studentId": "string or null",
@@ -290,11 +291,12 @@ For add_class always set "entity": "class" and "operation": "add". Extract any f
 }
 
 ### Staff (add_staff: single object OR array of up to ${MAX_BATCH_SIZE})
+When the user says "add teacher X with salary Y" or "add staff X salary Y", set monthlySalary to the number Y (e.g. 25000).
 {
   "name": "string (required)",
   "employeeId": "string or null",
   "role": "${STAFF_ROLES.join(" | ")} | null",
-  "monthlySalary": "number or null",
+  "monthlySalary": "number (required when user mentions salary; e.g. 25000)",
   "subjectOrGrade": "string or null"
 }
 
@@ -378,8 +380,45 @@ function capArray<T>(arr: T[]): T[] {
   return arr.length > MAX_BATCH_SIZE ? arr.slice(0, MAX_BATCH_SIZE) : arr;
 }
 
-function normalizeParsedData(_intent: IntentType, data: unknown): IntentResult["data"] {
+/** Normalize staff salary from parsed data (camelCase, snake_case, or "salary" key; coerce string to number). */
+function normalizeStaffSalary(staffObj: Record<string, unknown>): number {
+  const raw =
+    staffObj.monthlySalary ??
+    staffObj.monthly_salary ??
+    (staffObj as { salary?: unknown }).salary;
+  if (raw == null) return 0;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Normalize class label from parsed student data (classLabel, class, or className). */
+function normalizeStudentClassLabel(studentObj: Record<string, unknown>): string | undefined {
+  const raw =
+    studentObj.classLabel ??
+    studentObj.class ??
+    (studentObj as { className?: unknown }).className;
+  if (raw == null || raw === "") return undefined;
+  return typeof raw === "string" ? raw.trim() : String(raw).trim();
+}
+
+function normalizeParsedData(intent: IntentType, data: unknown): IntentResult["data"] {
   if (data == null) return undefined;
+  if (intent === "add_staff") {
+    const arr = Array.isArray(data) ? (data as Record<string, unknown>[]) : [data as Record<string, unknown>];
+    const capped = capArray(arr);
+    return capped.map((item) => ({
+      ...item,
+      monthlySalary: normalizeStaffSalary(item),
+    })) as IntentResult["data"];
+  }
+  if (intent === "add_student") {
+    const arr = Array.isArray(data) ? (data as Record<string, unknown>[]) : [data as Record<string, unknown>];
+    const capped = capArray(arr);
+    return capped.map((item) => {
+      const classLabel = normalizeStudentClassLabel(item);
+      return { ...item, classLabel: classLabel ?? item.classLabel };
+    }) as IntentResult["data"];
+  }
   if (!Array.isArray(data)) return data as IntentResult["data"];
   const capped = capArray(data as object[]);
   return capped as IntentResult["data"];
@@ -490,9 +529,10 @@ export async function parseAxpoIntent(userInput: string): Promise<IntentResult> 
   if (!trimmed) {
     return { success: false, intent: "unknown", error: "Please enter a message." };
   }
+  let result: IntentResult;
   if (isTeachingApiConfigured()) {
     try {
-      return await aiAssistantApi.parseIntent(trimmed);
+      result = await aiAssistantApi.parseIntent(trimmed);
     } catch (e) {
       return {
         success: false,
@@ -500,8 +540,34 @@ export async function parseAxpoIntent(userInput: string): Promise<IntentResult> 
         error: e instanceof Error ? e.message : String(e),
       };
     }
+  } else {
+    result = await parseAxpoIntentWithOpenRouter(trimmed);
   }
-  return parseAxpoIntentWithOpenRouter(trimmed);
+  // Normalize add_staff data so monthlySalary is set (from monthlySalary, monthly_salary, or salary; coerce string to number)
+  if (result.intent === "add_staff" && result.data != null) {
+    const items = Array.isArray(result.data) ? result.data : [result.data];
+    const normalized = items.map((item: Record<string, unknown>) => ({
+      ...item,
+      monthlySalary: normalizeStaffSalary(item),
+    }));
+    result = {
+      ...result,
+      data: (Array.isArray(result.data) ? normalized : normalized[0]) as IntentResult["data"],
+    };
+  }
+  // Normalize add_student data so classLabel is set (from classLabel, class, or className)
+  if (result.intent === "add_student" && result.data != null) {
+    const items = Array.isArray(result.data) ? result.data : [result.data];
+    const normalized = items.map((item: Record<string, unknown>) => {
+      const classLabel = normalizeStudentClassLabel(item);
+      return { ...item, classLabel: classLabel ?? item.classLabel };
+    });
+    result = {
+      ...result,
+      data: (Array.isArray(result.data) ? normalized : normalized[0]) as IntentResult["data"],
+    };
+  }
+  return result;
 }
 
 // ============================================================================
