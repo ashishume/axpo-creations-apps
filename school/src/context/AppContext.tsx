@@ -38,6 +38,8 @@ import {
   organizationsRepository,
   fixedCostsRepository,
 } from "../lib/db/repositories";
+import { useQueryClient } from "@tanstack/react-query";
+import { refetchStaffAndMergeIntoCache } from "../hooks/useStaff";
 import { useAuth } from "./AuthContext";
 import {
   createSampleSchools,
@@ -177,6 +179,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const urlMigratedRef = useRef(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isAppLoading, setIsAppLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const refetchAll = useCallback(async () => {
     setIsAppLoading(true);
@@ -520,9 +523,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
       
-      await refetchAll();
+      await refetchStaffAndMergeIntoCache(queryClient, staffId);
     },
-    [refetchAll]
+    [queryClient]
   );
 
   const addSalaryPayment = useCallback(async (staffId: string, payment: Omit<SalaryPayment, "id">) => {
@@ -545,8 +548,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
     }
     
-    await refetchAll();
-  }, [refetchAll]);
+    await refetchStaffAndMergeIntoCache(queryClient, staffId);
+  }, [queryClient]);
 
   const addSalaryPaymentsBatch = useCallback(
     async (payments: { staffId: string; payment: Omit<SalaryPayment, "id"> }[]) => {
@@ -582,9 +585,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         })
         .filter((e): e is Omit<Expense, "id"> => e !== null);
       if (salaryExpenses.length > 0) await expensesRepository.createMany(salaryExpenses);
-      await refetchAll();
+      for (const staffId of [...new Set(payments.map((p) => p.staffId))]) {
+        await refetchStaffAndMergeIntoCache(queryClient, staffId);
+      }
     },
-    [refetchAll, selectedSessionId]
+    [queryClient, selectedSessionId]
   );
 
   const addExpense = useCallback(async (data: Omit<Expense, "id">) => {

@@ -91,13 +91,16 @@ async def list_students(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
-    """List students for the current organization (paginated)."""
+    """List students for the current organization (paginated, DB-level)."""
     if not user.organization_id:
         raise HTTPException(status_code=400, detail="Organization required")
-    students = await student_service.list_by_organization(db, user.organization_id)
-    total = len(students)
-    page_size = min(limit if limit is not None else total, MAX_PAGE_SIZE)
-    items = students[offset : offset + page_size]
+    page_size = min(
+        limit if limit is not None else DEFAULT_PAGE_SIZE_STUDENTS,
+        MAX_PAGE_SIZE,
+    )
+    items, total = await student_service.list_by_organization_paginated(
+        db, user.organization_id, limit=page_size, offset=offset
+    )
     return PaginatedResponse(
         items=[StudentResponse.model_validate(s) for s in items],
         total=total,

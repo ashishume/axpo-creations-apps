@@ -5,6 +5,51 @@ import type { Staff, LeaveSummary } from '../types';
 
 const QUERY_KEY = 'staff';
 
+/**
+ * After POST/PATCH/DELETE .../staff/:id/payments: fetch only that staff (GET /staff/:id) and merge into
+ * list caches. We intentionally do NOT refetch the whole staff list (GET /staff?session_id=... or
+ * paginated list) so the client stays fast.
+ * Exported for use from AppContext.
+ */
+export async function refetchStaffAndMergeIntoCache(queryClient: ReturnType<typeof useQueryClient>, staffId: string) {
+  const updatedStaff = await staffRepository.getById(staffId);
+  if (!updatedStaff) return;
+  const sessionId = updatedStaff.sessionId;
+
+  const mergeStaffInList = (list: Staff[] | undefined) =>
+    Array.isArray(list) ? list.map((s) => (s.id === staffId ? updatedStaff : s)) : list;
+
+  queryClient.setQueryData([QUERY_KEY, staffId], updatedStaff);
+
+  queryClient.setQueriesData<Staff[]>(
+    { queryKey: [QUERY_KEY, 'bySession'], predicate: (q) => q.queryKey[1] === 'bySession' && q.queryKey[2] === sessionId },
+    mergeStaffInList
+  );
+
+  queryClient.setQueriesData<{ pages: { data: Staff[] }[]; pageParams: unknown[] }>(
+    { queryKey: [QUERY_KEY, 'infinite'], predicate: (q) => q.queryKey[1] === 'infinite' && q.queryKey[2] === sessionId },
+    (old) => {
+      if (!old?.pages) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          data: mergeStaffInList(page.data) ?? page.data,
+        })),
+      };
+    }
+  );
+
+  queryClient.setQueriesData<{ data: Staff[] }>(
+    {
+      queryKey: [QUERY_KEY, 'paginated'],
+      predicate: (query) =>
+        query.queryKey[1] === 'paginated' && (query.queryKey[4] as { sessionId?: string } | undefined)?.sessionId === sessionId,
+    },
+    (old) => (old?.data ? { ...old, data: mergeStaffInList(old.data)! } : old)
+  );
+}
+
 const DEFAULT_PAGE_SIZE = 10;
 const FILTERED_PAGE_SIZE = 50;
 
@@ -112,8 +157,11 @@ export function useAddSalaryPaymentsBatch() {
   return useMutation({
     mutationFn: (payments: { staffId: string; payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'> }[]) =>
       staffRepository.addSalaryPaymentsBatch(payments),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    onSuccess: async (_, payments) => {
+      const staffIds = [...new Set(payments.map((p) => p.staffId))];
+      for (const staffId of staffIds) {
+        await refetchStaffAndMergeIntoCache(queryClient, staffId);
+      }
     },
   });
 }
@@ -182,9 +230,8 @@ export function useAddSalaryPayment() {
   return useMutation({
     mutationFn: ({ staffId, payment }: { staffId: string; payment: Omit<ExtendedSalaryPayment, 'id' | 'lateDays'> }) =>
       staffRepository.addSalaryPayment(staffId, payment),
-    onSuccess: (_, { staffId }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, staffId] });
+    onSuccess: async (_, { staffId }) => {
+      await refetchStaffAndMergeIntoCache(queryClient, staffId);
     },
   });
 }
@@ -195,9 +242,8 @@ export function useUpdateSalaryPayment() {
   return useMutation({
     mutationFn: ({ staffId, paymentId, updates }: { staffId: string; paymentId: string; updates: Partial<ExtendedSalaryPayment> }) =>
       staffRepository.updateSalaryPayment(staffId, paymentId, updates),
-    onSuccess: (_, { staffId }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, staffId] });
+    onSuccess: async (_, { staffId }) => {
+      await refetchStaffAndMergeIntoCache(queryClient, staffId);
     },
   });
 }
@@ -208,9 +254,8 @@ export function useDeleteSalaryPayment() {
   return useMutation({
     mutationFn: ({ staffId, paymentId }: { staffId: string; paymentId: string }) =>
       staffRepository.deleteSalaryPayment(staffId, paymentId),
-    onSuccess: (_, { staffId }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, staffId] });
+    onSuccess: async (_, { staffId }) => {
+      await refetchStaffAndMergeIntoCache(queryClient, staffId);
     },
   });
 }

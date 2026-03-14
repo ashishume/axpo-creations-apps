@@ -30,6 +30,22 @@ class StaffRepository:
         result = await db.execute(select(Staff).order_by(Staff.created_at.desc()))
         return list(result.scalars().all())
 
+    async def count_all(self, db: AsyncSession) -> int:
+        result = await db.execute(select(func.count()).select_from(Staff))
+        return result.scalar() or 0
+
+    async def list_all_paginated(
+        self,
+        db: AsyncSession,
+        *,
+        limit: int,
+        offset: int,
+    ) -> list[Staff]:
+        result = await db.execute(
+            select(Staff).order_by(Staff.created_at.desc()).limit(limit).offset(offset)
+        )
+        return list(result.scalars().all())
+
     async def list_by_session(self, db: AsyncSession, session_id: UUID) -> list[Staff]:
         result = await db.execute(
             select(Staff).where(Staff.session_id == session_id).order_by(Staff.created_at.desc())

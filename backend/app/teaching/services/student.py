@@ -54,6 +54,21 @@ class StudentService:
     async def list_by_organization(self, db: AsyncSession, organization_id: UUID) -> list[Student]:
         return await student_repository.list_by_organization(db, organization_id)
 
+    async def list_by_organization_paginated(
+        self,
+        db: AsyncSession,
+        organization_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[Student], int]:
+        """Return (items, total) for DB-level pagination."""
+        total = await student_repository.count_by_organization(db, organization_id)
+        items = await student_repository.list_by_organization_paginated(
+            db, organization_id, limit=limit, offset=offset
+        )
+        return items, total
+
     async def update(self, db: AsyncSession, id: UUID, data: StudentUpdate) -> Student:
         student = await self.get_or_404(db, id)
         for k, v in data.model_dump(exclude_unset=True).items():

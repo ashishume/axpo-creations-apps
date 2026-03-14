@@ -87,9 +87,9 @@ async def list_staff(
             db, user.organization_id, limit=page_size, offset=offset
         )
     else:
-        staff_list = await staff_service.list_all(db)
-        total = len(staff_list)
-        items = staff_list[offset : offset + page_size]
+        items, total = await staff_service.list_all_paginated(
+            db, limit=page_size, offset=offset
+        )
     return PaginatedResponse(
         items=[StaffResponse.model_validate(s) for s in items],
         total=total,

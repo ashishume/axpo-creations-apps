@@ -45,6 +45,33 @@ class StudentRepository:
         )
         return list(result.scalars().all())
 
+    async def count_by_organization(self, db: AsyncSession, organization_id: UUID) -> int:
+        result = await db.execute(
+            select(func.count())
+            .select_from(Student)
+            .join(School, Student.school_id == School.id)
+            .where(School.organization_id == organization_id)
+        )
+        return result.scalar() or 0
+
+    async def list_by_organization_paginated(
+        self,
+        db: AsyncSession,
+        organization_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+    ) -> list[Student]:
+        result = await db.execute(
+            select(Student)
+            .join(School, Student.school_id == School.id)
+            .where(School.organization_id == organization_id)
+            .order_by(Student.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(result.scalars().all())
+
     async def count_by_school(self, db: AsyncSession, school_id: UUID) -> int:
         result = await db.execute(
             select(func.count()).select_from(Student).where(Student.school_id == school_id)

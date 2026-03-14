@@ -78,6 +78,20 @@ class StaffService:
     async def list_all(self, db: AsyncSession) -> list[Staff]:
         return await staff_repository.list_all(db)
 
+    async def list_all_paginated(
+        self,
+        db: AsyncSession,
+        *,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[Staff], int]:
+        """Return (items, total) for DB-level pagination when no session/org filter."""
+        total = await staff_repository.count_all(db)
+        items = await staff_repository.list_all_paginated(
+            db, limit=limit, offset=offset
+        )
+        return items, total
+
     async def list_by_organization(self, db: AsyncSession, organization_id: UUID) -> list[Staff]:
         return await staff_repository.list_by_organization(db, organization_id)
 
