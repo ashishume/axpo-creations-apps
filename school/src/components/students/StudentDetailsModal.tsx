@@ -27,7 +27,7 @@ import {
 import type { FeeCategoryType } from "../../lib/studentUtils";
 import { cn } from "../../lib/utils";
 import { isTeachingApiConfigured } from "../../lib/api/client";
-import { uploadReceipt } from "../../lib/api/upload";
+import { uploadReceipt, uploadStudentPhoto } from "../../lib/api/upload";
 import { User, Phone, MapPin, Heart, AlertTriangle, DollarSign, Camera, X, Image, CheckCircle, XCircle, AlertCircle, Plus, Trash2, Loader2, Snowflake, Lock } from "lucide-react";
 import type { Session } from "../../types";
 
@@ -95,11 +95,19 @@ export function StudentDetailsModal({
   const amountInputRef = useRef<HTMLInputElement>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const receiptPhotoFileRef = useRef<File | null>(null);
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   
   // Reset state when student changes (payment list refresh fix)
   useEffect(() => {
     setShowPaymentForm(initialTab === "payments");
   }, [student.id, student.payments.length, initialTab]);
+
+  // Clear profile photo preview when student or modal changes
+  useEffect(() => {
+    if (!open) setProfilePhotoPreview(null);
+  }, [open, student.id]);
 
   // Get session months for dropdown
   const sessionMonthOptions = useMemo(() => {
@@ -207,6 +215,43 @@ export function StudentDetailsModal({
     if (remaining !== Infinity && remaining >= 0) {
       amountInputRef.current.value = String(remaining);
     }
+  };
+
+  // Profile photo: change or remove
+  const displayPhotoUrl = profilePhotoPreview ?? student.photoUrl;
+  const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image (JPEG, PNG, GIF, or WebP).");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Photo must be under 2MB. Please select a smaller image.");
+      return;
+    }
+    if (!isTeachingApiConfigured() || !onUpdateStudent) return;
+    const blobUrl = URL.createObjectURL(file);
+    setProfilePhotoPreview(blobUrl);
+    setIsUploadingPhoto(true);
+    try {
+      const url = await uploadStudentPhoto(file);
+      onUpdateStudent({ photoUrl: url });
+      setProfilePhotoPreview(null); // parent state will have new URL
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Photo upload failed");
+      setProfilePhotoPreview(null);
+      URL.revokeObjectURL(blobUrl);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+  const handleRemoveProfilePhoto = () => {
+    setProfilePhotoPreview(null);
+    if (profilePhotoInputRef.current) profilePhotoInputRef.current.value = "";
+    onUpdateStudent?.({ photoUrl: undefined });
   };
 
   // Handle receipt photo selection with 2MB limit
@@ -428,17 +473,58 @@ export function StudentDetailsModal({
           <div className="space-y-4">
             {/* Student Photo and Basic Info */}
             <div className="flex items-start gap-4">
-              {student.photoUrl ? (
-                <img 
-                  src={student.photoUrl} 
-                  alt={student.name} 
-                  className="h-20 w-20 rounded-full object-cover border-2 border-slate-200 shrink-0"
-                />
-              ) : (
-                <div className="h-20 w-20 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center shrink-0">
-                  <User className="h-10 w-10 text-slate-400" />
-                </div>
-              )}
+              <div className="relative shrink-0">
+                {displayPhotoUrl ? (
+                  <img 
+                    src={displayPhotoUrl} 
+                    alt={student.name} 
+                    className="h-20 w-20 rounded-full object-cover border-2 border-slate-200"
+                  />
+                ) : (
+                  <div className="h-20 w-20 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center">
+                    <User className="h-10 w-10 text-slate-400" />
+                  </div>
+                )}
+                {isUploadingPhoto && (
+                  <div className="absolute inset-0 rounded-full bg-slate-900/50 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 text-white animate-spin" />
+                  </div>
+                )}
+                {onUpdateStudent && isTeachingApiConfigured() && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    <input
+                      ref={profilePhotoInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handleProfilePhotoChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => profilePhotoInputRef.current?.click()}
+                      disabled={isUploadingPhoto}
+                    >
+                      <Camera className="h-3.5 w-3.5 mr-1" />
+                      {displayPhotoUrl ? "Change photo" : "Add photo"}
+                    </Button>
+                    {displayPhotoUrl && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={handleRemoveProfilePhoto}
+                        disabled={isUploadingPhoto}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-4 text-sm flex-1">
                 <div>
                   <span className="text-slate-500">Admission No:</span>

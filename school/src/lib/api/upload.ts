@@ -31,6 +31,9 @@ export async function uploadStudentPhoto(file: File): Promise<string> {
     throw new Error((err as { detail?: string }).detail ?? "Upload failed");
   }
   const data = (await res.json()) as { url: string };
+  if (data.url.startsWith("http://") || data.url.startsWith("https://")) {
+    return data.url;
+  }
   const path = data.url.startsWith("/") ? data.url : `/${data.url}`;
   return `${getTeachingApiUrl().replace(/\/$/, "")}${path}`;
 }
@@ -54,6 +57,9 @@ export async function uploadReceipt(file: File): Promise<string> {
     throw new Error((err as { detail?: string }).detail ?? "Upload failed");
   }
   const data = (await res.json()) as { url: string };
+  if (data.url.startsWith("http://") || data.url.startsWith("https://")) {
+    return data.url;
+  }
   const path = data.url.startsWith("/") ? data.url : `/${data.url}`;
   return `${getTeachingApiUrl().replace(/\/$/, "")}${path}`;
 }

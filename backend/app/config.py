@@ -79,6 +79,10 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     UPLOAD_MAX_BYTES: int = 2 * 1024 * 1024  # 2MB
 
+    # Optional: Supabase Storage for uploads (persists on Railway; set both to enable)
+    TEACHING_SUPABASE_URL: str | None = None  # e.g. https://xxx.supabase.co
+    TEACHING_SUPABASE_SERVICE_ROLE_KEY: str | None = None
+
 
 def get_settings() -> Settings:
     """Return application settings."""

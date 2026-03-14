@@ -69,6 +69,21 @@ TARGET_DB=teaching alembic upgrade head
 
 Use the same Postgres URLs as in `.env` (Alembic uses a sync driver internally).
 
+### File uploads (Teaching – student photos, receipt photos)
+
+Uploads are stored on the server filesystem by default. **On Railway (and similar platforms) the filesystem is ephemeral**, so uploaded images disappear after a deploy or restart. To make profile and receipt images persist:
+
+1. In **Supabase Dashboard** → your Teaching project → **Storage**, create two buckets:
+   - `student-photos` (for profile photos)
+   - `receipts` (for fee receipt images)
+2. Set both buckets to **Public** (so the returned URLs can be used in `<img src="...">`).
+3. In **Project Settings** → **API** copy the **Project URL** and **service_role** key (keep it secret).
+4. Set in your backend environment (e.g. Railway):
+   - `TEACHING_SUPABASE_URL=https://YOUR_REF.supabase.co`
+   - `TEACHING_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key`
+
+When both are set, the backend uploads files to Supabase Storage and returns the public image URL. The frontend stores that URL in the DB and uses it as-is for display.
+
 ## API Overview
 
 ### Billing (`/billing/api/v1`)
