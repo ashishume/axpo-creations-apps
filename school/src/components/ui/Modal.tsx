@@ -20,10 +20,6 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
   
   useEffect(() => {
     if (open) {
-      if (activeModals.size > 0 && !activeModals.has(modalId)) {
-        onClose();
-        return;
-      }
       activeModals.add(modalId);
       isRegistered.current = true;
     } else {
@@ -32,13 +28,13 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         isRegistered.current = false;
       }
     }
-    
+
     return () => {
       activeModals.delete(modalId);
       isRegistered.current = false;
     };
   }, [open, modalId, onClose]);
-  
+
   useEffect(() => {
     if (!open) return;
     const handle = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -51,10 +47,6 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
   }, [open, onClose]);
 
   if (!open) return null;
-  
-  if (activeModals.size > 0 && !activeModals.has(modalId)) {
-    return null;
-  }
 
   return createPortal(
     <div
