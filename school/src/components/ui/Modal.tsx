@@ -17,7 +17,7 @@ interface ModalProps {
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
   const modalId = useId();
   const isRegistered = useRef(false);
-  
+
   useEffect(() => {
     if (open) {
       activeModals.add(modalId);
@@ -61,7 +61,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       />
       <div
         className={cn(
-          "relative z-10 w-full max-w-3xl max-h-[90vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl",
+          "relative z-10 w-full max-w-5xl max-h-[99vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl",
           className
         )}
         onClick={(e) => e.stopPropagation()}

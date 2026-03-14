@@ -120,18 +120,18 @@ function getSalaryHistoryMonths(sessionMonths: string[], paymentMonths: string[]
   return Array.from(set).sort((a, b) => b.localeCompare(a));
 }
 
-// Salary Payment Modal Component with leave calculations and partial payment support
-function SalaryPaymentModalContent({
+// Salary payment form (used inside tabbed modal; no Modal wrapper)
+function SalaryPaymentForm({
   staff,
   month,
   salaryDueDay,
-  onClose,
+  onCancel,
   onSubmit,
 }: {
   staff: StaffType;
   month: string;
   salaryDueDay: number;
-  onClose: () => void;
+  onCancel?: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }) {
   const { data: leaveSummary, isLoading: leaveSummaryLoading } = useLeaveSummary(staff.id, month);
@@ -148,13 +148,22 @@ function SalaryPaymentModalContent({
   const [payAmount, setPayAmount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Update form values when leave summary loads
+  // Update form values when leave summary or month changes
   useEffect(() => {
     if (leaveSummary && !existingPayment) {
       setDaysWorked(leaveSummary.daysWorked);
       setLeavesTaken(leaveSummary.leavesTaken);
     }
   }, [leaveSummary, existingPayment]);
+
+  // Reset form when month changes
+  useEffect(() => {
+    const pay = staff.salaryPayments.find((p) => p.month === month);
+    setDaysWorked(pay?.daysWorked ?? 30);
+    setLeavesTaken(pay?.leavesTaken ?? 0);
+    setExtraAllowance(pay?.extraAllowance ?? 0);
+    setExtraDeduction(pay?.extraDeduction ?? 0);
+  }, [month, staff.salaryPayments]);
 
   // Calculate salary breakdown
   const perDay = staff.perDaySalary ?? staff.monthlySalary / 30;
@@ -193,12 +202,7 @@ function SalaryPaymentModalContent({
   };
 
   return (
-    <Modal
-      open={true}
-      onClose={onClose}
-      title={`Salary Payment – ${staff.name}`}
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
         {/* Hidden fields for form data */}
         <input type="hidden" name="calculatedSalary" value={calculatedSalary} />
         <input type="hidden" name="previouslyPaidAmount" value={previouslyPaidAmount} />
@@ -429,9 +433,11 @@ function SalaryPaymentModalContent({
         )}
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
+          {onCancel && (
+            <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
+              Back
+            </Button>
+          )}
           <Button 
             type="submit" 
             disabled={isFullyPaid || payAmount <= 0 || payAmount > remainingAmount || isSubmitting}
@@ -442,7 +448,6 @@ function SalaryPaymentModalContent({
           </Button>
         </div>
       </form>
-    </Modal>
   );
 }
 
@@ -481,8 +486,9 @@ export function StaffPage() {
   );
 
   const [staffModal, setStaffModal] = useState<{ open: boolean; staff?: StaffType }>({ open: false });
-  const [salaryModal, setSalaryModal] = useState<{ staff: StaffType; month: string; fromHistory?: boolean } | null>(null);
   const [salaryHistoryModal, setSalaryHistoryModal] = useState<StaffType | null>(null);
+  const [activeSalaryTab, setActiveSalaryTab] = useState<"history" | "payment">("history");
+  const [paymentMonth, setPaymentMonth] = useState<string>(() => getCurrentMonth());
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
@@ -667,9 +673,9 @@ export function StaffPage() {
 
   const handleSaveSalary = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!salaryModal) return;
+    if (!salaryHistoryModal) return;
     const form = e.currentTarget;
-    const month = salaryModal.month;
+    const month = paymentMonth;
     const daysWorked = Number((form.elements.namedItem("daysWorked") as HTMLInputElement).value) || 30;
     const leavesTaken = Number((form.elements.namedItem("leavesTaken") as HTMLInputElement).value) || 0;
     const extraAllowance = Number((form.elements.namedItem("extraAllowance") as HTMLInputElement).value) || 0;
@@ -683,7 +689,7 @@ export function StaffPage() {
     const dueDate = `${month}-${String(salaryDueDay).padStart(2, "0")}`;
 
     // Calculate final amount based on deductions
-    const staff = salaryModal.staff;
+    const staff = salaryHistoryModal;
     const perDay = staff.perDaySalary ?? staff.monthlySalary / 30;
     const allowedLeaves = staff.allowedLeavesPerMonth ?? 1;
     const excessLeaves = Math.max(0, leavesTaken - allowedLeaves);
@@ -724,13 +730,11 @@ export function StaffPage() {
         calculatedSalary,
       });
       toast(`Salary payment of ${formatCurrency(payAmount)} recorded`);
-      setSalaryModal(null);
-      if (salaryModal.fromHistory) {
-        const result = await refetchStaffList();
-        const updatedList = (result.data?.pages ?? []).flatMap((p: { data: StaffType[] }) => p.data);
-        const updatedStaff = updatedList.find((s: StaffType) => s.id === staff.id) ?? staff;
-        setSalaryHistoryModal(updatedStaff);
-      }
+      const result = await refetchStaffList();
+      const updatedList = (result.data?.pages ?? []).flatMap((p: { data: StaffType[] }) => p.data);
+      const updatedStaff = updatedList.find((s: StaffType) => s.id === staff.id) ?? staff;
+      setSalaryHistoryModal(updatedStaff);
+      setActiveSalaryTab("history");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to record payment";
       toast(message);
@@ -995,6 +999,8 @@ export function StaffPage() {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     setSalaryHistoryModal(s);
+                                    setActiveSalaryTab("history");
+                                    setPaymentMonth(sessionMonths?.[0] ?? getCurrentMonth());
                                   }}
                                   title="View salary history & pay"
                                 >
@@ -1193,20 +1199,6 @@ export function StaffPage() {
         </form>
       </Modal>
 
-      {salaryModal && <SalaryPaymentModalContent
-        staff={salaryModal.staff}
-        month={salaryModal.month}
-        salaryDueDay={salaryDueDay}
-        onClose={() => {
-          // If opened from salary history, reopen it when cancelled
-          if (salaryModal.fromHistory) {
-            setSalaryHistoryModal(salaryModal.staff);
-          }
-          setSalaryModal(null);
-        }}
-        onSubmit={handleSaveSalary}
-      />}
-
       <ConfirmDialog
         open={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
@@ -1283,34 +1275,62 @@ export function StaffPage() {
         }}
       />
 
-      {/* Salary History Modal - use latest staff from context so payments stay in sync */}
+      {/* Salary modal: Salary History + Record Payment in two tabs */}
       {salaryHistoryModal && (() => {
         const historyStaff = staff.find((s: StaffType) => s.id === salaryHistoryModal.id) ?? salaryHistoryModal;
         const monthsToShow = getSalaryHistoryMonths(
           sessionMonths,
           historyStaff.salaryPayments.map((p: SalaryPayment) => p.month)
         );
+        const salaryTabs = [
+          { id: "history" as const, label: "Salary History" },
+          { id: "payment" as const, label: "Record Payment" },
+        ];
         return (
           <Modal
             open={!!salaryHistoryModal}
-            onClose={() => setSalaryHistoryModal(null)}
-            title={`Salary History – ${historyStaff.name}`}
+            onClose={() => {
+              setSalaryHistoryModal(null);
+              setActiveSalaryTab("history");
+            }}
+            title={`Salary – ${historyStaff.name}`}
           >
             <div className="space-y-4">
-              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Monthly Salary: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(historyStaff.monthlySalary)}</strong>
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Allowed Leaves: {historyStaff.allowedLeavesPerMonth ?? 1}/month
-                    </p>
-                  </div>
-                </div>
+              {/* Tab navigation */}
+              <div className="flex gap-1 border-b border-slate-200 dark:border-slate-700">
+                {salaryTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveSalaryTab(tab.id)}
+                    className={cn(
+                      "px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors -mb-px",
+                      activeSalaryTab === tab.id
+                        ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                        : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
 
-              <div className="max-h-96 overflow-y-auto">
+              {activeSalaryTab === "history" && (
+                <>
+                  <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Monthly Salary: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(historyStaff.monthlySalary)}</strong>
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Allowed Leaves: {historyStaff.allowedLeavesPerMonth ?? 1}/month
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-white dark:bg-slate-900">
                     <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">
@@ -1399,7 +1419,8 @@ export function StaffPage() {
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        setSalaryModal({ staff: historyStaff, month, fromHistory: true });
+                                        setPaymentMonth(month);
+                                        setActiveSalaryTab("payment");
                                       }}
                                       title={monthStatus.status === "Partially Paid" ? "Continue paying remaining amount" : "Pay salary for this month"}
                                     >
@@ -1419,22 +1440,47 @@ export function StaffPage() {
                 </table>
               </div>
 
-              <div className="flex justify-between border-t border-slate-200 pt-4">
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Total Paid (this session):{" "}
-                    <strong className="text-slate-900 dark:text-slate-100">
-                      {formatCurrency(
-                        sessionMonths.reduce(
-                          (sum: number, m: string) => sum + getTotalPaidForMonth(historyStaff.salaryPayments, m),
-                          0
-                        )
-                      )}
-                    </strong>
-                  </p>
+                  <div className="flex justify-between border-t border-slate-200 dark:border-slate-700 pt-4">
+                    <div>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Total Paid (this session):{" "}
+                        <strong className="text-slate-900 dark:text-slate-100">
+                          {formatCurrency(
+                            sessionMonths.reduce(
+                              (sum: number, m: string) => sum + getTotalPaidForMonth(historyStaff.salaryPayments, m),
+                              0
+                            )
+                          )}
+                        </strong>
+                      </p>
+                    </div>
+                    <Button type="button" onClick={() => setSalaryHistoryModal(null)}>Close</Button>
+                  </div>
+                </>
+              )}
+
+              {activeSalaryTab === "payment" && (
+                <div className="space-y-4">
+                  <FormField label="Month">
+                    <Select
+                      value={paymentMonth}
+                      onChange={(e) => setPaymentMonth(e.target.value)}
+                    >
+                      {sessionMonths.map((m) => (
+                        <option key={m} value={m}>{formatMonthYear(m)}</option>
+                      ))}
+                    </Select>
+                  </FormField>
+                  <SalaryPaymentForm
+                    key={paymentMonth}
+                    staff={historyStaff}
+                    month={paymentMonth}
+                    salaryDueDay={salaryDueDay}
+                    onCancel={() => setActiveSalaryTab("history")}
+                    onSubmit={handleSaveSalary}
+                  />
                 </div>
-                <Button onClick={() => setSalaryHistoryModal(null)}>Close</Button>
-              </div>
+              )}
             </div>
           </Modal>
         );
