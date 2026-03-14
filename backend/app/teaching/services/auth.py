@@ -2,6 +2,7 @@
 from uuid import UUID
 
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import verify_password, hash_password, create_access_token, create_refresh_token, decode_token
@@ -13,7 +14,9 @@ from app.teaching.models.role import RolePermission
 
 class AuthService:
     async def login(self, db: AsyncSession, username: str, password: str) -> User:
-        result = await db.execute(select(User).where(User.username == username, User.is_active == True))
+        result = await db.execute(
+            select(User).options(joinedload(User.role)).where(User.username == username, User.is_active == True)
+        )
         user = result.scalar_one_or_none()
         if not user or not user.password_hash or not verify_password(password, user.password_hash):
             raise UnauthorizedError("Invalid username or password")

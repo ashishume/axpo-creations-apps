@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import Cookie, Depends
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_teaching_db
@@ -47,7 +48,9 @@ async def get_current_teaching_user(
         user_id = UUID(sub)
     except (ValueError, TypeError):
         raise UnauthorizedError("Invalid token")
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(
+        select(User).options(joinedload(User.role)).where(User.id == user_id)
+    )
     user = result.scalar_one_or_none()
     if not user:
         raise UnauthorizedError("User not found")

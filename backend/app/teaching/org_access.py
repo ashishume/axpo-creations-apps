@@ -31,13 +31,14 @@ async def enforce_school_access(db: AsyncSession, user: User, school_id: UUID) -
 
 
 async def enforce_session_access(db: AsyncSession, user: User, session_id: UUID) -> None:
-    """Raise 403 if the session's school doesn't belong to the user's org."""
+    """Raise 403 if the session's school doesn't belong to the user's org. Loads session+school in one query."""
     if _is_super_admin(user):
         return
     session = await session_repository.get(db, session_id)
-    if not session:
+    if not session or not session.school:
         raise ForbiddenError("Access denied")
-    await enforce_school_access(db, user, session.school_id)
+    if session.school.organization_id != user.organization_id:
+        raise ForbiddenError("Access denied: session belongs to another organization")
 
 
 async def enforce_session_child_access(

@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import TeachingBase
 
@@ -33,6 +33,7 @@ class Session(TeachingBase):
         ForeignKey("schools.id", ondelete="CASCADE"),
         nullable=False,
     )
+    school: Mapped["School"] = relationship("School", lazy="joined", foreign_keys=[school_id])
     year: Mapped[str] = mapped_column(String(20), nullable=False)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date] = mapped_column(Date, nullable=False)

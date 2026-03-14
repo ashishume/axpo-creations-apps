@@ -12,7 +12,6 @@ from app.teaching.schemas.auth import (
     UserResponse, RoleInfo, MeResponse, ChangePasswordRequest,
 )
 from app.teaching.services.auth import auth_service
-from app.teaching.repositories.role import role_repository
 from app.teaching.models.user import User
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,11 +20,10 @@ router = APIRouter(prefix="/auth", tags=["teaching-auth"])
 
 
 async def _build_user_response(db: AsyncSession, user: User) -> UserResponse:
-    """Build UserResponse with embedded role info."""
+    """Build UserResponse with embedded role info (role loaded via joinedload in get_current_teaching_user)."""
     role_info = None
-    role = await role_repository.get(db, user.role_id)
-    if role:
-        role_info = RoleInfo(id=role.id, name=role.name, is_system=role.is_system)
+    if user.role:
+        role_info = RoleInfo(id=user.role.id, name=user.role.name, is_system=user.role.is_system)
     return UserResponse(
         id=user.id,
         username=user.username,

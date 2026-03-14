@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import TeachingBase
 
@@ -23,6 +23,7 @@ class User(TeachingBase):
         ForeignKey("roles.id"),
         nullable=False,
     )
+    role: Mapped["Role"] = relationship("Role", lazy="joined", foreign_keys=[role_id])
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
