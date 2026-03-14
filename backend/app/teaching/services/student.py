@@ -10,6 +10,7 @@ from app.teaching.models.student import Student, StudentEnrollment, FeePayment
 from app.teaching.models.user import User
 from app.teaching.schemas.student import (
     StudentCreate,
+    StudentCreateWithEnrollment,
     StudentUpdate,
     BulkStudentCreate,
     EnrollmentCreate,
@@ -21,6 +22,7 @@ from app.teaching.schemas.student import (
 )
 from app.teaching.repositories.student import student_repository, enrollment_repository
 from app.teaching.repositories.class_model import class_repository
+from app.teaching.repositories.session import session_repository
 
 
 class StudentService:
@@ -29,6 +31,41 @@ class StudentService:
     async def create(self, db: AsyncSession, data: StudentCreate) -> Student:
         student = Student(**data.model_dump())
         return await student_repository.add(db, student)
+
+    async def create_with_enrollment(
+        self, db: AsyncSession, data: StudentCreateWithEnrollment
+    ) -> tuple[Student, StudentEnrollment]:
+        """Create student identity and enroll in a session in one transaction."""
+        session = await session_repository.get(db, data.session_id)
+        if not session:
+            raise NotFoundError("Session not found")
+        # Student fields only (exclude enrollment fields)
+        enrollment_fields = {
+            "session_id", "class_id", "registration_fees", "annual_fund", "monthly_fees",
+            "transport_fees", "registration_paid", "annual_fund_paid", "due_day_of_month",
+            "late_fee_amount", "late_fee_frequency",
+        }
+        student_dict = {k: v for k, v in data.model_dump().items() if k not in enrollment_fields}
+        student_dict["school_id"] = session.school_id
+        student = Student(**student_dict)
+        student = await student_repository.add(db, student)
+        # Create enrollment
+        enrollment_data = EnrollmentCreate(
+            student_id=student.id,
+            session_id=data.session_id,
+            class_id=data.class_id,
+            registration_fees=data.registration_fees,
+            annual_fund=data.annual_fund,
+            monthly_fees=data.monthly_fees,
+            transport_fees=data.transport_fees,
+            registration_paid=data.registration_paid,
+            annual_fund_paid=data.annual_fund_paid,
+            due_day_of_month=data.due_day_of_month,
+            late_fee_amount=data.late_fee_amount,
+            late_fee_frequency=data.late_fee_frequency,
+        )
+        enrollment = await enrollment_service.create(db, enrollment_data)
+        return student, enrollment
 
     async def create_bulk(
         self, db: AsyncSession, data: BulkStudentCreate

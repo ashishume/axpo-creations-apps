@@ -76,7 +76,7 @@ function addStudentToSessionCache(
     id: student.id,
     sessionId,
     payments: [],
-    enrollmentId: undefined,
+    enrollmentId: (student as { enrollmentId?: string }).enrollmentId,
     classId: enrollmentFields?.classId,
     registrationFees: enrollmentFields?.registrationFees,
     annualFund: enrollmentFields?.annualFund,
@@ -98,9 +98,10 @@ function addStudentToSessionCache(
     } : undefined,
   };
 
+  // Prepend so recently added students appear at top (matches backend order_by created_at.desc())
   queryClient.setQueryData(
     [QUERY_KEY, 'bySession', sessionId],
-    (old: SessionStudentLike[] | undefined) => (old ? [...old, stub] : [stub])
+    (old: SessionStudentLike[] | undefined) => (old ? [stub, ...old] : [stub])
   );
 
   queryClient.setQueriesData<{ pages: { data: SessionStudentLike[]; total: number }[] }>(
@@ -111,7 +112,7 @@ function addStudentToSessionCache(
       return {
         ...old,
         pages: [
-          { ...first, data: [...(first.data ?? []), stub], total: (first.total ?? 0) + 1 },
+          { ...first, data: [stub, ...(first.data ?? [])], total: (first.total ?? 0) + 1 },
           ...rest,
         ],
       };

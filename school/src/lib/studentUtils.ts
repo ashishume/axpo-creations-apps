@@ -214,7 +214,10 @@ export function getMonthlyPaymentStatus(
   const paidAmount = payments.reduce((sum, p) => sum + p.amount, 0);
 
   let status: MonthlyFeeStatus;
-  if (paidAmount >= expectedAmount) {
+  if (expectedAmount === 0) {
+    // No fee due: show "Not Paid" when there are no payments (don't treat 0 >= 0 as Paid)
+    status = paidAmount > 0 ? "Paid" : "Not Paid";
+  } else if (paidAmount >= expectedAmount) {
     status = "Paid";
   } else if (paidAmount > 0) {
     status = "Partially Paid";

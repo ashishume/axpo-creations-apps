@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ClassBase(BaseModel):
@@ -18,7 +18,12 @@ class ClassBase(BaseModel):
 
 
 class ClassCreate(ClassBase):
-    pass
+    @field_validator("monthly_fees")
+    @classmethod
+    def monthly_fees_must_be_positive(cls, v: Decimal) -> Decimal:
+        if v is not None and v <= 0:
+            raise ValueError("Monthly fees must be greater than zero (zero breaks finance logic)")
+        return v
 
 
 class ClassUpdate(BaseModel):
@@ -29,6 +34,13 @@ class ClassUpdate(BaseModel):
     late_fee_amount: Decimal | None = None
     late_fee_frequency: str | None = None
     due_day_of_month: int | None = None
+
+    @field_validator("monthly_fees")
+    @classmethod
+    def monthly_fees_must_be_positive(cls, v: Decimal | None) -> Decimal | None:
+        if v is not None and v <= 0:
+            raise ValueError("Monthly fees must be greater than zero (zero breaks finance logic)")
+        return v
 
 
 class ClassResponse(ClassBase):

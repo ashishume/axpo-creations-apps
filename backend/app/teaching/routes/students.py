@@ -14,10 +14,12 @@ from app.teaching.pagination import DEFAULT_PAGE_SIZE_STUDENTS, FILTERED_PAGE_SI
 from app.teaching.schemas.pagination import PaginatedResponse
 from app.teaching.schemas.student import (
     StudentCreate,
+    StudentCreateWithEnrollment,
     StudentUpdate,
     StudentResponse,
     BulkStudentCreate,
     BulkStudentResponse,
+    CreateStudentWithEnrollmentResponse,
     EnrollmentCreate,
     EnrollmentUpdate,
     EnrollmentResponse,
@@ -56,6 +58,21 @@ async def create_student(
     await enforce_school_access(db, user, data.school_id)
     student = await student_service.create(db, data)
     return StudentResponse.model_validate(student)
+
+
+@router.post("/with-enrollment", response_model=CreateStudentWithEnrollmentResponse)
+async def create_student_with_enrollment(
+    data: StudentCreateWithEnrollment,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Create a new student identity and enroll in a session in one request."""
+    await enforce_session_access(db, user, data.session_id)
+    student, enrollment = await student_service.create_with_enrollment(db, data)
+    return CreateStudentWithEnrollmentResponse(
+        student=StudentResponse.model_validate(student),
+        enrollment=EnrollmentResponse.model_validate(enrollment),
+    )
 
 
 @router.post("/bulk", response_model=BulkStudentResponse)

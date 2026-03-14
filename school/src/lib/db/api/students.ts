@@ -154,69 +154,46 @@ export const studentsRepositoryApi = {
     }
   },
 
-  async create(data: any): Promise<Student> {
-    // Backward compatibility: if sessionId is provided, we need to:
-    // 1. Get schoolId from session
-    // 2. Create student identity
-    // 3. Create enrollment
-
+  async create(data: any): Promise<Student & { enrollmentId?: string }> {
+    // When sessionId is provided, create student and enroll in one backend call.
     if (data.sessionId) {
-      // Old format with sessionId - convert to new format
-      try {
-        const sessionRes = await teachingFetchJson<any>(`/sessions/${data.sessionId}`);
-        const schoolId = sessionRes?.school_id || sessionRes?.schoolId;
-
-        if (!schoolId) {
-          throw new Error('Cannot determine schoolId from session');
-        }
-
-        // Handle old personalDetails structure
-        const personalDetails = data.personalDetails || {};
-
-        // Create student identity
-        const body = {
-          school_id: schoolId,
-          name: data.name,
-          student_id: data.studentId,
-          admission_number: data.admissionNumber || null,
-          fee_type: data.feeType || 'Regular',
-          father_name: personalDetails.fatherName || data.fatherName || null,
-          mother_name: personalDetails.motherName || data.motherName || null,
-          guardian_phone: personalDetails.guardianPhone || data.guardianPhone || null,
-          current_address: personalDetails.currentAddress || data.currentAddress || null,
-          permanent_address: personalDetails.permanentAddress || data.permanentAddress || null,
-          blood_group: personalDetails.bloodGroup || data.bloodGroup || null,
-          health_issues: personalDetails.healthIssues || data.healthIssues || null,
-          aadhaar_number: personalDetails.aadhaarNumber || data.aadhaarNumber || null,
-          date_of_birth: personalDetails.dateOfBirth || data.dateOfBirth || null,
-          photo_url: data.photoUrl || null,
-          sibling_id: data.siblingId || null,
-          has_sibling_discount: data.hasSiblingDiscount || false,
-        };
-        const r = await teachingFetchJson<Record<string, unknown>>('/students', { method: 'POST', body: JSON.stringify(body) });
-        const student = mapStudent(r);
-
-        // Create enrollment
-        await enrollmentsRepositoryApi.create({
-          studentId: student.id,
-          sessionId: data.sessionId,
-          classId: data.classId,
-          registrationFees: data.registrationFees,
-          annualFund: data.annualFund,
-          monthlyFees: data.monthlyFees,
-          transportFees: data.transportFees,
-          registrationPaid: data.registrationPaid ?? false,
-          annualFundPaid: data.annualFundPaid ?? false,
-          dueDayOfMonth: data.dueDayOfMonth,
-          lateFeeAmount: data.lateFeeAmount,
-          lateFeeFrequency: data.lateFeeFrequency,
-        });
-
-        return student;
-      } catch (error) {
-        console.error('Error creating student with session:', error);
-        throw error;
-      }
+      const personalDetails = data.personalDetails || {};
+      const body = {
+        session_id: data.sessionId,
+        name: data.name,
+        student_id: data.studentId,
+        admission_number: data.admissionNumber || null,
+        fee_type: data.feeType || 'Regular',
+        father_name: personalDetails.fatherName || data.fatherName || null,
+        mother_name: personalDetails.motherName || data.motherName || null,
+        guardian_phone: personalDetails.guardianPhone || data.guardianPhone || null,
+        current_address: personalDetails.currentAddress || data.currentAddress || null,
+        permanent_address: personalDetails.permanentAddress || data.permanentAddress || null,
+        blood_group: personalDetails.bloodGroup || data.bloodGroup || null,
+        health_issues: personalDetails.healthIssues || data.healthIssues || null,
+        aadhaar_number: personalDetails.aadhaarNumber || data.aadhaarNumber || null,
+        date_of_birth: personalDetails.dateOfBirth || data.dateOfBirth || null,
+        photo_url: data.photoUrl || null,
+        sibling_id: data.siblingId || null,
+        has_sibling_discount: data.hasSiblingDiscount ?? false,
+        class_id: data.classId ?? null,
+        registration_fees: data.registrationFees ?? null,
+        annual_fund: data.annualFund ?? null,
+        monthly_fees: data.monthlyFees ?? null,
+        transport_fees: data.transportFees ?? null,
+        registration_paid: data.registrationPaid ?? false,
+        annual_fund_paid: data.annualFundPaid ?? false,
+        due_day_of_month: data.dueDayOfMonth ?? null,
+        late_fee_amount: data.lateFeeAmount ?? null,
+        late_fee_frequency: data.lateFeeFrequency ?? null,
+      };
+      const r = await teachingFetchJson<{ student: Record<string, unknown>; enrollment: Record<string, unknown> }>(
+        '/students/with-enrollment',
+        { method: 'POST', body: JSON.stringify(body) }
+      );
+      const student = mapStudent(r.student);
+      const enrollmentId = r.enrollment?.id != null ? String(r.enrollment.id) : undefined;
+      return { ...student, enrollmentId };
     }
 
     // New format without sessionId

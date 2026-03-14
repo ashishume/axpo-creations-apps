@@ -61,6 +61,28 @@ class StudentCreate(StudentBase):
     pass
 
 
+class StudentCreateWithEnrollment(StudentBase):
+    """Create student identity and enroll in a session in one request. school_id is set from session."""
+    school_id: UUID | None = None  # optional; backend sets from session_id
+    session_id: UUID
+    class_id: UUID | None = None
+    registration_fees: Decimal | None = None
+    annual_fund: Decimal | None = None
+    monthly_fees: Decimal | None = None
+    transport_fees: Decimal | None = None
+    registration_paid: bool = False
+    annual_fund_paid: bool = False
+    due_day_of_month: int | None = None
+    late_fee_amount: Decimal | None = None
+    late_fee_frequency: str | None = None
+
+
+class CreateStudentWithEnrollmentResponse(BaseModel):
+    """Response when creating a student and enrolling in one call."""
+    student: StudentResponse
+    enrollment: EnrollmentResponse
+
+
 class BulkStudentCreate(BaseModel):
     students: list[StudentCreate]
 

@@ -264,8 +264,6 @@ export function SchoolsPage() {
                             {isSuperAdmin && school?.organizationId && (
                               <> · {organizations.find((o) => o.id === school.organizationId)?.name ?? "—"}</>
                             )}
-                            {" · "}
-                            {studentCount} student{studentCount !== 1 ? "s" : ""}
                           </p>
                         </div>
                       </div>

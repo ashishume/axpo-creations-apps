@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
 import { useStudentsBySessionInfinite, useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useDeleteAllStudentsBySession, useAddStudentPayment, useTransferStudentsToSession } from "../hooks/useStudents";
@@ -128,6 +129,8 @@ export function StudentsPage() {
   const [pendingAddStudents, setPendingAddStudents] = useState<PendingStudent[]>([]);
   const [isAddingStudents, setIsAddingStudents] = useState(false);
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [actionMenuStudent, setActionMenuStudent] = useState<SessionStudent | null>(null);
+  const [actionMenuPosition, setActionMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferStep, setTransferStep] = useState<"select" | "preview">("select");
   const [transferTargetSessionId, setTransferTargetSessionId] = useState<string | null>(null);
@@ -174,6 +177,22 @@ export function StudentsPage() {
       setSelectedSiblingId(studentModal.student?.siblingId ?? "");
     }
   }, [studentModal.open, studentModal.student?.siblingId]);
+
+  // Close actions dropdown on scroll/resize so it doesn't stay mispositioned
+  useEffect(() => {
+    if (!actionMenuStudent) return;
+    const close = () => {
+      setActionMenuStudent(null);
+      setActionMenuPosition(null);
+      setActionMenuOpen(null);
+    };
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [actionMenuStudent]);
 
   // Search is applied on backend; status, class, feeType filters on client
   const filteredList = useMemo(() => {
@@ -364,6 +383,11 @@ export function StudentsPage() {
     const dueDayOfMonth = Number((form.elements.namedItem("dueDayOfMonth") as HTMLInputElement).value) || CLASS_FEE_DEFAULTS.dueDayOfMonth;
 
     if (!name) return;
+
+    if (monthlyFees <= 0) {
+      toast("Monthly fees must be greater than zero.", "error");
+      return;
+    }
 
     const classData = {
       name,
@@ -701,45 +725,23 @@ export function StudentsPage() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => setActionMenuOpen(actionMenuOpen === s.id ? null : s.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (actionMenuOpen === s.id) {
+                                        setActionMenuOpen(null);
+                                        setActionMenuStudent(null);
+                                        setActionMenuPosition(null);
+                                      } else {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        setActionMenuPosition({ top: rect.bottom + 4, left: rect.right - 144 });
+                                        setActionMenuOpen(s.id);
+                                        setActionMenuStudent(s);
+                                      }
+                                    }}
                                     title="More actions"
                                   >
                                     <MoreVertical className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                                   </Button>
-                                  {actionMenuOpen === s.id && (
-                                    <>
-                                      <div
-                                        className="fixed inset-0 z-40"
-                                        onClick={() => setActionMenuOpen(null)}
-                                      />
-                                      <div className="absolute right-0 top-full mt-1 z-50 w-36 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg py-1">
-                                        <PermissionGate permission="students:edit">
-                                          <button
-                                            className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                                            onClick={() => {
-                                              setStudentModal({ open: true, student: s });
-                                              setActionMenuOpen(null);
-                                            }}
-                                          >
-                                            <Pencil className="h-4 w-4" />
-                                            Edit
-                                          </button>
-                                        </PermissionGate>
-                                        <PermissionGate permission="students:delete">
-                                          <button
-                                            className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
-                                            onClick={() => {
-                                              setConfirmDelete({ id: s.id, name: s.name });
-                                              setActionMenuOpen(null);
-                                            }}
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                            Delete
-                                          </button>
-                                        </PermissionGate>
-                                      </div>
-                                    </>
-                                  )}
                                 </div>
                               </div>
                             </td>
@@ -793,6 +795,58 @@ export function StudentsPage() {
               }
             }}
           />
+          {actionMenuStudent &&
+            actionMenuPosition &&
+            createPortal(
+              <>
+                <div
+                  className="fixed inset-0 z-9998"
+                  onClick={() => {
+                    setActionMenuOpen(null);
+                    setActionMenuStudent(null);
+                    setActionMenuPosition(null);
+                  }}
+                  aria-hidden
+                />
+                <div
+                  className="fixed z-9999 w-36 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg py-1"
+                  style={{ top: actionMenuPosition.top, left: actionMenuPosition.left }}
+                  role="menu"
+                >
+                  <PermissionGate permission="students:edit">
+                    <button
+                      type="button"
+                      className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
+                      onClick={() => {
+                        setStudentModal({ open: true, student: actionMenuStudent });
+                        setActionMenuOpen(null);
+                        setActionMenuStudent(null);
+                        setActionMenuPosition(null);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </button>
+                  </PermissionGate>
+                  <PermissionGate permission="students:delete">
+                    <button
+                      type="button"
+                      className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
+                      onClick={() => {
+                        setConfirmDelete({ id: actionMenuStudent.id, name: actionMenuStudent.name });
+                        setActionMenuOpen(null);
+                        setActionMenuStudent(null);
+                        setActionMenuPosition(null);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
+                  </PermissionGate>
+                </div>
+              </>,
+              document.body
+            )}
         </>
       )}
 
@@ -1216,9 +1270,10 @@ export function StudentsPage() {
                 <Input
                   name="monthlyFees"
                   type="number"
-                  min={0}
+                  min={0.01}
+                  step="any"
                   defaultValue={editingClass?.monthlyFees ?? CLASS_FEE_DEFAULTS.monthlyFees}
-                  placeholder="₹"
+                  placeholder="₹ (required, must be &gt; 0)"
                   className="rounded px-2 py-1.5 text-sm"
                 />
               </FormField>
