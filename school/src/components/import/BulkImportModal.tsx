@@ -411,6 +411,7 @@ export function BulkImportModal({
   };
 
   const handleImport = async () => {
+    if (isImporting) return;
     const validRows = parsed.filter((p) => p.valid);
     if (validRows.length === 0 || !sessionId) return;
     const results = validRows.map((r) => {

@@ -74,6 +74,7 @@ export function AddStudentsVerifyModal({
   };
 
   const handleConfirm = () => {
+    if (isSubmitting) return;
     const valid = students.filter((s) => s.name.trim());
     if (valid.length === 0) return;
     onConfirm(valid);

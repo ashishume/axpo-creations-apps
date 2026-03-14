@@ -23,6 +23,7 @@ import {
   getRunningBalances,
   getTotalFine,
   getPaymentsByCategory,
+  getRemainingForCategory,
   type PaymentStatus,
 } from "../lib/studentUtils";
 import { cn } from "../lib/utils";
@@ -35,6 +36,8 @@ import { FormField } from "../components/ui/FormField";
 import { Badge } from "../components/ui/Badge";
 import { EmptyState } from "../components/ui/EmptyState";
 import { PermissionGate } from "../components/auth/PermissionGate";
+import { isTeachingApiConfigured } from "../lib/api/client";
+import { uploadStudentPhoto } from "../lib/api/upload";
 
 const statusBadgeVariant: Record<PaymentStatus, "success" | "warning" | "danger"> = {
   "Fully Paid": "success",
@@ -100,6 +103,7 @@ export function StudentsPage() {
   const deleteClass = (id: string) => deleteClassMut.mutate(id);
   const studentFormRef = useRef<HTMLFormElement>(null);
   const studentPhotoInputRef = useRef<HTMLInputElement>(null);
+  const studentPhotoFileRef = useRef<File | null>(null);
   const [studentModal, setStudentModal] = useState<{ open: boolean; student?: SessionStudent }>({ open: false });
   const [studentPhotoPreview, setStudentPhotoPreview] = useState<string | null>(null);
   const [selectedSiblingId, setSelectedSiblingId] = useState<string>("");
@@ -130,6 +134,8 @@ export function StudentsPage() {
   const [transferSelectedIds, setTransferSelectedIds] = useState<Set<string>>(new Set());
   const [transferSubmitting, setTransferSubmitting] = useState(false);
   const [isStudentSubmitting, setIsStudentSubmitting] = useState(false);
+  const [isClassSubmitting, setIsClassSubmitting] = useState(false);
+  const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
 
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 300);
   const hasFilters = !!(statusFilter || classFilter || feeTypeFilter || debouncedSearch);
@@ -205,23 +211,24 @@ export function StudentsPage() {
     }
   };
 
-  // Handle student photo selection with size validation
+  // Handle student photo selection with size validation (max 2MB)
   const handleStudentPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
       setStudentPhotoPreview(null);
+      studentPhotoFileRef.current = null;
       return;
     }
 
-    // Check file size (2MB = 2 * 1024 * 1024 bytes)
     if (file.size > 2 * 1024 * 1024) {
       toast("Photo must be under 2MB. Please select a smaller file.", "error");
       e.target.value = "";
       setStudentPhotoPreview(null);
+      studentPhotoFileRef.current = null;
       return;
     }
 
-    // Create preview URL
+    studentPhotoFileRef.current = file;
     const reader = new FileReader();
     reader.onloadend = () => {
       setStudentPhotoPreview(reader.result as string);
@@ -231,6 +238,7 @@ export function StudentsPage() {
 
   const handleSaveStudent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isStudentSubmitting) return;
     const form = e.currentTarget;
     const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
     const studentId = (form.elements.namedItem("studentId") as HTMLInputElement).value.trim();
@@ -266,8 +274,19 @@ export function StudentsPage() {
       return;
     }
 
-    // TODO: Upload photo and get URL (currently using base64 preview for demo)
-    const photoUrl = studentPhotoPreview || studentModal.student?.photoUrl;
+    let photoUrl: string | undefined;
+    if (studentPhotoFileRef.current && isTeachingApiConfigured()) {
+      try {
+        photoUrl = await uploadStudentPhoto(studentPhotoFileRef.current);
+      } catch (err) {
+        toast(err instanceof Error ? err.message : "Photo upload failed", "error");
+        return;
+      }
+    } else if (studentPhotoPreview && !studentPhotoPreview.startsWith("data:")) {
+      photoUrl = studentPhotoPreview;
+    } else {
+      photoUrl = studentModal.student?.photoUrl;
+    }
 
     const studentData: Record<string, unknown> = {
       name,
@@ -325,15 +344,16 @@ export function StudentsPage() {
       }
       setStudentModal({ open: false });
       setStudentPhotoPreview(null);
+      studentPhotoFileRef.current = null;
       setSelectedSiblingId("");
     } finally {
       setIsStudentSubmitting(false);
     }
   };
 
-  const handleSaveClass = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveClass = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedSessionId) return;
+    if (!selectedSessionId || isClassSubmitting) return;
     const form = e.currentTarget;
     const name = (form.elements.namedItem("className") as HTMLInputElement).value.trim();
     const registrationFees = Number((form.elements.namedItem("registrationFees") as HTMLInputElement).value) || 0;
@@ -355,20 +375,25 @@ export function StudentsPage() {
       dueDayOfMonth,
     };
 
-    if (editingClass) {
-      updateClass(editingClass.id, classData);
-      toast("Class updated");
-      setEditingClass(null);
-    } else {
-      addClass({ sessionId: selectedSessionId, ...classData });
-      toast("Class added");
+    setIsClassSubmitting(true);
+    try {
+      if (editingClass) {
+        await updateClassMut.mutateAsync({ id: editingClass.id, updates: classData });
+        toast("Class updated");
+        setEditingClass(null);
+      } else {
+        await createClass.mutateAsync({ sessionId: selectedSessionId, ...classData });
+        toast("Class added");
+      }
+      form.reset();
+    } finally {
+      setIsClassSubmitting(false);
     }
-    form.reset();
   };
 
-  const handleAddPayment = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddPayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!paymentModal) return;
+    if (!paymentModal || isPaymentSubmitting) return;
     const form = e.currentTarget;
     const date = (form.elements.namedItem("date") as HTMLInputElement).value;
     const amount = Number((form.elements.namedItem("amount") as HTMLInputElement).value);
@@ -376,25 +401,31 @@ export function StudentsPage() {
     const receiptNumber = (form.elements.namedItem("receiptNumber") as HTMLInputElement).value.trim();
     if (!date || amount <= 0) return;
     const remainingBefore = getRemaining(paymentModal.student);
-    addFeePayment(
-      paymentModal.student.id,
-      {
-        date,
-        amount,
-        method,
-        receiptNumber: receiptNumber || "-",
-        feeCategory: "monthly" // Default to monthly fee payment
-      },
-      (paymentModal.student as { enrollmentId?: string }).enrollmentId,
-      (paymentModal.student as { sessionId?: string }).sessionId
-    );
-    toast("Fees captured");
-    setPaymentModal(null);
-    setReceiptData({
-      student: paymentModal.student,
-      payment: { date, amount, method, receiptNumber: receiptNumber || "-" },
-      remainingAfter: Math.max(0, remainingBefore - amount),
-    });
+    const studentRef = paymentModal.student;
+    setIsPaymentSubmitting(true);
+    try {
+      await addFeePayment(
+        studentRef.id,
+        {
+          date,
+          amount,
+          method,
+          receiptNumber: receiptNumber || "-",
+          feeCategory: "monthly" // Default to monthly fee payment
+        },
+        (studentRef as { enrollmentId?: string }).enrollmentId,
+        (studentRef as { sessionId?: string }).sessionId
+      );
+      toast("Fees captured");
+      setPaymentModal(null);
+      setReceiptData({
+        student: studentRef,
+        payment: { date, amount, method, receiptNumber: receiptNumber || "-" },
+        remainingAfter: Math.max(0, remainingBefore - amount),
+      });
+    } finally {
+      setIsPaymentSubmitting(false);
+    }
   };
 
   return (
@@ -477,15 +508,17 @@ export function StudentsPage() {
               Add student
             </Button>
           </PermissionGate>
-          <Button
-            size="sm"
-            variant="danger"
-            disabled={!selectedSessionId}
-            onClick={() => setConfirmDeleteAll(true)}
-          >
-            <Trash2 className="mr-1 h-4 w-4" />
-            Delete all students (Danger)
-          </Button>
+          {import.meta.env.DEV && (
+            <Button
+              size="sm"
+              variant="danger"
+              disabled={!selectedSessionId}
+              onClick={() => setConfirmDeleteAll(true)}
+            >
+              <Trash2 className="mr-1 h-4 w-4" />
+              Delete all students (Danger)
+            </Button>
+          )}
           <Button
             size="sm"
             variant="secondary"
@@ -798,6 +831,7 @@ export function StudentsPage() {
                     type="button"
                     onClick={() => {
                       setStudentPhotoPreview(null);
+                      studentPhotoFileRef.current = null;
                       if (studentModal.student) {
                         updateStudent(studentModal.student.id, { photoUrl: undefined });
                       }
@@ -1056,7 +1090,9 @@ export function StudentsPage() {
               <Button type="button" variant="secondary" onClick={() => setPaymentModal(null)}>
                 Cancel
               </Button>
-              <Button type="submit">Record payment</Button>
+              <Button type="submit" disabled={isPaymentSubmitting} loading={isPaymentSubmitting} loadingText="Recording...">
+                Record payment
+              </Button>
             </div>
           </form>
         </Modal>
@@ -1215,7 +1251,7 @@ export function StudentsPage() {
                   Cancel
                 </Button>
               )}
-              <Button type="submit" size="sm">
+              <Button type="submit" size="sm" disabled={isClassSubmitting} loading={isClassSubmitting} loadingText={editingClass ? "Updating..." : "Adding..."}>
                 {editingClass ? "Update class" : "Add class"}
               </Button>
             </div>
@@ -1291,25 +1327,27 @@ export function StudentsPage() {
         confirmLabel="Delete"
       />
 
-      <ConfirmDialog
-        open={confirmDeleteAll}
-        onClose={() => setConfirmDeleteAll(false)}
-        onConfirm={() => {
-          if (!selectedSessionId) return;
-          deleteAllStudentsMut.mutate(selectedSessionId, {
-            onSuccess: (deleted) => {
-              toast(deleted > 0 ? `Deleted ${deleted} student(s)` : "No students to delete");
-              setConfirmDeleteAll(false);
-            },
-            onError: (err) => {
-              toast(err instanceof Error ? err.message : "Failed to delete all students", "error");
-            },
-          });
-        }}
-        title="Delete all students"
-        message="This will permanently delete all students in this session and their fee history. This action cannot be undone. Are you sure?"
-        confirmLabel="Delete all"
-      />
+      {import.meta.env.DEV && (
+        <ConfirmDialog
+          open={confirmDeleteAll}
+          onClose={() => setConfirmDeleteAll(false)}
+          onConfirm={() => {
+            if (!selectedSessionId) return;
+            deleteAllStudentsMut.mutate(selectedSessionId, {
+              onSuccess: (deleted) => {
+                toast(deleted > 0 ? `Deleted ${deleted} student(s)` : "No students to delete");
+                setConfirmDeleteAll(false);
+              },
+              onError: (err) => {
+                toast(err instanceof Error ? err.message : "Failed to delete all students", "error");
+              },
+            });
+          }}
+          title="Delete all students"
+          message="This will permanently delete all students in this session and their fee history. This action cannot be undone. Are you sure?"
+          confirmLabel="Delete all"
+        />
+      )}
 
       <BulkImportModal
         open={importModalOpen}
@@ -1387,24 +1425,19 @@ export function StudentsPage() {
               return;
             }
 
-            // Prevent double payment: monthly tuition for same month
+            // Allow partial payments: only block when the month is fully paid
             if (payment.feeCategory === "monthly" && payment.month) {
-              const alreadyPaidForMonth = student.payments.some(
-                (p) => p.feeCategory === "monthly" && p.month === payment.month
-              );
-              if (alreadyPaidForMonth) {
-                toast(`Monthly tuition for ${payment.month} is already recorded.`, "error");
+              const remainingForMonth = getRemainingForCategory(student, studentClass ?? undefined, "monthly", payment.month);
+              if (remainingForMonth <= 0) {
+                toast(`Monthly tuition for ${payment.month} is already fully paid.`, "error");
                 return;
               }
             }
 
-            // Prevent double payment: transport for same month
             if (payment.feeCategory === "transport" && payment.month) {
-              const alreadyPaidForMonth = student.payments.some(
-                (p) => p.feeCategory === "transport" && p.month === payment.month
-              );
-              if (alreadyPaidForMonth) {
-                toast(`Transport fee for ${payment.month} is already recorded.`, "error");
+              const remainingForMonth = getRemainingForCategory(student, studentClass ?? undefined, "transport", payment.month);
+              if (remainingForMonth <= 0) {
+                toast(`Transport fee for ${payment.month} is already fully paid.`, "error");
                 return;
               }
             }

@@ -75,6 +75,10 @@ class Settings(BaseSettings):
             return self.RAZORPAY_PLAN_ID
         return None
 
+    # File uploads (student photos, receipt photos) – max 2MB per file
+    UPLOAD_DIR: str = "uploads"
+    UPLOAD_MAX_BYTES: int = 2 * 1024 * 1024  # 2MB
+
 
 def get_settings() -> Settings:
     """Return application settings."""

@@ -530,6 +530,7 @@ export function StaffPage() {
 
   const handleSaveStaff = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isStaffSubmitting) return;
     const form = e.currentTarget;
     const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
     const employeeId = (form.elements.namedItem("employeeId") as HTMLInputElement).value.trim();
@@ -755,15 +756,17 @@ export function StaffPage() {
             <ArrowRightLeft className="mr-1 h-4 w-4" />
             Transfer to new session
           </Button>
-          {/* <Button
-            size="sm"
-            variant="danger"
-            disabled={!selectedSessionId}
-            onClick={() => setConfirmDeleteAllStaff(true)}
-          >
-            <Trash2 className="mr-1 h-4 w-4" />
-            Delete all staff (Danger)
-          </Button> */}
+          {import.meta.env.DEV && (
+            <Button
+              size="sm"
+              variant="danger"
+              disabled={!selectedSessionId}
+              onClick={() => setConfirmDeleteAllStaff(true)}
+            >
+              <Trash2 className="mr-1 h-4 w-4" />
+              Delete all staff (Danger)
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1167,25 +1170,27 @@ export function StaffPage() {
         confirmLabel="Delete"
       />
 
-      <ConfirmDialog
-        open={confirmDeleteAllStaff}
-        onClose={() => setConfirmDeleteAllStaff(false)}
-        onConfirm={() => {
-          if (!selectedSessionId) return;
-          deleteAllStaffMut.mutate(selectedSessionId, {
-            onSuccess: (deleted) => {
-              toast(deleted > 0 ? `Deleted ${deleted} staff member(s)` : "No staff to delete");
-              setConfirmDeleteAllStaff(false);
-            },
-            onError: (err) => {
-              toast(err instanceof Error ? err.message : "Failed to delete all staff", "error");
-            },
-          });
-        }}
-        title="Delete all staff"
-        message="This will permanently delete all staff in this session and their salary history. This action cannot be undone. Are you sure?"
-        confirmLabel="Delete all"
-      />
+      {import.meta.env.DEV && (
+        <ConfirmDialog
+          open={confirmDeleteAllStaff}
+          onClose={() => setConfirmDeleteAllStaff(false)}
+          onConfirm={() => {
+            if (!selectedSessionId) return;
+            deleteAllStaffMut.mutate(selectedSessionId, {
+              onSuccess: (deleted) => {
+                toast(deleted > 0 ? `Deleted ${deleted} staff member(s)` : "No staff to delete");
+                setConfirmDeleteAllStaff(false);
+              },
+              onError: (err) => {
+                toast(err instanceof Error ? err.message : "Failed to delete all staff", "error");
+              },
+            });
+          }}
+          title="Delete all staff"
+          message="This will permanently delete all staff in this session and their salary history. This action cannot be undone. Are you sure?"
+          confirmLabel="Delete all"
+        />
+      )}
 
       <BulkImportModal
         open={importModalOpen}

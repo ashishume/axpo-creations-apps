@@ -22,8 +22,12 @@ import {
   getMonthlyPaymentStatus,
   getOneTimeFeePayments,
   getOtherPayments,
+  getRemainingForCategory,
 } from "../../lib/studentUtils";
+import type { FeeCategoryType } from "../../lib/studentUtils";
 import { cn } from "../../lib/utils";
+import { isTeachingApiConfigured } from "../../lib/api/client";
+import { uploadReceipt } from "../../lib/api/upload";
 import { User, Phone, MapPin, Heart, AlertTriangle, DollarSign, Camera, X, Image, CheckCircle, XCircle, AlertCircle, Plus, Trash2, Loader2, Snowflake, Lock } from "lucide-react";
 import type { Session } from "../../types";
 
@@ -90,77 +94,71 @@ export function StudentDetailsModal({
   ]);
   const amountInputRef = useRef<HTMLInputElement>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
+  const receiptPhotoFileRef = useRef<File | null>(null);
   
   // Reset state when student changes (payment list refresh fix)
   useEffect(() => {
     setShowPaymentForm(initialTab === "payments");
   }, [student.id, student.payments.length, initialTab]);
 
-  // Get session months for dropdown (only unpaid months)
+  // Get session months for dropdown
   const sessionMonthOptions = useMemo(() => {
     if (!session) return [];
-    const months = getFeeHistoryMonths(session.startDate, session.endDate);
-    return months;
+    return getFeeHistoryMonths(session.startDate, session.endDate);
   }, [session]);
 
-  // Get paid months for filtering
-  const paidMonthlyMonths = useMemo(() => {
-    return new Set(student.payments.filter(p => p.feeCategory === "monthly" && p.month).map(p => p.month!));
-  }, [student.payments]);
-  
-  const paidTransportMonths = useMemo(() => {
-    return new Set(student.payments.filter(p => p.feeCategory === "transport" && p.month).map(p => p.month!));
-  }, [student.payments]);
-
-  // Filter months based on category - only show unpaid months
+  // Months that still have a balance due (unpaid or partially paid) – so user can pay the rest
   const availableMonthOptions = useMemo(() => {
-    const paidMonths = selectedCategory === "transport" ? paidTransportMonths : paidMonthlyMonths;
-    return sessionMonthOptions.filter(m => !paidMonths.has(m));
-  }, [sessionMonthOptions, selectedCategory, paidMonthlyMonths, paidTransportMonths]);
+    if (selectedCategory !== "monthly" && selectedCategory !== "transport") return [];
+    return sessionMonthOptions.filter((m) => {
+      const remaining = getRemainingForCategory(
+        student,
+        studentClass,
+        selectedCategory as FeeCategoryType,
+        m
+      );
+      return remaining > 0;
+    });
+  }, [sessionMonthOptions, selectedCategory, student, studentClass]);
 
-  // When form is shown or category changes, set "For Month" to first available unpaid month
-  const nextUnpaidMonth = getNextUnpaidMonth(student, "monthly");
-  const nextUnpaidMonthTransport = getNextUnpaidMonth(student, "transport");
-  
+  // When form is shown or category changes, set "For Month" to first month with balance due
   useEffect(() => {
     if (!showPaymentForm) return;
-    const targetMonth = selectedCategory === "transport" ? nextUnpaidMonthTransport : nextUnpaidMonth;
-    if (availableMonthOptions.includes(targetMonth)) {
-      setPaymentMonth(targetMonth);
-    } else if (availableMonthOptions.length > 0) {
+    if (availableMonthOptions.length > 0) {
       setPaymentMonth(availableMonthOptions[0]);
+    } else {
+      setPaymentMonth("");
     }
-  }, [showPaymentForm, selectedCategory, nextUnpaidMonth, nextUnpaidMonthTransport, availableMonthOptions]);
-  
+  }, [showPaymentForm, selectedCategory, availableMonthOptions]);
+
   // Reset month when student changes (e.g. after recording a payment we update the student in parent)
   useEffect(() => {
-    const targetMonth = getNextUnpaidMonth(student, selectedCategory === "transport" ? "transport" : "monthly");
-    if (availableMonthOptions.includes(targetMonth)) {
-      setPaymentMonth(targetMonth);
-    } else if (availableMonthOptions.length > 0) {
+    if (availableMonthOptions.length > 0) {
       setPaymentMonth(availableMonthOptions[0]);
+    } else {
+      setPaymentMonth("");
     }
   }, [student.id, student.payments.length, selectedCategory, availableMonthOptions]);
 
-  // Navigate to payments with prefilled category and month
+  // Navigate to payments with prefilled category, month, and remaining amount due
   const goToPaymentWithPrefill = (category: string, month?: string) => {
     setSelectedCategory(category);
     if (month) {
       setPaymentMonth(month);
     }
     setActiveTab("payments");
-    
-    // Prefill amount after state update
+
     setTimeout(() => {
       if (amountInputRef.current) {
-        let amount = 0;
-        switch (category) {
-          case "registration": amount = student.registrationFees ?? studentClass?.registrationFees ?? 0; break;
-          case "annualFund": amount = student.annualFund ?? studentClass?.annualFund ?? 0; break;
-          case "monthly": amount = getDiscountedMonthlyFees(student, studentClass); break;
-          case "transport": amount = student.transportFees ?? 0; break;
+        const remaining = getRemainingForCategory(
+          student,
+          studentClass,
+          category as FeeCategoryType,
+          category === "monthly" || category === "transport" ? month : undefined
+        );
+        if (remaining !== Infinity && remaining >= 0) {
+          amountInputRef.current.value = String(remaining);
         }
-        if (amount > 0) amountInputRef.current.value = String(amount);
       }
     }, 50);
   };
@@ -181,31 +179,33 @@ export function StudentDetailsModal({
   const siblingDiscount = getSiblingDiscount(student);
   const transportFees = student.transportFees ?? 0;
 
-  // Handle fee category change to pre-fill amount
+  // Handle fee category change: pre-fill amount with remaining due for that category
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     if (!amountInputRef.current) return;
-    
-    let prefillAmount = 0;
-    switch (category) {
-      case "registration":
-        prefillAmount = registrationFees;  // Registration/Admission fees
-        break;
-      case "annualFund":
-        prefillAmount = annualFund;
-        break;
-      case "monthly":
-        prefillAmount = monthlyFees;
-        break;
-      case "transport":
-        prefillAmount = transportFees;
-        break;
-      default:
-        prefillAmount = 0;
+    const remaining = getRemainingForCategory(
+      student,
+      studentClass,
+      category as FeeCategoryType,
+      category === "monthly" || category === "transport" ? paymentMonth : undefined
+    );
+    if (remaining !== Infinity && remaining >= 0) {
+      amountInputRef.current.value = String(remaining);
     }
-    
-    if (prefillAmount > 0) {
-      amountInputRef.current.value = String(prefillAmount);
+  };
+
+  // When month changes (monthly/transport), update amount to remaining for that month
+  const handleMonthChange = (month: string) => {
+    setPaymentMonth(month);
+    if (!amountInputRef.current || (selectedCategory !== "monthly" && selectedCategory !== "transport")) return;
+    const remaining = getRemainingForCategory(
+      student,
+      studentClass,
+      selectedCategory as FeeCategoryType,
+      month
+    );
+    if (remaining !== Infinity && remaining >= 0) {
+      amountInputRef.current.value = String(remaining);
     }
   };
 
@@ -214,18 +214,17 @@ export function StudentDetailsModal({
     const file = e.target.files?.[0];
     if (!file) {
       setReceiptPhotoPreview(null);
+      receiptPhotoFileRef.current = null;
       return;
     }
-    
-    // Check file size (2MB = 2 * 1024 * 1024 bytes)
     if (file.size > 2 * 1024 * 1024) {
       alert("Receipt photo must be under 2MB. Please select a smaller file.");
       e.target.value = "";
       setReceiptPhotoPreview(null);
+      receiptPhotoFileRef.current = null;
       return;
     }
-    
-    // Create preview URL
+    receiptPhotoFileRef.current = file;
     const reader = new FileReader();
     reader.onloadend = () => {
       setReceiptPhotoPreview(reader.result as string);
@@ -242,12 +241,33 @@ export function StudentDetailsModal({
     const receiptNumber = (form.elements.namedItem("receiptNumber") as HTMLInputElement).value.trim();
     const feeCategory = (form.elements.namedItem("feeCategory") as HTMLSelectElement).value as "registration" | "admission" | "annualFund" | "monthly" | "transport" | "other";
     const month = (form.elements.namedItem("month") as HTMLInputElement)?.value;
-    const receiptPhotoUrl = receiptPhotoPreview || undefined;
     
     if (!date) return;
     
+    let receiptPhotoUrl: string | undefined;
+    if (receiptPhotoFileRef.current && isTeachingApiConfigured()) {
+      try {
+        receiptPhotoUrl = await uploadReceipt(receiptPhotoFileRef.current);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Receipt photo upload failed");
+        return;
+      }
+    } else if (receiptPhotoPreview && !receiptPhotoPreview.startsWith("data:")) {
+      receiptPhotoUrl = receiptPhotoPreview;
+    } else {
+      receiptPhotoUrl = undefined;
+    }
+    
     setIsSubmitting(true);
     
+    const monthVal = (form.elements.namedItem("month") as HTMLInputElement)?.value;
+    const maxForCategory = getRemainingForCategory(
+      student,
+      studentClass,
+      feeCategory,
+      feeCategory === "monthly" || feeCategory === "transport" ? monthVal : undefined
+    );
+
     try {
       if (isSplitPayment) {
         const validSplitPayments = splitPayments.filter(sp => sp.amount > 0);
@@ -255,7 +275,13 @@ export function StudentDetailsModal({
           setIsSubmitting(false);
           return;
         }
-        
+        const totalSplit = validSplitPayments.reduce((s, sp) => s + sp.amount, 0);
+        if (maxForCategory !== Infinity && totalSplit > maxForCategory) {
+          setIsSubmitting(false);
+          alert(`Total split amount (${formatCurrency(totalSplit)}) cannot exceed the remaining due for this fee category (${formatCurrency(maxForCategory)}).`);
+          return;
+        }
+
         for (const sp of validSplitPayments) {
           await onAddPayment({
             date,
@@ -270,12 +296,18 @@ export function StudentDetailsModal({
       } else {
         const amount = Number((form.elements.namedItem("amount") as HTMLInputElement).value);
         const method = (form.elements.namedItem("method") as HTMLSelectElement).value as PaymentMethod;
-        
+
         if (amount <= 0) {
           setIsSubmitting(false);
           return;
         }
-        
+
+        if (maxForCategory !== Infinity && amount > maxForCategory) {
+          setIsSubmitting(false);
+          alert(`Amount cannot exceed the remaining due for this fee category (${formatCurrency(maxForCategory)}).`);
+          return;
+        }
+
         await onAddPayment({
           date,
           amount,
@@ -289,6 +321,7 @@ export function StudentDetailsModal({
       
       setShowPaymentForm(false);
       setReceiptPhotoPreview(null);
+      receiptPhotoFileRef.current = null;
       setIsSplitPayment(false);
       setSplitPayments([
         { id: "1", amount: 0, method: "Cash" },
@@ -1005,18 +1038,17 @@ export function StudentDetailsModal({
             {onAddPayment && (() => {
                 const isRegistrationPaid = paidByCategory.registration >= registrationFees && registrationFees > 0;
                 const isAnnualFundPaid = paidByCategory.annualFund >= annualFund && annualFund > 0;
-                
-                // Get the amount for current category
-                const getCurrentAmount = () => {
-                  switch (selectedCategory) {
-                    case "registration": return registrationFees;
-                    case "annualFund": return annualFund;
-                    case "monthly": return monthlyFees;
-                    case "transport": return transportFees;
-                    default: return "";
-                  }
-                };
-                
+
+                // Remaining due for selected category/month (autofill and max amount)
+                const remainingDue = getRemainingForCategory(
+                  student,
+                  studentClass,
+                  selectedCategory as FeeCategoryType,
+                  selectedCategory === "monthly" || selectedCategory === "transport" ? paymentMonth : undefined
+                );
+                const maxAmount = remainingDue === Infinity ? undefined : remainingDue;
+                const defaultAmount = remainingDue !== Infinity && remainingDue >= 0 ? remainingDue : 0;
+
                 return (
               <form
                 key={`payment-form-${paymentMonth}-${selectedCategory}`}
@@ -1047,14 +1079,20 @@ export function StudentDetailsModal({
                       <option value="other">Other</option>
                     </Select>
                   </FormField>
-                  <FormField label="Amount (₹) *" required helperText="Amount auto-fills based on category">
+                  <FormField
+                    label="Amount (₹) *"
+                    required
+                    helperText={maxAmount != null ? `Remaining due: ${formatCurrency(maxAmount)}. Amount cannot exceed this.` : "Enter amount"}
+                  >
                     <Input
                       ref={amountInputRef}
                       name="amount"
                       type="number"
                       required
                       min={1}
-                      defaultValue={getCurrentAmount()}
+                      max={maxAmount != null && maxAmount < Infinity ? maxAmount : undefined}
+                      step={0.01}
+                      defaultValue={defaultAmount}
                       className="rounded px-2 py-1.5 text-sm"
                     />
                   </FormField>
@@ -1072,12 +1110,12 @@ export function StudentDetailsModal({
                   {(selectedCategory === "monthly" || selectedCategory === "transport") && (
                   <FormField
                     label="For Month"
-                    helperText="Only unpaid months shown"
+                    helperText="Months with balance due (unpaid or partially paid)"
                   >
                     <Select
                       name="month"
                       value={paymentMonth}
-                      onChange={(e) => setPaymentMonth(e.target.value)}
+                      onChange={(e) => handleMonthChange(e.target.value)}
                       className="rounded px-2 py-1.5 text-sm"
                     >
                       {availableMonthOptions.map((m) => (
@@ -1230,6 +1268,7 @@ export function StudentDetailsModal({
                           type="button"
                           onClick={() => {
                             setReceiptPhotoPreview(null);
+                            receiptPhotoFileRef.current = null;
                             if (receiptInputRef.current) receiptInputRef.current.value = "";
                           }}
                           className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"

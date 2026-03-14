@@ -1,6 +1,10 @@
 """Teaching API router - mounts all teaching routes at /teaching/api/v1."""
-from fastapi import APIRouter
+from pathlib import Path
 
+from fastapi import APIRouter
+from fastapi.staticfiles import StaticFiles
+
+from app.config import get_settings
 from app.teaching.routes import (
     auth,
     admin_subscriptions,
@@ -20,10 +24,18 @@ from app.teaching.routes import (
     leaves,
     users,
     subscription,
+    upload,
 )
 
 router = APIRouter()
 
+# Ensure upload directory exists and serve uploaded files (student photos, receipts)
+_settings = get_settings()
+_upload_dir = Path(_settings.UPLOAD_DIR)
+_upload_dir.mkdir(parents=True, exist_ok=True)
+router.mount("/upload/files", StaticFiles(directory=str(_upload_dir)), name="upload_files")
+
+router.include_router(upload.router)
 router.include_router(auth.router)
 router.include_router(org_subscription.router)
 router.include_router(admin_subscriptions.router)

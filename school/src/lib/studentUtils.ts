@@ -244,3 +244,41 @@ export function getOneTimeFeePayments(student: StudentLike) {
 export function getOtherPayments(student: StudentLike) {
   return student.payments.filter((p) => p.feeCategory === "other");
 }
+
+export type FeeCategoryType = "registration" | "admission" | "annualFund" | "monthly" | "transport" | "other";
+
+/**
+ * Get the remaining amount due for a specific fee category (and month for monthly/transport).
+ * Use for auto-filling payment amount and capping the amount so it does not exceed what's due.
+ * Returns 0 if category is fully paid; for "other" returns Infinity (no cap).
+ */
+export function getRemainingForCategory(
+  student: StudentLike,
+  studentClass: StudentClass | undefined,
+  category: FeeCategoryType,
+  month?: string
+): number {
+  const paidByCategory = getPaymentsByCategory(student);
+  const registrationFees = student.registrationFees ?? studentClass?.registrationFees ?? 0;
+  const annualFund = student.annualFund ?? studentClass?.annualFund ?? 0;
+  const monthlyFees = getDiscountedMonthlyFees(student, studentClass);
+  const transportFees = student.transportFees ?? 0;
+
+  switch (category) {
+    case "registration":
+    case "admission":
+      return Math.max(0, registrationFees - (paidByCategory.registration || 0));
+    case "annualFund":
+      return Math.max(0, annualFund - (paidByCategory.annualFund || 0));
+    case "monthly":
+      if (!month) return monthlyFees;
+      const monthlyStatus = getMonthlyPaymentStatus(student, month, "monthly", monthlyFees);
+      return Math.max(0, monthlyFees - monthlyStatus.paidAmount);
+    case "transport":
+      if (!month) return transportFees;
+      const transportStatus = getMonthlyPaymentStatus(student, month, "transport", transportFees);
+      return Math.max(0, transportFees - transportStatus.paidAmount);
+    default:
+      return Infinity; // "other" – no cap
+  }
+}
