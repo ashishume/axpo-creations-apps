@@ -203,7 +203,7 @@ export function StudentDashboardPage() {
                 </div>
               ) : (
                 <p className="text-sm text-slate-500 dark:text-slate-400">No payments recorded yet.</p>
-              )
+              )}
             </div>
           </CardContent>
         </Card>

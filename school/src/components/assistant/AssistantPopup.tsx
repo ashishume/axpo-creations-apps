@@ -53,6 +53,7 @@ import type {
   Expense,
   Stock,
   FixedMonthlyCost,
+  FeePayment,
 } from "../../types";
 import { getTotalPaid, getRemaining } from "../../lib/studentUtils";
 import { generateId, cn } from "../../lib/utils";
@@ -394,7 +395,7 @@ export function AssistantPopup() {
         case "monthly_fee_report": {
           const monthlyFees: Record<string, { collected: number; count: number }> = {};
           sessionStudents.forEach((s) => {
-            s.payments.forEach((p) => {
+            s.payments.forEach((p: FeePayment) => {
               const month = p.date.slice(0, 7);
               if (!monthlyFees[month]) monthlyFees[month] = { collected: 0, count: 0 };
               monthlyFees[month].collected += p.amount;
@@ -1427,7 +1428,7 @@ export function AssistantPopup() {
                         ? "class"
                         : (pendingAction.intentResult.entity || "student")
                     }
-                    operation={pendingAction.intentResult.operation || "add"}
+                    operation={((pendingAction.intentResult.operation === "list" ? "query" : pendingAction.intentResult.operation) || "add") as "add" | "update" | "delete" | "query"}
                     intent={pendingAction.intentResult.intent}
                     data={pendingAction.resolvedData}
                     sessionClasses={sessionClasses}

@@ -545,8 +545,8 @@ export async function parseAxpoIntent(userInput: string): Promise<IntentResult> 
   }
   // Normalize add_staff data so monthlySalary is set (from monthlySalary, monthly_salary, or salary; coerce string to number)
   if (result.intent === "add_staff" && result.data != null) {
-    const items = Array.isArray(result.data) ? result.data : [result.data];
-    const normalized = items.map((item: Record<string, unknown>) => ({
+    const items = (Array.isArray(result.data) ? result.data : [result.data]) as unknown as Record<string, unknown>[];
+    const normalized = items.map((item) => ({
       ...item,
       monthlySalary: normalizeStaffSalary(item),
     }));
@@ -557,8 +557,8 @@ export async function parseAxpoIntent(userInput: string): Promise<IntentResult> 
   }
   // Normalize add_student data so classLabel is set (from classLabel, class, or className)
   if (result.intent === "add_student" && result.data != null) {
-    const items = Array.isArray(result.data) ? result.data : [result.data];
-    const normalized = items.map((item: Record<string, unknown>) => {
+    const items = (Array.isArray(result.data) ? result.data : [result.data]) as unknown as Record<string, unknown>[];
+    const normalized = items.map((item) => {
       const classLabel = normalizeStudentClassLabel(item);
       return { ...item, classLabel: classLabel ?? item.classLabel };
     });
