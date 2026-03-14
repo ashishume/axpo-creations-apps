@@ -72,6 +72,7 @@ export function useStaffBySessionInfinite(
     isFetchingNextPage: q.isFetchingNextPage,
     isLoading: q.isLoading,
     isFetching: q.isFetching,
+    refetch: q.refetch,
   };
 }
 

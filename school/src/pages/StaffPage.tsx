@@ -53,21 +53,58 @@ function calculateLateDays(payment: SalaryPayment, dueDay: number = 5): number {
   return Math.max(0, diffDays);
 }
 
-// Get last paid salary info for a staff member (dueDay from session for fallback when payment has no dueDate)
-function getLastPaidInfo(salaryPayments: SalaryPayment[], dueDay: number = 5): { date: string | null; lateDays: number; month: string | null } {
-  const paidPayments = salaryPayments
-    .filter(p => p.status === "Paid" && p.paymentDate)
-    .sort((a, b) => new Date(b.paymentDate!).getTime() - new Date(a.paymentDate!).getTime());
+/** Total paid in a month (sum of paidAmount across all payment records for that month). */
+function getTotalPaidForMonth(payments: SalaryPayment[], month: string): number {
+  return payments
+    .filter((p) => p.month === month)
+    .reduce((sum, p) => sum + (p.paidAmount ?? p.amount ?? 0), 0);
+}
 
-  if (paidPayments.length === 0) {
+/** Expected salary for a month (from first payment's calculatedSalary for that month, or fallback). */
+function getExpectedSalaryForMonth(payments: SalaryPayment[], month: string, fallbackMonthly: number): number {
+  const first = payments.find((p) => p.month === month);
+  return first?.calculatedSalary ?? fallbackMonthly;
+}
+
+/** Effective status for a month when multiple partial payments can add up to full. */
+function getMonthSalaryStatus(
+  payments: SalaryPayment[],
+  month: string,
+  monthlySalary: number
+): { status: "Paid" | "Partially Paid" | "Pending"; totalPaid: number; expectedAmount: number; paymentCount: number } {
+  const forMonth = payments.filter((p) => p.month === month);
+  const totalPaid = forMonth.reduce((sum, p) => sum + (p.paidAmount ?? p.amount ?? 0), 0);
+  const expectedAmount = forMonth[0]?.calculatedSalary ?? monthlySalary;
+  let status: "Paid" | "Partially Paid" | "Pending" = "Pending";
+  if (totalPaid >= expectedAmount) status = "Paid";
+  else if (totalPaid > 0) status = "Partially Paid";
+  return { status, totalPaid, expectedAmount, paymentCount: forMonth.length };
+}
+
+// Get last paid salary info for a staff member (dueDay from session for fallback when payment has no dueDate).
+// Considers a month "paid" when total paid for that month >= expected (so 2 partials = paid).
+function getLastPaidInfo(
+  salaryPayments: SalaryPayment[],
+  dueDay: number = 5,
+  monthlySalary: number = 0
+): { date: string | null; lateDays: number; month: string | null } {
+  const months = [...new Set(salaryPayments.map((p) => p.month))];
+  const fullyPaidMonths = months.filter((m) => {
+    const { totalPaid, expectedAmount } = getMonthSalaryStatus(salaryPayments, m, monthlySalary);
+    return expectedAmount > 0 && totalPaid >= expectedAmount;
+  });
+  if (fullyPaidMonths.length === 0) {
     return { date: null, lateDays: 0, month: null };
   }
-
-  const lastPayment = paidPayments[0];
+  const lastMonth = fullyPaidMonths.sort((a, b) => b.localeCompare(a))[0];
+  const lastPayments = salaryPayments.filter((p) => p.month === lastMonth && p.paymentDate).sort(
+    (a, b) => new Date(b.paymentDate!).getTime() - new Date(a.paymentDate!).getTime()
+  );
+  const lastPayment = lastPayments[0];
   return {
-    date: lastPayment.paymentDate!,
-    lateDays: calculateLateDays(lastPayment, dueDay),
-    month: lastPayment.month,
+    date: lastPayment?.paymentDate ?? null,
+    lateDays: lastPayment ? calculateLateDays(lastPayment, dueDay) : 0,
+    month: lastMonth,
   };
 }
 
@@ -126,19 +163,21 @@ function SalaryPaymentModalContent({
   const leaveDeduction = excessLeaves * perDay;
   const calculatedSalary = staff.monthlySalary - leaveDeduction - extraDeduction + extraAllowance;
   
-  // Calculate remaining amount for partial payments
-  const remainingAmount = Math.max(0, calculatedSalary - previouslyPaidAmount);
+  // Calculate remaining amount for partial payments (cap to 2 decimal places)
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const remainingAmount = round2(Math.max(0, calculatedSalary - previouslyPaidAmount));
   const isPartiallyPaid = existingPayment?.status === "Partially Paid";
   const isFullyPaid = existingPayment?.status === "Paid";
-  
+
   // Set default pay amount when calculated salary changes
   useEffect(() => {
     setPayAmount(remainingAmount);
   }, [remainingAmount]);
-  
-  // Validate pay amount doesn't exceed remaining
+
+  // Validate pay amount doesn't exceed remaining, rounded to 2 decimals
   const validatePayAmount = (value: number) => {
-    return Math.min(Math.max(0, value), remainingAmount);
+    const v = round2(Math.max(0, value));
+    return Math.min(v, remainingAmount);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -349,10 +388,12 @@ function SalaryPaymentModalContent({
                 <Input
                   name="payAmount"
                   type="number"
-                  min={1}
+                  min={0.01}
                   max={remainingAmount}
+                  step={0.01}
                   value={payAmount}
                   onChange={(e) => setPayAmount(validatePayAmount(Number(e.target.value)))}
+                  onBlur={() => setPayAmount(round2(Math.min(Math.max(0, payAmount), remainingAmount)))}
                   className="text-lg font-semibold"
                 />
               </FormField>
@@ -468,6 +509,7 @@ export function StaffPage() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isAppLoading,
+    refetch: refetchStaffList,
   } = useStaffBySessionInfinite(selectedSessionId ?? "", {
     hasFilters,
     search: debouncedSearch || undefined,
@@ -682,10 +724,13 @@ export function StaffPage() {
         calculatedSalary,
       });
       toast(`Salary payment of ${formatCurrency(payAmount)} recorded`);
-      if (salaryModal.fromHistory) {
-        setSalaryHistoryModal(staff);
-      }
       setSalaryModal(null);
+      if (salaryModal.fromHistory) {
+        const result = await refetchStaffList();
+        const updatedList = (result.data?.pages ?? []).flatMap((p: { data: StaffType[] }) => p.data);
+        const updatedStaff = updatedList.find((s: StaffType) => s.id === staff.id) ?? staff;
+        setSalaryHistoryModal(updatedStaff);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to record payment";
       toast(message);
@@ -883,10 +928,8 @@ export function StaffPage() {
                   </thead>
                   <tbody>
                     {filteredList.map((s) => {
-                      const lastPaid = getLastPaidInfo(s.salaryPayments, salaryDueDay);
-                      const currentMonthPayments = s.salaryPayments.filter(p => p.month === currentMonth);
-                      const currentMonthPayment = currentMonthPayments[0];
-                      const currentMonthPaidCount = currentMonthPayments.filter(p => p.status === "Paid").length;
+                      const lastPaid = getLastPaidInfo(s.salaryPayments, salaryDueDay, s.monthlySalary);
+                      const monthStatus = getMonthSalaryStatus(s.salaryPayments, currentMonth, s.monthlySalary);
 
                       return (
                         <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700">
@@ -920,17 +963,19 @@ export function StaffPage() {
                             )}
                           </td>
                           <td className="py-3 pr-4">
-                            {currentMonthPayment ? (
+                            {monthStatus.paymentCount > 0 ? (
                               <span className={cn(
                                 "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                                currentMonthPaidCount > 0 ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200" :
-                                  currentMonthPayment.status === "Partially Paid" ? "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200" :
+                                monthStatus.status === "Paid" ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200" :
+                                  monthStatus.status === "Partially Paid" ? "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200" :
                                     "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200"
                               )}>
-                                {currentMonthPaidCount > 0 && <CheckCircle className="h-3 w-3" />}
-                                {currentMonthPaidCount === 0 && currentMonthPayment.status === "Pending" && <XCircle className="h-3 w-3" />}
-                                {currentMonthPaidCount === 0 && currentMonthPayment.status === "Partially Paid" && <AlertCircle className="h-3 w-3" />}
-                                {currentMonthPaidCount > 0 ? (currentMonthPaidCount > 1 ? `Paid (${currentMonthPaidCount})` : "Paid") : currentMonthPayment.status}
+                                {monthStatus.status === "Paid" && <CheckCircle className="h-3 w-3" />}
+                                {monthStatus.status === "Pending" && <XCircle className="h-3 w-3" />}
+                                {monthStatus.status === "Partially Paid" && <AlertCircle className="h-3 w-3" />}
+                                {monthStatus.status === "Paid"
+                                  ? (monthStatus.paymentCount > 1 ? `Paid (${monthStatus.paymentCount})` : "Paid")
+                                  : monthStatus.status}
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-slate-300">
@@ -943,9 +988,14 @@ export function StaffPage() {
                             <div className="flex gap-1">
                               <PermissionGate anyPermission={["salary:manage", "salary:record"]}>
                                 <Button
+                                  type="button"
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => setSalaryHistoryModal(s)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setSalaryHistoryModal(s);
+                                  }}
                                   title="View salary history & pay"
                                 >
                                   <Calendar className="h-4 w-4" />
@@ -953,6 +1003,7 @@ export function StaffPage() {
                               </PermissionGate>
                               <PermissionGate permission="staff:edit">
                                 <Button
+                                  type="button"
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => setStaffModal({ open: true, staff: s })}
@@ -963,6 +1014,7 @@ export function StaffPage() {
                               </PermissionGate>
                               <PermissionGate permission="staff:delete">
                                 <Button
+                                  type="button"
                                   variant="ghost"
                                   size="sm"
                                   className="text-red-600 hover:bg-red-50"
@@ -1272,13 +1324,13 @@ export function StaffPage() {
                   <tbody>
                     {monthsToShow.map((month) => {
                       const paymentsForMonth = historyStaff.salaryPayments.filter((p: SalaryPayment) => p.month === month);
-                      const totalAmount = paymentsForMonth.reduce((s: number, p: SalaryPayment) => s + p.amount, 0);
-                      const anyPaid = paymentsForMonth.some((p: SalaryPayment) => p.status === "Paid");
+                      const monthStatus = getMonthSalaryStatus(historyStaff.salaryPayments, month, historyStaff.monthlySalary);
+                      const totalAmount = monthStatus.totalPaid;
                       const firstPayment = paymentsForMonth[0];
                       const lateDays = firstPayment ? calculateLateDays(firstPayment, salaryDueDay) : 0;
-                      const statusLabel = paymentsForMonth.length > 1
-                        ? (anyPaid ? "Paid" : firstPayment?.status ?? "—") + ` (${paymentsForMonth.length} payments)`
-                        : firstPayment?.status ?? "—";
+                      const statusLabel = monthStatus.paymentCount > 1
+                        ? monthStatus.status + ` (${monthStatus.paymentCount} payments)`
+                        : monthStatus.status;
 
                       return (
                         <tr key={month} className="border-b border-slate-100 group hover:bg-slate-50 dark:hover:bg-slate-800/50">
@@ -1288,16 +1340,16 @@ export function StaffPage() {
                               <div className="flex flex-col gap-1">
                                 <span className={cn(
                                   "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium w-fit",
-                                  anyPaid ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
-                                    firstPayment.status === "Partially Paid" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" :
+                                  monthStatus.status === "Paid" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
+                                    monthStatus.status === "Partially Paid" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" :
                                       "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                                 )}>
-                                  {anyPaid && <CheckCircle className="h-3 w-3" />}
-                                  {!anyPaid && firstPayment.status === "Pending" && <XCircle className="h-3 w-3" />}
-                                  {!anyPaid && firstPayment.status === "Partially Paid" && <AlertCircle className="h-3 w-3" />}
+                                  {monthStatus.status === "Paid" && <CheckCircle className="h-3 w-3" />}
+                                  {monthStatus.status === "Pending" && <XCircle className="h-3 w-3" />}
+                                  {monthStatus.status === "Partially Paid" && <AlertCircle className="h-3 w-3" />}
                                   {statusLabel}
                                 </span>
-                                {anyPaid && lateDays > 0 && (
+                                {monthStatus.status === "Paid" && lateDays > 0 && (
                                   <span className="inline-flex items-center gap-1 text-xs text-amber-600">
                                     <Clock className="h-3 w-3" />
                                     {lateDays}d late
@@ -1320,9 +1372,9 @@ export function StaffPage() {
                             {totalAmount > 0 ? (
                               <div className="flex flex-col">
                                 <span>{formatCurrency(totalAmount)}</span>
-                                {firstPayment?.calculatedSalary && firstPayment.calculatedSalary !== totalAmount && (
+                                {monthStatus.expectedAmount > 0 && monthStatus.expectedAmount !== totalAmount && (
                                   <span className="text-xs text-slate-500">
-                                    Calc: {formatCurrency(firstPayment.calculatedSalary)}
+                                    Expected: {formatCurrency(monthStatus.expectedAmount)}
                                   </span>
                                 )}
                               </div>
@@ -1336,23 +1388,23 @@ export function StaffPage() {
                           <td className="py-2">
                             <PermissionGate anyPermission={["salary:manage", "salary:record"]}>
                               {(() => {
-                                const isPartiallyPaid = firstPayment?.status === "Partially Paid";
-                                const isNotPaid = paymentsForMonth.length === 0;
-                                const canPay = isNotPaid || isPartiallyPaid;
-                                
+                                const canPay = monthStatus.status !== "Paid";
                                 if (canPay) {
                                   return (
                                     <Button
+                                      type="button"
                                       variant="ghost"
                                       size="sm"
                                       className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                      onClick={() => {
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         setSalaryModal({ staff: historyStaff, month, fromHistory: true });
                                       }}
-                                      title={isPartiallyPaid ? "Continue paying remaining amount" : "Pay salary for this month"}
+                                      title={monthStatus.status === "Partially Paid" ? "Continue paying remaining amount" : "Pay salary for this month"}
                                     >
                                       <Banknote className="h-4 w-4 mr-1" />
-                                      {isPartiallyPaid ? "Pay Rest" : "Pay"}
+                                      {monthStatus.status === "Partially Paid" ? "Pay Rest" : "Pay"}
                                     </Button>
                                   );
                                 }
@@ -1373,9 +1425,10 @@ export function StaffPage() {
                     Total Paid (this session):{" "}
                     <strong className="text-slate-900 dark:text-slate-100">
                       {formatCurrency(
-                        historyStaff.salaryPayments
-                          .filter((p: SalaryPayment) => sessionMonths.includes(p.month) && p.status === "Paid")
-                          .reduce((sum: number, p: SalaryPayment) => sum + p.amount, 0)
+                        sessionMonths.reduce(
+                          (sum: number, m: string) => sum + getTotalPaidForMonth(historyStaff.salaryPayments, m),
+                          0
+                        )
                       )}
                     </strong>
                   </p>
