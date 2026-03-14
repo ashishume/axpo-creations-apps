@@ -181,38 +181,59 @@ export const staffRepository = {
     const supabase = getSupabase();
     const id = crypto.randomUUID();
 
+    const row: Record<string, unknown> = {
+      id,
+      session_id: staffMember.sessionId,
+      name: staffMember.name,
+      employee_id: staffMember.employeeId,
+      role: staffMember.role,
+      monthly_salary: staffMember.monthlySalary,
+      subject_or_grade: staffMember.subjectOrGrade ?? null,
+      allowed_leaves_per_month: staffMember.allowedLeavesPerMonth ?? 2,
+      per_day_salary: staffMember.perDaySalary ?? null,
+    };
+    if (staffMember.classesSubjects?.length) {
+      row.classes_subjects = staffMember.classesSubjects.map((cs) => ({
+        class_name: cs.className,
+        subjects: cs.subjects,
+      }));
+    }
+
     const { data, error } = await supabase
       .from('school_xx_staff')
-      .insert({
-        id,
-        session_id: staffMember.sessionId,
-        name: staffMember.name,
-        employee_id: staffMember.employeeId,
-        role: staffMember.role,
-        monthly_salary: staffMember.monthlySalary,
-        subject_or_grade: staffMember.subjectOrGrade,
-      })
+      .insert(row)
       .select()
       .single();
 
-    if (error) throw new Error('Failed to create staff member');
+    if (error) throw new Error(error.message || 'Failed to create staff member');
     return dbRowToStaff(data, []);
   },
 
   async createMany(staffMembers: Omit<Staff, 'id' | 'salaryPayments'>[]): Promise<Staff[]> {
     if (staffMembers.length === 0) return [];
     const supabase = getSupabase();
-    const rows = staffMembers.map((s) => ({
-      id: crypto.randomUUID(),
-      session_id: s.sessionId,
-      name: s.name,
-      employee_id: s.employeeId,
-      role: s.role,
-      monthly_salary: s.monthlySalary,
-      subject_or_grade: s.subjectOrGrade,
-    }));
+    const rows = staffMembers.map((s) => {
+      const row: Record<string, unknown> = {
+        id: crypto.randomUUID(),
+        session_id: s.sessionId,
+        name: s.name,
+        employee_id: s.employeeId,
+        role: s.role,
+        monthly_salary: s.monthlySalary,
+        subject_or_grade: s.subjectOrGrade ?? null,
+        allowed_leaves_per_month: s.allowedLeavesPerMonth ?? 2,
+        per_day_salary: s.perDaySalary ?? null,
+      };
+      if (s.classesSubjects?.length) {
+        row.classes_subjects = s.classesSubjects.map((cs) => ({
+          class_name: cs.className,
+          subjects: cs.subjects,
+        }));
+      }
+      return row;
+    });
     const { data, error } = await supabase.from('school_xx_staff').insert(rows).select();
-    if (error) throw new Error('Failed to create staff members');
+    if (error) throw new Error(error.message || 'Failed to create staff members');
     return (data || []).map((row: Record<string, unknown>) => dbRowToStaff(row, []));
   },
 

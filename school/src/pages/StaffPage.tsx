@@ -437,7 +437,7 @@ export function StaffPage() {
     }
   }, [staffModal.open, staffModal.staff]);
 
-  const handleSaveStaff = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveStaff = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
@@ -449,40 +449,53 @@ export function StaffPage() {
     const perDaySalaryInput = (form.elements.namedItem("perDaySalary") as HTMLInputElement).value;
     const perDaySalary = perDaySalaryInput ? Number(perDaySalaryInput) : undefined;
 
-    if (!selectedSessionId || !name || monthlySalary <= 0) return;
+    if (!selectedSessionId || !name || monthlySalary <= 0) {
+      if (!selectedSessionId) toast("Please select a session first.", "error");
+      return;
+    }
 
     // Filter out empty class/subject entries
     const validClassesSubjects = classesSubjects.filter(
       (cs) => cs.className.trim() && cs.subjects.length > 0
     );
 
-    if (staffModal.staff) {
-      updateStaff(staffModal.staff.id, {
-        name,
-        employeeId: employeeId || undefined,
-        role,
-        monthlySalary,
-        subjectOrGrade: subjectOrGrade || undefined,
-        allowedLeavesPerMonth,
-        perDaySalary,
-        classesSubjects: validClassesSubjects.length > 0 ? validClassesSubjects : undefined,
-      });
-      toast("Staff updated");
-    } else {
-      addStaff({
-        sessionId: selectedSessionId,
-        name,
-        employeeId: employeeId || `EMP-${Date.now()}`,
-        role,
-        monthlySalary,
-        subjectOrGrade: subjectOrGrade || undefined,
-        allowedLeavesPerMonth,
-        perDaySalary,
-        classesSubjects: validClassesSubjects.length > 0 ? validClassesSubjects : undefined,
-      });
-      toast("Staff added");
+    const payload = {
+      sessionId: selectedSessionId,
+      name,
+      employeeId: employeeId || `EMP-${Date.now()}`,
+      role,
+      monthlySalary,
+      subjectOrGrade: subjectOrGrade || undefined,
+      allowedLeavesPerMonth,
+      perDaySalary,
+      classesSubjects: validClassesSubjects.length > 0 ? validClassesSubjects : undefined,
+    };
+
+    try {
+      if (staffModal.staff) {
+        await updateStaffMut.mutateAsync({
+          id: staffModal.staff.id,
+          updates: {
+            name: payload.name,
+            employeeId: payload.employeeId || undefined,
+            role: payload.role,
+            monthlySalary: payload.monthlySalary,
+            subjectOrGrade: payload.subjectOrGrade,
+            allowedLeavesPerMonth: payload.allowedLeavesPerMonth,
+            perDaySalary: payload.perDaySalary,
+            classesSubjects: payload.classesSubjects,
+          },
+        });
+        toast("Staff updated");
+      } else {
+        await createStaff.mutateAsync(payload);
+        toast("Staff added");
+      }
+      setStaffModal({ open: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save staff.";
+      toast(message, "error");
     }
-    setStaffModal({ open: false });
   };
 
   // Class/Subject management helpers
