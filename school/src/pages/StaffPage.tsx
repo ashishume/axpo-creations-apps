@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../context/AppContext";
 import { useStaffBySessionInfinite, useStaffBySession, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useDeleteAllStaffBySession, useAddSalaryPayment, useTransferStaffToSession, useLeaveSummary } from "../hooks/useStaff";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
@@ -452,6 +453,7 @@ function SalaryPaymentForm({
 }
 
 export function StaffPage() {
+  const queryClient = useQueryClient();
   const {
     sessions,
     selectedSessionId,
@@ -730,9 +732,10 @@ export function StaffPage() {
         calculatedSalary,
       });
       toast(`Salary payment of ${formatCurrency(payAmount)} recorded`);
-      const result = await refetchStaffList();
-      const updatedList = (result.data?.pages ?? []).flatMap((p: { data: StaffType[] }) => p.data);
-      const updatedStaff = updatedList.find((s: StaffType) => s.id === staff.id) ?? staff;
+      // Cache already updated by refetchStaffAndMergeIntoCache in useAddSalaryPayment onSuccess;
+      // avoid an extra staff list refetch by reading updated staff from cache.
+      const updatedStaff =
+        queryClient.getQueryData<StaffType>(["staff", staff.id]) ?? staff;
       setSalaryHistoryModal(updatedStaff);
       setActiveSalaryTab("history");
     } catch (err) {

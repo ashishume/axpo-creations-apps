@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
 import { useStudents } from "../hooks/useStudents";
+import { isTeachingApiConfigured } from "../lib/api/client";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -32,7 +33,10 @@ export function SchoolsPage() {
     promoteStudentsToNewSession,
     toast,
   } = useApp();
-  const { data: students = [] } = useStudents();
+  // GET /students requires organization_id; skip when using API and user has no org (e.g. Super Admin "All organizations")
+  const { data: students = [] } = useStudents({
+    enabled: !isTeachingApiConfigured() || !!user?.organizationId,
+  });
   const [schoolModal, setSchoolModal] = useState<{ open: boolean; school?: School }>({ open: false });
   const [sessionModal, setSessionModal] = useState<{ open: boolean; session?: Session; schoolId?: string }>({ open: false });
   const [confirmDelete, setConfirmDelete] = useState<{ type: "school" | "session"; id: string; name: string } | null>(null);

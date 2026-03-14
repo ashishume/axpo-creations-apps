@@ -1,10 +1,41 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { studentsRepository, enrollmentsRepository } from '../lib/db/repositories';
+import { flattenEnrollmentToStudentLike } from '../lib/db/api/students';
 import type { Student, StudentEnrollment, FeePayment } from '../types';
 
 const QUERY_KEY = 'students';
 const ENROLLMENTS_QUERY_KEY = 'enrollments';
+
+/** After recording a fee payment, fetch the updated enrollment and merge into session list caches to avoid refetching the full list. */
+export async function refetchEnrollmentAndMergeIntoCache(
+  queryClient: QueryClient,
+  enrollmentId: string
+) {
+  const enrollment = await enrollmentsRepository.getById(enrollmentId);
+  if (!enrollment) return;
+  const sessionId = enrollment.sessionId;
+  const flattened = flattenEnrollmentToStudentLike(enrollment) as SessionStudentLike;
+  const studentId = enrollment.studentId;
+
+  const mergeInList = (list: SessionStudentLike[] | undefined) =>
+    Array.isArray(list) ? list.map((s) => (s.id === studentId ? flattened : s)) : list;
+
+  queryClient.setQueryData([QUERY_KEY, 'bySession', sessionId], mergeInList);
+  queryClient.setQueriesData<{ pages: { data: SessionStudentLike[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          data: mergeInList(page.data) ?? page.data,
+        })),
+      };
+    }
+  );
+}
 
 /** Invalidate session-scoped student list with minimal refetches: bySession once, infinite reset to page 1 then refetch once. */
 function invalidateSessionStudentList(queryClient: QueryClient, sessionId?: string | null) {
@@ -122,10 +153,11 @@ function removeStudentFromSessionCache(
 const DEFAULT_PAGE_SIZE = 10;
 const FILTERED_PAGE_SIZE = 50;
 
-export function useStudents() {
+export function useStudents(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: [QUERY_KEY],
     queryFn: () => studentsRepository.getAll(),
+    enabled: options?.enabled !== false,
   });
 }
 
@@ -334,8 +366,12 @@ export function useAddStudentPayment() {
       enrollmentId?: string;
       sessionId?: string;
     }) => (studentsRepository as { addPayment: (id: string, p: typeof payment, enrollmentId?: string) => Promise<FeePayment> }).addPayment(studentId, payment, enrollmentId),
-    onSuccess: (_, { studentId, sessionId }) => {
-      invalidateSessionStudentList(queryClient, sessionId);
+    onSuccess: async (_, { studentId, enrollmentId, sessionId }) => {
+      if (enrollmentId) {
+        await refetchEnrollmentAndMergeIntoCache(queryClient, enrollmentId);
+      } else {
+        invalidateSessionStudentList(queryClient, sessionId);
+      }
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, studentId] });
     },
   });
@@ -356,8 +392,12 @@ export function useDeleteStudentPayment() {
       enrollmentId?: string;
       sessionId?: string;
     }) => studentsRepository.deletePayment(studentId, paymentId, enrollmentId),
-    onSuccess: (_, { studentId, sessionId }) => {
-      invalidateSessionStudentList(queryClient, sessionId);
+    onSuccess: async (_, { studentId, enrollmentId, sessionId }) => {
+      if (enrollmentId) {
+        await refetchEnrollmentAndMergeIntoCache(queryClient, enrollmentId);
+      } else {
+        invalidateSessionStudentList(queryClient, sessionId);
+      }
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, studentId] });
     },
   });

@@ -78,8 +78,9 @@ function mapEnrollment(r: Record<string, unknown>): StudentEnrollment {
  * id = student identity ID (for delete/update) — always from e.studentId so delete works even if nested student is missing.
  * enrollmentId = enrollment ID (for payments).
  * Includes personalDetails nested object for StudentDetailsModal.
+ * Exported for use in useStudents cache merge after payment.
  */
-function flattenEnrollmentToStudentLike(e: StudentEnrollment): Record<string, unknown> {
+export function flattenEnrollmentToStudentLike(e: StudentEnrollment): Record<string, unknown> {
   const s = e.student;
   const studentId = e.studentId;
   return {
