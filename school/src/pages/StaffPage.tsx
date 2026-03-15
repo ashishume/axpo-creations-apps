@@ -469,9 +469,17 @@ export function StaffPage() {
   const deleteAllStaffMut = useDeleteAllStaffBySession();
   const { data: allSessionStaff = [] } = useStaffBySession(selectedSessionId ?? "");
 
-  const addStaff = (data: Omit<StaffType, "id" | "salaryPayments">) => createStaff.mutate(data);
-  const updateStaff = (id: string, data: Partial<Omit<StaffType, "id" | "salaryPayments">>) => updateStaffMut.mutate({ id, updates: data });
-  const deleteStaff = (id: string) => deleteStaffMut.mutate(id);
+  const addStaff = (data: Omit<StaffType, "id" | "salaryPayments">, options?: { onSuccess?: (newStaff?: StaffType) => void }) =>
+    createStaff.mutate(data, { onSuccess: options?.onSuccess });
+  const updateStaff = (id: string, data: Partial<Omit<StaffType, "id" | "salaryPayments">>, options?: { onError?: () => void }) =>
+    updateStaffMut.mutate(
+      { id, updates: data, sessionId: selectedSessionId ?? undefined },
+      { onError: options?.onError }
+    );
+  const deleteStaff = (idOrPayload: string | { id: string }) => {
+    const id = typeof idOrPayload === "string" ? idOrPayload : idOrPayload.id;
+    deleteStaffMut.mutate(selectedSessionId ? { id, sessionId: selectedSessionId } : id);
+  };
   const addSalaryPayment = (staffId: string, payment: Omit<SalaryPayment, "id">) =>
     addSalaryMut.mutate({ staffId, payment });
   const addSalaryPaymentAsync = (staffId: string, payment: Omit<SalaryPayment, "id">) =>
@@ -622,36 +630,33 @@ export function StaffPage() {
       dateOfBirth: dateOfBirth || undefined,
     };
 
-    setIsStaffSubmitting(true);
-    try {
-      if (staffModal.staff) {
-        await updateStaffMut.mutateAsync({
-          id: staffModal.staff.id,
-          updates: {
-            name: payload.name,
-            employeeId: payload.employeeId || undefined,
-            role: payload.role,
-            monthlySalary: payload.monthlySalary,
-            subjectOrGrade: payload.subjectOrGrade,
-            allowedLeavesPerMonth: payload.allowedLeavesPerMonth,
-            perDaySalary: payload.perDaySalary,
-            classesSubjects: payload.classesSubjects,
-            aadhaarNumber: payload.aadhaarNumber,
-            dateOfBirth: payload.dateOfBirth,
-          },
-        });
-        toast("Staff updated");
-      } else {
-        await createStaff.mutateAsync(payload);
-        toast("Staff added");
-      }
+    if (staffModal.staff) {
+      // Edit: optimistic update in hook; wait for submit for toast/close (or fire-and-forget with onError)
+      setIsStaffSubmitting(true);
+      updateStaff(staffModal.staff.id, {
+        name: payload.name,
+        employeeId: payload.employeeId || undefined,
+        role: payload.role,
+        monthlySalary: payload.monthlySalary,
+        subjectOrGrade: payload.subjectOrGrade,
+        allowedLeavesPerMonth: payload.allowedLeavesPerMonth,
+        perDaySalary: payload.perDaySalary,
+        classesSubjects: payload.classesSubjects,
+        aadhaarNumber: payload.aadhaarNumber,
+        dateOfBirth: payload.dateOfBirth,
+      }, {
+        onError: () => toast("Failed to update staff", "error"),
+      });
+      toast("Staff updated");
       setStaffModal({ open: false });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to save staff.";
-      toast(message, "error");
-    } finally {
       setIsStaffSubmitting(false);
+    } else {
+      // Add: optimistic add, close immediately, API runs in background
+      addStaff(payload);
+      toast("Staff added");
+      setStaffModal({ open: false });
     }
+    setClassesSubjects([]);
   };
 
   // Class/Subject management helpers

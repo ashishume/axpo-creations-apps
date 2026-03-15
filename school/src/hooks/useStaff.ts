@@ -1,9 +1,133 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
 import { staffRepository, type ExtendedSalaryPayment } from '../lib/db/repositories';
 import { staffRepositoryApi } from '../lib/db/api/staff';
 import type { Staff, LeaveSummary } from '../types';
 
 const QUERY_KEY = 'staff';
+
+/** Invalidate session-scoped staff list. */
+function invalidateSessionStaffList(queryClient: QueryClient, sessionId?: string | null) {
+  if (sessionId) {
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEY, 'bySession', sessionId] });
+    queryClient.resetQueries({ queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false });
+  } else {
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+  }
+}
+
+/** Add one staff to session caches (bySession + infinite) without refetch. */
+function addStaffToSessionCache(queryClient: QueryClient, sessionId: string, staff: Staff) {
+  const stub: Staff = { ...staff, id: staff.id, sessionId, salaryPayments: staff.salaryPayments ?? [] };
+  queryClient.setQueryData(
+    [QUERY_KEY, 'bySession', sessionId],
+    (old: Staff[] | undefined) => (old ? [stub, ...old] : [stub])
+  );
+  queryClient.setQueriesData<{ pages: { data: Staff[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      const [first, ...rest] = old.pages;
+      return {
+        ...old,
+        pages: [
+          { ...first, data: [stub, ...(first.data ?? [])], total: (first.total ?? 0) + 1 },
+          ...rest,
+        ],
+      };
+    }
+  );
+}
+
+/** Replace a temp-id staff with the real server staff in session caches. */
+function replaceTempStaffInSessionCache(
+  queryClient: QueryClient,
+  sessionId: string,
+  tempId: string,
+  realStaff: Staff
+) {
+  const mergeInList = (list: Staff[] | undefined) =>
+    Array.isArray(list) ? list.map((s) => (s.id === tempId ? realStaff : s)) : list;
+  queryClient.setQueryData([QUERY_KEY, 'bySession', sessionId], mergeInList);
+  queryClient.setQueriesData<{ pages: { data: Staff[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          data: mergeInList(page.data) ?? page.data,
+        })),
+      };
+    }
+  );
+}
+
+/** Remove one staff from session caches. */
+function removeStaffFromSessionCache(queryClient: QueryClient, sessionId: string, staffId: string) {
+  queryClient.setQueryData(
+    [QUERY_KEY, 'bySession', sessionId],
+    (old: Staff[] | undefined) => (old ? old.filter((s) => s.id !== staffId) : [])
+  );
+  queryClient.setQueriesData<{ pages: { data: Staff[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          data: (page.data ?? []).filter((s) => s.id !== staffId),
+          total: Math.max(0, (page.total ?? 0) - (page.data?.some((s) => s.id === staffId) ? 1 : 0)),
+        })),
+      };
+    }
+  );
+}
+
+/** Prepend one staff to session caches (e.g. rollback after optimistic delete). */
+function prependStaffToSessionCache(queryClient: QueryClient, sessionId: string, staff: Staff) {
+  queryClient.setQueryData(
+    [QUERY_KEY, 'bySession', sessionId],
+    (old: Staff[] | undefined) => (old ? [staff, ...old] : [staff])
+  );
+  queryClient.setQueriesData<{ pages: { data: Staff[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      const [first, ...rest] = old.pages;
+      return {
+        ...old,
+        pages: [
+          { ...first, data: [staff, ...(first.data ?? [])], total: (first.total ?? 0) + 1 },
+          ...rest,
+        ],
+      };
+    }
+  );
+}
+
+/** Merge an updated staff into bySession and infinite caches. */
+function mergeUpdatedStaffIntoSessionCache(queryClient: QueryClient, sessionId: string, staff: Staff) {
+  const staffId = staff.id;
+  const mergeInList = (list: Staff[] | undefined) =>
+    Array.isArray(list) ? list.map((s) => (s.id === staffId ? staff : s)) : list;
+  queryClient.setQueryData([QUERY_KEY, 'bySession', sessionId], mergeInList);
+  queryClient.setQueriesData<{ pages: { data: Staff[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          data: mergeInList(page.data) ?? page.data,
+        })),
+      };
+    }
+  );
+}
 
 /**
  * After POST/PATCH/DELETE .../staff/:id/payments: fetch only that staff (GET /staff/:id) and merge into
@@ -134,8 +258,34 @@ export function useCreateStaff() {
 
   return useMutation({
     mutationFn: (staffMember: Omit<Staff, 'id' | 'salaryPayments'>) => staffRepository.create(staffMember),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    onMutate: async (payload) => {
+      if (!payload.sessionId) return {};
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const stub: Staff = {
+        ...payload,
+        id: tempId,
+        sessionId: payload.sessionId,
+        salaryPayments: [],
+      };
+      addStaffToSessionCache(queryClient, payload.sessionId, stub);
+      return { tempId };
+    },
+    onSuccess: (data, payload, context) => {
+      if (payload.sessionId) {
+        if (context?.tempId && data && typeof data === 'object' && 'id' in data) {
+          replaceTempStaffInSessionCache(queryClient, payload.sessionId, context.tempId, data as Staff);
+          queryClient.setQueryData([QUERY_KEY, data.id], data);
+        } else if (!context?.tempId && data) {
+          addStaffToSessionCache(queryClient, payload.sessionId, data as Staff);
+        }
+      } else {
+        invalidateSessionStaffList(queryClient, null);
+      }
+    },
+    onError: (_err, payload, context) => {
+      if (payload.sessionId && context?.tempId) {
+        removeStaffFromSessionCache(queryClient, payload.sessionId, context.tempId);
+      }
     },
   });
 }
@@ -170,11 +320,42 @@ export function useUpdateStaff() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Omit<Staff, 'id' | 'salaryPayments'>> }) =>
-      staffRepository.update(id, updates),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, id] });
+    mutationFn: ({
+      id,
+      updates,
+      sessionId,
+    }: {
+      id: string;
+      updates: Partial<Omit<Staff, 'id' | 'salaryPayments'>>;
+      sessionId?: string;
+    }) => staffRepository.update(id, updates),
+    onMutate: async (variables) => {
+      if (!variables.sessionId) return {};
+      const list = queryClient.getQueryData<Staff[]>([QUERY_KEY, 'bySession', variables.sessionId]);
+      const previous = list?.find((s) => s.id === variables.id);
+      if (!previous) return {};
+      const optimistic: Staff = { ...previous, ...variables.updates };
+      mergeUpdatedStaffIntoSessionCache(queryClient, variables.sessionId, optimistic);
+      return { previousStaff: previous };
+    },
+    onSuccess: (data, { id, sessionId }) => {
+      if (sessionId && data && typeof data === 'object' && 'id' in data) {
+        mergeUpdatedStaffIntoSessionCache(queryClient, sessionId, data as Staff);
+        queryClient.setQueryData([QUERY_KEY, id], data);
+      } else {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+        if (data) queryClient.setQueryData([QUERY_KEY, id], data);
+        else queryClient.invalidateQueries({ queryKey: [QUERY_KEY, id] });
+      }
+    },
+    onError: (_err, variables, context) => {
+      if (variables.sessionId && context?.previousStaff) {
+        mergeUpdatedStaffIntoSessionCache(
+          queryClient,
+          variables.sessionId,
+          context.previousStaff
+        );
+      }
     },
   });
 }
@@ -183,9 +364,30 @@ export function useDeleteStaff() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => staffRepository.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    mutationFn: (payload: string | { id: string; sessionId?: string }) => {
+      const id = typeof payload === 'string' ? payload : payload.id;
+      return staffRepository.delete(id);
+    },
+    onMutate: async (payload) => {
+      const id = typeof payload === 'string' ? payload : payload.id;
+      const sessionId = typeof payload === 'string' ? undefined : payload.sessionId;
+      if (!sessionId) return {};
+      const list = queryClient.getQueryData<Staff[]>([QUERY_KEY, 'bySession', sessionId]);
+      const previous = list?.find((s) => s.id === id);
+      if (!previous) return {};
+      removeStaffFromSessionCache(queryClient, sessionId, id);
+      return { previousStaff: previous, sessionId };
+    },
+    onSuccess: (_, payload) => {
+      const id = typeof payload === 'string' ? payload : payload.id;
+      const sessionId = typeof payload === 'string' ? undefined : payload.sessionId;
+      if (!sessionId) invalidateSessionStaffList(queryClient, null);
+      queryClient.removeQueries({ queryKey: [QUERY_KEY, id] });
+    },
+    onError: (_err, payload, context) => {
+      if (context?.previousStaff && context?.sessionId) {
+        prependStaffToSessionCache(queryClient, context.sessionId, context.previousStaff);
+      }
     },
   });
 }
