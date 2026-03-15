@@ -146,6 +146,60 @@ function addStudentToSessionCache(
   );
 }
 
+/** Replace a temp-id student with the real server student in session caches (optimistic → confirmed). */
+function replaceTempStudentInSessionCache(
+  queryClient: QueryClient,
+  sessionId: string,
+  tempId: string,
+  realStudent: SessionStudentLike
+) {
+  const mergeInList = (list: SessionStudentLike[] | undefined) =>
+    Array.isArray(list)
+      ? list.map((s) => (s.id === tempId ? realStudent : s))
+      : list;
+
+  queryClient.setQueryData([QUERY_KEY, 'bySession', sessionId], mergeInList);
+  queryClient.setQueriesData<{ pages: { data: SessionStudentLike[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          data: mergeInList(page.data) ?? page.data,
+        })),
+      };
+    }
+  );
+}
+
+/** Prepend one session-student to session caches (e.g. rollback after optimistic delete). */
+function prependStudentToSessionCache(
+  queryClient: QueryClient,
+  sessionId: string,
+  student: SessionStudentLike
+) {
+  queryClient.setQueryData(
+    [QUERY_KEY, 'bySession', sessionId],
+    (old: SessionStudentLike[] | undefined) => (old ? [student, ...old] : [student])
+  );
+  queryClient.setQueriesData<{ pages: { data: SessionStudentLike[]; total: number }[] }>(
+    { queryKey: [QUERY_KEY, 'infinite', sessionId], exact: false },
+    (old) => {
+      if (!old?.pages?.length) return old;
+      const [first, ...rest] = old.pages;
+      return {
+        ...old,
+        pages: [
+          { ...first, data: [student, ...(first.data ?? [])], total: (first.total ?? 0) + 1 },
+          ...rest,
+        ],
+      };
+    }
+  );
+}
+
 /** Remove one student from session caches (bySession + infinite) without refetch. */
 function removeStudentFromSessionCache(
   queryClient: QueryClient,
@@ -264,27 +318,89 @@ export function useCreateStudent() {
   return useMutation({
     mutationFn: (payload: Omit<Student, 'id' | 'payments'> & { sessionId?: string }) =>
       studentsRepository.create(payload as Omit<Student, 'id' | 'payments'>),
-    onSuccess: (data, payload) => {
+    onMutate: async (payload) => {
+      if (!payload.sessionId) return {};
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const p = payload as Record<string, unknown>;
+      const enrollmentFields: EnrollmentStubFields | undefined =
+        (p.registrationFees !== undefined || p.monthlyFees !== undefined || p.classId !== undefined)
+          ? {
+              classId: p.classId as string | undefined,
+              registrationFees: p.registrationFees as number | undefined,
+              annualFund: p.annualFund as number | undefined,
+              monthlyFees: p.monthlyFees as number | undefined,
+              transportFees: p.transportFees as number | undefined,
+              registrationPaid: (p.registrationPaid as boolean | undefined) ?? false,
+              annualFundPaid: (p.annualFundPaid as boolean | undefined) ?? false,
+              dueDayOfMonth: p.dueDayOfMonth as number | undefined,
+              lateFeeAmount: p.lateFeeAmount as number | undefined,
+              lateFeeFrequency: p.lateFeeFrequency as string | undefined,
+            }
+          : undefined;
+      const stub = {
+        ...payload,
+        id: tempId,
+        schoolId: (p.schoolId as string) ?? '',
+        payments: [],
+      } as Student;
+      addStudentToSessionCache(queryClient, payload.sessionId, stub, enrollmentFields);
+      return { tempId };
+    },
+    onSuccess: (data, payload, context) => {
       if (payload.sessionId) {
-        const p = payload as Record<string, unknown>;
-        const enrollmentFields: EnrollmentStubFields | undefined =
-          (p.registrationFees !== undefined || p.monthlyFees !== undefined || p.classId !== undefined)
-            ? {
-                classId: p.classId as string | undefined,
-                registrationFees: p.registrationFees as number | undefined,
-                annualFund: p.annualFund as number | undefined,
-                monthlyFees: p.monthlyFees as number | undefined,
-                transportFees: p.transportFees as number | undefined,
-                registrationPaid: (p.registrationPaid as boolean | undefined) ?? false,
-                annualFundPaid: (p.annualFundPaid as boolean | undefined) ?? false,
-                dueDayOfMonth: p.dueDayOfMonth as number | undefined,
-                lateFeeAmount: p.lateFeeAmount as number | undefined,
-                lateFeeFrequency: p.lateFeeFrequency as string | undefined,
-              }
-            : undefined;
-        addStudentToSessionCache(queryClient, payload.sessionId, data, enrollmentFields);
+        if (context?.tempId && data && typeof data === 'object' && 'id' in data) {
+          const p = payload as Record<string, unknown>;
+          const flattened: SessionStudentLike =
+            'payments' in data && Array.isArray((data as SessionStudentLike).payments)
+              ? (data as SessionStudentLike)
+              : {
+                  ...data,
+                  id: data.id,
+                  sessionId: payload.sessionId,
+                  enrollmentId: (data as { enrollmentId?: string }).enrollmentId,
+                  payments: [],
+                };
+          // Preserve class/enrollment details from payload so the row shows correctly even if API didn't return them yet
+          const withClassDetails: SessionStudentLike = {
+            ...flattened,
+            classId: (flattened.classId as string) ?? (p.classId as string | undefined),
+            registrationFees: (flattened.registrationFees as number) ?? (p.registrationFees as number | undefined),
+            annualFund: (flattened.annualFund as number) ?? (p.annualFund as number | undefined),
+            monthlyFees: (flattened.monthlyFees as number) ?? (p.monthlyFees as number | undefined),
+            transportFees: (flattened.transportFees as number) ?? (p.transportFees as number | undefined),
+            registrationPaid: (flattened.registrationPaid as boolean) ?? (p.registrationPaid as boolean | undefined) ?? false,
+            annualFundPaid: (flattened.annualFundPaid as boolean) ?? (p.annualFundPaid as boolean | undefined) ?? false,
+            dueDayOfMonth: (flattened.dueDayOfMonth as number) ?? (p.dueDayOfMonth as number | undefined),
+            lateFeeAmount: (flattened.lateFeeAmount as number) ?? (p.lateFeeAmount as number | undefined),
+            lateFeeFrequency: (flattened.lateFeeFrequency as string) ?? (p.lateFeeFrequency as string | undefined),
+          };
+          replaceTempStudentInSessionCache(queryClient, payload.sessionId, context.tempId, withClassDetails);
+        } else if (!context?.tempId) {
+          const p = payload as Record<string, unknown>;
+          const enrollmentFields: EnrollmentStubFields | undefined =
+            (p.registrationFees !== undefined || p.monthlyFees !== undefined || p.classId !== undefined)
+              ? {
+                  classId: p.classId as string | undefined,
+                  registrationFees: p.registrationFees as number | undefined,
+                  annualFund: p.annualFund as number | undefined,
+                  monthlyFees: p.monthlyFees as number | undefined,
+                  transportFees: p.transportFees as number | undefined,
+                  registrationPaid: (p.registrationPaid as boolean | undefined) ?? false,
+                  annualFundPaid: (p.annualFundPaid as boolean | undefined) ?? false,
+                  dueDayOfMonth: p.dueDayOfMonth as number | undefined,
+                  lateFeeAmount: p.lateFeeAmount as number | undefined,
+                  lateFeeFrequency: p.lateFeeFrequency as string | undefined,
+                }
+              : undefined;
+          addStudentToSessionCache(queryClient, payload.sessionId, data, enrollmentFields);
+        }
       } else {
         invalidateSessionStudentList(queryClient, null);
+      }
+    },
+    onError: (_err, payload, context) => {
+      if (payload.sessionId && context?.tempId) {
+        removeStudentFromSessionCache(queryClient, payload.sessionId, context.tempId);
       }
     },
   });
@@ -315,6 +431,19 @@ export function useUpdateStudent() {
       updates: Partial<Omit<Student, 'id' | 'payments'>>;
       sessionId?: string;
     }) => studentsRepository.update(id, { ...updates, ...(sessionId != null && { sessionId }) }),
+    onMutate: async (variables) => {
+      if (!variables.sessionId) return {};
+      const list = queryClient.getQueryData<SessionStudentLike[]>([
+        QUERY_KEY,
+        'bySession',
+        variables.sessionId,
+      ]);
+      const previous = list?.find((s) => s.id === variables.id);
+      if (!previous) return {};
+      const optimistic: SessionStudentLike = { ...previous, ...variables.updates };
+      mergeUpdatedStudentIntoSessionCache(queryClient, variables.sessionId, optimistic);
+      return { previousStudent: previous };
+    },
     onSuccess: (data, { id, sessionId }) => {
       if (sessionId && data && typeof data === 'object' && 'id' in data && 'payments' in data) {
         mergeUpdatedStudentIntoSessionCache(queryClient, sessionId, data as SessionStudentLike);
@@ -323,6 +452,15 @@ export function useUpdateStudent() {
         invalidateSessionStudentList(queryClient, sessionId);
         if (data) queryClient.setQueryData([QUERY_KEY, id], data);
         else queryClient.invalidateQueries({ queryKey: [QUERY_KEY, id] });
+      }
+    },
+    onError: (_err, variables, context) => {
+      if (variables.sessionId && context?.previousStudent) {
+        mergeUpdatedStudentIntoSessionCache(
+          queryClient,
+          variables.sessionId,
+          context.previousStudent
+        );
       }
     },
   });
@@ -336,15 +474,36 @@ export function useDeleteStudent() {
       const id = typeof payload === 'string' ? payload : payload.id;
       return studentsRepository.delete(id);
     },
+    onMutate: async (payload) => {
+      const id = typeof payload === 'string' ? payload : payload.id;
+      const sessionId = typeof payload === 'string' ? undefined : payload.sessionId;
+      if (!sessionId) return {};
+      const list = queryClient.getQueryData<SessionStudentLike[]>([
+        QUERY_KEY,
+        'bySession',
+        sessionId,
+      ]);
+      const previous = list?.find((s) => s.id === id);
+      if (!previous) return {};
+      removeStudentFromSessionCache(queryClient, sessionId, id);
+      return { previousStudent: previous, sessionId };
+    },
     onSuccess: (_, payload) => {
       const id = typeof payload === 'string' ? payload : payload.id;
       const sessionId = typeof payload === 'string' ? undefined : payload.sessionId;
-      if (sessionId) {
-        removeStudentFromSessionCache(queryClient, sessionId, id);
-      } else {
+      if (!sessionId) {
         invalidateSessionStudentList(queryClient, null);
       }
       queryClient.removeQueries({ queryKey: [QUERY_KEY, id] });
+    },
+    onError: (_err, payload, context) => {
+      if (context?.previousStudent && context?.sessionId) {
+        prependStudentToSessionCache(
+          queryClient,
+          context.sessionId,
+          context.previousStudent
+        );
+      }
     },
   });
 }

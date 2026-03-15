@@ -177,6 +177,8 @@ export const staffRepositoryApi = {
         class_name: cs.className,
         subjects: cs.subjects,
       })) ?? null,
+      aadhaar_number: data.aadhaarNumber ?? null,
+      date_of_birth: data.dateOfBirth ?? null,
     }));
     const list = await teachingFetchJson<Record<string, unknown>[]>('/staff/bulk', {
       method: 'POST',

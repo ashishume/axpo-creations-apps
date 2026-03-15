@@ -80,12 +80,37 @@ export function StudentsPage() {
   const deleteClassMut = useDeleteClass();
 
   const addStudentAsync = (data: Omit<StudentType, "id" | "payments">) => createStudent.mutateAsync(data);
-  const updateStudent = (id: string, data: Partial<StudentType>) =>
-    updateStudentMut.mutate({ id, updates: data, sessionId: selectedSessionId ?? undefined });
+  /** Fire-and-forget add: optimistic update, then API in background. Use when closing modal immediately. */
+  const addStudent = (
+    data: Omit<StudentType, "id" | "payments">,
+    options?: { onSuccess?: (data: StudentType) => void }
+  ) => {
+    createStudent.mutate(data, {
+      onSuccess: (created) => {
+        options?.onSuccess?.(created as StudentType);
+      },
+      onError: (err) => {
+        toast(err instanceof Error ? err.message : "Failed to add student", "error");
+      },
+    });
+  };
+  const updateStudent = (
+    id: string,
+    data: Partial<StudentType>,
+    opts?: { onError?: (err: Error) => void }
+  ) =>
+    updateStudentMut.mutate(
+      { id, updates: data, sessionId: selectedSessionId ?? undefined },
+      {
+        onError: (err) => opts?.onError?.(err as Error),
+      }
+    );
   const updateStudentAsync = (id: string, data: Partial<StudentType>) =>
     updateStudentMut.mutateAsync({ id, updates: data, sessionId: selectedSessionId ?? undefined });
-  const deleteStudent = (id: string) =>
-    deleteStudentMut.mutate(selectedSessionId ? { id, sessionId: selectedSessionId } : id);
+  const deleteStudent = (id: string, opts?: { onError?: (err: Error) => void }) =>
+    deleteStudentMut.mutate(selectedSessionId ? { id, sessionId: selectedSessionId } : id, {
+      onError: (err) => opts?.onError?.(err as Error),
+    });
   const addFeePayment = async (
     studentId: string,
     payment: Omit<import("../types").FeePayment, "id" | "enrollmentId">,
@@ -330,44 +355,40 @@ export function StudentsPage() {
       studentData.sessionId = studentWithEnrollment.sessionId;
     }
 
-    setIsStudentSubmitting(true);
-    try {
-      if (studentModal.student) {
-        updateStudent(studentModal.student.id, studentData as Partial<StudentType>);
-
-        // If sibling is assigned, update the sibling to point back
-        if (siblingId) {
-          updateStudent(siblingId, { siblingId: studentModal.student.id });
-        }
-
-        // If sibling was removed, clear the reverse link
-        const oldSiblingId = studentModal.student.siblingId;
-        if (oldSiblingId && oldSiblingId !== siblingId) {
-          updateStudent(oldSiblingId, { siblingId: undefined });
-        }
-
-        toast("Student updated");
-      } else {
-        const newStudent = await addStudentAsync({
-          sessionId: selectedSessionId,
-          ...studentData,
-          studentId: (studentData.studentId as string) || `STU-${Date.now()}`,
-        } as unknown as Omit<StudentType, "id" | "payments">);
-
-        // If sibling is assigned, update the sibling to point back to the new student
-        if (siblingId && newStudent) {
-          await updateStudentAsync(siblingId, { siblingId: newStudent.id });
-        }
-
-        toast("Student added");
+    if (studentModal.student) {
+      const onError = () => toast("Failed to update student", "error");
+      updateStudent(studentModal.student.id, studentData as Partial<StudentType>, { onError });
+      if (siblingId) updateStudent(siblingId, { siblingId: studentModal.student.id }, { onError });
+      const oldSiblingId = studentModal.student.siblingId;
+      if (oldSiblingId && oldSiblingId !== siblingId) {
+        updateStudent(oldSiblingId, { siblingId: undefined }, { onError });
       }
+      toast("Student updated");
       setStudentModal({ open: false });
       setStudentPhotoPreview(null);
       studentPhotoFileRef.current = null;
       setSelectedSiblingId("");
-    } finally {
-      setIsStudentSubmitting(false);
+      return;
     }
+
+    // Add student: optimistic update, close immediately, API runs in background
+    const payload = {
+      sessionId: selectedSessionId,
+      ...studentData,
+      studentId: (studentData.studentId as string) || `STU-${Date.now()}`,
+    } as unknown as Omit<StudentType, "id" | "payments">;
+    addStudent(payload, {
+      onSuccess: (newStudent) => {
+        if (siblingId && newStudent?.id) {
+          updateStudent(siblingId, { siblingId: newStudent.id });
+        }
+      },
+    });
+    toast("Student added");
+    setStudentModal({ open: false });
+    setStudentPhotoPreview(null);
+    studentPhotoFileRef.current = null;
+    setSelectedSiblingId("");
   };
 
   const handleSaveClass = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -480,6 +501,7 @@ export function StudentsPage() {
                   return {
                     name: s.name,
                     studentId: s.studentId,
+                    admissionNumber: s.admissionNumber,
                     classId: s.classId,
                     feeType: s.feeType,
                     registrationFees: s.registrationFees,
@@ -496,6 +518,8 @@ export function StudentsPage() {
                     currentAddress: pd?.currentAddress ?? s.currentAddress,
                     permanentAddress: pd?.permanentAddress ?? s.permanentAddress,
                     healthIssues: pd?.healthIssues ?? s.healthIssues,
+                    aadhaarNumber: pd?.aadhaarNumber ?? s.aadhaarNumber,
+                    dateOfBirth: pd?.dateOfBirth ?? s.dateOfBirth,
                   };
                 }),
                 sessionClasses.map((c) => ({ id: c.id, name: c.name }))
@@ -566,27 +590,11 @@ export function StudentsPage() {
             Select a school and session to view students.
           </CardContent>
         </Card>
-      ) : isInitialLoading ? (
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <Skeleton className="h-10 w-64" />
-                <Skeleton className="h-8 w-24" />
-                <Skeleton className="h-8 w-24" />
-              </div>
-              <SkeletonTable rows={8} columns={6} />
-            </CardContent>
-          </Card>
-        </div>
       ) : (
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Students ({studentsTotal})</CardTitle>
+              <CardTitle>Students {!isInitialLoading ? `(${studentsTotal})` : ""}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
@@ -639,7 +647,11 @@ export function StudentsPage() {
                   </Select>
                 </div>
               </div>
-              {list.length === 0 ? (
+              {isInitialLoading ? (
+                <div className="py-8">
+                  <SkeletonTable rows={8} columns={6} />
+                </div>
+              ) : list.length === 0 ? (
                 <EmptyState message="No students in this session. Add one to get started." />
               ) : filteredList.length === 0 ? (
                 <EmptyState message="No students match your search or filter." />
@@ -1372,7 +1384,9 @@ export function StudentsPage() {
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => {
           if (confirmDelete) {
-            deleteStudent(confirmDelete.id);
+            deleteStudent(confirmDelete.id, {
+              onError: () => toast("Failed to delete student", "error"),
+            });
             toast("Student deleted");
             setConfirmDelete(null);
           }
@@ -1424,6 +1438,7 @@ export function StudentsPage() {
               sessionId: selectedSessionId,
               name: r.name,
               studentId: r.studentId ?? `STU-${Date.now()}-${idx}`,
+              admissionNumber: r.admissionNumber,
               classId,
               feeType: r.feeType,
               registrationFees: r.registrationFees ?? matchedClass?.registrationFees,
@@ -1433,7 +1448,7 @@ export function StudentsPage() {
               dueDayOfMonth: r.dueDayOfMonth ?? matchedClass?.dueDayOfMonth,
               lateFeeAmount: r.lateFeeAmount ?? matchedClass?.lateFeeAmount,
               lateFeeFrequency: r.lateFeeFrequency ?? matchedClass?.lateFeeFrequency,
-              personalDetails: (r.fatherName || r.motherName || r.guardianPhone || r.bloodGroup || r.currentAddress || r.permanentAddress || r.healthIssues) ? {
+              personalDetails: (r.fatherName || r.motherName || r.guardianPhone || r.bloodGroup || r.currentAddress || r.permanentAddress || r.healthIssues || r.aadhaarNumber || r.dateOfBirth) ? {
                 fatherName: r.fatherName,
                 motherName: r.motherName,
                 guardianPhone: r.guardianPhone,
@@ -1441,6 +1456,8 @@ export function StudentsPage() {
                 currentAddress: r.currentAddress,
                 permanentAddress: r.permanentAddress,
                 healthIssues: r.healthIssues,
+                aadhaarNumber: r.aadhaarNumber,
+                dateOfBirth: r.dateOfBirth,
               } : undefined,
               targetAmount: r.targetAmount,
               dueFrequency: r.dueFrequency,

@@ -191,6 +191,11 @@ export const studentsRepositoryApi = {
         '/students/with-enrollment',
         { method: 'POST', body: JSON.stringify(body) }
       );
+      if (r.enrollment && r.student) {
+        const enrollment = mapEnrollment(r.enrollment as Record<string, unknown>);
+        const flattened = flattenEnrollmentToStudentLike(enrollment);
+        return flattened as unknown as Student & { enrollmentId?: string };
+      }
       const student = mapStudent(r.student);
       const enrollmentId = r.enrollment?.id != null ? String(r.enrollment.id) : undefined;
       return { ...student, enrollmentId };

@@ -61,7 +61,9 @@ export function Layout() {
   const { pathname } = useLocation();
   const page = pathnameToPage(pathname);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isMutating = useIsMutating() > 0;
+  // Only show full-page overlay for mutations that opt in (e.g. bulk import).
+  // Student/staff edit and other background saves use button-level loading only.
+  const isMutating = useIsMutating({ mutationKey: ["globalOverlay"] }) > 0;
   const { loadSampleData, clearAllData, exportData, importData, toast, schools, sessions, selectedSchoolId, selectedSessionId } = useApp();
   const { hasPermission } = useAuth();
   const selectedSchool = selectedSchoolId ? schools.find((s) => s.id === selectedSchoolId) : null;

@@ -1270,6 +1270,8 @@ export function StaffPage() {
               allowedLeavesPerMonth: r.allowedLeavesPerMonth ?? 1,
               perDaySalary: r.perDaySalary,
               classesSubjects,
+              aadhaarNumber: r.aadhaarNumber,
+              dateOfBirth: r.dateOfBirth,
             };
           });
           await createStaffBulk.mutateAsync(staffToCreate);
