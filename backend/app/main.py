@@ -64,6 +64,45 @@ app.include_router(billing_router, prefix="/billing/api/v1", tags=["billing"])
 app.include_router(teaching_router, prefix="/teaching/api/v1", tags=["teaching"])
 
 
+@app.on_event("startup")
+async def startup_log():
+    """Log Supabase Storage config and verify DB connections."""
+    from sqlalchemy import text
+
+    from app.core.database import get_billing_session_factory, get_teaching_session_factory
+
+    s = get_settings()
+
+    # Database connection checks
+    try:
+        factory = get_billing_session_factory()
+        async with factory() as session:
+            await session.execute(text("SELECT 1"))
+        logger.info("Database connected: billing")
+    except Exception as e:
+        logger.error("Database connection failed: billing — %s", e)
+
+    try:
+        factory = get_teaching_session_factory()
+        async with factory() as session:
+            await session.execute(text("SELECT 1"))
+        logger.info("Database connected: teaching")
+    except Exception as e:
+        logger.error("Database connection failed: teaching — %s", e)
+
+    # Supabase Storage
+    if s.TEACHING_SUPABASE_URL and s.TEACHING_SUPABASE_SERVICE_ROLE_KEY:
+        logger.info(
+            "Supabase Storage enabled: uploads (student photos, receipts) will use %s",
+            s.TEACHING_SUPABASE_URL.rstrip("/"),
+        )
+    else:
+        logger.info(
+            "Supabase Storage not configured: uploads will use local %s (set TEACHING_SUPABASE_URL and TEACHING_SUPABASE_SERVICE_ROLE_KEY to use Supabase)",
+            s.UPLOAD_DIR,
+        )
+
+
 @app.get("/health")
 async def health():
     """Health check endpoint."""

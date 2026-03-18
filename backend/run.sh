@@ -100,15 +100,29 @@ echo "🚀 Backend"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Set environment mode
+# Set environment mode and load the right env file
 if [ "$MODE" = "prod" ]; then
     export ENVIRONMENT=production
     print_info "Mode: ${GREEN}Production${NC}"
     print_info "Config: ${GREEN}.env.production${NC}"
+    if [ -f ".env.production" ]; then
+        set -a
+        # shellcheck source=/dev/null
+        . ./.env.production
+        set +a
+        print_success "Loaded .env.production"
+    fi
 else
     export ENVIRONMENT=development
     print_info "Mode: ${BLUE}Development${NC}"
     print_info "Config: ${BLUE}.env.local${NC}"
+    if [ -f ".env.local" ]; then
+        set -a
+        # shellcheck source=/dev/null
+        . ./.env.local
+        set +a
+        print_success "Loaded .env.local"
+    fi
 fi
 
 echo ""
