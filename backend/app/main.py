@@ -14,19 +14,21 @@ from app.teaching.router import router as teaching_router
 logger = logging.getLogger(__name__)
 
 API_VERSION = "0.1.0"
+ROOT_PATH = "/axpo/api"
 
-app = FastAPI(
+api_app = FastAPI(
     title="Start Tech API",
     description="Backend for Billing and Teaching applications",
     version=API_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
+    root_path=ROOT_PATH,
 )
 
-app.add_exception_handler(AppException, app_exception_handler)
+api_app.add_exception_handler(AppException, app_exception_handler)
 
 
-@app.exception_handler(IntegrityError)
+@api_app.exception_handler(IntegrityError)
 async def integrity_error_handler(request: Request, exc: IntegrityError):
     """Map DB constraint violations to 409 Conflict."""
     logger.warning("IntegrityError: %s", exc)
@@ -40,7 +42,7 @@ async def integrity_error_handler(request: Request, exc: IntegrityError):
     )
 
 
-@app.exception_handler(Exception)
+@api_app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     """Return 500 with error detail; 503 when DB is unreachable (deployment/network)."""
     logger.exception("Unhandled exception")
@@ -60,27 +62,27 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     )
 
 
-setup_middleware(app)
+setup_middleware(api_app)
 
-app.include_router(billing_router, prefix="/billing/api/v1", tags=["billing"])
-app.include_router(teaching_router, prefix="/teaching/api/v1", tags=["teaching"])
+api_app.include_router(billing_router, prefix="/billing/api/v1", tags=["billing"])
+api_app.include_router(teaching_router, prefix="/teaching/api/v1", tags=["teaching"])
 
 
-@app.get("/")
+@api_app.get("/")
 async def root():
     """Welcome message and quick links."""
     return {
         "message": "Welcome to Start Tech API — Billing & Teaching backends.",
         "version": API_VERSION,
-        "docs": "/docs",
-        "billing_api": "/billing/api/v1",
-        "teaching_api": "/teaching/api/v1",
-        "health": "/health",
-        "health_db": "/health/db",
+        "docs": f"{ROOT_PATH}/docs",
+        "billing_api": f"{ROOT_PATH}/billing/api/v1",
+        "teaching_api": f"{ROOT_PATH}/teaching/api/v1",
+        "health": f"{ROOT_PATH}/health",
+        "health_db": f"{ROOT_PATH}/health/db",
     }
 
 
-@app.on_event("startup")
+@api_app.on_event("startup")
 async def startup_log():
     """Log Supabase Storage config and verify DB connections."""
     from sqlalchemy import text
@@ -119,7 +121,7 @@ async def startup_log():
         )
 
 
-@app.get("/health")
+@api_app.get("/health")
 async def health():
     """Liveness probe — process is up (use /health/db for database checks)."""
     return {
@@ -129,7 +131,7 @@ async def health():
     }
 
 
-@app.get("/health/db")
+@api_app.get("/health/db")
 async def health_db():
     """Check connectivity to Billing and Teaching databases (Supabase/Postgres)."""
     from sqlalchemy import text
@@ -155,3 +157,8 @@ async def health_db():
 
     result["ok"] = result["billing"] == "connected" and result["teaching"] == "connected"
     return result
+
+
+# Mount the API under /axpo/api so all routes are served at /axpo/api/...
+app = FastAPI()
+app.mount(ROOT_PATH, api_app)
