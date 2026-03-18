@@ -2,7 +2,7 @@ services:
   backend:
     build: .
     ports:
-      - "8000:8000"
+      - "8001:8000" # host:container — avoids clash with another app on 8000
     environment:
       BILLING_DATABASE_URL: postgresql+asyncpg://billing_user:billing_pass@billing_db:5432/billing_db
       TEACHING_DATABASE_URL: postgresql+asyncpg://teaching_user:teaching_pass@teaching_db:5432/teaching_db

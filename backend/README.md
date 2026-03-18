@@ -126,7 +126,7 @@ Protected routes require the cookie set by the same domain’s login; no token i
 docker compose up --build
 ```
 
-- Backend: http://localhost:8000  
+- Backend: http://localhost:8001 (mapped to avoid host port 8000 conflicts)  
 - Billing Postgres: localhost:5433 (user `billing_user`, db `billing_db`)  
 - Teaching Postgres: localhost:5434 (user `teaching_user`, db `teaching_db`)  
 

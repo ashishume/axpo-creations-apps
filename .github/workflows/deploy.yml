@@ -1,8 +1,14 @@
-# Auto-deploy backend with Docker Compose (detached)
-# Runs backend/deploy.sh: build images and docker compose up -d
+# Deploy backend on your AWS instance via SSH (Docker Compose on the server).
 #
-# For deploying to a persistent server, use a self-hosted runner on that server
-# (add label e.g. self-hosted, then set runs-on: [self-hosted, linux, x64])
+# Required GitHub repo secrets (Settings → Secrets and variables → Actions):
+#   DEPLOY_HOST     — EC2 public IP or DNS (e.g. 3.89.x.x or ec2-xx.compute.amazonaws.com)
+#   DEPLOY_USER     — SSH user (often ubuntu, ec2-user, or admin)
+#   DEPLOY_SSH_KEY  — Full private key (PEM) that matches the public key in ~/.ssh/authorized_keys on the server
+#   DEPLOY_PATH     — Absolute path to this repo root on the server (e.g. /home/ubuntu/axpo-creations-apps)
+#
+# On the server (one-time): Docker + Docker Compose v2, clone repo, configure backend/.env,
+# and ensure `git pull` works (deploy key or HTTPS access to the repo).
+#
 name: Deploy Backend
 
 on:
@@ -10,25 +16,27 @@ on:
     branches: [main]
     paths:
       - 'backend/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 jobs:
   deploy:
-    name: Build and run backend (Docker Compose)
+    name: SSH → pull → Docker Compose
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Make deploy.sh executable
-        run: chmod +x deploy.sh
-
-      - name: Deploy backend (Docker Compose up -d)
-        run: ./deploy.sh
+      - name: Deploy on AWS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd "${{ secrets.DEPLOY_PATH }}"
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
+            cd backend
+            chmod +x deploy.sh
+            ./deploy.sh

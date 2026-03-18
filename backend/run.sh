@@ -140,7 +140,7 @@ echo ""
 LAN_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 [ -z "$LAN_IP" ] && LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || echo "unknown")
 
-PORT=8000
+PORT=8001
 
 # Start the server
 if [ "$MODE" = "prod" ]; then

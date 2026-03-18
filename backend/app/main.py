@@ -13,10 +13,12 @@ from app.teaching.router import router as teaching_router
 
 logger = logging.getLogger(__name__)
 
+API_VERSION = "0.1.0"
+
 app = FastAPI(
     title="Start Tech API",
     description="Backend for Billing and Teaching applications",
-    version="0.1.0",
+    version=API_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -64,6 +66,20 @@ app.include_router(billing_router, prefix="/billing/api/v1", tags=["billing"])
 app.include_router(teaching_router, prefix="/teaching/api/v1", tags=["teaching"])
 
 
+@app.get("/")
+async def root():
+    """Welcome message and quick links."""
+    return {
+        "message": "Welcome to Start Tech API — Billing & Teaching backends.",
+        "version": API_VERSION,
+        "docs": "/docs",
+        "billing_api": "/billing/api/v1",
+        "teaching_api": "/teaching/api/v1",
+        "health": "/health",
+        "health_db": "/health/db",
+    }
+
+
 @app.on_event("startup")
 async def startup_log():
     """Log Supabase Storage config and verify DB connections."""
@@ -105,8 +121,12 @@ async def startup_log():
 
 @app.get("/health")
 async def health():
-    """Health check endpoint."""
-    return {"status": "ok"}
+    """Liveness probe — process is up (use /health/db for database checks)."""
+    return {
+        "status": "ok",
+        "service": "start-tech-api",
+        "version": API_VERSION,
+    }
 
 
 @app.get("/health/db")
