@@ -1,15 +1,13 @@
-# Deploy backend on your AWS instance via SSH (Docker Compose on the server).
+# Deploy Axpo Apps backend on your AWS instance via SSH (Docker Compose on the server).
 #
-# Required GitHub repo secrets (Settings → Secrets and variables → Actions):
-#   DEPLOY_HOST     — EC2 public IP or DNS (e.g. 3.89.x.x or ec2-xx.compute.amazonaws.com)
-#   DEPLOY_USER     — SSH user (often ubuntu, ec2-user, or admin)
-#   DEPLOY_SSH_KEY  — Full private key (PEM) that matches the public key in ~/.ssh/authorized_keys on the server
-#   DEPLOY_PATH     — Absolute path to this repo root on the server (e.g. /home/ubuntu/axpo-creations-apps)
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   SSH_HOST         — EC2 public IP or DNS
+#   SSH_USER         — e.g. ubuntu, ec2-user
+#   SSH_PRIVATE_KEY  — Full PEM private key (matches authorized_keys on server)
+#   DEPLOY_PATH      — Absolute path to repo root on server
+#   SSH_PORT         — Optional; defaults to 22 if unset or empty
 #
-# On the server (one-time): Docker + Docker Compose v2, clone repo, configure backend/.env,
-# and ensure `git pull` works (deploy key or HTTPS access to the repo).
-#
-name: Deploy Backend
+name: Axpo Apps Deployment - Backend
 
 on:
   push:
@@ -27,9 +25,10 @@ jobs:
       - name: Deploy on AWS
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
           script_stop: true
           script: |
             set -e
