@@ -2,6 +2,7 @@
 import ssl
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from urllib.parse import urlparse
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -13,6 +14,19 @@ _ssl_context = ssl.create_default_context()
 # Supabase uses a cert that may not match the pooler hostname; allow for that
 _ssl_context.check_hostname = False
 _ssl_context.verify_mode = ssl.CERT_NONE
+
+# Hosts that do not use SSL (e.g. in-Docker Postgres). Avoids "rejected SSL upgrade" when using docker-compose.
+_NO_SSL_HOSTS = frozenset({"teaching_db", "billing_db", "localhost", "127.0.0.1"})
+
+
+def _use_ssl_for_url(url: str) -> bool:
+    """Use SSL for cloud Postgres (Supabase, etc.); disable for in-Docker / localhost."""
+    try:
+        parsed = urlparse(url)
+        host = (parsed.hostname or "").lower().strip()
+        return host not in _NO_SSL_HOSTS
+    except Exception:
+        return True
 
 
 class Base(DeclarativeBase):
@@ -34,19 +48,22 @@ class TeachingBase(DeclarativeBase):
 
 
 def create_engine_for_url(url: str):
-    """Create async engine for a given database URL. Uses SSL for Supabase/cloud Postgres.
-    statement_cache_size=0 is required when using PgBouncer (e.g. Supabase pooler) in
-    transaction or statement mode, which does not support prepared statements."""
+    """Create async engine for a given database URL. Uses SSL for Supabase/cloud Postgres;
+    disables SSL for in-Docker hosts (teaching_db, billing_db, localhost) to avoid
+    'PostgreSQL server rejected SSL upgrade'. statement_cache_size=0 is required when
+    using PgBouncer (e.g. Supabase pooler) in transaction or statement mode."""
+    use_ssl = _use_ssl_for_url(url)
+    connect_args: dict = {
+        "ssl": _ssl_context if use_ssl else False,
+        "statement_cache_size": 0,
+    }
     return create_async_engine(
         url,
         echo=False,
         pool_pre_ping=True,
         pool_size=5,
         max_overflow=10,
-        connect_args={
-            "ssl": _ssl_context,
-            "statement_cache_size": 0,
-        },
+        connect_args=connect_args,
     )
 
 

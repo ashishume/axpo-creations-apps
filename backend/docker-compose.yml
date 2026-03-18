@@ -3,22 +3,10 @@ services:
     build: .
     ports:
       - "8001:8000" # host:container — avoids clash with another app on 8000
-    environment:
-      BILLING_DATABASE_URL: postgresql+asyncpg://billing_user:billing_pass@billing_db:5432/billing_db
-      TEACHING_DATABASE_URL: postgresql+asyncpg://teaching_user:teaching_pass@teaching_db:5432/teaching_db
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
-      JWT_ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 30
-      REFRESH_TOKEN_EXPIRE_DAYS: 7
-      COOKIE_SECURE: "false"
-      # CORS: allow frontends that call this API (origin = scheme+host, no path). Override via backend/.env CORS_ORIGINS.
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:5174,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,https://school.axpocreation.com,https://billing.axpocreation.com,https://axposerver.axpocreation.com,http://axposerver.axpocreation.com}
-      # Razorpay (Teaching subscriptions) — set in backend/.env on the server
-      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
-      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
-      RAZORPAY_PLAN_ID: ${RAZORPAY_PLAN_ID:-}
-      RAZORPAY_PLAN_IDS: ${RAZORPAY_PLAN_IDS:-}
-      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+    env_file:
+      - .env.docker.defaults
+      - .env.local
+    # .env.docker.defaults is in repo (safe defaults). Create .env.local on the server with production secrets (Supabase URLs, JWT, CORS, Razorpay). If .env.local is missing, copy .env.docker.defaults to .env.local for in-container DB only.
     depends_on:
       billing_db:
         condition: service_healthy
