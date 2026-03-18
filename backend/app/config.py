@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = True
     COOKIE_DOMAIN: str | None = None
 
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,https://school.axpocreation.com,https://billing.axpocreation.com"
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,https://school.axpocreation.com,https://billing.axpocreation.com,https://axposerver.axpocreation.com,http://axposerver.axpocreation.com"
 
     # AI Assistant (OpenRouter)
     OPENROUTER_API_KEY: str | None = None

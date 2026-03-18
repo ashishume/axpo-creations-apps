@@ -11,7 +11,8 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       REFRESH_TOKEN_EXPIRE_DAYS: 7
       COOKIE_SECURE: "false"
-      CORS_ORIGINS: http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000
+      # CORS: allow frontends that call this API (origin = scheme+host, no path). Override via backend/.env CORS_ORIGINS.
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:5174,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,https://school.axpocreation.com,https://billing.axpocreation.com,https://axposerver.axpocreation.com,http://axposerver.axpocreation.com}
       # Razorpay (Teaching subscriptions) — set in backend/.env on the server
       RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
       RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
