@@ -5,7 +5,7 @@ services:
       - "8001:8000" # host:container — avoids clash with another app on 8000
     env_file:
       - .env.docker.defaults
-      - .env.local
+      - .env
     # .env.docker.defaults is in repo (safe defaults). Create .env.local on the server with production secrets (Supabase URLs, JWT, CORS, Razorpay). If .env.local is missing, copy .env.docker.defaults to .env.local for in-container DB only.
     depends_on:
       billing_db:
