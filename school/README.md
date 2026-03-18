@@ -1,5 +1,7 @@
 # School Financial Management System
 
+<!-- School app – teaching/finance UI for Axpo Creations -->
+
 A comprehensive school financial management system for tracking income and expenses across multiple schools. Built with **React 18**, **TypeScript**, **Tailwind CSS**, and **Recharts**. All state is local with **localStorage** persistence (no backend).
 
 ## Features
