@@ -12,6 +12,12 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: 7
       COOKIE_SECURE: "false"
       CORS_ORIGINS: http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000
+      # Razorpay (Teaching subscriptions) — set in backend/.env on the server
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+      RAZORPAY_PLAN_ID: ${RAZORPAY_PLAN_ID:-}
+      RAZORPAY_PLAN_IDS: ${RAZORPAY_PLAN_IDS:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
     depends_on:
       billing_db:
         condition: service_healthy

@@ -1,11 +1,12 @@
-# Deploy Axpo Apps backend on your AWS instance via SSH (Docker Compose on the server).
+# Deploy backend to AWS: copy code from the runner (no GitHub login needed on EC2).
 #
-# Repository secrets (Settings → Secrets and variables → Actions):
-#   SSH_HOST         — EC2 public IP or DNS
-#   SSH_USER         — e.g. ubuntu, ec2-user
-#   SSH_PRIVATE_KEY  — Full PEM private key (matches authorized_keys on server)
-#   DEPLOY_PATH      — Absolute path to repo root on server
-#   SSH_PORT         — Optional; defaults to 22 if unset or empty
+# Why not git pull on the server? EC2 would need its own deploy key or HTTPS token
+# for your private repo — otherwise: Permission denied (publickey).
+#
+# Secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY, DEPLOY_PATH (repo root on server),
+#          SSH_PORT (optional, default 22)
+#
+# Your server keeps backend/.env — rsync does not overwrite .env / .env.local / .env.production.
 #
 name: Axpo Apps Deployment - Backend
 
@@ -19,10 +20,37 @@ on:
 
 jobs:
   deploy:
-    name: SSH → pull → Docker Compose
+    name: Rsync backend → Docker Compose on AWS
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy on AWS
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rsync backend to server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=accept-new" \
+            --exclude '.env' \
+            --exclude '.env.local' \
+            --exclude '.env.production' \
+            --exclude '.git' \
+            --exclude '__pycache__' \
+            --exclude '*.pyc' \
+            --exclude '.venv' \
+            backend/ "${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/backend/"
+
+      - name: Run Docker deploy on server
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -32,10 +60,6 @@ jobs:
           script_stop: true
           script: |
             set -e
-            cd "${{ secrets.DEPLOY_PATH }}"
-            git fetch origin main
-            git checkout main
-            git pull --ff-only origin main
-            cd backend
+            cd "${{ secrets.DEPLOY_PATH }}/backend"
             chmod +x deploy.sh
             ./deploy.sh
