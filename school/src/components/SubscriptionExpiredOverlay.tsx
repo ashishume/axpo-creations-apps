@@ -2,7 +2,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSubscription } from "../providers/SubscriptionProvider";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/Button";
-import { AlertCircle, Lock } from "lucide-react";
+import { SUBSCRIPTION_PLANS } from "../lib/plans";
+import { AlertCircle, Lock, CreditCard } from "lucide-react";
+
+function formatPrice(amount: number): string {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
 
 export function SubscriptionExpiredOverlay() {
   const { isActive, isLocked, isLoading } = useSubscription();
@@ -35,6 +44,32 @@ export function SubscriptionExpiredOverlay() {
             {isLocked ? "Organization suspended" : "Subscription required"}
           </h2>
           <p className="text-slate-600 dark:text-slate-300">{message}</p>
+
+          {!isLocked && (
+            <div className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 p-4 text-left">
+              <p className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                <CreditCard className="h-4 w-4" />
+                Payment details
+              </p>
+              <ul className="space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
+                {SUBSCRIPTION_PLANS.map((plan) => {
+                  const monthly = plan.pricing?.monthly ?? plan.price;
+                  return (
+                    <li key={plan.id} className="flex justify-between gap-2">
+                      <span>{plan.name}</span>
+                      <span className="font-medium tabular-nums text-slate-800 dark:text-slate-100">
+                        {formatPrice(monthly)}/month
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                Payment via Razorpay (card, UPI, net banking)
+              </p>
+            </div>
+          )}
+
           {canManagePlans ? (
             <Button
               variant="primary"
