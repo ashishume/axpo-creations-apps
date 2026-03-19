@@ -41,16 +41,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { refetchStaffAndMergeIntoCache } from "../hooks/useStaff";
 import { useAuth } from "./AuthContext";
-import {
-  createSampleSchools,
-  createSampleSessions,
-  createSampleClasses,
-  createSampleStudents,
-  createSampleStaff,
-  createSampleExpenses,
-  createSampleStocks,
-  createSampleFixedCosts,
-} from "../data/sampleData";
 
 type Toast = { id: string; message: string; type: "success" | "error" };
 
@@ -134,7 +124,7 @@ interface AppContextValue extends AppState {
 
   toast: (message: string, type?: "success" | "error") => void;
   dismissToast: (id: string) => void;
-  loadSampleData: () => void;
+  // loadSampleData: () => void;
   clearAllData: () => void;
   exportData: () => Promise<BackupData>;
   importData: (data: BackupData) => void;
@@ -634,194 +624,194 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await refetchAll();
   }, [refetchAll]);
 
-  const loadSampleData = useCallback(async () => {
-    try {
-      const sampleSchools = createSampleSchools();
-      const sampleSessions = createSampleSessions();
-      const schoolIdMap: Record<string, string> = {};
-      for (const school of sampleSchools) {
-        const created = await schoolsRepository.create({
-          name: school.name,
-          address: school.address,
-          contact: school.contact,
-          isLocked: school.isLocked,
-        });
-        schoolIdMap[school.id] = created.id;
-      }
-      const sessionIdMap: Record<string, string> = {};
-      for (const session of sampleSessions) {
-        const schoolId = schoolIdMap[session.schoolId];
-        if (!schoolId) continue;
-        const created = await sessionsRepository.create({
-          schoolId,
-          year: session.year,
-          startDate: session.startDate,
-          endDate: session.endDate,
-          salaryDueDay: session.salaryDueDay,
-        });
-        sessionIdMap[session.id] = created.id;
-      }
-      const sampleClasses = createSampleClasses();
-      const classIdMap: Record<string, string> = {};
-      for (const cls of sampleClasses) {
-        const sessionId = sessionIdMap[cls.sessionId];
-        if (!sessionId) continue;
-        const created = await classesRepository.create({
-          sessionId,
-          name: cls.name,
-          registrationFees: cls.registrationFees,
-          annualFund: cls.annualFund,
-          monthlyFees: cls.monthlyFees,
-          lateFeeAmount: cls.lateFeeAmount,
-          lateFeeFrequency: cls.lateFeeFrequency,
-          dueDayOfMonth: cls.dueDayOfMonth,
-        });
-        classIdMap[cls.id] = created.id;
-      }
-      const sampleStudents = createSampleStudents();
-      // Group by session to set sibling links after creation
-      const studentsBySession = new Map<string, typeof sampleStudents>();
-      for (const stu of sampleStudents) {
-        const sid = stu.sessionId ?? '';
-        const list = studentsBySession.get(sid) ?? [];
-        list.push(stu);
-        studentsBySession.set(sid, list);
-      }
-      for (const [sampleSessionId, sessionStudents] of studentsBySession) {
-        const sessionId = sessionIdMap[sampleSessionId];
-        if (!sessionId) continue;
-        const createdIds: string[] = [];
-        for (const stu of sessionStudents) {
-          const classId = stu.classId ? classIdMap[stu.classId] : undefined;
-          const created = await studentsRepository.create({
-            sessionId,
-            classId,
-            name: stu.name,
-            studentId: stu.studentId,
-            feeType: stu.feeType,
-            personalDetails: stu.personalDetails,
-            registrationFees: stu.registrationFees,
-            annualFund: stu.annualFund,
-            monthlyFees: stu.monthlyFees,
-            transportFees: stu.transportFees,
-            registrationPaid: stu.registrationPaid,
-            annualFundPaid: stu.annualFundPaid,
-            dueDayOfMonth: stu.dueDayOfMonth,
-            lateFeeAmount: stu.lateFeeAmount,
-            lateFeeFrequency: stu.lateFeeFrequency,
-            targetAmount: stu.targetAmount,
-            finePerDay: stu.finePerDay,
-            dueFrequency: stu.dueFrequency,
-            photoUrl: stu.photoUrl,
-          } as never);
-          createdIds.push(created.id);
-        }
-        // Set sibling links: first two and next two students per session
-        if (createdIds.length >= 2) {
-          await studentsRepository.update(createdIds[0], { siblingId: createdIds[1] });
-          await studentsRepository.update(createdIds[1], { siblingId: createdIds[0] });
-        }
-        if (createdIds.length >= 4) {
-          await studentsRepository.update(createdIds[2], { siblingId: createdIds[3] });
-          await studentsRepository.update(createdIds[3], { siblingId: createdIds[2] });
-        }
-        for (let i = 0; i < sessionStudents.length && i < createdIds.length; i++) {
-          const stu = sessionStudents[i];
-          const studentId = createdIds[i];
-          for (const p of stu.payments) {
-            await studentsRepository.addPayment(studentId, {
-              enrollmentId: p.enrollmentId || '',
-              date: p.date,
-              amount: p.amount,
-              method: p.method,
-              receiptNumber: p.receiptNumber,
-              feeCategory: p.feeCategory,
-              month: p.month,
-              receiptPhotoUrl: p.receiptPhotoUrl,
-            });
-          }
-        }
-      }
-      const sampleStaffList = createSampleStaff();
-      for (const s of sampleStaffList) {
-        const sessionId = sessionIdMap[s.sessionId];
-        if (!sessionId) continue;
-        await staffRepository.create({
-          sessionId,
-          name: s.name,
-          employeeId: s.employeeId,
-          role: s.role,
-          monthlySalary: s.monthlySalary,
-          subjectOrGrade: s.subjectOrGrade,
-          allowedLeavesPerMonth: s.allowedLeavesPerMonth ?? 1,
-        });
-      }
-      const sampleExpensesList = createSampleExpenses();
-      for (const e of sampleExpensesList) {
-        const sessionId = sessionIdMap[e.sessionId];
-        if (!sessionId) continue;
-        await expensesRepository.create({
-          sessionId,
-          date: e.date,
-          amount: e.amount,
-          category: e.category,
-          description: e.description,
-          vendorPayee: e.vendorPayee,
-          paymentMethod: e.paymentMethod,
-          tags: e.tags,
-        });
-      }
-      const sampleStocksList = createSampleStocks();
-      for (const st of sampleStocksList) {
-        const sessionId = sessionIdMap[st.sessionId];
-        if (!sessionId) continue;
-        const created = await stocksRepository.create({
-          sessionId,
-          publisherName: st.publisherName,
-          description: st.description,
-          purchaseDate: st.purchaseDate,
-          totalCreditAmount: st.totalCreditAmount,
-          status: st.status,
-          settledDate: st.settledDate,
-          settledAmount: st.settledAmount,
-          notes: st.notes,
-        });
-        for (const tx of st.transactions) {
-          await stocksRepository.addTransaction(created.id, {
-            date: tx.date,
-            type: tx.type,
-            amount: tx.amount,
-            quantity: tx.quantity,
-            description: tx.description,
-            receiptNumber: tx.receiptNumber,
-          });
-        }
-      }
-      const sampleFixedCostsList = createSampleFixedCosts();
-      for (const fc of sampleFixedCostsList) {
-        const sessionId = sessionIdMap[fc.sessionId];
-        if (!sessionId) continue;
-        await fixedCostsRepository.create({
-          sessionId,
-          name: fc.name,
-          amount: fc.amount,
-          category: fc.category,
-          isActive: fc.isActive,
-        });
-      }
-      await refetchAll();
-      const firstSchoolId = schoolIdMap["s1"];
-      const sess2Id = sessionIdMap["sess2"];
-      if (firstSchoolId || sess2Id) {
-        const next = new URLSearchParams(searchParams);
-        if (firstSchoolId) next.set("schoolId", firstSchoolId);
-        if (sess2Id) next.set("sessionId", sess2Id);
-        setSearchParams(next, { replace: true });
-      }
-    } catch (err) {
-      toast(String(err), "error");
-    }
-  }, [refetchAll, toast, searchParams, setSearchParams]);
+  // const loadSampleData = useCallback(async () => {
+  //   try {
+  //     const sampleSchools = createSampleSchools();
+  //     const sampleSessions = createSampleSessions();
+  //     const schoolIdMap: Record<string, string> = {};
+  //     for (const school of sampleSchools) {
+  //       const created = await schoolsRepository.create({
+  //         name: school.name,
+  //         address: school.address,
+  //         contact: school.contact,
+  //         isLocked: school.isLocked,
+  //       });
+  //       schoolIdMap[school.id] = created.id;
+  //     }
+  //     const sessionIdMap: Record<string, string> = {};
+  //     for (const session of sampleSessions) {
+  //       const schoolId = schoolIdMap[session.schoolId];
+  //       if (!schoolId) continue;
+  //       const created = await sessionsRepository.create({
+  //         schoolId,
+  //         year: session.year,
+  //         startDate: session.startDate,
+  //         endDate: session.endDate,
+  //         salaryDueDay: session.salaryDueDay,
+  //       });
+  //       sessionIdMap[session.id] = created.id;
+  //     }
+  //     const sampleClasses = createSampleClasses();
+  //     const classIdMap: Record<string, string> = {};
+  //     for (const cls of sampleClasses) {
+  //       const sessionId = sessionIdMap[cls.sessionId];
+  //       if (!sessionId) continue;
+  //       const created = await classesRepository.create({
+  //         sessionId,
+  //         name: cls.name,
+  //         registrationFees: cls.registrationFees,
+  //         annualFund: cls.annualFund,
+  //         monthlyFees: cls.monthlyFees,
+  //         lateFeeAmount: cls.lateFeeAmount,
+  //         lateFeeFrequency: cls.lateFeeFrequency,
+  //         dueDayOfMonth: cls.dueDayOfMonth,
+  //       });
+  //       classIdMap[cls.id] = created.id;
+  //     }
+  //     const sampleStudents = createSampleStudents();
+  //     // Group by session to set sibling links after creation
+  //     const studentsBySession = new Map<string, typeof sampleStudents>();
+  //     for (const stu of sampleStudents) {
+  //       const sid = stu.sessionId ?? '';
+  //       const list = studentsBySession.get(sid) ?? [];
+  //       list.push(stu);
+  //       studentsBySession.set(sid, list);
+  //     }
+  //     for (const [sampleSessionId, sessionStudents] of studentsBySession) {
+  //       const sessionId = sessionIdMap[sampleSessionId];
+  //       if (!sessionId) continue;
+  //       const createdIds: string[] = [];
+  //       for (const stu of sessionStudents) {
+  //         const classId = stu.classId ? classIdMap[stu.classId] : undefined;
+  //         const created = await studentsRepository.create({
+  //           sessionId,
+  //           classId,
+  //           name: stu.name,
+  //           studentId: stu.studentId,
+  //           feeType: stu.feeType,
+  //           personalDetails: stu.personalDetails,
+  //           registrationFees: stu.registrationFees,
+  //           annualFund: stu.annualFund,
+  //           monthlyFees: stu.monthlyFees,
+  //           transportFees: stu.transportFees,
+  //           registrationPaid: stu.registrationPaid,
+  //           annualFundPaid: stu.annualFundPaid,
+  //           dueDayOfMonth: stu.dueDayOfMonth,
+  //           lateFeeAmount: stu.lateFeeAmount,
+  //           lateFeeFrequency: stu.lateFeeFrequency,
+  //           targetAmount: stu.targetAmount,
+  //           finePerDay: stu.finePerDay,
+  //           dueFrequency: stu.dueFrequency,
+  //           photoUrl: stu.photoUrl,
+  //         } as never);
+  //         createdIds.push(created.id);
+  //       }
+  //       // Set sibling links: first two and next two students per session
+  //       if (createdIds.length >= 2) {
+  //         await studentsRepository.update(createdIds[0], { siblingId: createdIds[1] });
+  //         await studentsRepository.update(createdIds[1], { siblingId: createdIds[0] });
+  //       }
+  //       if (createdIds.length >= 4) {
+  //         await studentsRepository.update(createdIds[2], { siblingId: createdIds[3] });
+  //         await studentsRepository.update(createdIds[3], { siblingId: createdIds[2] });
+  //       }
+  //       for (let i = 0; i < sessionStudents.length && i < createdIds.length; i++) {
+  //         const stu = sessionStudents[i];
+  //         const studentId = createdIds[i];
+  //         for (const p of stu.payments) {
+  //           await studentsRepository.addPayment(studentId, {
+  //             enrollmentId: p.enrollmentId || '',
+  //             date: p.date,
+  //             amount: p.amount,
+  //             method: p.method,
+  //             receiptNumber: p.receiptNumber,
+  //             feeCategory: p.feeCategory,
+  //             month: p.month,
+  //             receiptPhotoUrl: p.receiptPhotoUrl,
+  //           });
+  //         }
+  //       }
+  //     }
+  //     const sampleStaffList = createSampleStaff();
+  //     for (const s of sampleStaffList) {
+  //       const sessionId = sessionIdMap[s.sessionId];
+  //       if (!sessionId) continue;
+  //       await staffRepository.create({
+  //         sessionId,
+  //         name: s.name,
+  //         employeeId: s.employeeId,
+  //         role: s.role,
+  //         monthlySalary: s.monthlySalary,
+  //         subjectOrGrade: s.subjectOrGrade,
+  //         allowedLeavesPerMonth: s.allowedLeavesPerMonth ?? 1,
+  //       });
+  //     }
+  //     const sampleExpensesList = createSampleExpenses();
+  //     for (const e of sampleExpensesList) {
+  //       const sessionId = sessionIdMap[e.sessionId];
+  //       if (!sessionId) continue;
+  //       await expensesRepository.create({
+  //         sessionId,
+  //         date: e.date,
+  //         amount: e.amount,
+  //         category: e.category,
+  //         description: e.description,
+  //         vendorPayee: e.vendorPayee,
+  //         paymentMethod: e.paymentMethod,
+  //         tags: e.tags,
+  //       });
+  //     }
+  //     const sampleStocksList = createSampleStocks();
+  //     for (const st of sampleStocksList) {
+  //       const sessionId = sessionIdMap[st.sessionId];
+  //       if (!sessionId) continue;
+  //       const created = await stocksRepository.create({
+  //         sessionId,
+  //         publisherName: st.publisherName,
+  //         description: st.description,
+  //         purchaseDate: st.purchaseDate,
+  //         totalCreditAmount: st.totalCreditAmount,
+  //         status: st.status,
+  //         settledDate: st.settledDate,
+  //         settledAmount: st.settledAmount,
+  //         notes: st.notes,
+  //       });
+  //       for (const tx of st.transactions) {
+  //         await stocksRepository.addTransaction(created.id, {
+  //           date: tx.date,
+  //           type: tx.type,
+  //           amount: tx.amount,
+  //           quantity: tx.quantity,
+  //           description: tx.description,
+  //           receiptNumber: tx.receiptNumber,
+  //         });
+  //       }
+  //     }
+  //     const sampleFixedCostsList = createSampleFixedCosts();
+  //     for (const fc of sampleFixedCostsList) {
+  //       const sessionId = sessionIdMap[fc.sessionId];
+  //       if (!sessionId) continue;
+  //       await fixedCostsRepository.create({
+  //         sessionId,
+  //         name: fc.name,
+  //         amount: fc.amount,
+  //         category: fc.category,
+  //         isActive: fc.isActive,
+  //       });
+  //     }
+  //     await refetchAll();
+  //     const firstSchoolId = schoolIdMap["s1"];
+  //     const sess2Id = sessionIdMap["sess2"];
+  //     if (firstSchoolId || sess2Id) {
+  //       const next = new URLSearchParams(searchParams);
+  //       if (firstSchoolId) next.set("schoolId", firstSchoolId);
+  //       if (sess2Id) next.set("sessionId", sess2Id);
+  //       setSearchParams(next, { replace: true });
+  //     }
+  //   } catch (err) {
+  //     toast(String(err), "error");
+  //   }
+  // }, [refetchAll, toast, searchParams, setSearchParams]);
 
   const clearAllData = useCallback(() => {
     setSchools([]);
@@ -1091,7 +1081,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deleteFixedCost,
       toast,
       dismissToast,
-      loadSampleData,
+      // loadSampleData,
       clearAllData,
       exportData,
       importData,
@@ -1149,7 +1139,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deleteFixedCost,
       toast,
       dismissToast,
-      loadSampleData,
       clearAllData,
       exportData,
       importData,
