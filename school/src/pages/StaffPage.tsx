@@ -9,7 +9,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card"
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
-import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle, X, AlertTriangle, Banknote, Download, ArrowRightLeft } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle, X, AlertTriangle, Banknote, Download, ArrowRightLeft, MoreVertical } from "lucide-react";
 import { BulkImportModal, exportStaffToCSV } from "../components/import/BulkImportModal";
 import type { Staff as StaffType, StaffRole, SalaryPayment, ClassSubject } from "../types";
 import { STAFF_ROLES, STAFF_ROLE_FILTER_OPTIONS } from "../constants/staffRoles";
@@ -501,6 +502,9 @@ export function StaffPage() {
   const [activeSalaryTab, setActiveSalaryTab] = useState<"history" | "payment">("history");
   const [paymentMonth, setPaymentMonth] = useState<string>(() => getCurrentMonth());
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
+  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [actionMenuStaff, setActionMenuStaff] = useState<StaffType | null>(null);
+  const [actionMenuPosition, setActionMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferStep, setTransferStep] = useState<"select" | "preview">("select");
@@ -1022,7 +1026,7 @@ export function StaffPage() {
                             )}
                           </td>
                           <td className="py-3">
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 items-center">
                               <PermissionGate anyPermission={["salary:manage", "salary:record"]}>
                                 <Button
                                   type="button"
@@ -1040,29 +1044,30 @@ export function StaffPage() {
                                   <Calendar className="h-4 w-4" />
                                 </Button>
                               </PermissionGate>
-                              <PermissionGate permission="staff:edit">
+                              <div className="relative">
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => setStaffModal({ open: true, staff: s })}
-                                  title="Edit staff details"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (actionMenuOpen === s.id) {
+                                      setActionMenuOpen(null);
+                                      setActionMenuStaff(null);
+                                      setActionMenuPosition(null);
+                                    } else {
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      setActionMenuPosition({ top: rect.bottom + 4, left: rect.right - 144 });
+                                      setActionMenuOpen(s.id);
+                                      setActionMenuStaff(s);
+                                    }
+                                  }}
+                                  title="More actions"
                                 >
-                                  <Pencil className="h-4 w-4" />
+                                  <MoreVertical className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                                 </Button>
-                              </PermissionGate>
-                              <PermissionGate permission="staff:delete">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-600 hover:bg-red-50"
-                                  onClick={() => setConfirmDelete({ id: s.id, name: s.name })}
-                                  title="Delete staff member"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </PermissionGate>
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -1086,6 +1091,58 @@ export function StaffPage() {
           </CardContent>
         </Card>
       )}
+
+      {actionMenuStaff && actionMenuPosition &&
+        createPortal(
+          <>
+            <div
+              className="fixed inset-0 z-9998"
+              onClick={() => {
+                setActionMenuOpen(null);
+                setActionMenuStaff(null);
+                setActionMenuPosition(null);
+              }}
+              aria-hidden
+            />
+            <div
+              className="fixed z-9999 w-36 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg py-1"
+              style={{ top: actionMenuPosition.top, left: actionMenuPosition.left }}
+              role="menu"
+            >
+              <PermissionGate permission="staff:edit">
+                <button
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
+                  onClick={() => {
+                    setStaffModal({ open: true, staff: actionMenuStaff });
+                    setActionMenuOpen(null);
+                    setActionMenuStaff(null);
+                    setActionMenuPosition(null);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </button>
+              </PermissionGate>
+              <PermissionGate permission="staff:delete">
+                <button
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
+                  onClick={() => {
+                    setConfirmDelete({ id: actionMenuStaff.id, name: actionMenuStaff.name });
+                    setActionMenuOpen(null);
+                    setActionMenuStaff(null);
+                    setActionMenuPosition(null);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </button>
+              </PermissionGate>
+            </div>
+          </>,
+          document.body
+        )}
 
       <Modal
         open={staffModal.open}
