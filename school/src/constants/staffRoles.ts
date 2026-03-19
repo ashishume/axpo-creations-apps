@@ -23,13 +23,12 @@ export const STAFF_ROLES = [
   "Support Staff",
   "Security",
   "Cleaner",
-  "Peon",
-  "Gardener",
-  "Cook",
-  "Driver",
-  "Helper",
-
-  "Other",
+  // "Peon",
+  // "Gardener",
+  // "Cook",
+  // "Driver",
+  // "Helper",
+  // "Other",
 ] as const;
 
 export type StaffRole = (typeof STAFF_ROLES)[number];
