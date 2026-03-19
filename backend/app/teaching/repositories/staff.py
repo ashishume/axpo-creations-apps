@@ -2,7 +2,7 @@
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import select, func, or_, and_, delete
+from sqlalchemy import select, func, or_, and_, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.teaching.models.staff import Staff, SalaryPayment
@@ -69,6 +69,7 @@ class StaffRepository:
         *,
         search: str | None = None,
         role: str | None = None,
+        teaching_class: str | None = None,
     ) -> int:
         q = select(func.count()).select_from(Staff).where(Staff.session_id == session_id)
         if search:
@@ -84,6 +85,14 @@ class StaffRepository:
                 q = q.where(and_(*conditions))
         if role:
             q = q.where(Staff.role == role)
+        if teaching_class and teaching_class.strip():
+            # Staff whose classes_subjects contains an entry with this class name (class_name or className)
+            q = q.where(
+                text(
+                    "EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(staff.classes_subjects, '[]'::jsonb)) AS e "
+                    "WHERE e->>'class_name' = :tc OR e->>'className' = :tc)"
+                ).bindparams(tc=teaching_class.strip())
+            )
         result = await db.execute(q)
         return result.scalar() or 0
 
@@ -96,6 +105,7 @@ class StaffRepository:
         offset: int,
         search: str | None = None,
         role: str | None = None,
+        teaching_class: str | None = None,
     ) -> list[Staff]:
         q = select(Staff).where(Staff.session_id == session_id)
         if search:
@@ -111,6 +121,13 @@ class StaffRepository:
                 q = q.where(and_(*conditions))
         if role:
             q = q.where(Staff.role == role)
+        if teaching_class and teaching_class.strip():
+            q = q.where(
+                text(
+                    "EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(staff.classes_subjects, '[]'::jsonb)) AS e "
+                    "WHERE e->>'class_name' = :tc OR e->>'className' = :tc)"
+                ).bindparams(tc=teaching_class.strip())
+            )
         q = q.order_by(Staff.created_at.desc()).limit(limit).offset(offset)
         result = await db.execute(q)
         return list(result.scalars().all())

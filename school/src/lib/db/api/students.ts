@@ -613,6 +613,7 @@ export const enrollmentsRepositoryApi = {
     const params = new URLSearchParams();
     if (filters?.sessionId) params.set('session_id', filters.sessionId);
     if (filters?.studentId) params.set('student_id', filters.studentId);
+    if (filters?.classId) params.set('class_id', filters.classId);
     params.set('limit', String(pageSize));
     params.set('offset', String(offset));
     params.set('has_filters', String(hasFilters));

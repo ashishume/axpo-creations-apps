@@ -272,9 +272,9 @@ export const staffRepositoryApi = {
   async getPaginated(
     page: number = 1,
     pageSize: number = 10,
-    filters?: { sessionId?: string; role?: string; search?: string }
+    filters?: { sessionId?: string; role?: string; search?: string; teachingClass?: string }
   ): Promise<PaginatedResult<Staff>> {
-    const hasFilters = !!(filters?.role ?? filters?.search);
+    const hasFilters = !!(filters?.role ?? filters?.search ?? filters?.teachingClass);
     const sessionId = filters?.sessionId ?? '';
     const offset = (page - 1) * pageSize;
     const params = new URLSearchParams();
@@ -284,6 +284,7 @@ export const staffRepositoryApi = {
     params.set('has_filters', String(hasFilters));
     if (filters?.search?.trim()) params.set('search', filters.search.trim());
     if (filters?.role) params.set('role', filters.role);
+    if (filters?.teachingClass?.trim()) params.set('teaching_class', filters.teachingClass.trim());
     const res = await teachingFetchJson<PaginatedApiResponse>(`/staff?${params.toString()}`);
     const items = res?.items ?? [];
     const total = res?.total ?? 0;

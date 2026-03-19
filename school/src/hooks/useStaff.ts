@@ -174,7 +174,7 @@ export async function refetchStaffAndMergeIntoCache(queryClient: ReturnType<type
   );
 }
 
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 50;
 const FILTERED_PAGE_SIZE = 50;
 
 export function useStaff() {
@@ -196,6 +196,7 @@ interface StaffFilters {
   sessionId?: string;
   role?: string;
   search?: string;
+  teachingClass?: string;
 }
 
 export function useStaffPaginated(
@@ -209,16 +210,21 @@ export function useStaffPaginated(
   });
 }
 
-/** Infinite list for Staff list page: default 10 per page, 50 when filters applied. Search and role are sent to backend. */
+/** Cache: keep class/role-filtered results so switching filter and back uses cache. */
+const STAFF_LIST_STALE_TIME = 5 * 60 * 1000;   // 5 min – no refetch when switching back to same class
+const STAFF_LIST_GC_TIME = 15 * 60 * 1000;     // 15 min – retain cached pages in memory
+
+/** Infinite list for Staff list page: default 50 per page. Search, role and teaching class are sent to backend. */
 export function useStaffBySessionInfinite(
   sessionId: string,
-  options?: { hasFilters?: boolean; search?: string; role?: string }
+  options?: { hasFilters?: boolean; search?: string; role?: string; teachingClass?: string }
 ) {
   const pageSize = options?.hasFilters ? FILTERED_PAGE_SIZE : DEFAULT_PAGE_SIZE;
   const filters: StaffFilters = {
     sessionId,
     search: options?.search?.trim() || undefined,
     role: options?.role || undefined,
+    teachingClass: options?.teachingClass?.trim() || undefined,
   };
 
   const q = useInfiniteQuery({
@@ -229,6 +235,8 @@ export function useStaffBySessionInfinite(
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     enabled: !!sessionId,
     placeholderData: keepPreviousData,
+    staleTime: STAFF_LIST_STALE_TIME,
+    gcTime: STAFF_LIST_GC_TIME,
   });
 
   const staffList = q.data?.pages.flatMap((p) => p.data) ?? [];

@@ -1,8 +1,8 @@
 """Configurable pagination limits for list endpoints."""
 
 # Default page size when no filters applied (students, staff)
-DEFAULT_PAGE_SIZE_STUDENTS = 10
-DEFAULT_PAGE_SIZE_STAFF = 10
+DEFAULT_PAGE_SIZE_STUDENTS = 50
+DEFAULT_PAGE_SIZE_STAFF = 50
 
 # Default page size for expense/stock/leave lists (initial load)
 DEFAULT_PAGE_SIZE_EXPENSES = 50

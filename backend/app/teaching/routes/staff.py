@@ -68,9 +68,11 @@ async def list_staff(
     has_filters: bool = False,
     search: str | None = None,
     role: str | None = None,
+    teaching_class: str | None = None,
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
+    """List staff. When session_id is set, teaching_class filters by staff who teach that class (class name)."""
     page_size = min(limit or (FILTERED_PAGE_SIZE if has_filters else DEFAULT_PAGE_SIZE_STAFF), MAX_PAGE_SIZE)
     if session_id:
         await enforce_session_access(db, user, session_id)
@@ -81,6 +83,7 @@ async def list_staff(
             offset=offset,
             search=search.strip() if search else None,
             role=role or None,
+            teaching_class=teaching_class.strip() if teaching_class else None,
         )
     elif user.organization_id:
         items, total = await staff_service.list_by_organization_paginated(

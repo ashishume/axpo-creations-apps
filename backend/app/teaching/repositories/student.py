@@ -154,7 +154,15 @@ class EnrollmentRepository:
         session_id: UUID,
         *,
         search: str | None = None,
+        class_id: UUID | None = None,
     ) -> int:
+        base = (
+            select(func.count())
+            .select_from(StudentEnrollment)
+            .where(StudentEnrollment.session_id == session_id)
+        )
+        if class_id is not None:
+            base = base.where(StudentEnrollment.class_id == class_id)
         if search and _search_words(search):
             q = (
                 select(func.count())
@@ -162,6 +170,8 @@ class EnrollmentRepository:
                 .join(Student, StudentEnrollment.student_id == Student.id)
                 .where(StudentEnrollment.session_id == session_id)
             )
+            if class_id is not None:
+                q = q.where(StudentEnrollment.class_id == class_id)
             words = _search_words(search)
             conditions = [
                 or_(
@@ -173,11 +183,7 @@ class EnrollmentRepository:
             q = q.where(and_(*conditions))
             result = await db.execute(q)
             return result.scalar() or 0
-        result = await db.execute(
-            select(func.count())
-            .select_from(StudentEnrollment)
-            .where(StudentEnrollment.session_id == session_id)
-        )
+        result = await db.execute(base)
         return result.scalar() or 0
 
     async def list_by_session_paginated(
@@ -188,6 +194,7 @@ class EnrollmentRepository:
         limit: int,
         offset: int,
         search: str | None = None,
+        class_id: UUID | None = None,
     ) -> list[StudentEnrollment]:
         words = _search_words(search) if search else []
         if words:
@@ -196,6 +203,8 @@ class EnrollmentRepository:
                 .join(Student, StudentEnrollment.student_id == Student.id)
                 .where(StudentEnrollment.session_id == session_id)
             )
+            if class_id is not None:
+                q = q.where(StudentEnrollment.class_id == class_id)
             conditions = [
                 or_(
                     Student.name.ilike(f"%{_escape_like(w)}%"),
@@ -206,6 +215,8 @@ class EnrollmentRepository:
             q = q.where(and_(*conditions))
         else:
             q = select(StudentEnrollment).where(StudentEnrollment.session_id == session_id)
+            if class_id is not None:
+                q = q.where(StudentEnrollment.class_id == class_id)
         q = q.order_by(StudentEnrollment.created_at.desc()).limit(limit).offset(offset).options(
             selectinload(StudentEnrollment.student),
             selectinload(StudentEnrollment.payments),

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../context/AppContext";
 import { useStaffBySessionInfinite, useStaffBySession, useCreateStaff, useCreateStaffBulk, useUpdateStaff, useDeleteStaff, useDeleteAllStaffBySession, useAddSalaryPayment, useTransferStaffToSession, useLeaveSummary } from "../hooks/useStaff";
@@ -508,9 +509,10 @@ export function StaffPage() {
   const [transferSubmitting, setTransferSubmitting] = useState(false);
   const [confirmDeleteAllStaff, setConfirmDeleteAllStaff] = useState(false);
   const [isStaffSubmitting, setIsStaffSubmitting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const classFilter = searchParams.get("class") ?? "";
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
-  const [classFilter, setClassFilter] = useState<string>("");
   const [subjectFilter, setSubjectFilter] = useState<string>("");
 
   // Staff form state for classes & subjects
@@ -530,6 +532,7 @@ export function StaffPage() {
     hasFilters,
     search: debouncedSearch || undefined,
     role: roleFilter || undefined,
+    teachingClass: classFilter || undefined,
   });
 
   const staff = staffList;
@@ -563,21 +566,16 @@ export function StaffPage() {
     };
   }, [list]);
 
-  // Search and role are applied on backend; only class and subject filters on client
+  // Search, role and class filter are applied via API; only subject filter on client
   const filteredList = useMemo(() => {
     let out = list;
-    if (classFilter) {
-      out = out.filter((s) =>
-        s.classesSubjects?.some((cs) => cs.className === classFilter)
-      );
-    }
     if (subjectFilter) {
       out = out.filter((s) =>
         s.classesSubjects?.some((cs) => cs.subjects?.includes(subjectFilter))
       );
     }
     return out;
-  }, [list, classFilter, subjectFilter]);
+  }, [list, subjectFilter]);
 
   // Reset classes/subjects form state when opening modal
   useEffect(() => {
@@ -884,7 +882,15 @@ export function StaffPage() {
                   {uniqueClasses.length > 0 && (
                     <Select
                       value={classFilter}
-                      onChange={(e) => setClassFilter(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setSearchParams((prev) => {
+                          const next = new URLSearchParams(prev);
+                          if (v) next.set("class", v);
+                          else next.delete("class");
+                          return next;
+                        }, { replace: true });
+                      }}
                       className="w-36"
                     >
                       <option value="">All Classes</option>

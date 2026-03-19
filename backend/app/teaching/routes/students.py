@@ -192,6 +192,7 @@ async def create_enrollments_bulk(
 async def list_enrollments(
     session_id: UUID | None = None,
     student_id: UUID | None = None,
+    class_id: UUID | None = None,
     limit: int | None = None,
     offset: int = 0,
     has_filters: bool = False,
@@ -199,7 +200,7 @@ async def list_enrollments(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
-    """List enrollments filtered by session or student."""
+    """List enrollments filtered by session or student. When session_id is set, class_id filters by enrollment class."""
     page_size = min(limit or (FILTERED_PAGE_SIZE if has_filters else DEFAULT_PAGE_SIZE_STUDENTS), MAX_PAGE_SIZE)
     
     if session_id:
@@ -210,6 +211,7 @@ async def list_enrollments(
             limit=page_size,
             offset=offset,
             search=search.strip() if search else None,
+            class_id=class_id,
         )
     elif student_id:
         student = await student_service.get_or_404(db, student_id)

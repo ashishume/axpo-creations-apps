@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
 import { useStudentsBySessionInfinite, useStudentsBySession, useCreateStudent, useCreateStudentsBulk, useUpdateStudent, useDeleteStudent, useDeleteAllStudentsBySession, useAddStudentPayment, useTransferStudentsToSession } from "../hooks/useStudents";
@@ -140,9 +141,9 @@ export function StudentsPage() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [classesModalOpen, setClassesModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<StudentClass | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [classFilter, setClassFilter] = useState<string>("");
   const [feeTypeFilter, setFeeTypeFilter] = useState<string>("");
   const [detailsStudent, setDetailsStudent] = useState<{ student: SessionStudent; initialTab?: "overview" | "fees" | "personal" | "payments" | "feeHistory" } | null>(null);
   const [receiptData, setReceiptData] = useState<{
@@ -165,6 +166,11 @@ export function StudentsPage() {
   const [isClassSubmitting, setIsClassSubmitting] = useState(false);
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
 
+  const { data: sessionClasses = [], isLoading: classesLoading } = useClassesBySession(selectedSessionId ?? "");
+  // Class filter from URL; only use if it exists in current session's classes
+  const classFilterFromUrl = searchParams.get("class") ?? "";
+  const classFilter = sessionClasses.some((c) => c.id === classFilterFromUrl) ? classFilterFromUrl : "";
+
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 300);
   const hasFilters = !!(statusFilter || classFilter || feeTypeFilter || debouncedSearch);
   const {
@@ -177,10 +183,21 @@ export function StudentsPage() {
   } = useStudentsBySessionInfinite(selectedSessionId ?? "", {
     hasFilters,
     search: debouncedSearch || undefined,
+    classId: classFilter || undefined,
   });
   const { data: allSessionStudents = [], isLoading: allStudentsLoading } = useStudentsBySession(selectedSessionId ?? "");
-  const { data: sessionClasses = [], isLoading: classesLoading } = useClassesBySession(selectedSessionId ?? "");
   const isInitialLoading = (studentsLoading && students.length === 0) || classesLoading;
+
+  // Clear stale class param when session changes and the class is not in current session
+  useEffect(() => {
+    if (!classFilter && classFilterFromUrl && sessionClasses.length > 0) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("class");
+        return next;
+      }, { replace: true });
+    }
+  }, [classFilter, classFilterFromUrl, sessionClasses.length, setSearchParams]);
 
   const list = students;
 
@@ -219,20 +236,17 @@ export function StudentsPage() {
     };
   }, [actionMenuStudent]);
 
-  // Search is applied on backend; status, class, feeType filters on client
+  // Class filter and search are applied via API; status and feeType filters on client
   const filteredList = useMemo(() => {
     let out = list;
     if (statusFilter) {
       out = out.filter((s) => getPaymentStatus(s) === statusFilter);
     }
-    if (classFilter) {
-      out = out.filter((s) => s.classId === classFilter);
-    }
     if (feeTypeFilter) {
       out = out.filter((s) => s.feeType === feeTypeFilter);
     }
     return out;
-  }, [list, statusFilter, classFilter, feeTypeFilter]);
+  }, [list, statusFilter, feeTypeFilter]);
 
   const handleClassSelectChange = (classId: string) => {
     if (!classId || !studentFormRef.current) return;
@@ -618,7 +632,15 @@ export function StudentsPage() {
                   <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Class:</span>
                   <Select
                     value={classFilter}
-                    onChange={(e) => setClassFilter(e.target.value)}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setSearchParams((prev) => {
+                        const next = new URLSearchParams(prev);
+                        if (v) next.set("class", v);
+                        else next.delete("class");
+                        return next;
+                      }, { replace: true });
+                    }}
                     className="w-auto min-w-[140px]"
                   >
                     <option value="">All Classes</option>

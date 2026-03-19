@@ -231,7 +231,7 @@ function removeStudentFromSessionCache(
   );
 }
 
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 50;
 const FILTERED_PAGE_SIZE = 50;
 
 export function useStudents(options?: { enabled?: boolean }) {
@@ -267,15 +267,20 @@ export function useStudentsPaginated(
   });
 }
 
-/** Infinite list for Students list page: default 10 per page, 50 when filters applied. Search is sent to backend. */
+/** Cache: keep class-filtered (and other filter) results so switching class and back uses cache. */
+const STUDENTS_LIST_STALE_TIME = 5 * 60 * 1000;   // 5 min – no refetch when switching back to same class
+const STUDENTS_LIST_GC_TIME = 15 * 60 * 1000;     // 15 min – retain cached pages in memory
+
+/** Infinite list for Students list page: default 50 per page. Class filter and search are sent to backend. */
 export function useStudentsBySessionInfinite(
   sessionId: string,
-  options?: { hasFilters?: boolean; search?: string }
+  options?: { hasFilters?: boolean; search?: string; classId?: string }
 ) {
   const pageSize = options?.hasFilters ? FILTERED_PAGE_SIZE : DEFAULT_PAGE_SIZE;
   const filters: StudentFilters = {
     sessionId,
     search: options?.search?.trim() || undefined,
+    classId: options?.classId || undefined,
   };
 
   const q = useInfiniteQuery({
@@ -289,6 +294,8 @@ export function useStudentsBySessionInfinite(
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     enabled: !!sessionId,
     placeholderData: keepPreviousData,
+    staleTime: STUDENTS_LIST_STALE_TIME,
+    gcTime: STUDENTS_LIST_GC_TIME,
   });
 
   const students = q.data?.pages.flatMap((p) => p.data) ?? [];
