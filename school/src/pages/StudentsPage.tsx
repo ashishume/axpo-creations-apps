@@ -313,10 +313,7 @@ export function StudentsPage() {
       ? (form.elements.namedItem("hasSiblingDiscount") as HTMLInputElement)?.checked ?? false
       : undefined;
 
-    if (!selectedSessionId || !name || !admissionNumber) {
-      if (!admissionNumber) toast("Admission number is required", "error");
-      return;
-    }
+    if (!selectedSessionId || !name) return;
 
     let photoUrl: string | undefined;
     if (studentPhotoFileRef.current && isTeachingApiConfigured()) {
@@ -335,7 +332,7 @@ export function StudentsPage() {
     const studentData: Record<string, unknown> = {
       name,
       studentId: studentId || undefined,
-      admissionNumber,
+      admissionNumber: admissionNumber || undefined,
       feeType,
       classId: classId || undefined,
       registrationFees,
@@ -948,11 +945,10 @@ export function StudentsPage() {
                 />
               </FormField>
             </div>
-            <FormField label="Admission Number *" required helperText="Unique admission number for this student">
+            <FormField label="Admission Number" helperText="Optional; unique per session if provided">
               <Input
                 name="admissionNumber"
                 type="text"
-                required
                 defaultValue={studentModal.student?.admissionNumber ?? ""}
                 placeholder="e.g., ADM-2024-001"
               />

@@ -113,7 +113,7 @@ export interface Student {
   // Basic info
   name: string;
   studentId: string; // display ID
-  admissionNumber?: string; // Mandatory admission number (unique per session)
+  admissionNumber?: string; // Optional; unique per session if provided
   feeType: FeeType;
 
   // Personal details (inline for backward compatibility)

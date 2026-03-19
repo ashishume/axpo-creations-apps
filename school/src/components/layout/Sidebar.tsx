@@ -356,16 +356,18 @@ export function Sidebar({
           <Trash2 className="h-4 w-4 shrink-0" />
           Clear all data
         </Button> */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px] touch-manipulation md:min-h-0"
-          onClick={() => setTheme(isDark ? "light" : "dark")}
-          title={isDark ? "Switch to light theme" : "Switch to dark theme"}
-        >
-          {isDark ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
-          {isDark ? "Light mode" : "Dark mode"}
-        </Button>
+        {import.meta.env.DEV && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px] touch-manipulation md:min-h-0"
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+          >
+            {isDark ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
+            {isDark ? "Light mode" : "Dark mode"}
+          </Button>
+        )}
       </div>
     </aside>
   );
