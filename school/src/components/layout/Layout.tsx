@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useIsMutating } from "@tanstack/react-query";
 import { Sidebar, type PageId, PAGE_PATHS } from "./Sidebar";
@@ -69,6 +69,14 @@ export function Layout() {
   const selectedSchool = selectedSchoolId ? schools.find((s) => s.id === selectedSchoolId) : null;
   const isAppLocked = selectedSchool?.isLocked && !hasPermission("app:lock");
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  useEffect(() => {
+    const appName = "Axpo";
+    document.title = selectedSchool ? `${selectedSchool.name} - ${appName}` : `${appName}`;
+    return () => {
+      document.title = "Axpo";
+    };
+  }, [selectedSchool?.id, selectedSchool?.name]);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
   const [pendingRestoreData, setPendingRestoreData] = useState<BackupData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
