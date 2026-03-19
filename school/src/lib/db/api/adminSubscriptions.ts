@@ -69,14 +69,36 @@ export const adminSubscriptionsApi = {
     await teachingFetchJson(`/admin/subscriptions/${orgId}/unlock`, { method: "POST", body: "{}" });
   },
 
-  async grant(orgId: string, planType: string, billingInterval: string, durationDays: number): Promise<void> {
+  async grant(
+    orgId: string,
+    planType: string,
+    billingInterval: string,
+    durationDays: number,
+    periodEnd?: string | null
+  ): Promise<void> {
+    const body: Record<string, unknown> = {
+      plan_type: planType,
+      billing_interval: billingInterval,
+      duration_days: durationDays,
+    };
+    if (periodEnd) body.period_end = periodEnd;
     await teachingFetchJson(`/admin/subscriptions/${orgId}/grant`, {
       method: "POST",
-      body: JSON.stringify({
-        plan_type: planType,
-        billing_interval: billingInterval,
-        duration_days: durationDays,
-      }),
+      body: JSON.stringify(body),
+    });
+  },
+
+  async updatePeriod(
+    orgId: string,
+    params: { currentPeriodEnd?: string | null; currentPeriodStart?: string | null }
+  ): Promise<void> {
+    const body: Record<string, string> = {};
+    if (params.currentPeriodEnd != null) body.current_period_end = params.currentPeriodEnd;
+    if (params.currentPeriodStart != null) body.current_period_start = params.currentPeriodStart;
+    if (Object.keys(body).length === 0) return;
+    await teachingFetchJson(`/admin/subscriptions/${orgId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
     });
   },
 

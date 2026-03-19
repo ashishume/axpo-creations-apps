@@ -40,7 +40,7 @@ export function SubscriptionExpiredOverlay() {
               variant="primary"
               onClick={() => navigate("/subscription")}
             >
-              Renew subscription
+              Payment
             </Button>
           ) : (
             <p className="text-sm text-slate-500 dark:text-slate-400">

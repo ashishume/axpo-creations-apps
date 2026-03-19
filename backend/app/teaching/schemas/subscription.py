@@ -87,3 +87,20 @@ class GrantOrgSubscriptionRequest(BaseModel):
     plan_type: str = Field(..., description="starter | premium")
     billing_interval: str = Field(..., description="monthly | quarterly | annual")
     duration_days: int = Field(..., ge=1, le=3650, description="Days of access")
+    period_end: datetime | None = Field(
+        None,
+        description="Optional expiry date (overrides duration_days). ISO datetime.",
+    )
+
+
+class UpdateOrgSubscriptionPeriodRequest(BaseModel):
+    """Super Admin request to set org subscription period (expiry) only."""
+
+    current_period_end: datetime | None = Field(
+        None,
+        description="Last date of expiry. ISO datetime.",
+    )
+    current_period_start: datetime | None = Field(
+        None,
+        description="Optional period start. ISO datetime.",
+    )

@@ -11,6 +11,7 @@ from app.teaching.models.user import User
 from app.teaching.schemas.subscription import (
     OrgSubscriptionStatus,
     GrantOrgSubscriptionRequest,
+    UpdateOrgSubscriptionPeriodRequest,
 )
 from app.teaching.services import org_subscription as org_sub_svc
 
@@ -76,12 +77,35 @@ async def admin_grant_subscription(
     db: AsyncSession = Depends(get_teaching_db_session),
     user: User = Depends(get_current_teaching_user),
 ):
-    """Manually grant subscription to an org (no Razorpay). Super Admin only."""
+    """Manually grant subscription to an org (no Razorpay). Super Admin only. Optional period_end overrides duration_days."""
     _require_super_admin(user)
     await org_sub_svc.grant_org_subscription(
-        db, org_id, body.plan_type, body.billing_interval, body.duration_days
+        db,
+        org_id,
+        body.plan_type,
+        body.billing_interval,
+        body.duration_days,
+        period_end=body.period_end,
     )
     return {"success": True, "message": "Subscription granted"}
+
+
+@router.patch("/{org_id}")
+async def admin_update_org_subscription_period(
+    org_id: UUID,
+    body: UpdateOrgSubscriptionPeriodRequest,
+    db: AsyncSession = Depends(get_teaching_db_session),
+    user: User = Depends(get_current_teaching_user),
+):
+    """Set org subscription period (expiry date). Super Admin only."""
+    _require_super_admin(user)
+    await org_sub_svc.update_org_subscription_period(
+        db,
+        org_id,
+        current_period_end=body.current_period_end,
+        current_period_start=body.current_period_start,
+    )
+    return {"success": True, "message": "Subscription period updated"}
 
 
 @router.post("/{org_id}/revoke")

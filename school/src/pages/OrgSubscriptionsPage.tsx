@@ -11,7 +11,7 @@ import { adminSubscriptionsApi, type OrgWithSubscription } from "../lib/db/api/a
 import { SUBSCRIPTION_PLANS, BILLING_INTERVALS, type BillingInterval } from "../lib/plans";
 import { useAuth } from "../context/AuthContext";
 import { isTeachingApiConfigured } from "../lib/api/client";
-import { Lock, Unlock, Gift, RotateCcw, Building2 } from "lucide-react";
+import { Lock, Unlock, Gift, RotateCcw, Building2, Calendar } from "lucide-react";
 
 const QUERY_KEY_ADMIN_ORG_SUBS = "adminOrgSubscriptions";
 
@@ -59,6 +59,9 @@ export function OrgSubscriptionsPage() {
   const [grantPlan, setGrantPlan] = useState<string>("starter");
   const [grantInterval, setGrantInterval] = useState<BillingInterval>("monthly");
   const [grantDays, setGrantDays] = useState(30);
+  const [grantExpiryDate, setGrantExpiryDate] = useState<string>("");
+  const [expiryModal, setExpiryModal] = useState<{ org: OrgWithSubscription } | null>(null);
+  const [expiryDate, setExpiryDate] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
   const { data: list = [], isLoading, refetch } = useQuery({
@@ -94,13 +97,38 @@ export function OrgSubscriptionsPage() {
     if (!grantModal) return;
     setSubmitting(true);
     try {
+      let periodEnd: string | undefined;
+      if (grantExpiryDate.trim()) {
+        const d = new Date(grantExpiryDate.trim());
+        d.setHours(23, 59, 59, 999);
+        periodEnd = d.toISOString();
+      }
       await adminSubscriptionsApi.grant(
         grantModal.org.id,
         grantPlan,
         grantInterval,
-        grantDays
+        grantDays,
+        periodEnd
       );
       setGrantModal(null);
+      setGrantExpiryDate("");
+      await refetch();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSetExpiry = async () => {
+    if (!expiryModal || !expiryDate.trim()) return;
+    setSubmitting(true);
+    try {
+      const end = new Date(expiryDate.trim());
+      end.setHours(23, 59, 59, 999);
+      await adminSubscriptionsApi.updatePeriod(expiryModal.org.id, {
+        currentPeriodEnd: end.toISOString(),
+      });
+      setExpiryModal(null);
+      setExpiryDate("");
       await refetch();
     } finally {
       setSubmitting(false);
@@ -190,6 +218,23 @@ export function OrgSubscriptionsPage() {
                         >
                           <Gift className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setExpiryModal({ org });
+                            setExpiryDate(
+                              org.currentPeriodEnd
+                                ? org.currentPeriodEnd.slice(0, 10)
+                                : ""
+                            );
+                          }}
+                          disabled={submitting}
+                          title="Set expiry date"
+                          aria-label="Set expiry date"
+                        >
+                          <Calendar className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                        </Button>
                         {org.status !== "inactive" && (
                           <Button
                             variant="ghost"
@@ -215,7 +260,7 @@ export function OrgSubscriptionsPage() {
       {grantModal && (
         <Modal
           open={!!grantModal}
-          onClose={() => setGrantModal(null)}
+          onClose={() => { setGrantModal(null); setGrantExpiryDate(""); }}
           title="Grant subscription"
         >
           <div className="space-y-4">
@@ -255,12 +300,54 @@ export function OrgSubscriptionsPage() {
                 onChange={(e) => setGrantDays(Number(e.target.value) || 30)}
               />
             </FormField>
+            <FormField label="Expiry date (optional)" helperText="Override duration with exact last date of expiry">
+              <Input
+                type="date"
+                value={grantExpiryDate}
+                onChange={(e) => setGrantExpiryDate(e.target.value)}
+              />
+            </FormField>
             <div className="flex justify-end gap-2">
               <Button variant="secondary" onClick={() => setGrantModal(null)}>
                 Cancel
               </Button>
               <Button onClick={handleGrant} disabled={submitting}>
                 {submitting ? "Granting…" : "Grant"}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {expiryModal && (
+        <Modal
+          open={!!expiryModal}
+          onClose={() => { setExpiryModal(null); setExpiryDate(""); }}
+          title="Set expiry date"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Set last date of expiry for <strong>{expiryModal.org.name}</strong>.
+            </p>
+            <FormField label="Expiry date">
+              <Input
+                type="date"
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+              />
+            </FormField>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => { setExpiryModal(null); setExpiryDate(""); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSetExpiry}
+                disabled={submitting || !expiryDate.trim()}
+              >
+                {submitting ? "Saving…" : "Save"}
               </Button>
             </div>
           </div>

@@ -381,18 +381,73 @@ async def unlock_org(db: AsyncSession, org_id: UUID) -> bool:
     return True
 
 
+async def update_org_subscription_period(
+    db: AsyncSession,
+    org_id: UUID,
+    *,
+    current_period_end: datetime | None = None,
+    current_period_start: datetime | None = None,
+) -> bool:
+    """
+    Super Admin sets subscription period (expiry) for an org. Creates inactive row if none exists.
+    """
+    result = await db.execute(
+        select(OrgSubscription).where(OrgSubscription.organization_id == org_id)
+    )
+    row = result.scalar_one_or_none()
+    now = datetime.now(timezone.utc)
+    if not row:
+        row = OrgSubscription(
+            organization_id=org_id,
+            plan_type="starter",
+            billing_interval="monthly",
+            status="inactive",
+            is_locked=False,
+            current_period_start=current_period_start or now,
+            current_period_end=current_period_end or now,
+        )
+        db.add(row)
+    else:
+        if current_period_end is not None:
+            row.current_period_end = (
+                current_period_end if current_period_end.tzinfo else current_period_end.replace(tzinfo=timezone.utc)
+            )
+        if current_period_start is not None:
+            row.current_period_start = (
+                current_period_start
+                if current_period_start.tzinfo
+                else current_period_start.replace(tzinfo=timezone.utc)
+            )
+        row.updated_at = now
+    await db.flush()
+    logger.info(
+        "Updated subscription period for org %s: end=%s start=%s",
+        org_id,
+        row.current_period_end,
+        row.current_period_start,
+    )
+    return True
+
+
 async def grant_org_subscription(
     db: AsyncSession,
     org_id: UUID,
     plan_type: str,
     billing_interval: str,
     duration_days: int,
+    period_end: datetime | None = None,
 ) -> bool:
     """
     Super Admin manually grants subscription (no Razorpay). Creates or updates OrgSubscription.
+    If period_end is provided, use it as current_period_end; else use now + duration_days.
     """
     now = datetime.now(timezone.utc)
-    period_end = now + timedelta(days=duration_days)
+    if period_end is not None:
+        period_end_utc = (
+            period_end if period_end.tzinfo else period_end.replace(tzinfo=timezone.utc)
+        )
+    else:
+        period_end_utc = now + timedelta(days=duration_days)
     result = await db.execute(
         select(OrgSubscription).where(OrgSubscription.organization_id == org_id)
     )
@@ -405,7 +460,7 @@ async def grant_org_subscription(
         row.razorpay_subscription_id = None
         row.razorpay_payment_id = None
         row.current_period_start = now
-        row.current_period_end = period_end
+        row.current_period_end = period_end_utc
         row.updated_at = now
     else:
         row = OrgSubscription(
@@ -415,11 +470,17 @@ async def grant_org_subscription(
             status="active",
             is_locked=False,
             current_period_start=now,
-            current_period_end=period_end,
+            current_period_end=period_end_utc,
         )
         db.add(row)
     await db.flush()
-    logger.info("Granted subscription for org %s: %s/%s until %s", org_id, plan_type, billing_interval, period_end)
+    logger.info(
+        "Granted subscription for org %s: %s/%s until %s",
+        org_id,
+        plan_type,
+        billing_interval,
+        period_end_utc,
+    )
     return True
 
 
