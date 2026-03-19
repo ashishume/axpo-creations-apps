@@ -39,7 +39,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore
     }
-    return "system";
+    return "light";
   });
 
   const isDark = useMemo(() => resolveDark(theme), [theme]);
