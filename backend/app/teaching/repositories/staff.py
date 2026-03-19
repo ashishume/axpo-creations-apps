@@ -86,10 +86,13 @@ class StaffRepository:
         if role:
             q = q.where(Staff.role == role)
         if teaching_class and teaching_class.strip():
-            # Staff whose classes_subjects contains an entry with this class name (class_name or className)
+            # Staff whose classes_subjects contains an entry with this class name (class_name or className).
+            # Only expand when value is a JSON array (avoid "cannot extract elements from a scalar").
             q = q.where(
                 text(
-                    "EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(staff.classes_subjects, '[]'::jsonb)) AS e "
+                    "EXISTS (SELECT 1 FROM jsonb_array_elements("
+                    "CASE WHEN jsonb_typeof(COALESCE(staff.classes_subjects, '[]'::jsonb)) = 'array' "
+                    "THEN COALESCE(staff.classes_subjects, '[]'::jsonb) ELSE '[]'::jsonb END) AS e "
                     "WHERE e->>'class_name' = :tc OR e->>'className' = :tc)"
                 ).bindparams(tc=teaching_class.strip())
             )
@@ -124,7 +127,9 @@ class StaffRepository:
         if teaching_class and teaching_class.strip():
             q = q.where(
                 text(
-                    "EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(staff.classes_subjects, '[]'::jsonb)) AS e "
+                    "EXISTS (SELECT 1 FROM jsonb_array_elements("
+                    "CASE WHEN jsonb_typeof(COALESCE(staff.classes_subjects, '[]'::jsonb)) = 'array' "
+                    "THEN COALESCE(staff.classes_subjects, '[]'::jsonb) ELSE '[]'::jsonb END) AS e "
                     "WHERE e->>'class_name' = :tc OR e->>'className' = :tc)"
                 ).bindparams(tc=teaching_class.strip())
             )

@@ -519,7 +519,12 @@ export function StaffPage() {
   const [classesSubjects, setClassesSubjects] = useState<ClassSubject[]>([]);
 
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 300);
-  const hasFilters = !!(roleFilter || debouncedSearch || classFilter || subjectFilter);
+  // Staff API expects class name (e.g. "Nur"), not class ID; ignore URL class param if it looks like a UUID (e.g. from Students page)
+  const teachingClassFilter =
+    classFilter && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(classFilter)
+      ? classFilter
+      : undefined;
+  const hasFilters = !!(roleFilter || debouncedSearch || teachingClassFilter || subjectFilter);
   const {
     staffList,
     total: staffTotal,
@@ -532,7 +537,7 @@ export function StaffPage() {
     hasFilters,
     search: debouncedSearch || undefined,
     role: roleFilter || undefined,
-    teachingClass: classFilter || undefined,
+    teachingClass: teachingClassFilter,
   });
 
   const staff = staffList;
@@ -576,6 +581,20 @@ export function StaffPage() {
     }
     return out;
   }, [list, subjectFilter]);
+
+  // Clear URL class param when it's a UUID (from Students page); Staff filter uses class name, not ID
+  useEffect(() => {
+    if (
+      classFilter &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(classFilter)
+    ) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("class");
+        return next;
+      }, { replace: true });
+    }
+  }, [classFilter, setSearchParams]);
 
   // Reset classes/subjects form state when opening modal
   useEffect(() => {
@@ -1258,7 +1277,8 @@ export function StaffPage() {
         onImportStudents={() => { }}
         onImportStaff={async (rows) => {
           if (!selectedSessionId) return;
-          const staffToCreate = rows.map((r) => {
+          const baseId = `EMP-${Date.now()}`;
+          const staffToCreate = rows.map((r, idx) => {
             // Parse classesSubjectsRaw: "Class1:Math,Science;Class2:English" format
             let classesSubjects: ClassSubject[] | undefined;
             if (r.classesSubjectsRaw) {
@@ -1271,10 +1291,14 @@ export function StaffPage() {
               }).filter((cs) => cs.className && cs.subjects.length > 0);
             }
 
+            // DB has UNIQUE(session_id, employee_id): ensure unique employeeId per row when CSV omits it
+            const rawId = (r.employeeId ?? "").trim();
+            const employeeId = rawId ? rawId : (rows.length > 1 ? `${baseId}-${idx + 1}` : baseId);
+
             return {
               sessionId: selectedSessionId,
               name: r.name,
-              employeeId: r.employeeId ?? "",
+              employeeId,
               role: r.role,
               monthlySalary: r.monthlySalary,
               subjectOrGrade: r.subjectOrGrade,
