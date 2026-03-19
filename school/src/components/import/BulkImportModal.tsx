@@ -211,9 +211,10 @@ function validateStaffRow(
   const roleNorm = STAFF_ROLES.find((r) => r.toLowerCase() === role.toLowerCase());
   if (!roleNorm && role)
     return { valid: false, error: `Role must be one of: ${STAFF_ROLES.join(", ")}` };
-  const monthlySalary = salaryStr ? Number(salaryStr) : NaN;
-  if (!salaryStr || isNaN(monthlySalary) || monthlySalary <= 0)
-    return { valid: false, error: "Monthly salary must be a positive number" };
+  // Allow 0 or empty for initial import (salary can be set later)
+  const monthlySalary = salaryStr !== "" ? Number(salaryStr) : 0;
+  if (isNaN(monthlySalary) || monthlySalary < 0)
+    return { valid: false, error: "Monthly salary must be 0 or a positive number" };
   
   const allowedLeavesPerMonth = allowedLeavesStr ? parseInt(allowedLeavesStr, 10) : undefined;
   if (allowedLeavesStr && (isNaN(allowedLeavesPerMonth!) || allowedLeavesPerMonth! < 0 || allowedLeavesPerMonth! > 30))

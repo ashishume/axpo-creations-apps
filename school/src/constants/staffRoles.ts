@@ -7,26 +7,28 @@
  */
 
 export const STAFF_ROLES = [
-  "Admin",
+  "PRT",
+  "TGT",
+  "Mother Teacher",
+  "Martial Arts",
+  "Ground Staff",
+  "Accountant",
+  "Teacher",
   "Principal",
+  "Admin",
   "Vice Principal",
   "Head of Department",
   "Teacher In Charge",
-  "Teacher Assistant",
-  "Teacher Helper",
-  "Teacher",
   "Administrative",
-  "Accountant",
-  "Bus Driver",
   "Support Staff",
   "Security",
   "Cleaner",
-  "Messenger",
   "Peon",
   "Gardener",
   "Cook",
   "Driver",
   "Helper",
+
   "Other",
 ] as const;
 
