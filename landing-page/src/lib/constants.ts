@@ -10,6 +10,11 @@ export const APPS = {
     name: "Axpo EduFinance",
     url: "https://school.axpocreation.com/",
   },
+  tracker: {
+    name: "Axpo Tracker",
+    iosUrl: "https://apps.apple.com/in/app/axpo-expense-manager/id6759822547",
+    androidUrl: "https://play.google.com/store/apps/details?id=com.axpo.expense",
+  },
 } as const;
 
 /** Contact phone (India). Used for WhatsApp and display. */

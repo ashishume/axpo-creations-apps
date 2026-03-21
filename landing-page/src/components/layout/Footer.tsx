@@ -27,6 +27,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">{APPS.biller.name}</Link></li>
               <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">{APPS.eduFinance.name}</Link></li>
+              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">{APPS.tracker.name}</Link></li>
               <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">Custom Solutions</Link></li>
             </ul>
           </div>

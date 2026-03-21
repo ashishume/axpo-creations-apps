@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card"
 import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Skeleton, SkeletonTable } from "../components/ui/Skeleton";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { createPortal } from "react-dom";
 import { Plus, Pencil, Trash2, Upload, Calendar, Clock, CheckCircle, AlertCircle, XCircle, X, AlertTriangle, Banknote, Download, ArrowRightLeft, MoreVertical } from "lucide-react";
 import { BulkImportModal, exportStaffToCSV } from "../components/import/BulkImportModal";
@@ -536,6 +537,7 @@ export function StaffPage() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isAppLoading,
+    isFetching: isStaffListFetching,
     refetch: refetchStaffList,
   } = useStaffBySessionInfinite(selectedSessionId ?? "", {
     hasFilters,
@@ -892,12 +894,13 @@ export function StaffPage() {
                     className="max-w-xs shrink-0"
                   />
                   <Select
-                    value={roleFilter}
+                    value={roleFilter ?? ""}
                     onChange={(e) => setRoleFilter(e.target.value)}
                     className="w-40 shrink-0"
+                    aria-label="Filter by role"
                   >
                     {STAFF_ROLE_FILTER_OPTIONS.map((opt) => (
-                      <option key={opt.value || "all"} value={opt.value}>
+                      <option key={opt.value === "" ? "__all_roles__" : opt.value} value={opt.value}>
                         {opt.label}
                       </option>
                     ))}
@@ -943,8 +946,8 @@ export function StaffPage() {
               <div className="overflow-x-auto min-h-13 overflow-y-hidden rounded-md flex items-center">
                 <FilterChips
                   options={STAFF_ROLE_FILTER_OPTIONS}
-                  value={roleFilter}
-                  onChange={setRoleFilter}
+                  value={roleFilter ?? ""}
+                  onChange={(v) => setRoleFilter(v)}
                   className="flex-nowrap min-w-max"
                 />
               </div>
@@ -954,7 +957,13 @@ export function StaffPage() {
             ) : filteredList.length === 0 ? (
               <EmptyState message="No staff match your search or filter." />
             ) : (
-              <div className="overflow-x-auto">
+              <div className="relative overflow-x-auto">
+                {hasFilters && isStaffListFetching && (
+                  <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 rounded-md bg-slate-100/90 dark:bg-slate-800/90 px-2 py-1 text-xs text-slate-600 dark:text-slate-300">
+                    <LoadingSpinner size="sm" />
+                    <span>Updating…</span>
+                  </div>
+                )}
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-600 dark:text-slate-300">

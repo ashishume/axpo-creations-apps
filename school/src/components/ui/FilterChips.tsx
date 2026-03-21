@@ -12,12 +12,17 @@ interface FilterChipsProps {
   className?: string;
 }
 
+/** Stable key for options; empty string can cause React reconciliation issues. */
+function chipKey(opt: ChipOption): string {
+  return opt.value === "" ? "__all__" : opt.value;
+}
+
 export function FilterChips({ options, value, onChange, className }: FilterChipsProps) {
   return (
     <div className={cn("flex flex-wrap gap-1.5", className)} role="group" aria-label="Filter">
       {options.map((opt) => (
         <button
-          key={opt.value}
+          key={chipKey(opt)}
           type="button"
           onClick={() => onChange(opt.value)}
           className={cn(

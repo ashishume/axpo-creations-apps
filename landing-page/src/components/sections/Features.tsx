@@ -2,10 +2,24 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, School, Receipt, Sparkles } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Check, ArrowRight, School, Receipt, Sparkles, Wallet } from "lucide-react";
 import { APPS } from "@/lib/constants";
 
-const products = [
+type ProductCard = {
+  id: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  features: string[];
+  comparison: string;
+  aiBadge?: boolean;
+  learnMoreUrl?: string;
+  iosUrl?: string;
+  androidUrl?: string;
+};
+
+const products: ProductCard[] = [
   {
     id: "billing",
     title: APPS.biller.name,
@@ -36,6 +50,23 @@ const products = [
     aiBadge: true,
     learnMoreUrl: APPS.eduFinance.url,
   },
+  {
+    id: "tracker",
+    title: APPS.tracker.name,
+    description:
+      "Smart expense tracking, group splits, and lending insights—in one mobile app for Android and iOS. Personal budgets, shared bills, and optional premium Lend with AI-powered reports.",
+    icon: Wallet,
+    features: [
+      "Expense tracker: income, categories, fixed costs, investments & monthly CSV export",
+      "Expense splitter: groups, flexible splits, balances, settlements & activity logs",
+      "Premium Lend: contacts, loans, due dates, insights & regenerable AI report",
+      "Voice input, receipt scan, Google or email sign-in, light/dark theme"
+    ],
+    comparison: "Android & iOS • Supabase sync",
+    aiBadge: true,
+    iosUrl: APPS.tracker.iosUrl,
+    androidUrl: APPS.tracker.androidUrl,
+  },
 ];
 
 export function Features() {
@@ -48,11 +79,11 @@ export function Features() {
           </Badge>
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Our Core Products</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Industry-specific software with AI at the core—smarter reports, intelligent alerts, and automation that scales with you.
+            Industry-specific web apps and a native mobile suite—AI at the core for reports, splits, and insights that scale with you.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {products.map((product, index) => (
             <motion.div
               key={product.id}
@@ -88,11 +119,36 @@ export function Features() {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Button asChild className="w-full group">
-                    <a href={product.learnMoreUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center">
-                      Learn More <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </a>
-                  </Button>
+                  {product.iosUrl && product.androidUrl ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+                      <Button asChild className="w-full group">
+                        <a
+                          href={product.iosUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center"
+                        >
+                          App Store <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </a>
+                      </Button>
+                      <Button asChild variant="outline" className="w-full group">
+                        <a
+                          href={product.androidUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center"
+                        >
+                          Google Play <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </a>
+                      </Button>
+                    </div>
+                  ) : product.learnMoreUrl ? (
+                    <Button asChild className="w-full group">
+                      <a href={product.learnMoreUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center">
+                        Learn More <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </a>
+                    </Button>
+                  ) : null}
                 </CardFooter>
               </Card>
             </motion.div>
