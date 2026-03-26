@@ -25,7 +25,8 @@ function Router() {
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/copyright" component={Copyright} />
       <Route path="/delete-account" component={DeleteAccount} />
-      <Route path="/open/:type/:id" component={Open} />
+      {/* Multi-segment paths: /open/lend/contact/:id, /open/splitter/:id, etc. */}
+      <Route path="/open/*" component={Open} />
       <Route path="/open" component={Open} />
       <Route component={NotFound} />
     </Switch>
