@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { Link } from "wouter";
 import heroBg from "@/assets/hero-bg.png"; // Assuming we generated this
 import { APPS, CONTACT_WHATSAPP_URL } from "@/lib/constants";
 
@@ -42,6 +43,11 @@ export function Hero() {
               <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow">
                 Explore Our Products
                 <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+              <Button size="lg" variant="secondary" className="h-12 px-8 text-base" asChild>
+                <Link href="/expense-tracker-app">
+                  Expense Tracker App
+                </Link>
               </Button>
               <Button size="lg" variant="outline" className="h-12 px-8 text-base bg-white/50 backdrop-blur-sm" asChild>
                 <a href={CONTACT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">

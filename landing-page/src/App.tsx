@@ -13,6 +13,7 @@ import TermsOfService from "@/pages/TermsOfService";
 import Copyright from "@/pages/Copyright";
 import DeleteAccount from "@/pages/DeleteAccount";
 import Open from "@/pages/Open";
+import ExpenseTrackerApp from "@/pages/ExpenseTrackerApp";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
       {/* Multi-segment paths: /open/lend/contact/:id, /open/splitter/:id, etc. */}
       <Route path="/open/*" component={Open} />
       <Route path="/open" component={Open} />
+      <Route path="/expense-tracker-app" component={ExpenseTrackerApp} />
       <Route component={NotFound} />
     </Switch>
   );
