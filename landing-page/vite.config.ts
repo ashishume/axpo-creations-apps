@@ -13,5 +13,11 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: path.resolve(import.meta.dirname, 'index.html'),
+        axpo: path.resolve(import.meta.dirname, 'axpo.html'),
+      },
+    },
   },
 })

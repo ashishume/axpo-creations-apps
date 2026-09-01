@@ -33,6 +33,7 @@ function Router() {
       <Route path="/open/*" component={Open} />
       <Route path="/open" component={Open} />
       <Route path="/expense-tracker-app" component={ExpenseTrackerApp} />
+      <Route path="/axpo" component={DownloadApp} />
       <Route path="/download" component={DownloadApp} />
       <Route path="/viora/privacy-policy" component={VioraPrivacyPolicy} />
       <Route path="/viora/account-deletion" component={VioraAccountDeletion} />

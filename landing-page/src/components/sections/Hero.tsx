@@ -46,7 +46,7 @@ export function Hero() {
               </Button>
               <Button size="lg" variant="secondary" className="h-12 px-8 text-base" asChild>
                 <Link href="/expense-tracker-app">
-                  Expense Tracker App
+                  Explore AXPO
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="h-12 px-8 text-base bg-white/50 backdrop-blur-sm" asChild>

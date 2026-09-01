@@ -23,7 +23,7 @@ export default function PrivacyPolicy() {
           </p>
 
           <p className="leading-relaxed text-slate-600 dark:text-slate-400 mb-4">
-            Axpo Tracker (&quot;we&quot;, &quot;our&quot;, or &quot;the app&quot;)
+            AXPO (&quot;we&quot;, &quot;our&quot;, or &quot;the app&quot;)
             is an expense-tracking and bill-splitting app. This Privacy Policy
             explains what data we collect, how we use it, and your choices.
           </p>
@@ -232,7 +232,7 @@ export default function PrivacyPolicy() {
             8. Children
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            Axpo Tracker is not directed at children under 13. We do not knowingly
+            AXPO is not directed at children under 13. We do not knowingly
             collect data from children under 13. If you believe we have done so,
             please contact us so we can delete it.
           </p>
@@ -263,7 +263,7 @@ export default function PrivacyPolicy() {
             </a>
           </p>
           <p className="text-slate-600 dark:text-slate-400">
-            Subject line: Axpo Tracker – Privacy
+            Subject line: AXPO – Privacy
           </p>
         </div>
       </main>

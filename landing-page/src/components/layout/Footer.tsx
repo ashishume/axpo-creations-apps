@@ -1,4 +1,4 @@
-import { Rocket, Mail, MapPin, Phone, Linkedin, Twitter, Facebook } from "lucide-react";
+import { Rocket, Mail, MapPin, Phone, Facebook, Instagram } from "lucide-react";
 import { Link } from "wouter";
 import { APPS } from "@/lib/constants";
 
@@ -16,9 +16,24 @@ export function Footer() {
               AI-powered software for billing, inventory, and school finance—built for reliability and growth.
             </p>
             <div className="flex gap-4 pt-2">
-              <a href="#" className="hover:text-primary transition-colors"><Linkedin className="w-5 h-5" /></a>
-              <a href="#" className="hover:text-primary transition-colors"><Twitter className="w-5 h-5" /></a>
-              <a href="#" className="hover:text-primary transition-colors"><Facebook className="w-5 h-5" /></a>
+              <a
+                href="https://www.facebook.com/profile.php?id=61574354923904"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="AxpoCreation on Facebook"
+                className="hover:text-primary transition-colors"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a
+                href="https://www.instagram.com/aaxpocreation"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="AxpoCreation on Instagram"
+                className="hover:text-primary transition-colors"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
             </div>
           </div>
 

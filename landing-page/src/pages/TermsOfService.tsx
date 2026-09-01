@@ -23,17 +23,17 @@ export default function TermsOfService() {
           </p>
 
           <p className="leading-relaxed text-slate-600 dark:text-slate-400 mb-4">
-            Welcome to Axpo Tracker. By using the app, you agree to these Terms
+            Welcome to AXPO. By using the app, you agree to these Terms
             of Service (&quot;Terms&quot;). If you do not agree, please do not
             use the app. These Terms also serve as the End User License Agreement
-            (EULA) for the Axpo Tracker app.
+            (EULA) for AXPO.
           </p>
 
           <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
             1. Description of Service
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            Axpo Tracker is a mobile and web application that helps you track
+            AXPO is a mobile and web application that helps you track
             personal expenses, manage fixed costs and investments, and split bills
             with others. You may optionally record{" "}
             <strong className="dark:text-slate-300 text-slate-700">how</strong>{" "}
@@ -110,7 +110,7 @@ export default function TermsOfService() {
             4. Not Financial or Legal Advice
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            Axpo Tracker is for personal expense tracking and organization only.
+            AXPO is for personal expense tracking and organization only.
             It does not provide tax, legal, or investment advice. Figures and
             summaries in the app are for informational use only. For important
             financial or legal decisions, please consult a qualified
@@ -148,7 +148,7 @@ export default function TermsOfService() {
             7. Subscriptions and In-App Purchases
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-2">
-            Axpo Tracker may offer premium features through a paid subscription or
+            AXPO may offer premium features through a paid subscription or
             other in-app purchase. If you choose to subscribe:
           </p>
           <ul className="list-disc pl-5 space-y-2 text-slate-600 dark:text-slate-400 mb-4">
@@ -270,7 +270,7 @@ export default function TermsOfService() {
             </a>
           </p>
           <p className="text-slate-600 dark:text-slate-400">
-            Subject line: Axpo Tracker – Terms
+            Subject line: AXPO – Terms
           </p>
         </div>
       </main>

@@ -6,10 +6,10 @@ import {
   type MobilePlatform,
 } from "@/lib/mobilePlatform";
 
-const PAGE_TITLE = "Download Axpo Expense Manager";
+const PAGE_TITLE = "Download AXPO";
 const PAGE_DESCRIPTION =
-  "Download Axpo Expense Manager for iPhone, iPad, or Android.";
-const PAGE_URL = "https://www.axpocreation.com/download";
+  "Track spending, split bills, and manage lending with AXPO. Available on iOS and Android.";
+const PAGE_URL = "https://www.axpocreation.com/axpo";
 
 function destinationFor(platform: MobilePlatform): string | null {
   if (platform === "ios") return APPS.tracker.iosUrl;
@@ -72,13 +72,13 @@ export default function DownloadApp() {
 
       <section className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-center shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-10">
         <img
-          src="/expense-tracker-logo.png"
-          alt="Axpo Expense Manager"
+          src="/axpo-logo.png"
+          alt="AXPO"
           className="mx-auto mb-6 h-24 w-24 rounded-3xl border border-white/10 object-cover shadow-xl shadow-teal-500/10"
         />
 
         <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-teal-300">
-          Axpo Expense Manager
+          AXPO
         </p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           {isRedirecting ? `Opening ${storeName}` : "Get the app"}

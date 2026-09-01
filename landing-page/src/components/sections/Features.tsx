@@ -3,14 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { LucideIcon } from "lucide-react";
-import { Check, ArrowRight, School, Receipt, Sparkles, Wallet } from "lucide-react";
+import { Check, ArrowRight, School, Receipt, Sparkles } from "lucide-react";
 import { APPS } from "@/lib/constants";
 
 type ProductCard = {
   id: string;
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  logoSrc?: string;
   features: string[];
   comparison: string;
   aiBadge?: boolean;
@@ -55,7 +56,7 @@ const products: ProductCard[] = [
     title: APPS.tracker.name,
     description:
       "Smart expense tracking, group splits, and lending insights—in one mobile app for Android and iOS. Personal budgets, shared bills, and optional premium Lend with AI-powered reports.",
-    icon: Wallet,
+    logoSrc: "/axpo-logo.png",
     features: [
       "Expense tracker: income, categories, fixed costs, investments & monthly CSV export",
       "Expense splitter: groups, flexible splits, balances, settlements & activity logs",
@@ -95,7 +96,15 @@ export function Features() {
               <Card className="h-full border-border/50 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 text-primary">
-                    <product.icon className="w-6 h-6" />
+                    {product.logoSrc ? (
+                      <img
+                        src={product.logoSrc}
+                        alt={`${product.title} logo`}
+                        className="w-10 h-10 rounded-md object-cover"
+                      />
+                    ) : product.icon ? (
+                      <product.icon className="w-6 h-6" />
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2 mb-2">
                     {product.aiBadge && (

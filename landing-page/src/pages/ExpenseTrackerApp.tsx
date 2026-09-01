@@ -3,10 +3,11 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { APPS } from "@/lib/constants";
 
-const PAGE_TITLE = "Axpo Expense Tracker App | Pocket Friendly Expense Assistant";
-const PAGE_DESCRIPTION = "Pocket friendly expenses assistant or manager";
+const PAGE_TITLE = "AXPO | Smart Money, Simplified";
+const PAGE_DESCRIPTION =
+  "Track spending, split bills, and manage lending with AXPO.";
 const PAGE_URL = "https://www.axpocreation.com/expense-tracker-app";
-const LOGO_URL = "https://www.axpocreation.com/expense-tracker-logo.png";
+const LOGO_URL = "https://www.axpocreation.com/axpo-logo.png";
 
 function setMetaTag(
   key: string,
@@ -70,7 +71,7 @@ export default function ExpenseTrackerApp() {
         document.title = previousTitle;
       },
       setMetaTag("description", PAGE_DESCRIPTION),
-      setMetaTag("keywords", "expense tracker app, expense manager app, personal budget app, pocket friendly expense assistant"),
+      setMetaTag("keywords", "AXPO, personal budget app, expense tracking, bill splitting, pocket friendly expense assistant"),
       setMetaTag("robots", "index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"),
       setMetaTag("author", "AxpoCreation"),
       setMetaTag("og:title", PAGE_TITLE, "property"),
@@ -86,7 +87,7 @@ export default function ExpenseTrackerApp() {
       setJsonLd({
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        name: "Axpo Expense Tracker App",
+        name: "AXPO",
         applicationCategory: "FinanceApplication",
         operatingSystem: "Android, iOS",
         description: PAGE_DESCRIPTION,
@@ -107,14 +108,14 @@ export default function ExpenseTrackerApp() {
             <div className="grid md:grid-cols-2 gap-10 items-center">
               <div>
                 <p className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 mb-4">
-                  Expense Tracker App
+                  AXPO Mobile App
                 </p>
                 <h1 className="text-4xl md:text-5xl font-heading font-bold text-slate-900 leading-tight">
-                  Pocket friendly expenses assistant or manager
+                  Smart money, simplified
                 </h1>
                 <p className="mt-5 text-slate-600 text-lg leading-relaxed">
                   Track daily spending, organize group splits, and stay on top of personal lending in one simple app.
-                  Axpo Expense Manager is designed for everyday users who want clean records, quick entries, and
+                  AXPO is designed for everyday users who want clean records, quick entries, and
                   smarter money decisions without complex setup.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3 text-sm">
@@ -143,8 +144,8 @@ export default function ExpenseTrackerApp() {
               </div>
               <div className="flex items-center justify-center">
                 <img
-                  src="/expense-tracker-logo.png"
-                  alt="Axpo Expense Tracker app logo"
+                  src="/axpo-logo.png"
+                  alt="AXPO logo"
                   className="w-full max-w-sm rounded-3xl border border-slate-200 shadow-2xl shadow-slate-300/40"
                   loading="eager"
                 />
@@ -155,7 +156,7 @@ export default function ExpenseTrackerApp() {
         <section className="container mx-auto px-4 mt-10">
           <div className="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
             <h2 className="text-2xl md:text-3xl font-heading font-bold text-slate-900 mb-4">
-              Why users choose Axpo Expense Manager
+              Why users choose AXPO
             </h2>
             <p className="text-slate-600 leading-relaxed mb-6">
               Whether you are managing personal monthly budgets, tracking shared trips with friends, or handling

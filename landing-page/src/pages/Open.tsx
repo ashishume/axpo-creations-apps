@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const SCHEME = "axpo-expense";
 const WEB_BASE = "https://www.axpocreation.com";
-const OG_IMAGE = "https://www.axpocreation.com/logo.jpg";
+const OG_IMAGE = "https://www.axpocreation.com/axpo-logo.png";
 
 /** Path after `/open/`, same as open.html */
 function pathAfterOpen(pathname: string): string {
@@ -34,7 +34,7 @@ function contentForPath(path: string): PageContent | null {
       icon: "👥",
       title: "Split Group",
       subtitle: "Someone shared an expense group with you",
-      detail: "Tap below to view the group in Axpo Tracker",
+      detail: "Tap below to view the group in AXPO",
     };
   }
 
@@ -55,7 +55,7 @@ function contentForPath(path: string): PageContent | null {
       icon: "💰",
       title,
       subtitle,
-      detail: "Tap below to open in Axpo Tracker",
+      detail: "Tap below to open in AXPO",
     };
   }
 
@@ -100,20 +100,20 @@ export default function Open() {
 
   useEffect(() => {
     if (!validType) return;
-    const title = "Open in Axpo Tracker";
-    const description = "Tap to open in the Axpo Tracker app";
+    const title = "Open in AXPO";
+    const description = "Tap to open in AXPO";
     const prevTitle = document.title;
     document.title = title;
     const restores: Array<() => void> = [
       () => {
         document.title = prevTitle;
       },
-      setMetaTag("og:title", "Axpo Tracker"),
+      setMetaTag("og:title", "AXPO"),
       setMetaTag("og:description", description),
       setMetaTag("og:image", OG_IMAGE),
       setMetaTag("og:type", "website"),
       setMetaTag("twitter:card", "summary", false),
-      setMetaTag("twitter:title", "Axpo Tracker", false),
+      setMetaTag("twitter:title", "AXPO", false),
       setMetaTag("twitter:description", description, false),
       setMetaTag("twitter:image", OG_IMAGE, false),
     ];
@@ -189,7 +189,7 @@ export default function Open() {
         </p>
         <p className="text-[13px] text-slate-500 mb-8">
           {showFallback
-            ? "Install Axpo Tracker or open the web version"
+            ? "Install AXPO or open the web version"
             : content.detail}
         </p>
 
@@ -200,7 +200,7 @@ export default function Open() {
               style={{ animation: "open-spin 0.7s linear infinite" }}
             />
             <p className="text-sm text-slate-400 mb-6">
-              Redirecting to Axpo Tracker...
+              Redirecting to AXPO...
             </p>
           </div>
         ) : (
@@ -235,7 +235,7 @@ export default function Open() {
             className="no-underline hover:underline"
             style={{ color: "#14b8a6" }}
           >
-            Axpo Tracker
+            AXPO
           </a>
         </p>
       </div>
