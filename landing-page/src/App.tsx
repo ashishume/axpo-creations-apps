@@ -14,6 +14,7 @@ import Copyright from "@/pages/Copyright";
 import DeleteAccount from "@/pages/DeleteAccount";
 import Open from "@/pages/Open";
 import ExpenseTrackerApp from "@/pages/ExpenseTrackerApp";
+import DownloadApp from "@/pages/DownloadApp";
 import VioraPrivacyPolicy from "@/pages/VioraPrivacyPolicy";
 import VioraAccountDeletion from "@/pages/VioraAccountDeletion";
 
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/open/*" component={Open} />
       <Route path="/open" component={Open} />
       <Route path="/expense-tracker-app" component={ExpenseTrackerApp} />
+      <Route path="/download" component={DownloadApp} />
       <Route path="/viora/privacy-policy" component={VioraPrivacyPolicy} />
       <Route path="/viora/account-deletion" component={VioraAccountDeletion} />
       <Route component={NotFound} />
