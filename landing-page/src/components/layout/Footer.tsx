@@ -13,7 +13,7 @@ export function Footer() {
               Axpo<span className="text-slate-100">Creation</span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
-              AI-powered software for billing, inventory, and school finance—built for reliability and growth.
+              Smart expense tracking, shared splits, and lending insights in one mobile app.
             </p>
             <div className="flex gap-4 pt-2">
               <a
@@ -38,12 +38,9 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="font-bold text-white mb-4">Products</h3>
+            <h3 className="font-bold text-white mb-4">AXPO</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">{APPS.biller.name}</Link></li>
-              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">{APPS.eduFinance.name}</Link></li>
-              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">{APPS.tracker.name}</Link></li>
-              <li><Link href="/products" className="hover:text-primary transition-colors cursor-pointer">Custom Solutions</Link></li>
+              <li><Link href="/expense-tracker-app" className="hover:text-primary transition-colors cursor-pointer">{APPS.tracker.name}</Link></li>
             </ul>
           </div>
 

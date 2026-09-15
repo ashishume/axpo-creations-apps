@@ -29,7 +29,7 @@ function Router() {
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/copyright" component={Copyright} />
       <Route path="/delete-account" component={DeleteAccount} />
-      {/* Multi-segment paths: /open/lend/contact/:id, /open/splitter/:id, etc. */}
+      {/* Multi-segment paths: /open/family/invite/:token, /open/lend/contact/:id, etc. */}
       <Route path="/open/*" component={Open} />
       <Route path="/open" component={Open} />
       <Route path="/expense-tracker-app" component={ExpenseTrackerApp} />

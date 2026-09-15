@@ -9,9 +9,9 @@ export default function Products() {
       <Navbar />
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4 mb-12">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-center mb-6">Our Solutions</h1>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold text-center mb-6">AXPO Expense Manager</h1>
           <p className="text-lg text-muted-foreground text-center max-w-2xl mx-auto">
-            AI-powered billing and school finance—{APPS.biller.name} and {APPS.eduFinance.name}—plus {APPS.tracker.name} for personal expenses, group splits, and lending on Android and iOS.
+            {APPS.tracker.name} brings personal expenses, group splits, and lending records together on Android and iOS.
           </p>
         </div>
         <Features />

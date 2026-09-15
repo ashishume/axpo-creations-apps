@@ -10,7 +10,7 @@ export function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Products", href: "/products" },
+    { name: "AXPO", href: "/expense-tracker-app" },
     { name: "About Us", href: "/about" },
     { name: "Contact", href: "/contact" },
   ];
@@ -39,8 +39,8 @@ export function Navbar() {
               {link.name}
             </Link>
           ))}
-          <Button size="sm" className="font-semibold shadow-lg shadow-primary/20">
-            Get Started
+          <Button size="sm" className="font-semibold shadow-lg shadow-primary/20" asChild>
+            <Link href="/axpo">Download AXPO</Link>
           </Button>
         </div>
 
@@ -69,7 +69,9 @@ export function Navbar() {
               {link.name}
             </Link>
           ))}
-          <Button className="w-full mt-2">Get Started</Button>
+          <Button className="w-full mt-2" asChild>
+            <Link href="/axpo" onClick={() => setIsOpen(false)}>Download AXPO</Link>
+          </Button>
         </div>
       )}
     </nav>

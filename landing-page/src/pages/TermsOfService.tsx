@@ -122,7 +122,7 @@ export default function TermsOfService() {
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
             Payment-method fields and saved methods are for your convenience only
-            (including defaults, filters, and future product features such as
+            (including defaults, filters, and future AXPO features such as
             reminders where we explicitly offer them). They do not create any
             obligation on us to remind you of bills or due dates unless we
             clearly provide and describe that feature; any such tools are not a

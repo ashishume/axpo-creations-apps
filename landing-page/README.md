@@ -11,6 +11,10 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173).
 
+Family invite links use `/open/family/invite/:token`. The landing route opens
+`axpo-expense://family/invite/:token` in the installed app and otherwise shows
+the invite code with a link to download AXPO.
+
 ## Build
 
 ```bash

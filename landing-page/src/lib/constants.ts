@@ -2,14 +2,6 @@
  * App names and URLs used across the landing page.
  */
 export const APPS = {
-  biller: {
-    name: "Axpo Biller",
-    url: "https://billing.axpocreation.com/",
-  },
-  eduFinance: {
-    name: "Axpo EduFinance",
-    url: "https://school.axpocreation.com/",
-  },
   tracker: {
     name: "AXPO",
     iosUrl: "https://apps.apple.com/in/app/axpo-expense-manager/id6759822547",

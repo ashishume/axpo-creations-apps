@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
 import heroBg from "@/assets/hero-bg.png"; // Assuming we generated this
-import { APPS, CONTACT_WHATSAPP_URL } from "@/lib/constants";
+import { CONTACT_WHATSAPP_URL } from "@/lib/constants";
 
 export function Hero() {
   return (
@@ -30,28 +30,30 @@ export function Hero() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6 border border-primary/20">
-              AI-Powered • Built for Growth
+              Android & iOS • Built for everyday money
             </span>
             <h1 className="text-4xl md:text-6xl font-heading font-bold tracking-tight text-foreground mb-6 leading-tight">
-              Smarter Software for <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">Billing & Education</span>
+              Smart money, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">simplified with AXPO</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              From AI-enhanced billing and inventory ({APPS.biller.name}) to intelligent school finance ({APPS.eduFinance.name}), we build the tools that scale with you.
+              Track personal expenses, manage shared bills, and keep lending records organized in one simple mobile app.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow">
-                Explore Our Products
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-              <Button size="lg" variant="secondary" className="h-12 px-8 text-base" asChild>
+              <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow" asChild>
                 <Link href="/expense-tracker-app">
                   Explore AXPO
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="secondary" className="h-12 px-8 text-base" asChild>
+                <Link href="/axpo">
+                  Download AXPO
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="h-12 px-8 text-base bg-white/50 backdrop-blur-sm" asChild>
                 <a href={CONTACT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
-                  Contact Sales
+                  Contact Us
                 </a>
               </Button>
             </div>
@@ -65,15 +67,15 @@ export function Hero() {
           >
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span>AI-Powered Insights</span>
+              <span>Expense Insights</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span>Enterprise Ready</span>
+              <span>Shared Splits</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span>Secure & Scalable</span>
+              <span>Lending Records</span>
             </div>
           </motion.div>
         </div>
