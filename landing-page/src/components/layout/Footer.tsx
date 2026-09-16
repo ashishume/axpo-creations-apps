@@ -71,6 +71,8 @@ export function Footer() {
             <h3 className="font-bold text-white mb-4">AXPO</h3>
             <ul className="space-y-2 text-sm">
               <li><Link href="/expense-tracker-app" className="hover:text-primary transition-colors cursor-pointer">{APPS.tracker.name}</Link></li>
+              <li><a href="/figureout" className="hover:text-primary transition-colors">Figureout — The game night</a></li>
+              <li><a href="/figureout/support" className="hover:text-primary transition-colors">Figureout support & legal</a></li>
             </ul>
           </motion.div>
 

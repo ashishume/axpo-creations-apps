@@ -4,3 +4,5 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+# Generated from legal/figureout.mjs by predev/prebuild.
+public/figureout/
