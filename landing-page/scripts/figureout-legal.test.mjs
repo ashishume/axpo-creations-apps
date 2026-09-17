@@ -18,7 +18,13 @@ test('six distinct Figureout pages have text, public contact and canonical HTTPS
 test('legal content is escaped, with no expense/health-app policy contamination', () => {
   assert.equal(escapeHTML('<script>&"'), '&lt;script&gt;&amp;&quot;');
   const policy = render(pages.find(p => p.slug === 'privacy-policy'));
-  for (const word of ['Supabase', 'AdMob', 'HealthKit', 'OpenRouter']) assert.ok(!policy.includes(word));
+  for (const word of ['Supabase', 'HealthKit', 'OpenRouter']) assert.ok(!policy.includes(word));
+  assert.ok(policy.includes('AdMob')); assert.ok(policy.includes('365 days'));
+  assert.ok(!policy.includes('No ads, tracking')); assert.ok(policy.includes('anonymous scores'));
+});
+test('developer website authorizes the supplied AdMob publisher', async () => {
+  const text = await readFile(new URL('../public/app-ads.txt', import.meta.url), 'utf8');
+  assert.ok(text.includes('google.com, pub-3743383597691737, DIRECT, f08c47fec0942fa0'));
 });
 test('deployment rewrites serve generated HTML before the SPA fallback', async () => {
   const config = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
