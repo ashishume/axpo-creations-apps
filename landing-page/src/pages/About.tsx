@@ -16,7 +16,7 @@ export default function About() {
           >
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6">About AxpoCreation</h1>
             <p className="text-lg text-muted-foreground">
-              We are a team of passionate developers and strategists dedicated to simplifying complex business processes through intuitive software.
+              We are the team behind AXPO, focused on making everyday money management clear, fast, and accessible.
             </p>
           </motion.div>
 
@@ -25,11 +25,11 @@ export default function About() {
              <div>
                <h2 className="text-3xl font-bold mb-4">Our Mission</h2>
                <p className="text-muted-foreground leading-relaxed mb-6">
-                 At AxpoCreation, our mission is to empower small to medium-sized enterprises and educational institutions with technology that was once only accessible to large corporations. We believe in democratizing access to efficient, automated, and data-driven management tools.
+                 Our mission is to help individuals and families understand spending, organize shared expenses, and manage lending records without unnecessary complexity.
                </p>
                <h2 className="text-3xl font-bold mb-4">Our Vision</h2>
                <p className="text-muted-foreground leading-relaxed">
-                 To become the most trusted partner for digital transformation in the education and retail sectors across the region.
+                 To make AXPO a trusted everyday companion for personal and shared financial organization.
                </p>
              </div>
           </div>

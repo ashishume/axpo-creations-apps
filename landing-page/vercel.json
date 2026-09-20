@@ -24,6 +24,38 @@
       "destination": "/mindstrike/support.html"
     },
     {
+      "source": "/figureout",
+      "destination": "/figureout/index.html"
+    },
+    {
+      "source": "/figureout/privacy-policy",
+      "destination": "/figureout/privacy-policy/index.html"
+    },
+    {
+      "source": "/figureout/terms-of-service",
+      "destination": "/figureout/terms-of-service/index.html"
+    },
+    {
+      "source": "/figureout/support",
+      "destination": "/figureout/support/index.html"
+    },
+    {
+      "source": "/figureout/community-guidelines",
+      "destination": "/figureout/community-guidelines/index.html"
+    },
+    {
+      "source": "/figureout/account-deletion",
+      "destination": "/figureout/account-deletion/index.html"
+    },
+    {
+      "source": "/axpo",
+      "destination": "/axpo.html"
+    },
+    {
+      "source": "/download",
+      "destination": "/axpo.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

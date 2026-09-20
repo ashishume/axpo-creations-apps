@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const SCHEME = "axpo-expense";
 const WEB_BASE = "https://www.axpocreation.com";
-const OG_IMAGE = "https://www.axpocreation.com/logo.jpg";
+const OG_IMAGE = "https://www.axpocreation.com/axpo-logo.png";
 
 /** Path after `/open/`, same as open.html */
 function pathAfterOpen(pathname: string): string {
@@ -22,6 +22,10 @@ type PageContent = {
   title: string;
   subtitle: string;
   detail: string;
+  fallbackHref: string;
+  fallbackLabel: string;
+  fallbackDetail: string;
+  inviteCode?: string;
 };
 
 function contentForPath(path: string): PageContent | null {
@@ -34,7 +38,29 @@ function contentForPath(path: string): PageContent | null {
       icon: "👥",
       title: "Split Group",
       subtitle: "Someone shared an expense group with you",
-      detail: "Tap below to view the group in Axpo Tracker",
+      detail: "Tap below to view the group in AXPO",
+      fallbackHref: `${WEB_BASE}/`,
+      fallbackLabel: "Open Web Version",
+      fallbackDetail: "Install AXPO or open the web version",
+    };
+  }
+
+  if (type === "family" && second === "invite" && segments[2]) {
+    const rawToken = segments[2].trim();
+    const inviteCode = /^[a-z0-9]{8}$/i.test(rawToken)
+      ? rawToken.toUpperCase()
+      : rawToken;
+
+    return {
+      icon: "🏠",
+      title: "Family Invite",
+      subtitle: "Someone invited you to a shared family expense ledger",
+      detail: "Tap below to join the family in AXPO",
+      fallbackHref: `${WEB_BASE}/axpo`,
+      fallbackLabel: "Download AXPO",
+      fallbackDetail:
+        "Install AXPO, then reopen this link or enter the invite code",
+      inviteCode,
     };
   }
 
@@ -55,7 +81,10 @@ function contentForPath(path: string): PageContent | null {
       icon: "💰",
       title,
       subtitle,
-      detail: "Tap below to open in Axpo Tracker",
+      detail: "Tap below to open in AXPO",
+      fallbackHref: `${WEB_BASE}/`,
+      fallbackLabel: "Open Web Version",
+      fallbackDetail: "Install AXPO or open the web version",
     };
   }
 
@@ -100,25 +129,25 @@ export default function Open() {
 
   useEffect(() => {
     if (!validType) return;
-    const title = "Open in Axpo Tracker";
-    const description = "Tap to open in the Axpo Tracker app";
+    const title = content?.title ?? "Open in AXPO";
+    const description = content?.subtitle ?? "Tap to open in AXPO";
     const prevTitle = document.title;
     document.title = title;
     const restores: Array<() => void> = [
       () => {
         document.title = prevTitle;
       },
-      setMetaTag("og:title", "Axpo Tracker"),
+      setMetaTag("og:title", title),
       setMetaTag("og:description", description),
       setMetaTag("og:image", OG_IMAGE),
       setMetaTag("og:type", "website"),
       setMetaTag("twitter:card", "summary", false),
-      setMetaTag("twitter:title", "Axpo Tracker", false),
+      setMetaTag("twitter:title", title, false),
       setMetaTag("twitter:description", description, false),
       setMetaTag("twitter:image", OG_IMAGE, false),
     ];
     return () => restores.forEach((r) => r());
-  }, [validType]);
+  }, [content, validType]);
 
   useEffect(() => {
     if (!validType) return;
@@ -188,10 +217,19 @@ export default function Open() {
           {showFallback ? "App not detected" : content.subtitle}
         </p>
         <p className="text-[13px] text-slate-500 mb-8">
-          {showFallback
-            ? "Install Axpo Tracker or open the web version"
-            : content.detail}
+          {showFallback ? content.fallbackDetail : content.detail}
         </p>
+
+        {content.inviteCode ? (
+          <div className="mb-6 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Invite code
+            </p>
+            <p className="break-all font-mono text-xl font-bold tracking-[0.16em] text-white">
+              {content.inviteCode}
+            </p>
+          </div>
+        ) : null}
 
         {!showFallback ? (
           <div>
@@ -200,7 +238,7 @@ export default function Open() {
               style={{ animation: "open-spin 0.7s linear infinite" }}
             />
             <p className="text-sm text-slate-400 mb-6">
-              Redirecting to Axpo Tracker...
+              Redirecting to AXPO...
             </p>
           </div>
         ) : (
@@ -216,14 +254,14 @@ export default function Open() {
               Open in App
             </a>
             <a
-              href={`${WEB_BASE}/`}
+              href={content.fallbackHref}
               className="inline-flex items-center justify-center gap-2 w-full py-4 px-6 rounded-[14px] text-[17px] font-semibold no-underline border border-white/10 active:scale-[0.97] transition-[transform,box-shadow] duration-150"
               style={{
                 background: "rgba(255, 255, 255, 0.08)",
                 color: "#cbd5e1",
               }}
             >
-              Open Web Version
+              {content.fallbackLabel}
             </a>
           </div>
         )}
@@ -235,7 +273,7 @@ export default function Open() {
             className="no-underline hover:underline"
             style={{ color: "#14b8a6" }}
           >
-            Axpo Tracker
+            AXPO
           </a>
         </p>
       </div>
