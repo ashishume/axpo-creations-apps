@@ -31,3 +31,28 @@ npm run preview
 4. Deploy.
 
 If you deploy only the `landing-page` folder as its own repo, use the repo root and leave Root Directory empty.
+
+
+## Mindstrike App Store pages
+
+Mindstrike has its own static pages, separate from Axpo Tracker's policies:
+
+- Marketing: https://www.axpocreation.com/mindstrike
+- Privacy: https://www.axpocreation.com/mindstrike/privacy
+- Terms: https://www.axpocreation.com/mindstrike/terms
+- Support: https://www.axpocreation.com/mindstrike/support
+- Deletion / privacy choices: https://www.axpocreation.com/mindstrike/delete-account
+
+Edit `public/mindstrike/*.html` and the shared `site.css`. These pages use local
+assets and system fonts; they do not load the main SPA's AdSense script, analytics,
+external fonts or optional cookies. They are readable without JavaScript.
+`vercel.json` maps the clean URLs to HTML before the SPA fallback; the Vite plugin
+mirrors those routes during development and preview. The footer uses a normal
+anchor so navigation leaves the SPA. Do not replace it with a client-side Link.
+
+Before publishing, run `npm run build`, check all five routes with `npm run preview`,
+and keep their content aligned with the shipped app. Account deletion is provided
+by the iOS app and its authenticated Supabase Edge Function, not the expense app's
+web deletion API. The MathsArena repository contains deployment instructions and
+the App Store submission checklist. Do not claim the app is ready for review until
+the deletion service and native sign-in have been exercised in production.

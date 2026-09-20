@@ -54,4 +54,9 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url><loc>https://www.axpocreation.com/mindstrike</loc><lastmod>2026-09-20</lastmod></url>
+  <url><loc>https://www.axpocreation.com/mindstrike/privacy</loc><lastmod>2026-09-20</lastmod></url>
+  <url><loc>https://www.axpocreation.com/mindstrike/terms</loc><lastmod>2026-09-20</lastmod></url>
+  <url><loc>https://www.axpocreation.com/mindstrike/delete-account</loc><lastmod>2026-09-20</lastmod></url>
+  <url><loc>https://www.axpocreation.com/mindstrike/support</loc><lastmod>2026-09-20</lastmod></url>
 </urlset>
