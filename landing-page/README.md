@@ -56,7 +56,9 @@ anchor so navigation leaves the SPA. Do not replace it with a client-side Link.
 
 Before publishing, run `npm run build`, check all five routes with `npm run preview`,
 and keep their content aligned with the shipped app. Account deletion is provided
-by the iOS app and its authenticated Supabase Edge Function, not the expense app's
-web deletion API. The MathsArena repository contains deployment instructions and
+through authenticated Supabase request/status RPCs in the iOS app. Requests store
+account details and a seven-day completion deadline for manual processing; they do
+not erase accounts immediately. This is separate from the expense app's web API. The MathsArena repository contains deployment instructions and
 the App Store submission checklist. Do not claim the app is ready for review until
-the deletion service and native sign-in have been exercised in production.
+native sign-in, actual manual deletion, Apple token revocation and completion
+confirmation have been exercised in production.
