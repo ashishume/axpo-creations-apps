@@ -15,6 +15,17 @@ Family invite links use `/open/family/invite/:token`. The landing route opens
 `axpo-expense://family/invite/:token` in the installed app and otherwise shows
 the invite code with a link to download AXPO.
 
+Splitter group invitations use `/open/splitter/invite/:token`. This page opens
+`axpo-expense://splitter/invite/:token`, preserves the case-sensitive token, and
+provides a copyable invitation link plus the `/axpo` app download route. After
+installing or signing in, return to the invitation and tap **Open in App**. The
+native iOS app also accepts pasted links in **Splitter → Join group**.
+
+The landing page does not read the database or accept invitations itself. The
+signed-in app uses the backend API, so database migrations do not require a new
+landing-page database connection. App-side Splitter link handling and retaining
+invitations through sign-in are still required for automatic joining.
+
 ## Build
 
 ```bash
