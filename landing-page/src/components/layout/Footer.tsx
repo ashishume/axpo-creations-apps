@@ -34,7 +34,7 @@ export function Footer() {
               Axpo<span className="text-slate-100">Creation</span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Smart expense tracking, shared splits, and lending insights in one mobile app.
+              Thoughtfully built mobile apps: AXPO for everyday money and Mindstrike for quick-fire maths duels.
             </p>
             <div className="flex gap-4 pt-2">
               <motion.a
@@ -68,7 +68,7 @@ export function Footer() {
             viewport={{ once: true }}
             transition={{ delay: reduceMotion ? 0 : 0.14 }}
           >
-            <h3 className="font-bold text-white mb-4">AXPO</h3>
+            <h3 className="font-bold text-white mb-4">Apps</h3>
             <ul className="space-y-2 text-sm">
               <li><Link href="/expense-tracker-app" className="hover:text-primary transition-colors cursor-pointer">{APPS.tracker.name}</Link></li>
               <li><a href="/mindstrike" className="hover:text-primary transition-colors">Mindstrike</a></li>

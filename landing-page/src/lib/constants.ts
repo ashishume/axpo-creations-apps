@@ -7,6 +7,12 @@ export const APPS = {
     iosUrl: "https://apps.apple.com/in/app/axpo-expense-manager/id6759822547",
     androidUrl: "https://play.google.com/store/apps/details?id=com.axpo.expense",
   },
+  mindstrike: {
+    name: "Mindstrike",
+    iosUrl: "https://apps.apple.com/us/app/mindstrike-arena-for-minds/id6813953183",
+    /** Static marketing page served from public/mindstrike (not an SPA route). */
+    siteUrl: "/mindstrike",
+  },
 } as const;
 
 /** Contact phone (India). Used for WhatsApp and display. */

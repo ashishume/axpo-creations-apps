@@ -12,6 +12,7 @@ export function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/" },
+    { name: "Apps", href: "/products" },
     { name: "AXPO", href: "/expense-tracker-app" },
     { name: "About Us", href: "/about" },
     { name: "Contact", href: "/contact" },
@@ -63,7 +64,7 @@ export function Navbar() {
             whileTap={reduceMotion ? undefined : { scale: 0.97 }}
           >
             <Button size="sm" className="font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/35" asChild>
-              <Link href="/axpo">Download AXPO</Link>
+              <Link href="/products">Get our apps</Link>
             </Button>
           </motion.div>
         </div>
@@ -126,7 +127,7 @@ export function Navbar() {
               transition={{ delay: reduceMotion ? 0 : 0.22 }}
             >
               <Button className="w-full mt-2" asChild>
-                <Link href="/axpo" onClick={() => setIsOpen(false)}>Download AXPO</Link>
+                <Link href="/products" onClick={() => setIsOpen(false)}>Get our apps</Link>
               </Button>
             </motion.div>
           </motion.div>
