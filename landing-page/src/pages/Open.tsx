@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { AxpoMark } from "@/components/axpo/AxpoMark";
 import { detectMobilePlatform } from "@/lib/mobilePlatform";
 
 const SCHEME = "axpo-expense";
@@ -211,19 +212,27 @@ export default function Open() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background p-5 text-foreground">
-      <section className="w-full max-w-md rounded-3xl border border-border bg-card px-6 py-8 text-center text-card-foreground shadow-xl sm:px-8">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 text-[40px]" aria-hidden="true">
+    <main className="theme-axpo theme-axpo-system relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-background p-5 text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--axpo-accent)_12%,transparent),transparent_60%)]"
+      />
+      <div className="relative mb-6 flex items-center gap-3">
+        <AxpoMark followSystem alt="" className="h-10 w-10" />
+        <span className="font-rounded text-lg font-bold">Axpo Expense</span>
+      </div>
+      <section className="relative w-full max-w-md rounded-3xl border border-border bg-card px-6 py-8 text-center text-card-foreground shadow-xl shadow-axpo-hero-start/10 sm:px-8">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-[40px]" aria-hidden="true">
           {content.icon}
         </div>
-        <h1 className="mb-2 text-2xl font-bold">{content.title}</h1>
+        <h1 className="mb-2 font-rounded text-2xl font-bold">{content.title}</h1>
         <p className="mb-3 text-base text-muted-foreground">{content.subtitle}</p>
         <p className="mb-6 text-sm text-muted-foreground">
           {showFallback ? content.fallbackDetail : content.detail}
         </p>
 
         {content.inviteCode ? (
-          <div className="mb-6 rounded-xl border border-border bg-muted px-4 py-3">
+          <div className="mb-6 rounded-2xl border border-border bg-muted px-4 py-3">
             <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Invite code
             </p>
@@ -234,7 +243,7 @@ export default function Open() {
         ) : null}
 
         {content.inviteLink ? (
-          <div className="mb-6 rounded-xl border border-border bg-muted p-4 text-left">
+          <div className="mb-6 rounded-2xl border border-border bg-muted p-4 text-left">
             <label htmlFor="invitation-link" className="mb-2 block text-sm font-semibold">
               Invitation link
             </label>
@@ -267,10 +276,10 @@ export default function Open() {
           </p>
         )}
         <div className="flex flex-col gap-3">
-          <Button asChild size="lg" className="min-h-12 rounded-xl text-base">
+          <Button asChild size="lg" className="min-h-[54px] rounded-2xl text-base">
             <a href={deepLink}>Open in App</a>
           </Button>
-          <Button asChild variant="secondary" size="lg" className="min-h-12 rounded-xl text-base">
+          <Button asChild variant="secondary" size="lg" className="min-h-[54px] rounded-2xl text-base">
             <a href={content.fallbackHref}>{content.fallbackLabel}</a>
           </Button>
         </div>

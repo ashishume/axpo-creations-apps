@@ -22,7 +22,7 @@ const products: ProductCard[] = [
     title: APPS.tracker.name,
     description:
       "Smart expense tracking, group splits, and lending insights—in one mobile app for Android and iOS. Personal budgets, shared bills, and optional premium Lend with AI-powered reports.",
-    logoSrc: "/axpo-logo.png",
+    logoSrc: "/axpo-mark.png",
     features: [
       "Expense tracker: income, categories, fixed costs, investments & monthly CSV export",
       "Expense splitter: groups, flexible splits, balances, settlements & activity logs",
@@ -82,13 +82,13 @@ export function Features() {
                 />
                 <CardHeader>
                   <motion.div
-                    className="relative w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 text-primary shadow-[0_8px_24px_hsl(var(--primary)/0.12)]"
+                    className="relative w-14 h-14 flex items-center justify-center mb-4 drop-shadow-[0_8px_18px_rgba(68,34,112,0.22)]"
                     whileHover={reduceMotion ? undefined : { rotate: -5, scale: 1.08 }}
                   >
                     <img
                       src={product.logoSrc}
                       alt={`${product.title} logo`}
-                      className="w-10 h-10 rounded-md object-cover"
+                      className="w-14 h-14 object-contain"
                     />
                   </motion.div>
                   <div className="flex flex-wrap gap-2 mb-2">

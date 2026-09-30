@@ -20,8 +20,24 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  --color-axpo-background: var(--axpo-background);
+  --color-axpo-surface: var(--axpo-surface);
+  --color-axpo-secondary-surface: var(--axpo-secondary-surface);
+  --color-axpo-accent: var(--axpo-accent);
+  --color-axpo-on-accent: var(--axpo-on-accent);
+  --color-axpo-border: var(--axpo-border);
+  --color-axpo-hero-start: var(--axpo-hero-start);
+  --color-axpo-hero-end: var(--axpo-hero-end);
+  --color-axpo-text: var(--axpo-text);
+  --color-axpo-secondary-text: var(--axpo-secondary-text);
+  --color-axpo-positive: var(--axpo-positive);
+  --color-axpo-warm: var(--axpo-warm);
+  --color-axpo-cool: var(--axpo-cool);
+  --color-axpo-rose: var(--axpo-rose);
+
   --font-sans: 'Inter', sans-serif;
   --font-heading: 'Outfit', sans-serif;
+  --font-rounded: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Outfit', sans-serif;
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -77,6 +93,87 @@
   --border: 217 32% 17%;
   --input: 217 32% 17%;
   --ring: 224 76% 48%;
+}
+
+/*
+ * AXPO app surfaces. Violet palette tokens mirror the native apps
+ * (ios-native AXDesign.swift / android-native AxpoTheme.kt).
+ * `.theme-axpo-system` additionally follows the OS dark appearance, like the apps.
+ */
+.theme-axpo {
+  --axpo-background: #F5F0FB;
+  --axpo-surface: #FFFCFF;
+  --axpo-secondary-surface: #EBE0F7;
+  --axpo-accent: #6835A8;
+  --axpo-on-accent: #FFFFFF;
+  --axpo-border: #DDD0ED;
+  --axpo-hero-start: #442270;
+  --axpo-hero-end: #7A41CD;
+  --axpo-text: #242238;
+  --axpo-secondary-text: #665D70;
+  --axpo-positive: #227659;
+  --axpo-warm: #A75121;
+  --axpo-cool: #346DB3;
+  --axpo-rose: #B04473;
+
+  --background: 267 58% 96%;
+  --foreground: 245 24% 18%;
+  --primary: 267 52% 43%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 269 59% 92%;
+  --secondary-foreground: 245 24% 18%;
+  --muted: 269 59% 92%;
+  --muted-foreground: 268 9% 40%;
+  --accent: 269 59% 92%;
+  --accent-foreground: 245 24% 18%;
+  --card: 300 100% 99%;
+  --card-foreground: 245 24% 18%;
+  --border: 267 45% 87%;
+  --input: 267 45% 87%;
+  --ring: 267 52% 43%;
+  --radius: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .theme-axpo-system {
+    --axpo-background: #15111F;
+    --axpo-surface: #211B30;
+    --axpo-secondary-surface: #302640;
+    --axpo-accent: #C6A5F2;
+    --axpo-on-accent: #29173F;
+    --axpo-border: #443452;
+    --axpo-hero-start: #331A55;
+    --axpo-hero-end: #623696;
+    --axpo-text: #F6F5FA;
+    --axpo-secondary-text: #C0BBC8;
+    --axpo-positive: #70D3AC;
+    --axpo-warm: #F2AF79;
+    --axpo-cool: #8ABBF1;
+    --axpo-rose: #F3A0BF;
+
+    --background: 257 29% 9%;
+    --foreground: 252 33% 97%;
+    --primary: 266 75% 80%;
+    --primary-foreground: 267 47% 17%;
+    --secondary: 263 25% 20%;
+    --secondary-foreground: 252 33% 97%;
+    --muted: 263 25% 20%;
+    --muted-foreground: 263 11% 76%;
+    --accent: 263 25% 20%;
+    --accent-foreground: 252 33% 97%;
+    --card: 257 28% 15%;
+    --card-foreground: 252 33% 97%;
+    --border: 272 22% 26%;
+    --input: 272 22% 26%;
+    --ring: 266 75% 80%;
+    color-scheme: dark;
+  }
+}
+
+.theme-axpo-system .axpo-mark-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  .theme-axpo-system .axpo-mark-light { display: none; }
+  .theme-axpo-system .axpo-mark-dark { display: block; }
 }
 
 @layer base {

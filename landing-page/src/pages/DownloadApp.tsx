@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, ExternalLink, Smartphone } from "lucide-react";
 import { APPS } from "@/lib/constants";
+import { AxpoMark } from "@/components/axpo/AxpoMark";
 import {
   detectMobilePlatform,
   type MobilePlatform,
@@ -67,56 +68,67 @@ export default function DownloadApp() {
   const storeName = platform === "ios" ? "App Store" : "Google Play";
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-5 py-10 text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.18),transparent_42%)]" />
+    <main className="theme-axpo theme-axpo-system relative flex min-h-screen items-center justify-center overflow-hidden bg-axpo-background px-5 py-10 text-axpo-text">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--axpo-accent)_12%,transparent),transparent_60%)]"
+      />
 
-      <section className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-center shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-10">
-        <img
-          src="/axpo-logo.png"
-          alt="AXPO"
-          className="mx-auto mb-6 h-24 w-24 rounded-3xl border border-white/10 object-cover shadow-xl shadow-teal-500/10"
-        />
+      <section className="relative w-full max-w-md text-center">
+        <div className="mb-10 flex items-center justify-center gap-3">
+          <AxpoMark followSystem alt="" className="h-11 w-11" />
+          <span className="font-rounded text-lg font-bold">Axpo Expense</span>
+        </div>
 
-        <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-teal-300">
-          AXPO
+        <p className="mb-3 font-rounded text-xs font-bold uppercase tracking-[0.2em] text-axpo-accent">
+          A little clarity. Every day.
         </p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          {isRedirecting ? `Opening ${storeName}` : "Get the app"}
+        <h1 className="font-rounded text-4xl font-bold tracking-tight sm:text-[2.6rem] sm:leading-[1.1]">
+          {isRedirecting ? (
+            <>
+              Opening <span className="block text-axpo-accent">{storeName}</span>
+            </>
+          ) : (
+            <>
+              Your money,
+              <span className="block text-axpo-accent">in a good place.</span>
+            </>
+          )}
         </h1>
-        <p className="mx-auto mt-4 max-w-md leading-relaxed text-slate-300">
+        <p className="mx-auto mt-4 max-w-sm leading-relaxed text-axpo-secondary-text">
           {isRedirecting
             ? `You’ll be redirected to ${storeName} automatically.`
-            : "Choose your device to download the app and start managing expenses, splits, and lending in one place."}
+            : "Little spends. Shared plans. Bring it all together with Axpo."}
         </p>
 
         {isRedirecting ? (
-          <div className="mt-8">
-            <div className="mx-auto mb-5 h-8 w-8 animate-spin rounded-full border-4 border-white/15 border-t-teal-400" />
+          <div className="mt-10">
+            <div className="mx-auto mb-5 h-8 w-8 animate-spin rounded-full border-4 border-axpo-secondary-surface border-t-axpo-accent" />
             <a
               href={destination}
-              className="inline-flex items-center gap-2 font-semibold text-teal-300 transition-colors hover:text-teal-200"
+              className="inline-flex min-h-11 items-center gap-2 font-semibold text-axpo-accent hover:underline"
             >
               Continue to {storeName}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </a>
           </div>
         ) : (
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+          <div className="mt-10 flex flex-col gap-3">
             <a
               href={APPS.tracker.iosUrl}
-              className="group inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-4 font-semibold text-slate-950 transition-transform hover:-translate-y-0.5"
+              className="group inline-flex min-h-[54px] items-center justify-center gap-2 rounded-2xl bg-axpo-accent px-5 font-semibold text-axpo-on-accent shadow-lg shadow-axpo-hero-start/15 transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
             >
-              App Store
+              Download on the App Store
               <ExternalLink
-                className="h-4 w-4 opacity-60 transition-transform group-hover:translate-x-0.5"
+                className="h-4 w-4 opacity-70 transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
               />
             </a>
             <a
               href={APPS.tracker.androidUrl}
-              className="group inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-white/15"
+              className="group inline-flex min-h-[54px] items-center justify-center gap-2 rounded-2xl border border-axpo-border bg-axpo-surface px-5 font-semibold text-axpo-text transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
             >
-              Google Play
+              Get it on Google Play
               <ExternalLink
                 className="h-4 w-4 opacity-60 transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
@@ -125,7 +137,7 @@ export default function DownloadApp() {
           </div>
         )}
 
-        <div className="mt-8 flex items-center justify-center gap-2 text-xs text-slate-500">
+        <div className="mt-8 flex items-center justify-center gap-2 text-xs text-axpo-secondary-text">
           <Smartphone className="h-4 w-4" aria-hidden="true" />
           Available for iOS and Android
         </div>
