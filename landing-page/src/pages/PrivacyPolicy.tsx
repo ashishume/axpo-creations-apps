@@ -91,11 +91,15 @@ export default function PrivacyPolicy() {
               <strong className="dark:text-slate-300 text-slate-700">
                 In-app purchases and subscriptions:
               </strong>{" "}
-              We do not collect or store your payment card details for store
-              purchases. Purchase and subscription status are processed by Apple
-              (on iOS), Google Play (on Android), or the relevant platform; we
-              may receive minimal information (for example, that your
-              subscription is active) to enable premium features.
+              We do not collect or store your card, UPI, or bank details for
+              purchases. Premium subscriptions are processed by Apple (on iOS),
+              Google Play (on Android), or{" "}
+              <strong className="dark:text-slate-300 text-slate-700">Razorpay</strong>
+              . When you subscribe through Razorpay, we share your name and
+              email with Razorpay to prefill checkout, and Razorpay collects
+              your payment details directly under its own privacy policy. We
+              receive only the subscription and payment status and reference
+              IDs needed to enable and manage premium features.
             </li>
             <li>
               <strong className="dark:text-slate-300 text-slate-700">
@@ -103,6 +107,48 @@ export default function PrivacyPolicy() {
               </strong>{" "}
               We use local storage (e.g. on your device) to keep you signed in and
               to cache data for offline use.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Receipt images (optional):
+              </strong>{" "}
+              When you scan a receipt, the photo or text you choose is sent to
+              our server and to an AI service provider to read the amounts,
+              items, and dates. We do not keep the images after processing. Only
+              the expenses you review and save are stored in your account.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Gmail (optional, where available):
+              </strong>{" "}
+              If you connect your Gmail account, we request read-only access and
+              look only for emails that appear to be purchase or payment
+              receipts. Relevant parts of those emails are processed by our
+              server and our AI service provider to suggest expenses for you to
+              review. We do not send email, change your mailbox, or use your
+              Gmail data for advertising. You can disconnect Gmail at any time.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Notification tokens:
+              </strong>{" "}
+              If you allow notifications, we store a push token for your device
+              along with basic device details (platform, app version, and
+              notification permission status) so we can send you account,
+              family, split, loan, and reminder notifications.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Advertising and device data:
+              </strong>{" "}
+              Free versions of the app show ads from{" "}
+              <strong className="dark:text-slate-300 text-slate-700">Google AdMob</strong>
+              . AdMob may collect device identifiers (such as your advertising
+              ID), IP address, approximate location, and app usage to show and
+              measure ads. Where required (for example in the EEA and UK), we
+              ask for your consent first. On iOS, we ask for permission before
+              ads can track you across other apps. Premium subscribers do not
+              see ads.
             </li>
             <li>
               <strong className="dark:text-slate-300 text-slate-700">
@@ -141,6 +187,14 @@ export default function PrivacyPolicy() {
               as described above.
             </li>
             <li>
+              Optional receipt scanning and Gmail import, when you choose to use
+              them, as described above.
+            </li>
+            <li>
+              From your device when you allow notifications, and from Google
+              AdMob when ads are shown.
+            </li>
+            <li>
               Optional SMS payment detection (Android app only): with your permission,
               bank and card SMS are read and processed on your device to suggest
               expenses. A suggested payment is saved to your account only after
@@ -172,6 +226,11 @@ export default function PrivacyPolicy() {
             <li>
               Keep you signed in and improve app performance (e.g. caching).
             </li>
+            <li>Read receipts and payment emails you choose to import.</li>
+            <li>Send notifications you have allowed.</li>
+            <li>
+              Show ads in the free version and manage premium subscriptions.
+            </li>
           </ul>
 
           <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
@@ -199,14 +258,52 @@ export default function PrivacyPolicy() {
               <strong className="dark:text-slate-300 text-slate-700">
                 Google
               </strong>{" "}
-              (and other providers you use) – only for sign-in (OAuth). We do
-              not control those providers&apos; own privacy practices; please
-              refer to their privacy policies.
+              (and other providers you use) – for sign-in (OAuth), and Gmail
+              access only if you connect it. We do not control those
+              providers&apos; own privacy practices; please refer to their
+              privacy policies.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                AI service provider (OpenRouter and the model providers it routes to)
+              </strong>{" "}
+              – to read receipts and payment emails you choose to import.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Firebase Cloud Messaging (Google)
+              </strong>{" "}
+              – to deliver push notifications.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Google AdMob
+              </strong>{" "}
+              – to show and measure ads in the free version.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Razorpay
+              </strong>{" "}
+              – to process premium subscription payments made through Razorpay.
             </li>
           </ul>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
             Data is transmitted over HTTPS. Supabase provides encryption in
             transit and at rest as part of their service.
+          </p>
+          <p className="text-slate-600 dark:text-slate-400 mb-4">
+            AXPO&apos;s use and transfer of information received from Google
+            APIs, including Gmail, follows the{" "}
+            <a
+              href="https://developers.google.com/terms/api-services-user-data-policy"
+              className="text-indigo-500 dark:text-indigo-400 hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Google API Services User Data Policy
+            </a>
+            , including the Limited Use requirements.
           </p>
 
           <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
@@ -218,8 +315,13 @@ export default function PrivacyPolicy() {
           </p>
           <ul className="list-disc pl-5 space-y-2 text-slate-600 dark:text-slate-400 mb-4">
             <li>
-              With service providers (e.g. Supabase) that help us run the app,
-              under strict confidentiality and data-processing terms.
+              With service providers that help us run the app (such as
+              Supabase, our AI service provider, Firebase, and Razorpay), only
+              as needed to provide the features described above.
+            </li>
+            <li>
+              With Google AdMob and its ad partners, as described above, to
+              show and measure ads in the free version.
             </li>
             <li>
               If required by law or to protect our rights, safety, or property.
@@ -253,6 +355,14 @@ export default function PrivacyPolicy() {
             <li>
               You can revoke the app&apos;s access to your Google account from
               your Google account settings.
+            </li>
+            <li>
+              You can turn off notifications in your device settings, disconnect
+              Gmail from the app or from your Google account settings, and
+              change your ad consent choices from the app&apos;s account screen
+              where available. On Android you can reset or delete your
+              advertising ID in device settings; on iOS you can turn off app
+              tracking in Settings → Privacy &amp; Security → Tracking.
             </li>
             <li>
               SMS access applies only to the Android app and is optional. You
