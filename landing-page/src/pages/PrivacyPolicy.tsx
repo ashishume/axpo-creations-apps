@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
             Privacy Policy
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
-            Last updated: March 31, 2026
+            Last updated: October 7, 2026
           </p>
 
           <p className="leading-relaxed text-slate-600 dark:text-slate-400 mb-4">
@@ -104,6 +104,27 @@ export default function PrivacyPolicy() {
               We use local storage (e.g. on your device) to keep you signed in and
               to cache data for offline use.
             </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Bank and card SMS (Android app only, optional):
+              </strong>{" "}
+              If you allow SMS access, the Android app reads payment alerts from
+              banks and card issuers on your phone to find payments you made—the
+              amount, merchant or payee, date, payment type (such as card or
+              UPI), and the last four digits of a card. This happens{" "}
+              <strong className="dark:text-slate-300 text-slate-700">
+                only on your device
+              </strong>
+              . We do{" "}
+              <strong className="dark:text-slate-300 text-slate-700">not</strong>{" "}
+              upload, store, or share your SMS messages, and we ignore personal
+              messages, one-time passwords (OTPs), and other non-payment SMS.
+              Only the payments you review and choose to add are saved to your
+              account as expenses. The app also remembers on your device which
+              detected payments you already added or dismissed. This feature is
+              available only in the Android app; the iOS app never reads or
+              accesses your SMS messages.
+            </li>
           </ul>
 
           <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
@@ -118,6 +139,12 @@ export default function PrivacyPolicy() {
               Optional CSV import: if you use the import feature, file contents
               are processed only on your device and then stored in your account
               as described above.
+            </li>
+            <li>
+              Optional SMS payment detection (Android app only): with your permission,
+              bank and card SMS are read and processed on your device to suggest
+              expenses. A suggested payment is saved to your account only after
+              you review it and tap to add it.
             </li>
           </ul>
 
@@ -134,6 +161,12 @@ export default function PrivacyPolicy() {
               Let you filter and organize spending using optional payment-method
               labels, and to apply default payment methods when you add expenses,
               based on settings you choose.
+            </li>
+            <li>
+              On Android only, suggest expenses from bank and card SMS on your device,
+              point out payments you may have already added, and show a
+              notification when a new payment SMS arrives, so you can add it
+              without typing it in.
             </li>
             <li>Keep your data in sync across devices when you are signed in.</li>
             <li>
@@ -220,6 +253,15 @@ export default function PrivacyPolicy() {
             <li>
               You can revoke the app&apos;s access to your Google account from
               your Google account settings.
+            </li>
+            <li>
+              SMS access applies only to the Android app and is optional. You
+              can decline it, or turn it off at any
+              time in Android Settings → Apps → AXPO → Permissions → SMS. You
+              can turn off payment alerts separately in the app&apos;s
+              &quot;Payments from SMS&quot; notification setting. Turning off
+              SMS access stops all SMS reading; expenses you already added stay
+              in your account until you delete them.
             </li>
             <li>
               If you are in the European Economic Area or other regions with
