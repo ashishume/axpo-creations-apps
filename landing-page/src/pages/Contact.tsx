@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
@@ -54,18 +54,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1">Email Us</h3>
-                      <p className="text-sm text-muted-foreground">ashishume@gmail.com</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                      <Phone className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Call Us</h3>
-                      <p className="text-sm text-muted-foreground">8557098095</p>
-                      <p className="text-sm text-muted-foreground">Mon-Fri from 9am to 6pm</p>
+                      <p className="text-sm text-muted-foreground">aaxpocreation@gmail.com</p>
                     </div>
                   </div>
 

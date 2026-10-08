@@ -3,7 +3,7 @@ import type { Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
-import { APPS, CONTACT_WHATSAPP_URL } from "@/lib/constants";
+import { APPS, CONTACT_EMAIL } from "@/lib/constants";
 
 const heroContainer: Variants = {
   hidden: {},
@@ -150,7 +150,7 @@ export function Hero() {
                 whileTap={reduceMotion ? undefined : { scale: 0.97 }}
               >
                 <Button size="lg" variant="outline" className="h-12 w-full border-white/20 bg-white/5 px-8 text-base text-white backdrop-blur-sm hover:bg-white/10 hover:text-white" asChild>
-                  <a href={CONTACT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                  <a href={`mailto:${CONTACT_EMAIL}`}>
                     Contact Us
                   </a>
                 </Button>

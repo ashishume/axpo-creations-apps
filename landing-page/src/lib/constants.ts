@@ -15,9 +15,8 @@ export const APPS = {
   },
 } as const;
 
-/** Contact phone (India). Used for WhatsApp and display. */
-export const CONTACT_PHONE = "8557098095";
-export const CONTACT_WHATSAPP_URL = `https://wa.me/91${CONTACT_PHONE}`;
+/** Public contact email. */
+export const CONTACT_EMAIL = "aaxpocreation@gmail.com";
 
 /** Backend API base URL for AXPO account deletion requests. Set VITE_API_URL in .env. */
 export const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "") || "";

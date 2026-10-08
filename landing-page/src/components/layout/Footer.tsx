@@ -1,4 +1,4 @@
-import { Rocket, Mail, MapPin, Phone, Facebook, Instagram } from "lucide-react";
+import { Rocket, Mail, MapPin, Facebook, Instagram } from "lucide-react";
 import { Link } from "wouter";
 import { APPS } from "@/lib/constants";
 import { motion, useReducedMotion } from "framer-motion";
@@ -109,12 +109,8 @@ export function Footer() {
                 <span>Bengaluru, Karnataka</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-primary shrink-0" />
-                <span>8557098095</span>
-              </li>
-              <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary shrink-0" />
-                <span>ashishume@gmail.com</span>
+                <span>aaxpocreation@gmail.com</span>
               </li>
             </ul>
           </motion.div>

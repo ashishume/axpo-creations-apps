@@ -408,10 +408,10 @@ export default function PrivacyPolicy() {
           <p className="text-slate-600 dark:text-slate-400 mb-1">
             Email:{" "}
             <a
-              href="mailto:ashishume@gmail.com"
+              href="mailto:aaxpocreation@gmail.com"
               className="text-indigo-500 dark:text-indigo-400 hover:underline"
             >
-              ashishume@gmail.com
+              aaxpocreation@gmail.com
             </a>
           </p>
           <p className="text-slate-600 dark:text-slate-400">
