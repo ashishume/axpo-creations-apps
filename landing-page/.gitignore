@@ -5,4 +5,5 @@ server/public
 vite.config.ts.*
 *.tar.gz
 # Generated from legal/figureout.mjs by predev/prebuild.
-public/figureout/
+public/figureout/*
+!public/figureout/app-ads.txt
