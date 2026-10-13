@@ -21,6 +21,7 @@ import AxpoFitnessPrivacyPolicy from "@/pages/axpo-fitness/AxpoFitnessPrivacyPol
 import AxpoFitnessTerms from "@/pages/axpo-fitness/AxpoFitnessTerms";
 import AxpoFitnessAccountDeletion from "@/pages/axpo-fitness/AxpoFitnessAccountDeletion";
 import AxpoFitnessSupport from "@/pages/axpo-fitness/AxpoFitnessSupport";
+import AxpoFitnessLanding from "@/pages/axpo-fitness/AxpoFitnessLanding";
 import { SiteMotion } from "@/components/motion/SiteMotion";
 
 function Router() {
@@ -45,6 +46,7 @@ function Router() {
         <Route path="/download" component={DownloadApp} />
         <Route path="/viora/privacy-policy" component={VioraPrivacyPolicy} />
         <Route path="/viora/account-deletion" component={VioraAccountDeletion} />
+        <Route path="/axpo-fitness" component={AxpoFitnessLanding} />
         {/* AxpoFitness (iOS and Android apps link to these). */}
         <Route path="/axpo-fitness/privacy-policy" component={AxpoFitnessPrivacyPolicy} />
         <Route path="/axpo-fitness/terms-of-service" component={AxpoFitnessTerms} />

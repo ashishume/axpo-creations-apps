@@ -56,6 +56,18 @@
       "destination": "/axpo.html"
     },
     {
+      "source": "/axpo-fitness",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/axpo-fitness/privacy-policy",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/axpo-fitness/terms-of-service",
+      "destination": "/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
