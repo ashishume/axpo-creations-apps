@@ -16,7 +16,7 @@ export default function About() {
           >
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6">About AxpoCreation</h1>
             <p className="text-lg text-muted-foreground">
-              We are the team behind AXPO, Axpo Fitness and Mindstrike: simple, thoughtful apps for your money, your body and your mind.
+              We are the team behind AXPO, Axpo Fitness, Mindstrike and Utsav Locator: simple, thoughtful apps for your money, your body, your mind and your festivals.
             </p>
           </motion.div>
 

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Sparkles, Brain, Dumbbell, LayoutGrid } from "lucide-react";
+import { Check, ArrowRight, Sparkles, Brain, Dumbbell, LayoutGrid, MapPin } from "lucide-react";
 import { APPS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -119,6 +119,32 @@ const products: ProductCard[] = [
       logoShadow: "drop-shadow-[0_8px_18px_rgba(21,124,112,0.28)]",
     },
   },
+  {
+    id: "utsav-locator",
+    title: APPS.utsavLocator.name,
+    tagline: "Durga Puja pandal finder",
+    description:
+      "Find Durga Puja pandals near you, see how crowded each one is right now and get directions in Google Maps. Free, no sign-up, right in your browser.",
+    logoSrc: "/utsav-locator/icon.png",
+    category: { label: "Web • Travel & Local", icon: MapPin },
+    platforms: "Web • Any device",
+    features: [
+      "Map of pandals across Kolkata, Bengaluru and beyond, searchable by name, club or theme",
+      "Live crowd heatmap: calm, moderate or busy, powered by “I’m visiting” check-ins",
+      "Favourites, “been here” list, most loved & busiest-right-now rankings",
+      "One-tap Google Maps navigation, English, বাংলা & हिंदी, installable as an app",
+    ],
+    actions: [
+      { label: "Open Utsav Locator", href: APPS.utsavLocator.siteUrl, kind: "external", className: "bg-orange-600 hover:bg-orange-700" },
+    ],
+    accent: {
+      glow: "from-orange-400/20 to-rose-300/10",
+      badge: "bg-orange-600 hover:bg-orange-600",
+      check: "text-orange-500",
+      hover: "hover:shadow-orange-500/10 hover:border-orange-500/30",
+      logoShadow: "drop-shadow-[0_8px_18px_rgba(194,65,12,0.28)]",
+    },
+  },
 ];
 
 function ActionButton({ action }: { action: ProductAction }) {
@@ -180,11 +206,11 @@ export function Features() {
           </Badge>
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Our apps</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Thoughtfully built mobile apps from AxpoCreation, from everyday money management and AI-planned workouts to quick-fire maths duels.
+            Thoughtfully built mobile apps from AxpoCreation, from everyday money management and AI-planned workouts to quick-fire maths duels and festive pandal hopping.
           </p>
         </motion.div>
 
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3 max-w-7xl mx-auto">
+        <div className="grid gap-8 md:grid-cols-2 max-w-6xl mx-auto">
           {products.map((product, index) => {
             const CategoryIcon = product.category.icon;
             return (
@@ -259,7 +285,7 @@ export function Features() {
                     <div
                       className={cn(
                         "grid grid-cols-1 gap-2 w-full",
-                        product.actions.length === 3 ? "sm:grid-cols-3 md:grid-cols-1" : "sm:grid-cols-2 md:grid-cols-1"
+                        product.actions.length === 3 ? "sm:grid-cols-3 md:grid-cols-1" : product.actions.length === 2 ? "sm:grid-cols-2 md:grid-cols-1" : ""
                       )}
                     >
                       {product.actions.map((action) => (

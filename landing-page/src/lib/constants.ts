@@ -19,6 +19,11 @@ export const APPS = {
     /** Static marketing page served from public/mindstrike (not an SPA route). */
     siteUrl: "/mindstrike",
   },
+  utsavLocator: {
+    name: "Utsav Locator",
+    /** Standalone web app (PWA) hosted on its own domain. */
+    siteUrl: "https://www.utsavlocator.com/",
+  },
 } as const;
 
 /** Public contact email. */
