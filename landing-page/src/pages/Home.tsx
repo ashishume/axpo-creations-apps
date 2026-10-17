@@ -5,6 +5,7 @@ import { Features } from "@/components/sections/Features";
 import { Founders } from "@/components/sections/Founders";
 import { MetaAdsCarousel } from "@/components/sections/MetaAdsCarousel";
 import { MindstrikeShowcase } from "@/components/sections/MindstrikeShowcase";
+import { FitnessShowcase } from "@/components/sections/FitnessShowcase";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
         <Hero />
         <Features />
         <MetaAdsCarousel />
+        <FitnessShowcase />
         <MindstrikeShowcase />
         <Founders />
       </main>

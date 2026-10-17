@@ -14,6 +14,7 @@ export function Navbar() {
     { name: "Home", href: "/" },
     { name: "Apps", href: "/products" },
     { name: "AXPO", href: "/expense-tracker-app" },
+    { name: "Fitness", href: "/axpo-fitness" },
     { name: "About Us", href: "/about" },
     { name: "Contact", href: "/contact" },
   ];

@@ -2,6 +2,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Features } from "@/components/sections/Features";
 import { MindstrikeShowcase } from "@/components/sections/MindstrikeShowcase";
+import { FitnessShowcase } from "@/components/sections/FitnessShowcase";
 
 export default function Products() {
   return (
@@ -11,10 +12,11 @@ export default function Products() {
         <div className="container mx-auto px-4 mb-12">
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-center mb-6">Our Apps</h1>
           <p className="text-lg text-muted-foreground text-center max-w-2xl mx-auto">
-            AXPO for everyday money management on Android and iOS, and Mindstrike for quick-fire maths duels on iPhone.
+            AXPO for everyday money management and Axpo Fitness for AI-planned workouts and meals on Android and iOS, and Mindstrike for quick-fire maths duels on iPhone.
           </p>
         </div>
         <Features />
+        <FitnessShowcase />
         <MindstrikeShowcase />
       </main>
       <Footer />

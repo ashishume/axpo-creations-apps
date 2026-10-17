@@ -7,6 +7,12 @@ export const APPS = {
     iosUrl: "https://apps.apple.com/in/app/axpo-expense-manager/id6759822547",
     androidUrl: "https://play.google.com/store/apps/details?id=com.axpo.expense",
   },
+  fitness: {
+    name: "Axpo Fitness",
+    iosUrl: "https://apps.apple.com/us/app/axpo-workout-meal-planner/id6822320198",
+    androidUrl: "https://play.google.com/store/apps/details?id=com.axpo.fitness",
+    siteUrl: "/axpo-fitness",
+  },
   mindstrike: {
     name: "Mindstrike",
     iosUrl: "https://apps.apple.com/us/app/mindstrike-arena-for-minds/id6813953183",

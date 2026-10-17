@@ -181,7 +181,7 @@
 .fitness-final h2 { margin-top: 17px; font-size: clamp(47px, 5vw, 65px); }
 .fitness-final h2 em { color: #c6a8ec; }
 .fitness-final-inner > p { margin-top: 15px; color: #c1bacb; font-size: 13px; }
-.fitness-final-actions { display: flex; justify-content: center; gap: 11px; margin-top: 26px; }
+.fitness-final-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 11px; margin-top: 26px; }
 .fitness-button-light { color: #2c2437; background: #cfb5ef; }
 .fitness-button-outline { color: white; border: 1px solid rgba(255,255,255,.32); background: rgba(255,255,255,.03); }
 .fitness-button-outline:hover { transform: translateY(-2px); background: rgba(255,255,255,.1); }

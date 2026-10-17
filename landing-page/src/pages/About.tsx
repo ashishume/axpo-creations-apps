@@ -16,7 +16,7 @@ export default function About() {
           >
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6">About AxpoCreation</h1>
             <p className="text-lg text-muted-foreground">
-              We are the team behind AXPO, focused on making everyday money management clear, fast, and accessible.
+              We are the team behind AXPO, Axpo Fitness and Mindstrike: simple, thoughtful apps for your money, your body and your mind.
             </p>
           </motion.div>
 
@@ -25,11 +25,11 @@ export default function About() {
              <div>
                <h2 className="text-3xl font-bold mb-4">Our Mission</h2>
                <p className="text-muted-foreground leading-relaxed mb-6">
-                 Our mission is to help individuals and families understand spending, organize shared expenses, and manage lending records without unnecessary complexity.
+                 Our mission is to make everyday life a little easier: helping people understand their spending and shared expenses, build workout and meal routines they can stick to, and keep their minds sharp, without unnecessary complexity.
                </p>
                <h2 className="text-3xl font-bold mb-4">Our Vision</h2>
                <p className="text-muted-foreground leading-relaxed">
-                 To make AXPO a trusted everyday companion for personal and shared financial organization.
+                 To build a family of trusted everyday companions for money, health and learning.
                </p>
              </div>
           </div>

@@ -16,6 +16,7 @@ import {
   Utensils,
 } from "lucide-react";
 import "./AxpoFitnessLanding.css";
+import { APPS } from "@/lib/constants";
 
 const PAGE_TITLE = "Axpo Fitness — a routine that feels like yours";
 const PAGE_DESCRIPTION =
@@ -182,7 +183,7 @@ export default function AxpoFitnessLanding() {
             <a href="#features">What’s inside</a>
             <a href="#how-it-works">How it works</a>
           </nav>
-          <a className="fitness-nav-cta" href="#get-started">Explore Axpo <ArrowUpRight size={16} /></a>
+          <a className="fitness-nav-cta" href="#get-started">Get the app <ArrowUpRight size={16} /></a>
           <a className="fitness-mobile-menu" href="#features" aria-label="Jump to app features"><ArrowDown size={20} /></a>
         </header>
 
@@ -296,7 +297,8 @@ export default function AxpoFitnessLanding() {
           <h2>Feel good about<br /><em>where you’re going.</em></h2>
           <p>Build a routine that makes a little more room for you.</p>
           <div className="fitness-final-actions">
-            <a className="fitness-button-light" href="mailto:aaxpocreation@gmail.com?subject=Axpo%20Fitness%20updates">Get in touch <ArrowUpRight size={17} /></a>
+            <a className="fitness-button-light" href={APPS.fitness.androidUrl} target="_blank" rel="noopener noreferrer">Get it on Google Play <ArrowUpRight size={17} /></a>
+            <a className="fitness-button-light" href={APPS.fitness.iosUrl} target="_blank" rel="noopener noreferrer">Download on the App Store <ArrowUpRight size={17} /></a>
             <a className="fitness-button-outline" href="/axpo-fitness/support">Visit support <ArrowRight size={16} /></a>
           </div>
           <span className="fitness-final-footnote"><CircleHelp size={14} /> General wellness guidance only. Axpo Fitness is not medical care.</span>
