@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
             Privacy Policy
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
-            Last updated: October 7, 2026
+            Last updated: October 22, 2026
           </p>
 
           <p className="leading-relaxed text-slate-600 dark:text-slate-400 mb-4">
@@ -146,9 +146,33 @@ export default function PrivacyPolicy() {
               . AdMob may collect device identifiers (such as your advertising
               ID), IP address, approximate location, and app usage to show and
               measure ads. Where required (for example in the EEA and UK), we
-              ask for your consent first. On iOS, we ask for permission before
-              ads can track you across other apps. Premium subscribers do not
-              see ads.
+              ask for your consent first. The iOS app does not track you across
+              other companies&apos; apps or websites, does not ask for tracking
+              permission, and requests only non-personalized ads. Premium
+              subscribers do not see ads.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                App install and usage measurement (iOS app):
+              </strong>{" "}
+              The iOS app uses{" "}
+              <strong className="dark:text-slate-300 text-slate-700">
+                Google Analytics for Firebase
+              </strong>{" "}
+              to record when the app is first opened and basic app events, along
+              with an app-instance ID, the identifier for vendor (IDFV), device
+              model, operating system and app version, language, and approximate
+              location (country or region, derived from your IP address). We use
+              this to count installs that come from our Google Ads campaigns and
+              to understand overall app usage. The iOS app does{" "}
+              <strong className="dark:text-slate-300 text-slate-700">not</strong>{" "}
+              access your advertising identifier (IDFA), and ad personalization
+              is turned off for this data. We never send your expenses, financial
+              data, receipts, name, or email address to Google Analytics. Apple
+              may also report anonymous, aggregated install attribution to Google
+              through its SKAdNetwork framework. On Android, Google Play reports
+              installs from our ads to Google Ads; the Android app does not
+              include Google Analytics.
             </li>
             <li>
               <strong className="dark:text-slate-300 text-slate-700">
@@ -195,6 +219,11 @@ export default function PrivacyPolicy() {
               AdMob when ads are shown.
             </li>
             <li>
+              Automatically from the iOS app through Google Analytics for
+              Firebase when you open and use it, and from Apple and Google Play
+              when an install comes from one of our ads.
+            </li>
+            <li>
               Optional SMS payment detection (Android app only): with your permission,
               bank and card SMS are read and processed on your device to suggest
               expenses. A suggested payment is saved to your account only after
@@ -230,6 +259,11 @@ export default function PrivacyPolicy() {
             <li>Send notifications you have allowed.</li>
             <li>
               Show ads in the free version and manage premium subscriptions.
+            </li>
+            <li>
+              Measure how many people install the app from our ads and
+              understand overall app usage, so we can improve the app and our
+              advertising.
             </li>
           </ul>
 
@@ -274,6 +308,12 @@ export default function PrivacyPolicy() {
                 Firebase Cloud Messaging (Google)
               </strong>{" "}
               – to deliver push notifications.
+            </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Google Analytics for Firebase and Google Ads
+              </strong>{" "}
+              – to measure app installs from our ads and app usage (iOS app).
             </li>
             <li>
               <strong className="dark:text-slate-300 text-slate-700">
@@ -324,6 +364,11 @@ export default function PrivacyPolicy() {
               show and measure ads in the free version.
             </li>
             <li>
+              With Google (Google Analytics for Firebase and Google Ads), as
+              described above, to measure app installs from our ads. This data
+              is not used to personalize ads.
+            </li>
+            <li>
               If required by law or to protect our rights, safety, or property.
             </li>
             <li>
@@ -343,6 +388,12 @@ export default function PrivacyPolicy() {
             within a reasonable period, except where we must keep it for legal
             reasons.
           </p>
+          <p className="text-slate-600 dark:text-slate-400 mb-4">
+            App install and usage measurement data collected by Google Analytics
+            for Firebase is not linked to your AXPO account and is kept only for
+            the limited retention period set in our Google Analytics settings,
+            after which Google deletes it.
+          </p>
 
           <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
             7. Your Rights and Choices
@@ -361,8 +412,10 @@ export default function PrivacyPolicy() {
               Gmail from the app or from your Google account settings, and
               change your ad consent choices from the app&apos;s account screen
               where available. On Android you can reset or delete your
-              advertising ID in device settings; on iOS you can turn off app
-              tracking in Settings → Privacy &amp; Security → Tracking.
+              advertising ID in device settings. The iOS app does not use your
+              advertising identifier. Deleting the iOS app resets the
+              app-instance ID used for install and usage measurement, and you can
+              contact us to ask us to delete measurement data linked to it.
             </li>
             <li>
               SMS access applies only to the Android app and is optional. You
