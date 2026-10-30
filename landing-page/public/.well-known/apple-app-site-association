@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["83FYPW267R.com.axpo.fitness"],
+        "components": [
+          { "/": "/axpo-fitness/exercise/*", "comment": "Shared exercise videos open in Axpo Fitness" }
+        ]
+      }
+    ]
+  }
+}

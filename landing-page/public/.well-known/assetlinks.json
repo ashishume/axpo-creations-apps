@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.axpo.fitness",
+      "sha256_cert_fingerprints": [
+        "2F:36:7A:69:08:FD:2B:D1:46:B1:98:B1:ED:D2:EA:DB:D5:9C:9D:0C:6C:1C:F0:EA:8B:F5:CE:B5:7F:FC:AA:DC"
+      ]
+    }
+  }
+]
