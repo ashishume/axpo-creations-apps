@@ -37,6 +37,16 @@ const heroApps = [
     ring: "hover:border-violet-300/40",
   },
   {
+    id: "fitness",
+    name: APPS.fitness.name,
+    tagline: "AI workouts & meal plans",
+    platforms: "Android & iOS",
+    iconSrc: "/axpo-fitness-icon.png",
+    screenSrc: "/assets/hero/axpo-fitness-today.jpg",
+    screenAlt: "Axpo Fitness Today screen with the day's workout, weekly progress and meal targets",
+    ring: "hover:border-emerald-300/40",
+  },
+  {
     id: "mindstrike",
     name: APPS.mindstrike.name,
     tagline: "90-second maths duels",
@@ -64,7 +74,7 @@ function PhoneFrame({ src, alt, className }: { src: string; alt: string; classNa
 
 export function Hero() {
   const reduceMotion = useReducedMotion();
-  const [axpo, mindstrike] = heroApps;
+  const [axpo, fitness, mindstrike] = heroApps;
 
   return (
     <section className="relative overflow-hidden bg-slate-950 pb-20 pt-28 text-white lg:pb-24 lg:pt-32">
@@ -124,11 +134,11 @@ export function Hero() {
               AxpoCreation • Apps for iPhone & Android
             </motion.span>
             <motion.h1 variants={heroItem} className="mb-6 text-4xl font-bold leading-tight tracking-tight text-white md:text-6xl">
-              Apps for your money{" "}
-              <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-teal-300 bg-clip-text text-transparent">and your mind</span>
+              Apps for your money,{" "}
+              <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-teal-300 bg-clip-text text-transparent">body and mind</span>
             </motion.h1>
             <motion.p variants={heroItem} className="mx-auto mb-8 max-w-xl text-lg leading-relaxed text-slate-300 md:text-xl lg:mx-0">
-              AXPO keeps expenses, shared bills and lending records organised. Mindstrike turns quick maths into 90-second duels. Simple, thoughtful apps for every day.
+              AXPO keeps expenses, shared bills and lending records organised. Axpo Fitness plans your workouts and meals with AI. Mindstrike turns quick maths into 90-second duels. Simple, thoughtful apps for every day.
             </motion.p>
 
             <motion.div variants={heroItem} className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
@@ -158,13 +168,13 @@ export function Hero() {
             </motion.div>
 
             {/* App shortcuts */}
-            <motion.ul variants={heroItem} className="mx-auto mt-10 grid max-w-xl gap-3 sm:grid-cols-2 lg:mx-0">
+            <motion.ul variants={heroItem} className="mx-auto mt-10 grid max-w-2xl gap-3 sm:grid-cols-3 lg:mx-0">
               {heroApps.map((app) => (
                 <li key={app.id}>
                   <motion.a
                     href={`#app-${app.id}`}
                     whileHover={reduceMotion ? undefined : { y: -3 }}
-                    className={`group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] p-3 text-left backdrop-blur-md transition-colors hover:bg-white/10 ${app.ring}`}
+                    className={`group flex h-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] p-3 text-left backdrop-blur-md transition-colors hover:bg-white/10 sm:flex-col sm:items-start ${app.ring}`}
                   >
                     <img src={app.iconSrc} alt="" className="h-11 w-11 shrink-0 rounded-xl object-contain" />
                     <span className="min-w-0 flex-1">
@@ -172,7 +182,7 @@ export function Hero() {
                       <span className="block text-xs text-slate-300">{app.tagline}</span>
                       <span className="block text-[11px] text-slate-500">{app.platforms}</span>
                     </span>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 sm:hidden" />
                   </motion.a>
                 </li>
               ))}
@@ -183,10 +193,10 @@ export function Hero() {
           <div className="relative mx-auto h-[420px] w-full max-w-[440px] sm:h-[520px] lg:h-[560px]" aria-label="App previews" role="group">
             <div aria-hidden="true" className="absolute inset-10 rounded-full bg-gradient-to-br from-violet-500/30 via-fuchsia-500/10 to-teal-400/30 blur-3xl" />
             <motion.div
-              initial={reduceMotion ? false : { opacity: 0, x: -30, rotate: -10 }}
-              animate={{ opacity: 1, x: 0, rotate: -6 }}
+              initial={reduceMotion ? false : { opacity: 0, x: -30, rotate: -12 }}
+              animate={{ opacity: 1, x: 0, rotate: -8 }}
               transition={{ delay: reduceMotion ? 0 : 0.3, duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute left-0 top-6 w-[52%] origin-bottom-right"
+              className="absolute left-0 top-14 w-[44%] origin-bottom-right sm:top-16"
             >
               <motion.div
                 animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
@@ -196,16 +206,29 @@ export function Hero() {
               </motion.div>
             </motion.div>
             <motion.div
-              initial={reduceMotion ? false : { opacity: 0, x: 30, rotate: 10 }}
-              animate={{ opacity: 1, x: 0, rotate: 5 }}
+              initial={reduceMotion ? false : { opacity: 0, x: 30, rotate: 12 }}
+              animate={{ opacity: 1, x: 0, rotate: 8 }}
               transition={{ delay: reduceMotion ? 0 : 0.42, duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute right-0 top-16 w-[52%] origin-bottom-left sm:top-20"
+              className="absolute right-0 top-14 w-[44%] origin-bottom-left sm:top-16"
             >
               <motion.div
                 animate={reduceMotion ? undefined : { y: [0, 10, 0] }}
                 transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
               >
                 <PhoneFrame src={mindstrike.screenSrc} alt={mindstrike.screenAlt} />
+              </motion.div>
+            </motion.div>
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: reduceMotion ? 0 : 0.54, duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute left-[24%] top-0 z-10 w-[52%]"
+            >
+              <motion.div
+                animate={reduceMotion ? undefined : { y: [0, -8, 0] }}
+                transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <PhoneFrame src={fitness.screenSrc} alt={fitness.screenAlt} className="shadow-emerald-950/60" />
               </motion.div>
             </motion.div>
           </div>

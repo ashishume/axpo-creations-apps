@@ -17,6 +17,12 @@ import ExpenseTrackerApp from "@/pages/ExpenseTrackerApp";
 import DownloadApp from "@/pages/DownloadApp";
 import VioraPrivacyPolicy from "@/pages/VioraPrivacyPolicy";
 import VioraAccountDeletion from "@/pages/VioraAccountDeletion";
+import AxpoFitnessPrivacyPolicy from "@/pages/axpo-fitness/AxpoFitnessPrivacyPolicy";
+import AxpoFitnessTerms from "@/pages/axpo-fitness/AxpoFitnessTerms";
+import AxpoFitnessAccountDeletion from "@/pages/axpo-fitness/AxpoFitnessAccountDeletion";
+import AxpoFitnessSupport from "@/pages/axpo-fitness/AxpoFitnessSupport";
+import AxpoFitnessLanding from "@/pages/axpo-fitness/AxpoFitnessLanding";
+import AxpoFitnessExercise from "@/pages/axpo-fitness/AxpoFitnessExercise";
 import { SiteMotion } from "@/components/motion/SiteMotion";
 
 function Router() {
@@ -41,6 +47,14 @@ function Router() {
         <Route path="/download" component={DownloadApp} />
         <Route path="/viora/privacy-policy" component={VioraPrivacyPolicy} />
         <Route path="/viora/account-deletion" component={VioraAccountDeletion} />
+        <Route path="/axpo-fitness" component={AxpoFitnessLanding} />
+        {/* AxpoFitness (iOS and Android apps link to these). */}
+        <Route path="/axpo-fitness/privacy-policy" component={AxpoFitnessPrivacyPolicy} />
+        <Route path="/axpo-fitness/terms-of-service" component={AxpoFitnessTerms} />
+        <Route path="/axpo-fitness/account-deletion" component={AxpoFitnessAccountDeletion} />
+        <Route path="/axpo-fitness/support" component={AxpoFitnessSupport} />
+        {/* Shared exercise videos from the apps (they open the app when it is installed). */}
+        <Route path="/axpo-fitness/exercise/:videoId" component={AxpoFitnessExercise} />
         <Route component={NotFound} />
       </Switch>
     </SiteMotion>

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Sparkles, Brain, LayoutGrid } from "lucide-react";
+import { Check, ArrowRight, Sparkles, Brain, Dumbbell, LayoutGrid, MapPin } from "lucide-react";
 import { APPS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +54,7 @@ const products: ProductCard[] = [
     actions: [
       { label: "App Store", href: APPS.tracker.iosUrl, kind: "external" },
       { label: "Google Play", href: APPS.tracker.androidUrl, kind: "external", variant: "outline" },
-      { label: "Explore AXPO", href: "/expense-tracker-app", kind: "route", variant: "ghost" },
+      { label: "Explore", href: "/expense-tracker-app", kind: "route", variant: "ghost" },
     ],
     accent: {
       glow: "from-primary/16 to-cyan-300/10",
@@ -62,6 +62,34 @@ const products: ProductCard[] = [
       check: "text-green-500",
       hover: "hover:shadow-primary/10 hover:border-primary/25",
       logoShadow: "drop-shadow-[0_8px_18px_rgba(68,34,112,0.22)]",
+    },
+  },
+  {
+    id: "fitness",
+    title: APPS.fitness.name,
+    tagline: "Workout & meal planner",
+    description:
+      "Your AI fitness coach in your pocket: a workout plan built around you, form videos for every move, and meal macros from a photo or a few typed words.",
+    logoSrc: "/axpo-fitness-icon.png",
+    category: { label: "AI • Health & Fitness", icon: Dumbbell },
+    platforms: "Android & iOS",
+    features: [
+      "AI weekly workout plan built around your goal, level and schedule",
+      "140+ exercises with step-by-step guides, demo videos and rest timers",
+      "Snap or type a meal to get calories, protein, carbs and fat in seconds",
+      "Axpo AI coach, optional cycle tracking, Apple Health & Health Connect",
+    ],
+    actions: [
+      { label: "App Store", href: APPS.fitness.iosUrl, kind: "external", className: "bg-emerald-600 hover:bg-emerald-700" },
+      { label: "Google Play", href: APPS.fitness.androidUrl, kind: "external", variant: "outline" },
+      { label: "Explore", href: APPS.fitness.siteUrl, kind: "route", variant: "ghost" },
+    ],
+    accent: {
+      glow: "from-emerald-400/20 to-teal-300/10",
+      badge: "bg-emerald-600 hover:bg-emerald-600",
+      check: "text-emerald-500",
+      hover: "hover:shadow-emerald-500/10 hover:border-emerald-500/30",
+      logoShadow: "drop-shadow-[0_8px_18px_rgba(10,69,66,0.30)]",
     },
   },
   {
@@ -89,6 +117,32 @@ const products: ProductCard[] = [
       check: "text-teal-500",
       hover: "hover:shadow-teal-500/10 hover:border-teal-500/30",
       logoShadow: "drop-shadow-[0_8px_18px_rgba(21,124,112,0.28)]",
+    },
+  },
+  {
+    id: "utsav-locator",
+    title: APPS.utsavLocator.name,
+    tagline: "Durga Puja pandal finder",
+    description:
+      "Find Durga Puja pandals near you, see how crowded each one is right now and get directions in Google Maps. Free, no sign-up, right in your browser.",
+    logoSrc: "/utsav-locator/icon.png",
+    category: { label: "Web • Travel & Local", icon: MapPin },
+    platforms: "Web • Any device",
+    features: [
+      "Map of pandals across Kolkata, Bengaluru and beyond, searchable by name, club or theme",
+      "Live crowd heatmap: calm, moderate or busy, powered by “I’m visiting” check-ins",
+      "Favourites, “been here” list, most loved & busiest-right-now rankings",
+      "One-tap Google Maps navigation, English, বাংলা & हिंदी, installable as an app",
+    ],
+    actions: [
+      { label: "Open Utsav Locator", href: APPS.utsavLocator.siteUrl, kind: "external", className: "bg-orange-600 hover:bg-orange-700" },
+    ],
+    accent: {
+      glow: "from-orange-400/20 to-rose-300/10",
+      badge: "bg-orange-600 hover:bg-orange-600",
+      check: "text-orange-500",
+      hover: "hover:shadow-orange-500/10 hover:border-orange-500/30",
+      logoShadow: "drop-shadow-[0_8px_18px_rgba(194,65,12,0.28)]",
     },
   },
 ];
@@ -152,11 +206,11 @@ export function Features() {
           </Badge>
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Our apps</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Thoughtfully built mobile apps from AxpoCreation, from everyday money management to quick-fire maths duels.
+            Thoughtfully built mobile apps from AxpoCreation, from everyday money management and AI-planned workouts to quick-fire maths duels and festive pandal hopping.
           </p>
         </motion.div>
 
-        <div className="grid gap-8 lg:grid-cols-2 max-w-6xl mx-auto">
+        <div className="grid gap-8 md:grid-cols-2 max-w-6xl mx-auto">
           {products.map((product, index) => {
             const CategoryIcon = product.category.icon;
             return (
@@ -231,7 +285,7 @@ export function Features() {
                     <div
                       className={cn(
                         "grid grid-cols-1 gap-2 w-full",
-                        product.actions.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"
+                        product.actions.length === 3 ? "sm:grid-cols-3 md:grid-cols-1" : product.actions.length === 2 ? "sm:grid-cols-2 md:grid-cols-1" : ""
                       )}
                     >
                       {product.actions.map((action) => (
