@@ -48,6 +48,10 @@
       "destination": "/figureout/account-deletion/index.html"
     },
     {
+      "source": "/download-axpofit-app",
+      "destination": "/download-axpofit-app/index.html"
+    },
+    {
       "source": "/axpo",
       "destination": "/axpo.html"
     },

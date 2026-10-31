@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 
 // Mirror the static legal-page rewrites locally, including URLs without a trailing slash.
 const legalRoutes = JSON.parse(readFileSync(new URL('./vercel.json', import.meta.url), 'utf8')).rewrites
-  .filter((route: { source: string }) => route.source.startsWith('/figureout') || route.source.startsWith('/mindstrike')) as { source: string; destination: string }[]
+  .filter((route: { source: string }) => route.source.startsWith('/figureout') || route.source.startsWith('/mindstrike') || route.source === '/download-axpofit-app') as { source: string; destination: string }[]
 function serveLegal(req: { url?: string }, _res: unknown, next: () => void) {
   const url = new URL(req.url ?? '/', 'http://localhost')
   const route = legalRoutes.find(route => route.source === url.pathname)
