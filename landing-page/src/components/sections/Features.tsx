@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Sparkles, Brain, Dumbbell, LayoutGrid, MapPin } from "lucide-react";
+import { Check, ArrowRight, Sparkles, Brain, Dumbbell, Images, LayoutGrid, MapPin } from "lucide-react";
 import { APPS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -117,6 +117,36 @@ const products: ProductCard[] = [
       check: "text-teal-500",
       hover: "hover:shadow-teal-500/10 hover:border-teal-500/30",
       logoShadow: "drop-shadow-[0_8px_18px_rgba(21,124,112,0.28)]",
+    },
+  },
+  {
+    id: "collagemagik",
+    title: APPS.collagemagik.name,
+    tagline: "Photo & video collage maker",
+    description:
+      "Make Story collages that move, or swipeable carousels whose photos flow across slides. Mix photos with videos, trim on a timeline, add your own music and export in high quality. No account, nothing uploaded.",
+    logoSrc: "/collagemagik/icon.png",
+    category: { label: "Photo & Video", icon: Images },
+    platforms: "iPhone • iOS 26+",
+    features: [
+      "Carousel mode: photos that run across the slide edges, up to 10 slides",
+      "Up to 9 photos and 2 videos in one collage, with 35 layouts",
+      "Timeline to trim, split and delay clips, plus crop and straighten",
+      "Your own music with volume and fade-out",
+      "Export 1080p or 4K MP4, or a PNG, and keep it in My Library",
+    ],
+    actions: [
+      ...(APPS.collagemagik.iosUrl
+        ? [{ label: "App Store", href: APPS.collagemagik.iosUrl, kind: "external" as const, className: "bg-violet-600 hover:bg-violet-700" }]
+        : []),
+      { label: "Learn more", href: APPS.collagemagik.siteUrl, kind: "route", variant: "outline" },
+    ],
+    accent: {
+      glow: "from-violet-400/20 to-pink-300/10",
+      badge: "bg-violet-600 hover:bg-violet-600",
+      check: "text-violet-500",
+      hover: "hover:shadow-violet-500/10 hover:border-violet-500/30",
+      logoShadow: "drop-shadow-[0_8px_18px_rgba(109,77,255,0.30)]",
     },
   },
   {

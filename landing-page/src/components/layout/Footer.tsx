@@ -34,7 +34,7 @@ export function Footer() {
               Axpo<span className="text-slate-100">Creation</span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Thoughtfully built mobile apps: AXPO for everyday money, Axpo Fitness for workouts and meals, Mindstrike for quick-fire maths duels, and Utsav Locator for Durga Puja pandal hopping.
+              Thoughtfully built mobile apps: AXPO for everyday money, Axpo Fitness for workouts and meals, Mindstrike for quick-fire maths duels, CollageMagik for photo and video collages, and Utsav Locator for Durga Puja pandal hopping.
             </p>
             <div className="flex gap-4 pt-2">
               <motion.a
@@ -75,6 +75,8 @@ export function Footer() {
               <li><Link href="/axpo-fitness/support" className="hover:text-primary transition-colors cursor-pointer">Axpo Fitness support & legal</Link></li>
               <li><a href="/mindstrike" className="hover:text-primary transition-colors">Mindstrike</a></li>
               <li><a href="/mindstrike/support" className="hover:text-primary transition-colors">Mindstrike support & legal</a></li>
+              <li><Link href={APPS.collagemagik.siteUrl} className="hover:text-primary transition-colors cursor-pointer">{APPS.collagemagik.name}</Link></li>
+              <li><Link href="/collagemagik/support" className="hover:text-primary transition-colors cursor-pointer">CollageMagik support & legal</Link></li>
               <li><a href={APPS.utsavLocator.siteUrl} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">{APPS.utsavLocator.name}</a></li>
               <li><a href="/figureout" className="hover:text-primary transition-colors">Figureout — The game night</a></li>
               <li><a href="/figureout/support" className="hover:text-primary transition-colors">Figureout support & legal</a></li>

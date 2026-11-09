@@ -23,6 +23,11 @@ import AxpoFitnessAccountDeletion from "@/pages/axpo-fitness/AxpoFitnessAccountD
 import AxpoFitnessSupport from "@/pages/axpo-fitness/AxpoFitnessSupport";
 import AxpoFitnessLanding from "@/pages/axpo-fitness/AxpoFitnessLanding";
 import AxpoFitnessExercise from "@/pages/axpo-fitness/AxpoFitnessExercise";
+import CollageMagikLanding from "@/pages/collagemagik/CollageMagikLanding";
+import CollageMagikPrivacyPolicy from "@/pages/collagemagik/CollageMagikPrivacyPolicy";
+import CollageMagikTerms from "@/pages/collagemagik/CollageMagikTerms";
+import CollageMagikAccountDeletion from "@/pages/collagemagik/CollageMagikAccountDeletion";
+import CollageMagikSupport from "@/pages/collagemagik/CollageMagikSupport";
 import { SiteMotion } from "@/components/motion/SiteMotion";
 
 function Router() {
@@ -53,6 +58,12 @@ function Router() {
         <Route path="/axpo-fitness/terms-of-service" component={AxpoFitnessTerms} />
         <Route path="/axpo-fitness/account-deletion" component={AxpoFitnessAccountDeletion} />
         <Route path="/axpo-fitness/support" component={AxpoFitnessSupport} />
+        {/* CollageMagik (iPhone app and its App Store listing link to these). */}
+        <Route path="/collagemagik" component={CollageMagikLanding} />
+        <Route path="/collagemagik/privacy-policy" component={CollageMagikPrivacyPolicy} />
+        <Route path="/collagemagik/terms-of-service" component={CollageMagikTerms} />
+        <Route path="/collagemagik/account-deletion" component={CollageMagikAccountDeletion} />
+        <Route path="/collagemagik/support" component={CollageMagikSupport} />
         {/* Shared exercise videos from the apps (they open the app when it is installed). */}
         <Route path="/axpo-fitness/exercise/:videoId" component={AxpoFitnessExercise} />
         <Route component={NotFound} />

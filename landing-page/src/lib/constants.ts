@@ -19,6 +19,12 @@ export const APPS = {
     /** Static marketing page served from public/mindstrike (not an SPA route). */
     siteUrl: "/mindstrike",
   },
+  collagemagik: {
+    name: "CollageMagik",
+    /** Set to the App Store link once the app is live (until then the pages say "Coming soon"). */
+    iosUrl: null as string | null,
+    siteUrl: "/collagemagik",
+  },
   utsavLocator: {
     name: "Utsav Locator",
     /** Standalone web app (PWA) hosted on its own domain. */
