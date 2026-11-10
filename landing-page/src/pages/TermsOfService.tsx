@@ -19,7 +19,7 @@ export default function TermsOfService() {
             Terms of Service
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
-            Last updated: March 31, 2026
+            Last updated: November 10, 2026
           </p>
 
           <p className="leading-relaxed text-slate-600 dark:text-slate-400 mb-4">
@@ -187,6 +187,21 @@ export default function TermsOfService() {
               Play, or other platforms are subject to that platform&apos;s refund
               policy. We cannot issue refunds directly for those purchases.
             </li>
+            <li>
+              <strong className="dark:text-slate-300 text-slate-700">
+                Ads in the free version:
+              </strong>{" "}
+              The free version of AXPO shows ads served by Google AdMob. A
+              Premium subscription removes ads. How ad-related data is handled,
+              including your choices, is described in our{" "}
+              <Link
+                href="/privacy-policy"
+                className="text-indigo-500 dark:text-indigo-400 hover:underline"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </li>
           </ul>
 
           <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
@@ -249,7 +264,10 @@ export default function TermsOfService() {
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
             These Terms are governed by the laws of India (or your country of
-            residence if required by law). If any part of these Terms is held
+            residence if required by law). If you are a consumer in the European
+            Economic Area or the United Kingdom, you keep the mandatory consumer
+            protection rights of your country of residence, and nothing in these
+            Terms limits them. If any part of these Terms is held
             invalid, the rest remains in effect. Our failure to enforce a right
             does not waive that right.
           </p>
@@ -258,7 +276,8 @@ export default function TermsOfService() {
             14. Contact
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-2">
-            For questions about these Terms:
+            AXPO is published by AxpoCreation, Bengaluru, Karnataka, India. For
+            questions about these Terms:
           </p>
           <p className="text-slate-600 dark:text-slate-400 mb-1">
             Email:{" "}
