@@ -1,7 +1,12 @@
 import { Link } from "wouter";
-import { APP_NAME, B, BASE, H2, LegalPage, List, Mail, P } from "./CollageMagikLayout";
+import type { ReactNode } from "react";
+import { A, APP_NAME, B, BASE, H2, LegalPage, List, Mail, P } from "./CollageMagikLayout";
 
 const link = "text-indigo-500 dark:text-indigo-400 hover:underline";
+
+function H3({ children }: { children: ReactNode }) {
+  return <h3 className="text-base font-medium mt-6 mb-2 dark:text-slate-200 text-slate-900">{children}</h3>;
+}
 
 export default function CollageMagikPrivacyPolicy() {
   return (
@@ -11,19 +16,22 @@ export default function CollageMagikPrivacyPolicy() {
       intro={
         <>
           {APP_NAME} (&quot;we&quot;, &quot;us&quot;) is an iPhone app that turns your photos and videos into collages.
-          It works entirely on your iPhone. <B>We do not collect, receive, store on a server, sell or share any
-          personal data about you</B>, there is no account to create, and the app currently uses no analytics and no
-          tracking. This page explains what the app does with your pictures on your own device and how to remove them.
+          It works on your iPhone and is free, with no account. <B>We do not collect, receive or store your photos,
+          videos, music or collages, and we keep no profile about you.</B> The app shows ads from{" "}
+          <B>Meta Audience Network</B>, and that ad service collects some data about your device and your use of ads, as
+          explained in the <B>Advertising</B> section below. This page explains what the app does with your pictures
+          on your own device, what the ad service collects, and the choices you have.
         </>
       }
     >
       <H2>The short version</H2>
       <List>
         <li>No account, no sign-in, no email address, no phone number.</li>
-        <li>Your photos, videos and music are used only on your iPhone, to build and export your collage. They are never uploaded to us or to anyone else.</li>
-        <li>Currently no analytics, no crash-reporting service and no third-party code that collects data in the app.</li>
+        <li>Your photos, videos and music are used only on your iPhone, to build and export your collage. They are never uploaded to us, to Meta, or to anyone else.</li>
+        <li>The app shows an occasional full-screen ad from <B>Meta Audience Network</B>, only after you export and never while you edit. Meta collects some device and ad data to serve and measure those ads.</li>
+        <li>On your iPhone, Apple&apos;s tracking prompt decides whether ads can be personalised. In the EU, UK and Switzerland we ask for your agreement first, and if you say no you see no ads.</li>
         <li>Collages you export are kept in <B>My Library</B> inside the app, on your iPhone only.</li>
-        <li>You can delete everything the app has stored, at any time, from inside the app.</li>
+        <li>You can delete everything the app has stored, and reset your ad choices, at any time, from inside the app.</li>
       </List>
 
       <H2>What the app works with, on your device</H2>
@@ -59,17 +67,65 @@ export default function CollageMagikPrivacyPolicy() {
           <B>Files access</B> only for the specific files you choose in the Files picker.
         </li>
         <li>
-          The app does not use your camera, microphone, location, contacts, calendar or health data. At the moment it
-          does not track you across other companies&apos; apps or websites.
+          <B>Tracking</B> (Apple&apos;s &quot;Allow App to Track&quot; prompt), asked once, after your first finished export. It
+          lets Meta use your device&apos;s advertising identifier to show you more relevant ads. You can say no, and the app
+          works the same; you may still see ads, just less relevant ones.
+        </li>
+        <li>
+          The app does not use your camera, microphone, location, contacts, calendar or health data.
         </li>
       </List>
 
       <H2>Advertising</H2>
       <P>
-        We may show ads in the app in the future. If we do, we will update this policy before the change reaches you,
-        describe what the advertising provider collects and why, and ask for your permission through the iPhone&apos;s
-        standard prompt before any tracking, as Apple requires. Your photos, videos, music and collages will not be
-        sent to advertisers.
+        {APP_NAME} is free and is paid for by ads. It shows an occasional full-screen ad from{" "}
+        <A href="https://www.facebook.com/audiencenetwork/">Meta Audience Network</A>, operated by Meta Platforms Ireland
+        Limited (for people in the European Economic Area and the UK) and Meta Platforms, Inc. elsewhere. An ad can
+        appear after you finish an export and close the export screen. It never appears while you edit, and not after your
+        first export.
+      </P>
+      <P>When the ad service runs, it collects and uses data from your iPhone, which may include:</P>
+      <List>
+        <li>your device&apos;s <B>advertising identifier</B> (IDFA), only if you allowed tracking, and other device and app identifiers;</li>
+        <li>your <B>IP address</B> and approximate location derived from it, device model, iOS version, language and similar technical information;</li>
+        <li><B>advertising data</B>: which ads were requested, shown, clicked or closed, and ad performance;</li>
+        <li><B>crash and diagnostic data</B> about the ad service, which is not linked to you.</li>
+      </List>
+      <P>
+        Meta uses this to choose, show, measure and protect ads, and, where you allowed tracking, to personalise them. Meta
+        handles this data under its own{" "}
+        <A href="https://www.facebook.com/privacy/policy/">Privacy Policy</A>. We receive reports about ad
+        performance and earnings that do not identify you. <B>Your photos, videos, music and collages are never given to
+        Meta or to any advertiser.</B> We do not sell your personal information ourselves.
+      </P>
+      <P>If you tap an ad, you leave {APP_NAME} and the advertiser&apos;s app or website applies its own privacy practices.</P>
+
+      <H3>Your choices about ads</H3>
+      <List>
+        <li>
+          <B>Tracking.</B> Apple&apos;s prompt asks once. You can change your answer at any time in iPhone{" "}
+          <B>Settings → Privacy &amp; Security → Tracking</B>. Without tracking, ads are not personalised using your advertising identifier.
+        </li>
+        <li>
+          <B>EU, UK and Switzerland.</B> We ask for your agreement before the ad service starts. If you choose{" "}
+          <B>No ads</B>, the ad service is never started and you see no ads. You can change this under <B>More ••• → About &amp; Privacy → Ads → Review ad choices</B>.
+        </li>
+        <li>
+          <B>Reset.</B> <B>Delete all my data</B> (More ••• → About &amp; Privacy) also resets your ad choices, so you are asked again.
+        </li>
+        <li>
+          <B>Meta controls.</B> You can manage how Meta uses your information for ads through your own Meta account&apos;s ad preferences and the{" "}
+          <A href="https://www.facebook.com/help/568137493302217">Audience Network opt-out</A>.
+        </li>
+        <li>
+          <B>Limit Ad Tracking.</B> A mobile advertising identifier can also be reset or turned off by Apple&apos;s privacy settings.
+        </li>
+      </List>
+      <P>
+        If you live in a place where the law treats sharing an advertising identifier for advertising as a &quot;sale&quot; or
+        &quot;sharing&quot; of personal information (for example some US states), you can opt out by not allowing tracking, as above.
+        Where the law requires a legal basis (for example the GDPR), our basis for the ad service is your <B>consent</B>, which you can
+        withdraw at any time as described above.
       </P>
 
       <H2>Sharing is your choice</H2>
@@ -80,8 +136,9 @@ export default function CollageMagikPrivacyPolicy() {
 
       <H2>Internet</H2>
       <P>
-        The app does not need an internet connection and does not send any data over the network. The privacy policy,
-        terms and support links in the app open in your web browser.
+        The app works without an internet connection: building, editing and exporting collages happens on your iPhone. The only
+        network use is the ad service (Meta Audience Network), which connects to Meta&apos;s servers to request and show ads, as
+        described under <B>Advertising</B>. The privacy policy, terms and support links in the app open in your web browser.
       </P>
 
       <H2>Information from Apple</H2>
@@ -101,7 +158,7 @@ export default function CollageMagikPrivacyPolicy() {
       <P>
         Data stays on your iPhone until you remove it. You can delete a single collage from My Library, or choose
         <B> More ••• → About &amp; Privacy → Delete all my data</B> to remove every collage and clear the collage you
-        are working on. Deleting the app removes all of it. Collages you saved to the Photos app belong to your photo
+        are working on, and it also resets your ad choices. Deleting the app removes all of it. Data that Meta has already received for ads is held by Meta, not by us; see <B>Your choices about ads</B>. Collages you saved to the Photos app belong to your photo
         library and are deleted from there. See{" "}
         <Link href={`${BASE}/account-deletion`} className={link}>
           how to delete your data
@@ -111,17 +168,20 @@ export default function CollageMagikPrivacyPolicy() {
 
       <H2>Children</H2>
       <P>
-        Because the app collects no personal information from anyone, it collects none from children either. The app
-        has no accounts or chat, and is not aimed at children. If we add advertising, we will not show children
-        personalised ads.
+        {APP_NAME} is not directed at children under 13 (or the age of digital consent where you live), and we do not knowingly
+        collect personal information from children. The app has no accounts or chat. Ads are served by Meta Audience Network under
+        its own rules; if you are a parent and want ads switched off, use <B>Ask App Not to Track</B> in Apple&apos;s prompt and, in the EU, UK
+        and Switzerland, choose <B>No ads</B>.
       </P>
 
       <H2>Your rights</H2>
       <P>
-        Laws such as the GDPR, the UK GDPR, the California Consumer Privacy Act and India&apos;s Digital Personal Data
-        Protection Act give you rights to access, correct and delete personal data a company holds about you. We hold no
-        personal data about you, so there is nothing for us to access, correct or delete. Everything the app keeps is
-        on your iPhone, under your control. If you have questions, write to <Mail />.
+        Laws such as the GDPR, the UK GDPR, the California Consumer Privacy Act and India&apos;s Digital Personal Data Protection Act
+        give you rights to access, correct and delete personal data a company holds about you, and to object to or withdraw consent for
+        advertising. <B>We</B> hold no personal data about you, so there is nothing for us to access, correct or delete. For data that
+        Meta processes for ads, you can use Meta&apos;s own tools and contact routes (see Meta&apos;s Privacy Policy), and the controls in{" "}
+        <B>Your choices about ads</B> above. You also have the right to complain to your data protection authority. If you have questions,
+        write to <Mail />.
       </P>
 
       <H2>This website</H2>
@@ -135,8 +195,9 @@ export default function CollageMagikPrivacyPolicy() {
 
       <H2>Changes to this policy</H2>
       <P>
-        If the app ever changes how it handles data, we will update this page and its effective date, and describe the
-        change in the app&apos;s release notes before it takes effect.
+        If the app changes how it handles data (for example by changing the ad provider), we will update this page and its effective
+        date, describe the change in the app&apos;s release notes before it takes effect, and ask for your choice again where the law or
+        Apple requires it.
       </P>
 
       <H2>Contact</H2>

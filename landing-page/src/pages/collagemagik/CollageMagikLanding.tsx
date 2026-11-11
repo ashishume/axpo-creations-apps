@@ -20,7 +20,7 @@ import { APP_NAME, BASE, usePageMeta } from "./CollageMagikLayout";
 
 const TITLE = "CollageMagik: photo & video collage maker for iPhone";
 const DESCRIPTION =
-  "Mix photos and videos that play inside one collage, or design a carousel whose photos flow across slides. 35 layouts, trim clips, add your own music, export in high quality. No account, nothing uploaded.";
+  "Mix photos and videos that play inside one collage, or design a carousel whose photos flow across slides. 35 layouts, trim clips, add your own music, export in high quality. Free with a few ads, no account, and your photos are never uploaded.";
 
 const features: { icon: LucideIcon; title: string; body: string }[] = [
   {
@@ -56,7 +56,7 @@ const features: { icon: LucideIcon; title: string; body: string }[] = [
   {
     icon: Lock,
     title: "Private by design",
-    body: "No account or sign-in. Your photos and videos are processed on your iPhone and never uploaded.",
+    body: "No account or sign-in. Your photos and videos are processed on your iPhone and never uploaded, and never shared with advertisers.",
   },
 ];
 
@@ -114,7 +114,7 @@ export default function CollageMagikLanding() {
                 <Link href={`${BASE}/support`}>Get help</Link>
               </Button>
             </div>
-            <p className="mt-4 text-sm text-violet-100/60">Free · No account · iPhone with iOS 26 or later</p>
+            <p className="mt-4 text-sm text-violet-100/60">Free with ads · No account · iPhone with iOS 26 or later</p>
           </div>
         </section>
 
@@ -143,7 +143,8 @@ export default function CollageMagikLanding() {
             <p className="text-lg leading-8 text-muted-foreground">
               {APP_NAME} has no login and no server for your pictures. Everything you add and everything you export lives on your iPhone.
               Finished collages are kept in <strong>My Library</strong> inside the app, and you can delete them, or
-              everything, whenever you like.
+              everything, whenever you like. The app is free and shows an occasional ad from Meta Audience Network after you
+              export. Ads never get your pictures, and you choose whether they can be personalised.
             </p>
             <nav aria-label={`${APP_NAME} policies`} className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
               {links.map((l) => (

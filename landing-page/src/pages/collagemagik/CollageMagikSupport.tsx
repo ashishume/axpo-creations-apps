@@ -58,9 +58,25 @@ export default function CollageMagikSupport() {
         </li>
       </List>
 
+      <H2>Ads</H2>
+      <List>
+        <li>
+          <B>Why do I see ads?</B> {APP_NAME} is free and paid for by ads. You may see one full-screen ad after you export, never while
+          editing and never after your very first export.
+        </li>
+        <li>
+          <B>Can I turn ads off or stop tracking?</B> Say <B>Ask App Not to Track</B> in Apple&apos;s prompt, or change it later in Settings →
+          Privacy &amp; Security → Tracking, and ads will not be personalised. In the EU, UK and Switzerland you can choose <B>No ads</B>
+          (More ••• → About &amp; Privacy → Ads → Review ad choices).
+        </li>
+        <li>
+          <B>An ad looks wrong or inappropriate.</B> Email <Mail /> with a screenshot and the time, and we will report it to the ad service.
+        </li>
+      </List>
+
       <H2>Privacy</H2>
       <P>
-        {APP_NAME} has no account, and your pictures never leave your iPhone. Read the{" "}
+        {APP_NAME} has no account, and your pictures never leave your iPhone. The ad service collects some device and ad data, explained in the{" "}
         <Link href={`${BASE}/privacy-policy`} className={link}>
           Privacy Policy
         </Link>

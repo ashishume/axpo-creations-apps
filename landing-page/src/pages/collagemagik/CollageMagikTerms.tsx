@@ -62,9 +62,16 @@ export default function CollageMagikTerms() {
         share to are governed by their own terms.
       </P>
 
-      <H2>6. Free to use</H2>
+      <H2>6. Free to use, with ads</H2>
       <P>
-        The app is free to download and use. We may add advertising or optional paid features in the future; if we do,
+        The app is free to download and use. It is paid for by advertising: after you export, you may see a full-screen ad from
+        Meta Audience Network. Ads are provided by third parties; we do not control their content and are not responsible for the
+        products, services or websites they promote, which have their own terms and privacy practices. Do not click ads you do not
+        trust. How the ad service uses data, and how to control it, is in our{" "}
+        <Link href={`${BASE}/privacy-policy`} className="text-indigo-500 dark:text-indigo-400 hover:underline">
+          Privacy Policy
+        </Link>
+        . You may not interfere with, block or automatically click ads. We may add optional paid features in the future; if we do,
         we will update these terms and the Privacy Policy, and tell you in the app, before the change takes effect.
       </P>
 

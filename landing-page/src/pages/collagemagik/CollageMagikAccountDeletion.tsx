@@ -51,9 +51,21 @@ export default function CollageMagikAccountDeletion() {
         deleting there removes them from your other devices.
       </P>
 
+      <H2>Ads</H2>
+      <P>
+        <B>Delete all my data</B> also resets your ad choices, so the app asks again after your next export. To change how ads use
+        your advertising identifier, go to iPhone <B>Settings → Privacy &amp; Security → Tracking</B>. In the EU, UK and Switzerland you
+        can choose <B>No ads</B> under <B>More ••• → About &amp; Privacy → Ads</B>. Data Meta Audience Network has already received for
+        ads is held by Meta under its own policy, not by us; see the{" "}
+        <Link href={`${BASE}/privacy-policy`} className="text-indigo-500 dark:text-indigo-400 hover:underline">
+          Privacy Policy
+        </Link>{" "}
+        for how to use Meta&apos;s controls.
+      </P>
+
       <H2>What we hold</H2>
       <P>
-        Nothing. We do not receive your photos, videos, music or collages, and we keep no account or personal profile
+        We do not receive your photos, videos, music or collages, and we keep no account or personal profile
         about you. If you emailed us for support, we keep that email only as long as needed to help you; ask us at{" "}
         <Mail /> and we will delete it. For details, read the{" "}
         <Link href={`${BASE}/privacy-policy`} className="text-indigo-500 dark:text-indigo-400 hover:underline">

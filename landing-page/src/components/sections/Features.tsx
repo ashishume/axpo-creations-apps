@@ -124,7 +124,7 @@ const products: ProductCard[] = [
     title: APPS.collagemagik.name,
     tagline: "Photo & video collage maker",
     description:
-      "Make Story collages that move, or swipeable carousels whose photos flow across slides. Mix photos with videos, trim on a timeline, add your own music and export in high quality. No account, nothing uploaded.",
+      "Make Story collages that move, or swipeable carousels whose photos flow across slides. Mix photos with videos, trim on a timeline, add your own music and export in high quality. Free with a few ads, no account, and your photos are never uploaded.",
     logoSrc: "/collagemagik/icon.png",
     category: { label: "Photo & Video", icon: Images },
     platforms: "iPhone • iOS 26+",

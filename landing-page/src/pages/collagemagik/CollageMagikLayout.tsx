@@ -7,7 +7,7 @@ import { A, B, H2, List, Mail, P, SUPPORT_EMAIL } from "../axpo-fitness/LegalLay
 export { A, B, H2, List, Mail, P, SUPPORT_EMAIL };
 
 export const APP_NAME = "CollageMagik";
-export const EFFECTIVE_DATE = "November 9, 2026";
+export const EFFECTIVE_DATE = "November 12, 2026";
 export const SITE_ORIGIN = "https://www.axpocreation.com";
 export const BASE = "/collagemagik";
 
@@ -26,11 +26,25 @@ export function usePageMeta(title: string, description: string, path: string) {
     }
     const previousCanonical = canonical.getAttribute("href");
 
+    // Show the CollageMagik logo in the browser tab while on these pages.
+    const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    const previousFavicon = favicon?.getAttribute("href") ?? null;
+    const previousFaviconType = favicon?.getAttribute("type") ?? null;
+    if (favicon) {
+      favicon.setAttribute("href", "/collagemagik/icon.svg");
+      favicon.setAttribute("type", "image/svg+xml");
+    }
+
     document.title = title;
     meta?.setAttribute("content", description);
     canonical.href = `${SITE_ORIGIN}${path}`;
 
     return () => {
+      if (favicon && previousFavicon !== null) {
+        favicon.setAttribute("href", previousFavicon);
+        if (previousFaviconType !== null) favicon.setAttribute("type", previousFaviconType);
+        else favicon.removeAttribute("type");
+      }
       document.title = previousTitle;
       if (meta && previousDescription !== null) meta.setAttribute("content", previousDescription);
       if (created) canonical?.remove();
@@ -53,7 +67,7 @@ export function LegalPage({
   path: string;
   children: ReactNode;
 }) {
-  usePageMeta(`${title} | ${APP_NAME}`, `${title} for ${APP_NAME}, the photo and video collage maker for iPhone by AxpoCreation.`, path);
+  usePageMeta(`${title} | ${APP_NAME}`, `${title} for ${APP_NAME}, the free photo and video collage maker for iPhone by AxpoCreation.`, path);
 
   return (
     <div className="min-h-screen flex flex-col">
