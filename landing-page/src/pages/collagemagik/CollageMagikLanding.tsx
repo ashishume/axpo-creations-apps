@@ -16,11 +16,14 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { APPS } from "@/lib/constants";
-import { APP_NAME, BASE, usePageMeta } from "./CollageMagikLayout";
+import { BASE, usePageMeta } from "./CollageMagikLayout";
 
-const TITLE = "CollageMagik: photo & video collage maker for iPhone";
+/** The name the app has on the App Store ("Insta Collage Maker & Editor") and on the home screen. */
+const APP_NAME = "Insta Collage";
+
+const TITLE = "Insta Collage: photo & video collage maker for iPhone";
 const DESCRIPTION =
-  "Mix photos and videos that play inside one collage, or design a carousel whose photos flow across slides. 35 layouts, trim clips, add your own music, export in high quality. Free with a few ads, no account, and your photos are never uploaded.";
+  "Mix photos and videos that play inside one collage, or design a carousel whose photos flow across slides. 35 layouts, trim clips, add your own music, export in high quality. Free to download with a few ads, no account, and your photos are never uploaded.";
 
 const features: { icon: LucideIcon; title: string; body: string }[] = [
   {
@@ -67,6 +70,26 @@ const links = [
   { label: "Support", href: `${BASE}/support` },
 ];
 
+const FACTS = "Free to download · Ads, removable with Pro · No account · iPhone with iOS 26 or later";
+
+/** Opens the app's App Store page; falls back to a "coming soon" label if no link is set. */
+function AppStoreButton({ href }: { href: string | null }) {
+  if (!href) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950">
+        <Sparkles className="h-4 w-4" /> Coming soon to the App Store
+      </span>
+    );
+  }
+  return (
+    <Button size="lg" className="bg-white text-slate-950 hover:bg-white/90" asChild>
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        Download on the App Store <ArrowRight className="ml-2 h-4 w-4" />
+      </a>
+    </Button>
+  );
+}
+
 export default function CollageMagikLanding() {
   usePageMeta(TITLE, DESCRIPTION, BASE);
   const iosUrl = APPS.collagemagik.iosUrl;
@@ -99,22 +122,12 @@ export default function CollageMagikLanding() {
               export in high quality, all on your iPhone.
             </p>
             <div className="mt-8 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row">
-              {iosUrl ? (
-                <Button size="lg" className="bg-white text-slate-950 hover:bg-white/90" asChild>
-                  <a href={iosUrl} target="_blank" rel="noopener noreferrer">
-                    Download on the App Store <ArrowRight className="ml-2 h-4 w-4" />
-                  </a>
-                </Button>
-              ) : (
-                <span className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950">
-                  <Sparkles className="h-4 w-4" /> Coming soon to the App Store
-                </span>
-              )}
+              <AppStoreButton href={iosUrl} />
               <Button size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" asChild>
                 <Link href={`${BASE}/support`}>Get help</Link>
               </Button>
             </div>
-            <p className="mt-4 text-sm text-violet-100/60">Free with ads · No account · iPhone with iOS 26 or later</p>
+            <p className="mt-4 text-sm text-violet-100/60">{FACTS}</p>
           </div>
         </section>
 
@@ -153,6 +166,27 @@ export default function CollageMagikLanding() {
                 </Link>
               ))}
             </nav>
+          </div>
+        </section>
+
+        <section aria-labelledby="cm-download" className="relative overflow-hidden bg-[#150d2e] py-20 text-white">
+          <div aria-hidden="true" className="absolute -right-24 -top-16 h-80 w-80 rounded-full bg-violet-500/25 blur-3xl" />
+          <div className="container relative z-10 mx-auto flex max-w-3xl flex-col items-center px-4 text-center">
+            <img
+              src="/collagemagik/icon.png"
+              alt=""
+              width={72}
+              height={72}
+              className="mb-5 h-[72px] w-[72px] rounded-[1.1rem] shadow-2xl shadow-black/40"
+            />
+            <h2 id="cm-download" className="text-3xl font-bold font-heading">Get {APP_NAME} on your iPhone</h2>
+            <p className="mt-3 max-w-xl text-base leading-7 text-violet-50/80">
+              Mix photos and videos in one collage, or build a carousel that keeps people swiping.
+            </p>
+            <div className="mt-8">
+              <AppStoreButton href={iosUrl} />
+            </div>
+            <p className="mt-4 text-sm text-violet-100/60">{FACTS}</p>
           </div>
         </section>
       </main>

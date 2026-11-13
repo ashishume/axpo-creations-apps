@@ -21,8 +21,8 @@ export const APPS = {
   },
   collagemagik: {
     name: "CollageMagik",
-    /** Set to the App Store link once the app is live (until then the pages say "Coming soon"). */
-    iosUrl: null as string | null,
+    /** Live on the App Store as "Insta Collage Maker & Editor" (bundle com.axpo.collagemagik). */
+    iosUrl: "https://apps.apple.com/app/id6832640005" as string | null,
     siteUrl: "/collagemagik",
   },
   utsavLocator: {
