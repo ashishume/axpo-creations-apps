@@ -16,12 +16,11 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { APPS } from "@/lib/constants";
-import { BASE, usePageMeta } from "./CollageMagikLayout";
+import { APP_NAME, BASE, usePageMeta } from "./CollageMagikLayout";
 
-/** The name the app has on the App Store ("Insta Collage Maker & Editor") and on the home screen. */
-const APP_NAME = "Insta Collage";
+const SUBTITLE = "Collage Maker & Editor";
 
-const TITLE = "Insta Collage: photo & video collage maker for iPhone";
+const TITLE = `${APP_NAME}: ${SUBTITLE}`;
 const DESCRIPTION =
   "Mix photos and videos that play inside one collage, or design a carousel whose photos flow across slides. 35 layouts, trim clips, add your own music, export in high quality. Free to download with a few ads, no account, and your photos are never uploaded.";
 
@@ -110,14 +109,18 @@ export default function CollageMagikLanding() {
               alt={`${APP_NAME} app icon`}
               width={96}
               height={96}
-              className="mb-5 h-24 w-24 rounded-[1.4rem] shadow-2xl shadow-black/40"
+              className="mb-4 h-24 w-24 rounded-[1.4rem] shadow-2xl shadow-black/40"
             />
+            <p className="mb-6 text-lg font-semibold text-white">
+              {APP_NAME}
+              <span className="block text-sm font-medium text-violet-200/80">{SUBTITLE}</span>
+            </p>
             <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
               Make a collage that{" "}
               <span className="bg-gradient-to-r from-violet-300 via-pink-300 to-sky-300 bg-clip-text text-transparent">moves.</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-violet-50/80 sm:text-lg">
-              {APP_NAME} mixes photos and videos in one collage for your Instagram Story or post, or turns your photos
+              {APP_NAME} mixes photos and videos in one collage for your Story or post, or turns your photos
               into a carousel that flows across slides so people keep swiping. Trim clips, add your own music and
               export in high quality, all on your iPhone.
             </p>
