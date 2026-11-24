@@ -6,6 +6,7 @@ import { Founders } from "@/components/sections/Founders";
 import { MetaAdsCarousel } from "@/components/sections/MetaAdsCarousel";
 import { MindstrikeShowcase } from "@/components/sections/MindstrikeShowcase";
 import { FitnessShowcase } from "@/components/sections/FitnessShowcase";
+import { CollageMagikShowcase } from "@/components/sections/CollageMagikShowcase";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
         <MetaAdsCarousel />
         <FitnessShowcase />
         <MindstrikeShowcase />
+        <CollageMagikShowcase />
         <Founders />
       </main>
       <Footer />

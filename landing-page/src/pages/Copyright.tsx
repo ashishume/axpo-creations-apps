@@ -24,7 +24,7 @@ export default function Copyright() {
 
           <p className="leading-relaxed text-slate-600 dark:text-slate-400 mb-4">
             © {new Date().getFullYear()} AxpoCreation. All rights reserved. This
-            Copyright Notice applies to the AxpoCreation website, the AXPO app
+            Copyright Notice applies to the AxpoCreation website, the Axpo Money app
             (expense tracking, bill splitting, and lending organization).
           </p>
 
@@ -45,7 +45,7 @@ export default function Copyright() {
             2. Trademarks
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            AxpoCreation, AXPO, and their logos and slogans are trademarks
+            AxpoCreation, Axpo Money, and their logos and slogans are trademarks
             of AxpoCreation. You may not use these marks without our prior
             written consent. All other names, logos, and marks mentioned are the
             trademarks of their respective owners.

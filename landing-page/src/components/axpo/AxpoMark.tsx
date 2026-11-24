@@ -8,8 +8,8 @@ type AxpoMarkProps = {
   loading?: "eager" | "lazy";
 };
 
-/** The AXPO app mark, shared with the native iOS and Android apps. */
-export function AxpoMark({ className, alt = "AXPO", followSystem = false, loading }: AxpoMarkProps) {
+/** The Axpo Money app mark, shared with the native iOS and Android apps. */
+export function AxpoMark({ className, alt = "Axpo Money", followSystem = false, loading }: AxpoMarkProps) {
   if (!followSystem) {
     return <img src="/axpo-mark.png" alt={alt} className={className} loading={loading} />;
   }

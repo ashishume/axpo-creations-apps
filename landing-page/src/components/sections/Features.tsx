@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Sparkles, Brain, Dumbbell, Images, LayoutGrid, MapPin } from "lucide-react";
+import { Check, ArrowRight, Sparkles, Brain, Dumbbell, Images, LayoutGrid } from "lucide-react";
 import { APPS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +39,7 @@ const products: ProductCard[] = [
   {
     id: "tracker",
     title: APPS.tracker.name,
-    tagline: "Expense manager",
+    tagline: "Expenses, splits & lending",
     description:
       "Smart expense tracking, group splits, and lending insights in one app. Personal budgets, shared bills, and optional premium Lend with AI-powered reports.",
     logoSrc: "/axpo-mark.png",
@@ -124,16 +124,16 @@ const products: ProductCard[] = [
     title: APPS.collagemagik.name,
     tagline: "Photo & video collage maker",
     description:
-      "Make Story collages that move, or swipeable carousels whose photos flow across slides. Mix photos with videos, trim on a timeline, add your own music and export in high quality. Free with a few ads, no account, and your photos are never uploaded.",
+      "Make collages that move, or swipeable carousels whose photos flow across slides. Mix photos with videos, add captions and stickers, set your own song and export in up to 4K at 60 fps. Free with a few ads, no account, and your photos are never uploaded.",
     logoSrc: "/collagemagik/icon.png",
     category: { label: "Photo & Video", icon: Images },
     platforms: "iPhone • iOS 26+",
     features: [
+      "Photos and videos in one collage: 35 layouts, up to 9 pictures, resizable cells",
       "Carousel mode: photos that run across the slide edges, up to 10 slides",
-      "Up to 9 photos and 2 videos in one collage, with 35 layouts",
-      "Timeline to trim, split and delay clips, plus crop and straighten",
-      "Your own music with volume and fade-out",
-      "Export 1080p or 4K MP4, or a PNG, and keep it in My Library",
+      "90 ready-made templates, captions, stickers, frames and backgrounds",
+      "Timeline to trim, split and change clip speed, plus your own music",
+      "Export MP4 in up to 4K at 60 fps, or a PNG still",
     ],
     actions: [
       ...(APPS.collagemagik.iosUrl
@@ -147,32 +147,6 @@ const products: ProductCard[] = [
       check: "text-violet-500",
       hover: "hover:shadow-violet-500/10 hover:border-violet-500/30",
       logoShadow: "drop-shadow-[0_8px_18px_rgba(109,77,255,0.30)]",
-    },
-  },
-  {
-    id: "utsav-locator",
-    title: APPS.utsavLocator.name,
-    tagline: "Durga Puja pandal finder",
-    description:
-      "Find Durga Puja pandals near you, see how crowded each one is right now and get directions in Google Maps. Free, no sign-up, right in your browser.",
-    logoSrc: "/utsav-locator/icon.png",
-    category: { label: "Web • Travel & Local", icon: MapPin },
-    platforms: "Web • Any device",
-    features: [
-      "Map of pandals across Kolkata, Bengaluru and beyond, searchable by name, club or theme",
-      "Live crowd heatmap: calm, moderate or busy, powered by “I’m visiting” check-ins",
-      "Favourites, “been here” list, most loved & busiest-right-now rankings",
-      "One-tap Google Maps navigation, English, বাংলা & हिंदी, installable as an app",
-    ],
-    actions: [
-      { label: "Open Utsav Locator", href: APPS.utsavLocator.siteUrl, kind: "external", className: "bg-orange-600 hover:bg-orange-700" },
-    ],
-    accent: {
-      glow: "from-orange-400/20 to-rose-300/10",
-      badge: "bg-orange-600 hover:bg-orange-600",
-      check: "text-orange-500",
-      hover: "hover:shadow-orange-500/10 hover:border-orange-500/30",
-      logoShadow: "drop-shadow-[0_8px_18px_rgba(194,65,12,0.28)]",
     },
   },
 ];
@@ -236,7 +210,7 @@ export function Features() {
           </Badge>
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Our apps</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Thoughtfully built mobile apps from AxpoCreation, from everyday money management and AI-planned workouts to quick-fire maths duels and festive pandal hopping.
+            Thoughtfully built mobile apps from AxpoCreation, from everyday money management and AI-planned workouts to quick-fire maths duels and photo and video collages.
           </p>
         </motion.div>
 

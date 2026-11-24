@@ -5,9 +5,9 @@ import { APPS } from "@/lib/constants";
 import { AxpoMark } from "@/components/axpo/AxpoMark";
 import { ChartPie, HandCoins, Users } from "lucide-react";
 
-const PAGE_TITLE = "AXPO | Smart Money, Simplified";
+const PAGE_TITLE = "Axpo Money | Expenses, Splits & Lending, Simplified";
 const PAGE_DESCRIPTION =
-  "Track spending, split bills, and manage lending with AXPO.";
+  "Track spending, split bills, and manage lending with Axpo Money.";
 const PAGE_URL = "https://www.axpocreation.com/expense-tracker-app";
 const LOGO_URL = "https://www.axpocreation.com/axpo-logo.png";
 
@@ -95,7 +95,7 @@ export default function ExpenseTrackerApp() {
         document.title = previousTitle;
       },
       setMetaTag("description", PAGE_DESCRIPTION),
-      setMetaTag("keywords", "AXPO, personal budget app, expense tracking, bill splitting, pocket friendly expense assistant"),
+      setMetaTag("keywords", "Axpo Money, personal budget app, expense tracking, bill splitting, pocket friendly expense assistant"),
       setMetaTag("robots", "index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"),
       setMetaTag("author", "AxpoCreation"),
       setMetaTag("og:title", PAGE_TITLE, "property"),
@@ -111,7 +111,7 @@ export default function ExpenseTrackerApp() {
       setJsonLd({
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        name: "AXPO",
+        name: "Axpo Money",
         applicationCategory: "FinanceApplication",
         operatingSystem: "Android, iOS",
         description: PAGE_DESCRIPTION,
@@ -148,7 +148,7 @@ export default function ExpenseTrackerApp() {
                 </h1>
                 <p className="mt-5 text-lg leading-relaxed text-white/80">
                   Track daily spending, organize group splits, and stay on top of personal lending in one simple app.
-                  AXPO is designed for everyday users who want clean records, quick entries, and
+                  Axpo Money is designed for everyday users who want clean records, quick entries, and
                   smarter money decisions without complex setup.
                 </p>
                 <div className="mt-7 flex flex-wrap gap-2 text-sm">
@@ -177,7 +177,7 @@ export default function ExpenseTrackerApp() {
               </div>
               <div className="flex items-center justify-center">
                 <AxpoMark
-                  alt="AXPO logo"
+                  alt="Axpo Money logo"
                   loading="eager"
                   className="w-full max-w-[280px] drop-shadow-[0_24px_40px_rgba(20,8,40,0.35)]"
                 />
@@ -188,7 +188,7 @@ export default function ExpenseTrackerApp() {
         <section className="container mx-auto px-4 mt-10">
           <div className="mx-auto max-w-5xl rounded-3xl border border-axpo-border bg-axpo-surface p-6 md:p-8">
             <h2 className="font-rounded text-2xl md:text-3xl font-bold text-axpo-text mb-4">
-              Why users choose AXPO
+              Why users choose Axpo Money
             </h2>
             <p className="text-axpo-secondary-text leading-relaxed mb-6">
               Whether you are managing personal monthly budgets, tracking shared trips with friends, or handling

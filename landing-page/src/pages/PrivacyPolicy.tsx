@@ -23,7 +23,7 @@ export default function PrivacyPolicy() {
           </p>
 
           <p className="leading-relaxed text-slate-600 dark:text-slate-400 mb-4">
-            AXPO (&quot;we&quot;, &quot;our&quot;, or &quot;the app&quot;)
+            Axpo Money (&quot;we&quot;, &quot;our&quot;, or &quot;the app&quot;)
             is an expense-tracking and bill-splitting app. This Privacy Policy
             explains what data we collect, how we use it, and your choices.
           </p>
@@ -333,7 +333,7 @@ export default function PrivacyPolicy() {
             transit and at rest as part of their service.
           </p>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            AXPO&apos;s use and transfer of information received from Google
+            Axpo Money&apos;s use and transfer of information received from Google
             APIs, including Gmail, follows the{" "}
             <a
               href="https://developers.google.com/terms/api-services-user-data-policy"
@@ -390,7 +390,7 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
             App install and usage measurement data collected by Google Analytics
-            for Firebase is not linked to your AXPO account and is kept only for
+            for Firebase is not linked to your Axpo Money account and is kept only for
             the limited retention period set in our Google Analytics settings,
             after which Google deletes it.
           </p>
@@ -420,7 +420,7 @@ export default function PrivacyPolicy() {
             <li>
               SMS access applies only to the Android app and is optional. You
               can decline it, or turn it off at any
-              time in Android Settings → Apps → AXPO → Permissions → SMS. You
+              time in Android Settings → Apps → Axpo Money → Permissions → SMS. You
               can turn off payment alerts separately in the app&apos;s
               &quot;Payments from SMS&quot; notification setting. Turning off
               SMS access stops all SMS reading; expenses you already added stay
@@ -437,7 +437,7 @@ export default function PrivacyPolicy() {
             8. Children
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            AXPO is not directed at children under 13. We do not knowingly
+            Axpo Money is not directed at children under 13. We do not knowingly
             collect data from children under 13. If you believe we have done so,
             please contact us so we can delete it.
           </p>
@@ -468,7 +468,7 @@ export default function PrivacyPolicy() {
             </a>
           </p>
           <p className="text-slate-600 dark:text-slate-400">
-            Subject line: AXPO – Privacy
+            Subject line: Axpo Money – Privacy
           </p>
         </div>
       </main>

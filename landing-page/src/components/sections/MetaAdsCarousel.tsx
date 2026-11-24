@@ -9,25 +9,25 @@ const creatives = [
     src: "/assets/meta-ads/01-split-together-settle-simply-1080x1080.png",
     title: "Split together. Settle simply.",
     description: "Create groups in seconds and keep every shared expense organized.",
-    alt: "AXPO Splitter campaign showing shared trip, dinner, and rent groups in the app",
+    alt: "Axpo Money Splitter campaign showing shared trip, dinner, and rent groups in the app",
   },
   {
     src: "/assets/meta-ads/02-know-who-owes-what-1080x1080.png",
     title: "Know who owes what.",
     description: "See total spending, individual shares, and balances at a glance.",
-    alt: "AXPO Splitter campaign showing group spending, member shares, and settlement balances",
+    alt: "Axpo Money Splitter campaign showing group spending, member shares, and settlement balances",
   },
   {
     src: "/assets/meta-ads/03-trips-rent-dinner-1080x1080.png",
     title: "Trips. Rent. Dinner.",
     description: "One clear splitter for flatmates, getaways, dinners, and group events.",
-    alt: "AXPO Splitter campaign for trips, flatmates, dinner bills, and group events",
+    alt: "Axpo Money Splitter campaign for trips, flatmates, dinner bills, and group events",
   },
   {
     src: "/assets/meta-ads/04-split-track-settle-1080x1080.png",
     title: "Split. Track. Settle.",
     description: "Move from the first shared payment to the final settlement with confidence.",
-    alt: "AXPO Splitter campaign showing the flow from expense groups to clear balances",
+    alt: "Axpo Money Splitter campaign showing the flow from expense groups to clear balances",
   },
 ] as const;
 
@@ -79,7 +79,7 @@ export function MetaAdsCarousel() {
             if (event.key === "ArrowRight") showNext();
           }}
           aria-roledescription="carousel"
-          aria-label="AXPO Splitter campaign gallery"
+          aria-label="Axpo Money Splitter campaign gallery"
         >
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, x: -24 }}
@@ -88,7 +88,7 @@ export function MetaAdsCarousel() {
             transition={{ duration: reduceMotion ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-400/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-violet-200">
-              <Sparkles className="h-3.5 w-3.5" /> AXPO Splitter
+              <Sparkles className="h-3.5 w-3.5" /> Axpo Money Splitter
             </div>
             <h2 className="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
               Shared spending, <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">beautifully clear.</span>
@@ -145,7 +145,7 @@ export function MetaAdsCarousel() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" className="bg-white text-slate-950 shadow-xl hover:bg-slate-100" asChild>
-                <Link href="/axpo">Download AXPO <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link href="/axpo">Download Axpo Money <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" asChild>
                 <Link href="/expense-tracker-app">Explore all features</Link>

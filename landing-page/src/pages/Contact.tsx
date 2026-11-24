@@ -32,7 +32,7 @@ export default function Contact() {
           >
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6">Get in Touch</h1>
             <p className="text-lg text-muted-foreground">
-              Need help with AXPO or want to share feedback? We'd love to hear from you.
+              Need help with Axpo Money or want to share feedback? We'd love to hear from you.
             </p>
           </motion.div>
 
@@ -101,7 +101,7 @@ export default function Contact() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="message">Message</Label>
-                      <Textarea id="message" placeholder="How can we help with AXPO?" className="min-h-[120px]" required />
+                      <Textarea id="message" placeholder="How can we help with Axpo Money?" className="min-h-[120px]" required />
                     </div>
                     <Button type="submit" className="w-full">Send Message</Button>
                   </form>

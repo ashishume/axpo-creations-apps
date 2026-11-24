@@ -3,7 +3,7 @@
  */
 export const APPS = {
   tracker: {
-    name: "AXPO",
+    name: "Axpo Money",
     iosUrl: "https://apps.apple.com/in/app/axpo-expense-manager/id6759822547",
     androidUrl: "https://play.google.com/store/apps/details?id=com.axpo.expense",
   },
@@ -25,15 +25,10 @@ export const APPS = {
     iosUrl: "https://apps.apple.com/app/id6832640005" as string | null,
     siteUrl: "/collagemagik",
   },
-  utsavLocator: {
-    name: "Utsav Locator",
-    /** Standalone web app (PWA) hosted on its own domain. */
-    siteUrl: "https://www.utsavlocator.com/",
-  },
 } as const;
 
 /** Public contact email. */
 export const CONTACT_EMAIL = "aaxpocreation@gmail.com";
 
-/** Backend API base URL for AXPO account deletion requests. Set VITE_API_URL in .env. */
+/** Backend API base URL for Axpo Money account deletion requests. Set VITE_API_URL in .env. */
 export const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "") || "";

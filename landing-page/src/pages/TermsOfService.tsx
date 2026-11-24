@@ -23,17 +23,17 @@ export default function TermsOfService() {
           </p>
 
           <p className="leading-relaxed text-slate-600 dark:text-slate-400 mb-4">
-            Welcome to AXPO. By using the app, you agree to these Terms
+            Welcome to Axpo Money. By using the app, you agree to these Terms
             of Service (&quot;Terms&quot;). If you do not agree, please do not
             use the app. These Terms also serve as the End User License Agreement
-            (EULA) for AXPO.
+            (EULA) for Axpo Money.
           </p>
 
           <h2 className="text-lg font-medium mt-8 mb-2 dark:text-slate-200 text-slate-900">
             1. Description of Service
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            AXPO is a mobile and web application that helps you track
+            Axpo Money is a mobile and web application that helps you track
             personal expenses, manage fixed costs and investments, and split bills
             with others. You may optionally record{" "}
             <strong className="dark:text-slate-300 text-slate-700">how</strong>{" "}
@@ -110,7 +110,7 @@ export default function TermsOfService() {
             4. Not Financial or Legal Advice
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            AXPO is for personal expense tracking and organization only.
+            Axpo Money is for personal expense tracking and organization only.
             It does not provide tax, legal, or investment advice. Figures and
             summaries in the app are for informational use only. For important
             financial or legal decisions, please consult a qualified
@@ -122,7 +122,7 @@ export default function TermsOfService() {
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
             Payment-method fields and saved methods are for your convenience only
-            (including defaults, filters, and future AXPO features such as
+            (including defaults, filters, and future Axpo Money features such as
             reminders where we explicitly offer them). They do not create any
             obligation on us to remind you of bills or due dates unless we
             clearly provide and describe that feature; any such tools are not a
@@ -148,7 +148,7 @@ export default function TermsOfService() {
             7. Subscriptions and In-App Purchases
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-2">
-            AXPO may offer premium features through a paid subscription or
+            Axpo Money may offer premium features through a paid subscription or
             other in-app purchase. If you choose to subscribe:
           </p>
           <ul className="list-disc pl-5 space-y-2 text-slate-600 dark:text-slate-400 mb-4">
@@ -191,7 +191,7 @@ export default function TermsOfService() {
               <strong className="dark:text-slate-300 text-slate-700">
                 Ads in the free version:
               </strong>{" "}
-              The free version of AXPO shows ads served by Google AdMob. A
+              The free version of Axpo Money shows ads served by Google AdMob. A
               Premium subscription removes ads. How ad-related data is handled,
               including your choices, is described in our{" "}
               <Link
@@ -276,7 +276,7 @@ export default function TermsOfService() {
             14. Contact
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-2">
-            AXPO is published by AxpoCreation, Bengaluru, Karnataka, India. For
+            Axpo Money is published by AxpoCreation, Bengaluru, Karnataka, India. For
             questions about these Terms:
           </p>
           <p className="text-slate-600 dark:text-slate-400 mb-1">
@@ -289,7 +289,7 @@ export default function TermsOfService() {
             </a>
           </p>
           <p className="text-slate-600 dark:text-slate-400">
-            Subject line: AXPO – Terms
+            Subject line: Axpo Money – Terms
           </p>
         </div>
       </main>

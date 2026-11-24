@@ -7,9 +7,9 @@ import {
   type MobilePlatform,
 } from "@/lib/mobilePlatform";
 
-const PAGE_TITLE = "Download AXPO";
+const PAGE_TITLE = "Download Axpo Money";
 const PAGE_DESCRIPTION =
-  "Track spending, split bills, and manage lending with AXPO. Available on iOS and Android.";
+  "Track spending, split bills, and manage lending with Axpo Money. Available on iOS and Android.";
 const PAGE_URL = "https://www.axpocreation.com/axpo";
 
 function destinationFor(platform: MobilePlatform): string | null {

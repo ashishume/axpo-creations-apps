@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ const heroApps = [
     platforms: "Android & iOS",
     iconSrc: "/axpo-mark.png",
     screenSrc: "/assets/hero/axpo-expenses.jpg",
-    screenAlt: "AXPO expense activity with monthly spending, savings and recent transactions",
+    screenAlt: "Axpo Money expense activity with monthly spending, savings and recent transactions",
     ring: "hover:border-violet-300/40",
   },
   {
@@ -42,8 +43,8 @@ const heroApps = [
     tagline: "AI workouts & meal plans",
     platforms: "Android & iOS",
     iconSrc: "/axpo-fitness-icon.png",
-    screenSrc: "/assets/hero/axpo-fitness-today.jpg",
-    screenAlt: "Axpo Fitness Today screen with the day's workout, weekly progress and meal targets",
+    screenSrc: "/assets/hero/axpo-fitness-home.jpg",
+    screenAlt: "Axpo Fitness home screen with today's workout, meal scan and daily macros",
     ring: "hover:border-emerald-300/40",
   },
   {
@@ -56,7 +57,26 @@ const heroApps = [
     screenAlt: "Mindstrike Arena screen with the ranked duel and a quick maths warm-up",
     ring: "hover:border-teal-300/40",
   },
+  {
+    id: "collagemagik",
+    name: APPS.collagemagik.name,
+    tagline: "Photo & video collages",
+    platforms: "iPhone",
+    iconSrc: "/collagemagik/icon.png",
+    screenSrc: "/assets/hero/collagemagik-collage.jpg",
+    screenAlt: "CollageMagik editor with photos and video clips in one collage",
+    ring: "hover:border-fuchsia-300/40",
+  },
 ] as const;
+
+type Slot = "left" | "center" | "right";
+
+/** Where each slot sits, relative to the centred front phone (x is a share of the phone's own width). */
+const SLOT_POSES: Record<Slot, { x: string; y: number; scale: number; rotate: number }> = {
+  center: { x: "0%", y: 0, scale: 1, rotate: 0 },
+  left: { x: "-54%", y: 48, scale: 0.85, rotate: -8 },
+  right: { x: "54%", y: 48, scale: 0.85, rotate: 8 },
+};
 
 function PhoneFrame({ src, alt, className }: { src: string; alt: string; className?: string }) {
   return (
@@ -74,10 +94,30 @@ function PhoneFrame({ src, alt, className }: { src: string; alt: string; classNa
 
 export function Hero() {
   const reduceMotion = useReducedMotion();
-  const [axpo, fitness, mindstrike] = heroApps;
+  const [axpo, fitness, , collagemagik] = heroApps;
+  const heroPhones = [
+    { ...axpo, float: -10, shadow: "" },
+    { ...fitness, float: -8, shadow: "shadow-emerald-950/60" },
+    { ...collagemagik, float: 10, shadow: "" },
+  ];
+  const [slots, setSlots] = useState<Record<string, Slot>>({
+    [axpo.id]: "left",
+    [fitness.id]: "center",
+    [collagemagik.id]: "right",
+  });
+
+  /** Swap the clicked phone with whichever one is in front. */
+  const bringToFront = (id: string) => {
+    setSlots((current) => {
+      const clicked = current[id];
+      if (clicked === "center") return current;
+      const frontId = Object.keys(current).find((key) => current[key] === "center")!;
+      return { ...current, [id]: "center", [frontId]: clicked };
+    });
+  };
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 pb-20 pt-28 text-white lg:pb-24 lg:pt-32">
+    <section className="relative overflow-clip bg-slate-950 pb-20 pt-28 text-white lg:pb-24 lg:pt-32">
       {/* Midnight aurora background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_#312e81_0%,_#0f172a_42%,_#020617_100%)]" aria-hidden />
@@ -134,11 +174,11 @@ export function Hero() {
               AxpoCreation • Apps for iPhone & Android
             </motion.span>
             <motion.h1 variants={heroItem} className="mb-6 text-4xl font-bold leading-tight tracking-tight text-white md:text-6xl">
-              Apps for your money,{" "}
-              <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-teal-300 bg-clip-text text-transparent">body and mind</span>
+              Apps for your money, body,{" "}
+              <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-teal-300 bg-clip-text text-transparent">mind and memories</span>
             </motion.h1>
             <motion.p variants={heroItem} className="mx-auto mb-8 max-w-xl text-lg leading-relaxed text-slate-300 md:text-xl lg:mx-0">
-              AXPO keeps expenses, shared bills and lending records organised. Axpo Fitness plans your workouts and meals with AI. Mindstrike turns quick maths into 90-second duels. Simple, thoughtful apps for every day.
+              Track and split every expense with Axpo Money, train and eat smarter with Axpo Fitness, sharpen your maths in Mindstrike duels, and turn photos and videos into collages that move with CollageMagik. Simple, thoughtful apps for every day.
             </motion.p>
 
             <motion.div variants={heroItem} className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
@@ -168,7 +208,7 @@ export function Hero() {
             </motion.div>
 
             {/* App shortcuts */}
-            <motion.ul variants={heroItem} className="mx-auto mt-10 grid max-w-2xl gap-3 sm:grid-cols-3 lg:mx-0">
+            <motion.ul variants={heroItem} className="mx-auto mt-10 grid max-w-2xl gap-3 sm:grid-cols-2 md:grid-cols-4 lg:mx-0">
               {heroApps.map((app) => (
                 <li key={app.id}>
                   <motion.a
@@ -192,45 +232,36 @@ export function Hero() {
           {/* Phone showcase */}
           <div className="relative mx-auto h-[420px] w-full max-w-[440px] sm:h-[520px] lg:h-[560px]" aria-label="App previews" role="group">
             <div aria-hidden="true" className="absolute inset-10 rounded-full bg-gradient-to-br from-violet-500/30 via-fuchsia-500/10 to-teal-400/30 blur-3xl" />
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, x: -30, rotate: -12 }}
-              animate={{ opacity: 1, x: 0, rotate: -8 }}
-              transition={{ delay: reduceMotion ? 0 : 0.3, duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute left-0 top-14 w-[44%] origin-bottom-right sm:top-16"
-            >
-              <motion.div
-                animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <PhoneFrame src={axpo.screenSrc} alt={axpo.screenAlt} />
-              </motion.div>
-            </motion.div>
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, x: 30, rotate: 12 }}
-              animate={{ opacity: 1, x: 0, rotate: 8 }}
-              transition={{ delay: reduceMotion ? 0 : 0.42, duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute right-0 top-14 w-[44%] origin-bottom-left sm:top-16"
-            >
-              <motion.div
-                animate={reduceMotion ? undefined : { y: [0, 10, 0] }}
-                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <PhoneFrame src={mindstrike.screenSrc} alt={mindstrike.screenAlt} />
-              </motion.div>
-            </motion.div>
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduceMotion ? 0 : 0.54, duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute left-[24%] top-0 z-10 w-[52%]"
-            >
-              <motion.div
-                animate={reduceMotion ? undefined : { y: [0, -8, 0] }}
-                transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <PhoneFrame src={fitness.screenSrc} alt={fitness.screenAlt} className="shadow-emerald-950/60" />
-              </motion.div>
-            </motion.div>
+            {heroPhones.map((phone, index) => {
+              const slot = slots[phone.id];
+              const pose = SLOT_POSES[slot];
+              const isFront = slot === "center";
+              return (
+                <motion.button
+                  key={phone.id}
+                  type="button"
+                  onClick={() => bringToFront(phone.id)}
+                  aria-label={isFront ? `${phone.name} preview` : `Bring ${phone.name} preview to the front`}
+                  aria-pressed={isFront}
+                  initial={reduceMotion ? false : { opacity: 0, ...pose, y: pose.y + 30 }}
+                  animate={{ opacity: 1, ...pose }}
+                  whileHover={reduceMotion || isFront ? undefined : { scale: pose.scale + 0.03 }}
+                  transition={{
+                    opacity: { delay: reduceMotion ? 0 : 0.3 + index * 0.12, duration: reduceMotion ? 0 : 0.7 },
+                    default: { type: "spring", stiffness: 170, damping: 22, duration: reduceMotion ? 0 : undefined },
+                  }}
+                  style={{ zIndex: isFront ? 10 : 1 }}
+                  className={`absolute left-[24%] top-0 w-[52%] rounded-[2.4rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 ${isFront ? "cursor-default" : "cursor-pointer"}`}
+                >
+                  <motion.div
+                    animate={reduceMotion ? undefined : { y: [0, phone.float, 0] }}
+                    transition={{ duration: 6 + index * 0.5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <PhoneFrame src={phone.screenSrc} alt={phone.screenAlt} className={phone.shadow} />
+                  </motion.div>
+                </motion.button>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -47,12 +47,12 @@ function contentForPath(path: string): PageContent | null {
       icon: "👥",
       title: isGroupInvite ? "Group invitation" : isFriendInvite ? "Friend invitation" : "Split Group",
       subtitle: isGroupInvite
-        ? "You’re invited to share expenses on AXPO"
-        : isFriendInvite ? "Someone invited you to connect on AXPO" : "Someone shared an expense group with you",
-      detail: isGroupInvite ? "Open AXPO to join the group" : "Tap below to open in AXPO",
+        ? "You’re invited to share expenses on Axpo Money"
+        : isFriendInvite ? "Someone invited you to connect on Axpo Money" : "Someone shared an expense group with you",
+      detail: isGroupInvite ? "Open Axpo Money to join the group" : "Tap below to open in Axpo Money",
       fallbackHref: `${WEB_BASE}/axpo`,
-      fallbackLabel: "Download AXPO",
-      fallbackDetail: "Install AXPO and sign in, then return to this page and tap Open in App.",
+      fallbackLabel: "Download Axpo Money",
+      fallbackDetail: "Install Axpo Money and sign in, then return to this page and tap Open in App.",
       inviteLink: isGroupInvite || isFriendInvite ? `${WEB_BASE}/open/${path}` : undefined,
       isGroupInvite,
     };
@@ -68,11 +68,11 @@ function contentForPath(path: string): PageContent | null {
       icon: "🏠",
       title: "Family Invite",
       subtitle: "Someone invited you to a shared family expense ledger",
-      detail: "Tap below to join the family in AXPO",
+      detail: "Tap below to join the family in Axpo Money",
       fallbackHref: `${WEB_BASE}/axpo`,
-      fallbackLabel: "Download AXPO",
+      fallbackLabel: "Download Axpo Money",
       fallbackDetail:
-        "Install AXPO, then reopen this link or enter the invite code",
+        "Install Axpo Money, then reopen this link or enter the invite code",
       inviteCode,
     };
   }
@@ -94,10 +94,10 @@ function contentForPath(path: string): PageContent | null {
       icon: "💰",
       title,
       subtitle,
-      detail: "Tap below to open in AXPO",
+      detail: "Tap below to open in Axpo Money",
       fallbackHref: `${WEB_BASE}/`,
       fallbackLabel: "Open Web Version",
-      fallbackDetail: "Install AXPO or open the web version",
+      fallbackDetail: "Install Axpo Money or open the web version",
     };
   }
 
@@ -146,8 +146,8 @@ export default function Open() {
 
   useEffect(() => {
     if (!validType) return;
-    const title = content?.title ?? "Open in AXPO";
-    const description = content?.subtitle ?? "Tap to open in AXPO";
+    const title = content?.title ?? "Open in Axpo Money";
+    const description = content?.subtitle ?? "Tap to open in Axpo Money";
     const prevTitle = document.title;
     document.title = title;
     const restores: Array<() => void> = [
@@ -262,7 +262,7 @@ export default function Open() {
             </Button>
             <p role="status" className="mt-2 text-sm text-muted-foreground">{copyStatus}</p>
             <p id="invitation-help" className="mt-3 text-sm text-muted-foreground">
-              Keep this link so you can reopen the invitation after installing AXPO or signing in.
+              Keep this link so you can reopen the invitation after installing Axpo Money or signing in.
               {content.isGroupInvite && platform === "ios"
                 ? " In the iOS app, you can also paste it in Splitter → Join group."
                 : ""}
@@ -272,7 +272,7 @@ export default function Open() {
 
         {!showFallback && (
           <p role="status" className="mb-4 text-sm text-muted-foreground">
-            Opening AXPO… If nothing happens, tap Open in App below.
+            Opening Axpo Money… If nothing happens, tap Open in App below.
           </p>
         )}
         <div className="flex flex-col gap-3">
@@ -286,7 +286,7 @@ export default function Open() {
 
         <p className="mt-8 text-xs text-muted-foreground">
           Powered by{" "}
-          <a href={`${WEB_BASE}/`} className="text-primary hover:underline">AXPO</a>
+          <a href={`${WEB_BASE}/`} className="text-primary hover:underline">Axpo Money</a>
         </p>
       </section>
     </main>
