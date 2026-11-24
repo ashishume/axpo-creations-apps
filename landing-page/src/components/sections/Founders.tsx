@@ -9,13 +9,6 @@ const founders = [
     initials: "AD",
     image: "/assets/founder_1.png"
   },
-  {
-    name: "Soumojit Kar",
-    role: "Co-founder",
-    bio: "Technical architect focused on building scalable, secure, and user-centric software architectures.",
-    initials: "SK",
-    image: "/assets/founder_2.jpg"
-  }
 ];
 
 export function Founders() {
@@ -43,7 +36,7 @@ export function Founders() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-12 max-w-4xl mx-auto">
           {founders.map((founder, index) => (
             <motion.div
               key={founder.name}
@@ -52,7 +45,7 @@ export function Founders() {
               viewport={{ once: true }}
               whileHover={reduceMotion ? undefined : { y: -9, scale: 1.015 }}
               transition={{ delay: reduceMotion ? 0 : index * 0.14, duration: reduceMotion ? 0 : 0.48, ease: [0.22, 1, 0.36, 1] }}
-              className="group relative flex flex-col items-center text-center p-8 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/10 transition-[border-color,box-shadow] duration-500 overflow-hidden"
+              className="group relative flex w-full max-w-md flex-col items-center text-center p-8 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/10 transition-[border-color,box-shadow] duration-500 overflow-hidden"
             >
               <div aria-hidden="true" className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <motion.div whileHover={reduceMotion ? undefined : { rotate: 2, scale: 1.04 }}>
